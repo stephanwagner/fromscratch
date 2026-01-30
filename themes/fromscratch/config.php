@@ -10,8 +10,8 @@ return [
 
 	// Menus
 	'menus' => [
-		'main_menu' => 'Hauptmenü',
-		'footer_menu' => 'Footermenü',
+		'main_menu' => fs_t('MENU_MAIN_MENU'),
+		'footer_menu' => fs_t('MENU_FOOTER_MENU'),
 	],
 
 	// The length of excerpts
@@ -22,27 +22,20 @@ return [
 
 	// Colors
 	'theme_colors' => [
-		// Black and white
-		['slug' => 'white', 'color' => '#fff', 'name' => 'Weiß'],
-		['slug' => 'black', 'color' => '#000', 'name' => 'Schwarz'],
-		['slug' => 'off-black', 'color' => '#222', 'name' => 'Helleres Schwarz'],
-
 		// Primary colors
 		['slug' => 'primary', 'color' => '#00aaff', 'name' => 'Primärfarbe'],
 		['slug' => 'secondary', 'color' => '#00ddff', 'name' => 'Sekundärfarbe'],
 
 		// Grayscale
+		['slug' => 'black', 'color' => '#000', 'name' => 'Schwarz'],
+		['slug' => 'off-black', 'color' => '#222', 'name' => 'Helleres Schwarz'],
 		['slug' => 'gray-600', 'color' => '#666', 'name' => 'Grau 600'],
 		['slug' => 'gray-500', 'color' => '#999', 'name' => 'Grau 500'],
 		['slug' => 'gray-400', 'color' => '#ccc', 'name' => 'Grau 400'],
 		['slug' => 'gray-300', 'color' => '#ddd', 'name' => 'Grau 300'],
 		['slug' => 'gray-200', 'color' => '#eee', 'name' => 'Grau 200'],
-		['slug' => 'gray-100', 'color' => '#fafafa', 'name' => 'Grau 100'],
-
-		// Status colors
-		['slug' => 'error', 'color' => '#f33', 'name' => 'Status: Fehler'],
-		['slug' => 'warning', 'color' => '#fc0', 'name' => 'Status: Warnung'],
-		['slug' => 'success', 'color' => '#5d5', 'name' => 'Status: Erfolg'],
+		['slug' => 'gray-100', 'color' => '#f6f6f6', 'name' => 'Grau 100'],
+		['slug' => 'white', 'color' => '#fff', 'name' => 'Weiß'],
 	],
 
 	// Gradients

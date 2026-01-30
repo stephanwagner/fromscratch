@@ -43,5 +43,7 @@ return [
     'INSTALL_GO_TO_DASHBOARD_BUTTON' => 'Zum Dashboard',
 
     // Menu
+    'MENU_MAIN_MENU' => 'Hauptmenü',
+    'MENU_FOOTER_MENU' => 'Footermenü',
     'MENU_SHOW_AS_BUTTON' => 'Diesen Menüpunkt als Button anzeigen',
 ];

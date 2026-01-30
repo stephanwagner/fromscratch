@@ -43,5 +43,7 @@ return [
     'INSTALL_GO_TO_DASHBOARD_BUTTON' => 'Go to dashboard',
 
     // Menu
+    'MENU_MAIN_MENU' => 'Main menu',
+    'MENU_FOOTER_MENU' => 'Footer menu',
     'MENU_SHOW_AS_BUTTON' => 'Show this menu item as a button',
 ];
