@@ -41,9 +41,7 @@ function fs_t(string $key, array $replace = []): string
 
     if (isset($translations[$key])) {
         $text = $translations[$key];
-    }
-
-    if (isset($fallback[$key])) {
+    } else if (isset($fallback[$key])) {
         $text = $fallback[$key];
     }
 
