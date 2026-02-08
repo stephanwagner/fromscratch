@@ -82,8 +82,8 @@
     position: absolute;
     display: block;
     top: 100%;
-    width: $headerMenuWidth;
-    right: calc($headerMenuWidth * -1 - 8px - $contentPaddingL);
+    width: $menuWidth;
+    right: calc($menuWidth * -1 - 8px - $contentPaddingL);
     background: #fff;
     margin: 0;
     transition: transition('right');
@@ -112,12 +112,12 @@
 
     @media (max-width: $breakpointM) {
       padding-right: $contentPaddingM;
-      right: calc($headerMenuWidth * -1 - $contentPaddingM);
+      right: calc($menuWidth * -1 - $contentPaddingM);
     }
 
     @media (max-width: $breakpointS) {
       padding-right: $contentPaddingS;
-      right: calc($headerMenuWidth * -1 - $contentPaddingS);
+      right: calc($menuWidth * -1 - $contentPaddingS);
     }
 
     @media (max-width: $breakpointXS) {

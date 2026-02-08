@@ -3,6 +3,11 @@
 
 <head>
 	<?php wp_head(); ?>
+	<style>
+		:root {
+			--default-text-color: red;
+		}
+	</style>
 </head>
 
 <body <?php body_class(); ?>>

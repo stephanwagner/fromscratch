@@ -29,6 +29,11 @@ if (is_admin()) {
 require_once 'inc/theme-setup.php';
 
 /**
+ * Support SVG
+ */
+require_once 'inc/svg-support.php';
+
+/**
  * Head
  */
 require_once 'inc/head.php';

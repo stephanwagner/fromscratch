@@ -1,16 +1,16 @@
 <?php
 return [
 	// Titles
-	'title_page' => 'Globale Einstellungen',
-	'title_menu' => 'Globale Einstellungen',
+	'title_page' => 'Theme Einstellungen',
+	'title_menu' => 'Theme Einstellungen',
 
 	// Languages
 	'languages' => [
-		// [
-		// 	'id' => 'en',
-		// 	'nameEnglish' => 'English',
-		// 	'nameOriginalLanguage' => 'English',
-		// ],
+		[
+			'id' => 'en',
+			'nameEnglish' => 'English',
+			'nameOriginalLanguage' => 'English',
+		],
 		[
 			'id' => 'de',
 			'nameEnglish' => 'German',

@@ -8,7 +8,7 @@ $themePath: '/wp-content/themes/fromscratch';
 @function color($value) {
   @each $name, $color in $colors {
     @if $name == $value {
-      @return $color;
+      @return var(--color-$name, $color);
     }
   }
   @return $value;
@@ -110,36 +110,79 @@ $fontSizes:
   'xl' 22px 1.4;
 
 // Text
-$primaryFontFamily: 'Open Sans', sans-serif;
-$defaultTextColor: color('off-black');
-$defaultFontSize: fontSize('m');
-$defaultLineHeight: lineHeight('m');
+$primaryFontFamily: var(--primary-font, 'Open Sans', sans-serif);
+// TODO secondary font family
+$defaultTextColor: var(--default-text-color, color('off-black'));
+$defaultFontSize: var(--default-font-size, fontSize('m'));
+$defaultLineHeight: var(--default-line-height, lineHeight('m'));
 
 // Content
-$maxContent: 1200px;
-$contentPaddingL: 64px;
-$contentPaddingM: 48px;
-$contentPaddingS: 32px;
-$contentPaddingXS: 24px;
+$maxContentWidth: var(--max-content-width, 1200px);
+$narrowContentWidth: var(--narrow-content-width, 900px);
+$veryNarrowContentWidth: var(--very-narrow-content-width, 600px);
+
+$contentPaddingXL: var(--content-padding-xl, 64px);
+$contentPaddingL: var(--content-padding-l, 64px);
+$contentPaddingM: var(--content-padding-m, 48px);
+$contentPaddingS: var(--content-padding-s, 32px);
+$contentPaddingXS: var(--content-padding-xs, 24px);
+
+$contentMarginXL: var(--content-margin-xl, 96px);
+// TODO adjust
+$contentMarginXLBreakpointXL: var(--content-margin-xl-breakpointXL, 96px);
+$contentMarginXLBreakpointL: var(--content-margin-xl-breakpointL, 96px);
+$contentMarginXLBreakpointM: var(--content-margin-xl-breakpointM, 96px);
+$contentMarginXLBreakpointS: var(--content-margin-xl-breakpointS, 96px);
+$contentMarginXLBreakpointXS: var(--content-margin-xl-breakpointXS, 96px);
+
+$contentMarginL: var(--content-margin-l, 64px);
+$contentMarginLBreakpointXL: var(--content-margin-l-breakpointXL, 64px);
+$contentMarginLBreakpointL: var(--content-margin-l-breakpointL, 64px);
+$contentMarginLBreakpointM: var(--content-margin-l-breakpointM, 64px);
+$contentMarginLBreakpointS: var(--content-margin-l-breakpointS, 64px);
+$contentMarginLBreakpointXS: var(--content-margin-l-breakpointXS, 64px);
+
+$contentMarginM: var(--content-margin-m, 48px);
+$contentMarginMBreakpointXL: var(--content-margin-m-breakpointXL, 48px);
+$contentMarginMBreakpointL: var(--content-margin-m-breakpointL, 48px);
+$contentMarginMBreakpointM: var(--content-margin-m-breakpointM, 48px);
+$contentMarginMBreakpointS: var(--content-margin-m-breakpointS, 48px);
+$contentMarginMBreakpointXS: var(--content-margin-m-breakpointXS, 48px);
+
+$contentMarginS: var(--content-margin-s, 32px);
+$contentMarginSBreakpointXL: var(--content-margin-s-breakpointXL, 32px);
+$contentMarginSBreakpointL: var(--content-margin-s-breakpointL, 32px);
+$contentMarginSBreakpointM: var(--content-margin-s-breakpointM, 32px);
+$contentMarginSBreakpointS: var(--content-margin-s-breakpointS, 32px);
+$contentMarginSBreakpointXS: var(--content-margin-s-breakpointXS, 32px);
+
+$contentMarginXS: var(--content-margin-xs, 16px);
+$contentMarginXSBreakpointXL: var(--content-margin-xs-breakpointXL, 16px);
+$contentMarginXSBreakpointL: var(--content-margin-xs-breakpointL, 16px);
+$contentMarginXSBreakpointM: var(--content-margin-xs-breakpointM, 16px);
+$contentMarginXSBreakpointS: var(--content-margin-xs-breakpointS, 16px);
+$contentMarginXSBreakpointXS: var(--content-margin-xs-breakpointXS, 16px);
 
 // Header
-$headerHeight: 120px;
-$headerHeightMobile: 80px;
-$headerHeightScrolled: 62px;
-$headerMenuWidth: 280px;
+$headerHeight: var(--header-height, 120px);
+$headerHeightMobile: var(--header-height-mobile, 80px);
+$headerHeightScrolled: var(--header-height-scrolled, 62px);
+
+// Menu
+$menuWidth: var(--menu-width, 280px);
 
 // Breakpoints
-$mobileBreakpoint: 900px;
-$breakpointXL: 1400px;
-$breakpointL: 1200px;
-$breakpointM: 900px;
-$breakpointS: 600px;
-$breakpointXS: 400px;
+$mobileBreakpoint: var(--mobile-breakpoint, 900px);
+$breakpointXL: var(--breakpoint-xl, 1400px);
+$breakpointL: var(--breakpoint-l, 1200px);
+$breakpointM: var(--breakpoint-m, 900px);
+$breakpointS: var(--breakpoint-s, 600px);
+$breakpointXS: var(--breakpoint-xs, 400px);
 
 // Transitions
-$defaultTransitionSpeed: 280ms;
-$slowTransitionSpeed: 460ms;
+$defaultTransitionSpeed: var(--default-transition-speed, 280ms);
+$slowTransitionSpeed: var(--slow-transition-speed, 460ms);
 
 // Border radius
-$smallBorderRadius: 8px;
-$defaultBorderRadius: 16px;
+$smallBorderRadius: var(--small-border-radius, 8px);
+$defaultBorderRadius: var(--default-border-radius, 16px);

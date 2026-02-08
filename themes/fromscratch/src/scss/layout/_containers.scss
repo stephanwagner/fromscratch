@@ -5,7 +5,7 @@
 .container {
   position: relative;
   margin: auto;
-  max-width: $maxContent;
+  max-width: $maxContentWidth;
   width: calc(100% - $contentPaddingL - $contentPaddingL);
 
   @media (max-width: $breakpointM) {
@@ -30,7 +30,7 @@
     padding-right: 80px;
   }
 
-  @media (max-width: calc($maxContent + 80px + 80px + 24px + 24px)) {
+  @media (max-width: calc($maxContentWidth + 80px + 80px + 24px + 24px)) {
     margin-left: calc($contentPaddingL * -1);
     margin-right: calc($contentPaddingL * -1);
 
@@ -40,17 +40,17 @@
     }
   }
 
-  @media (max-width: calc($maxContent + $contentPaddingL + $contentPaddingL + 24px + 24px)) {
-    margin-left: calc((100vw - $maxContent) / 2 / 2 * -1 - 16px);
-    margin-right: calc((100vw - $maxContent) / 2 / 2 * -1 - 16px);
+  @media (max-width: calc($maxContentWidth + $contentPaddingL + $contentPaddingL + 24px + 24px)) {
+    margin-left: calc((100vw - $maxContentWidth) / 2 / 2 * -1 - 16px);
+    margin-right: calc((100vw - $maxContentWidth) / 2 / 2 * -1 - 16px);
 
     &.has-background {
-      padding-left: calc((100vw - $maxContent) / 2 / 2 + 16px);
-      padding-right: calc((100vw - $maxContent) / 2 / 2 + 16px);
+      padding-left: calc((100vw - $maxContentWidth) / 2 / 2 + 16px);
+      padding-right: calc((100vw - $maxContentWidth) / 2 / 2 + 16px);
     }
   }
 
-  @media (max-width: calc($maxContent + $contentPaddingL + $contentPaddingL)) {
+  @media (max-width: calc($maxContentWidth + $contentPaddingL + $contentPaddingL)) {
     margin-left: calc($contentPaddingL / 2 * -1 - 12px);
     margin-right: calc($contentPaddingL / 2 * -1 - 12px);
 
@@ -92,12 +92,12 @@
 }
 
 .alignfull {
-  margin-left: calc((100vw - $maxContent) * -0.5);
-  margin-right: calc((100vw - $maxContent) * -0.5);
+  margin-left: calc((100vw - $maxContentWidth) * -0.5);
+  margin-right: calc((100vw - $maxContentWidth) * -0.5);
 
-  @media (max-width: calc($maxContent + $contentPaddingL + $contentPaddingL)) {
-    margin-left: $contentPaddingL * -1;
-    margin-right: $contentPaddingL * -1;
+  @media (max-width: calc($maxContentWidth + $contentPaddingL + $contentPaddingL)) {
+    margin-left: calc($contentPaddingL * -1);
+    margin-right: calc($contentPaddingL * -1);
   }
 
   @media (max-width: $breakpointM) {
@@ -116,7 +116,7 @@
   }
 
   > .wp-block-group__inner-container {
-    max-width: calc($maxContent + $contentPaddingL + $contentPaddingL);
+    max-width: calc($maxContentWidth + $contentPaddingL + $contentPaddingL);
     padding-left: $contentPaddingL;
     padding-right: $contentPaddingL;
     margin: auto;

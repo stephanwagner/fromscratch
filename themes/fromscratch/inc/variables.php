@@ -8,8 +8,63 @@ function theme_settings_page()
 	global $fs_config_variables;
 ?>
 	<div class="wrap">
+		
 		<h1><?= $fs_config_variables['title_page'] ?></h1>
+
 		<form method="post" action="options.php" class="page-settings-form">
+			<div class="settings-page-tab-wrapper">
+				<div class="settings-page-tab-container">
+					<div class="settings-page-tab">
+						Allgemein
+					</div>
+					<div class="settings-page-tab">
+						Texte
+					</div>
+					<div class="settings-page-tab">
+						Design
+					</div>
+				</div>
+			</div>
+		
+			<div style="margin: 24px 0 32px;">
+				<h1>Design</h1>
+
+				<table class="widefat striped">
+                <thead>
+                  <tr>
+				  	<th style="padding: 8px 10px; line-height: 1.4em; font-weight: bold"><?= fs_t('Variable') ?></th>
+                    <th style="padding: 8px 10px; line-height: 1.4em; font-weight: bold"><?= fs_t('Titel') ?></th>
+                    <th style="padding: 8px 10px; line-height: 1.4em; font-weight: bold"><?= fs_t('Wert') ?></th>
+                    <th style="padding: 8px 10px; line-height: 1.4em; font-weight: bold"></th>
+                  </tr>
+                </thead>
+                <tbody>
+
+                  <tr>
+                    <td><code>--color-gray-200</code></td>
+                    <td>
+                      <input
+                        type="text"
+                        name="pages[homepage][title]"
+                        value="Grau 200"
+                        class="regular-text" style="width: 180px">
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        name="pages[homepage][slug]"
+                        value="#444444"
+                        class="code" style="width: 180px">
+                    </td>
+					<td>
+						<div class="button">
+							<span class="dashicons dashicons-trash"></span>
+						</div>
+					</td>
+                  </tr>
+				</table>
+			</div>
+		
 			<div style="margin: 24px 0 32px;">
 				<?php
 				if (sizeof($fs_config_variables['languages']) > 1) {
@@ -50,9 +105,8 @@ function theme_settings_page()
 						resize: vertical;
 					}
 
-					.page-settings-form .form-table td {
-						padding-top: 8px;
-						padding-bottom: 8px;
+					.page-settings-form .form-table .widefat th {
+						padding: 8px 10px;
 					}
 
 					.page-settings-form {

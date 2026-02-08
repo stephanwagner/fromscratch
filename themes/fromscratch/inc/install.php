@@ -181,9 +181,9 @@ function fromscratch_render_installer()
               <table class="widefat striped" style="max-width: 600px">
                 <thead>
                   <tr>
-                    <td><b><?= fs_t('INSTALL_PAGES_TABLE_HEADING_PAGE') ?></b></td>
-                    <td><b><?= fs_t('INSTALL_PAGES_TABLE_HEADING_TITLE') ?></b></td>
-                    <td><b><?= fs_t('INSTALL_PAGES_TABLE_HEADING_SLUG') ?></b></td>
+                    <th style="padding: 8px 10px; line-height: 1.4em"><?= fs_t('INSTALL_PAGES_TABLE_HEADING_PAGE') ?></th>
+                    <th style="padding: 8px 10px; line-height: 1.4em"><?= fs_t('INSTALL_PAGES_TABLE_HEADING_TITLE') ?></th>
+                    <th style="padding: 8px 10px; line-height: 1.4em"><?= fs_t('INSTALL_PAGES_TABLE_HEADING_SLUG') ?></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -319,9 +319,7 @@ add_action('admin_init', function () {
   ) {
     update_option('fromscratch_install_skipped', true);
 
-    wp_safe_redirect(
-      admin_url('themes.php')
-    );
+    wp_safe_redirect(wp_get_referer() ?: admin_url());
     exit;
   }
 });
