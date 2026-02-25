@@ -1,7 +1,7 @@
 <?php
 return [
 	// Disable blogs
-	'disable_blogs' => false,
+	'disable_blogs' => true,
 
 	// Meta tags
 	'meta' => [

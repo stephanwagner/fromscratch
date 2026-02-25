@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * Get the current language
+ */
 function fs_get_lang(): string
 {
     $locale = function_exists('determine_locale')
@@ -9,6 +12,9 @@ function fs_get_lang(): string
     return substr($locale, 0, 2);
 }
 
+/**
+ * Load the translations for a given language
+ */
 function fs_load_translations(string $lang): array
 {
     static $cache = [];
@@ -30,6 +36,9 @@ function fs_load_translations(string $lang): array
     return $cache[$lang];
 }
 
+/**
+ * Translate a given key
+ */
 function fs_t(string $key, array $replace = []): string
 {
     $lang = fs_get_lang();
