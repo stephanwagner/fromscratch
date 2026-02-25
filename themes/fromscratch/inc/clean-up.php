@@ -39,6 +39,14 @@ add_action('admin_menu', function () {
 }, 999);
 
 add_action('admin_init', function () {
+	global $pagenow;
+	if ($pagenow === 'edit-comments.php') {
+		wp_safe_redirect(admin_url());
+		exit;
+	}
+});
+
+add_action('admin_init', function () {
 	foreach (get_post_types([], 'names') as $post_type) {
 		remove_post_type_support($post_type, 'comments');
 		remove_post_type_support($post_type, 'trackbacks');

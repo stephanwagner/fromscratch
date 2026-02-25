@@ -1,6 +1,11 @@
 <?php
 
 return [
+    // Menu
+    'MENU_MAIN_MENU' => 'Main menu',
+    'MENU_FOOTER_MENU' => 'Footer menu',
+    'MENU_SHOW_AS_BUTTON' => 'Show this menu item as a button',
+
     // Install
     'INSTALL_THEME_NAME_TITLE' => 'Theme name',
     'INSTALL_THEME_SLUG_TITLE' => 'Theme slug',
@@ -41,11 +46,6 @@ return [
     'INSTALL_SKIP_SETUP_BUTTON' => 'Skip',
     'INSTALL_COMPLETE_MESSAGE' => 'FromScratch is installed.',
     'INSTALL_GO_TO_DASHBOARD_BUTTON' => 'Go to dashboard',
-
-    // Menu
-    'MENU_MAIN_MENU' => 'Main menu',
-    'MENU_FOOTER_MENU' => 'Footer menu',
-    'MENU_SHOW_AS_BUTTON' => 'Show this menu item as a button',
 
     // SVG support
     'SVG_FILE_MUST_BE_UNDER_MAX_SIZE' => 'SVG file must be under %MAX_SIZE%. You tried to upload a file of %SIZE%.',
