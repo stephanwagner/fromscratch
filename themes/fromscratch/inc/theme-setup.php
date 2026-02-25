@@ -61,19 +61,6 @@ function fs_excerpt_more()
 add_filter('excerpt_more', 'fs_excerpt_more');
 
 /**
- * Disable comments
- */
-add_filter('comments_open', '__return_false');
-add_filter('pings_open', '__return_false');
-
-add_action('after_setup_theme', function () {
-	foreach (get_post_types([], 'names') as $post_type) {
-		remove_post_type_support($post_type, 'comments');
-		remove_post_type_support($post_type, 'trackbacks');
-	}
-});
-
-/**
  * Add custom colors and sizes
  */
 add_filter('wp_theme_json_data_default', function ($theme_json) {

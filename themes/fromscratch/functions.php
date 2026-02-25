@@ -18,6 +18,16 @@ if (is_admin()) {
 }
 
 /**
+ * Clean up
+ */
+require_once 'inc/clean-up.php';
+
+/**
+ * Head
+ */
+require_once 'inc/head.php';
+
+/**
  * Theme setup
  */
 require_once 'inc/theme-setup.php';
@@ -26,11 +36,6 @@ require_once 'inc/theme-setup.php';
  * Support SVG
  */
 require_once 'inc/svg-support.php';
-
-/**
- * Head
- */
-require_once 'inc/head.php';
 
 /**
  * Menu

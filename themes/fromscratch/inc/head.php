@@ -1,34 +1,4 @@
 <?php
-
-/**
- * Clean up
- */
-function fs_clean_up_head()
-{
-	// Head
-	remove_action('wp_head', 'wp_generator');
-	remove_action('wp_head', 'wlwmanifest_link');
-	remove_action('wp_head', 'rsd_link');
-	remove_action('wp_head', 'wp_shortlink_wp_head');
-
-	// Emoji
-	remove_action('wp_print_styles', 'print_emoji_styles');
-	remove_action('wp_head', 'print_emoji_detection_script', 7);
-	remove_action('admin_print_scripts', 'print_emoji_detection_script');
-	remove_action('admin_print_styles', 'print_emoji_styles');
-
-	// Rest discovery
-	remove_action('wp_head', 'rest_output_link_wp_head');
-}
-add_action('init', 'fs_clean_up_head');
-
-function fs_clean_up_styles()
-{
-	// Classic styles
-	wp_dequeue_style('classic-theme-styles');
-}
-add_action('wp_enqueue_scripts', 'fs_clean_up_styles', 100);
-
 /**
  * Add title tag
  */

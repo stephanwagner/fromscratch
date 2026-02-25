@@ -11,7 +11,7 @@ add_action('admin_init', function () {
 /**
  * Should show FromScratch installer
  */
-function fromscratch_should_show_installer(): bool
+function fs_should_show_installer(): bool
 {
   if (get_option('fromscratch_install_success')) {
     return false;
@@ -28,7 +28,7 @@ function fromscratch_should_show_installer(): bool
  * Add FromScratch installer to admin menu
  */
 add_action('admin_menu', function () {
-  if (!fromscratch_should_show_installer() && !isset($_GET['fromscratch_success'])) {
+  if (!fs_should_show_installer() && !isset($_GET['fromscratch_success'])) {
     return;
   }
 
@@ -37,7 +37,7 @@ add_action('admin_menu', function () {
     fs_t('INSTALL_MENU_TITLE'),
     'manage_options',
     'fromscratch-install',
-    'fromscratch_render_installer'
+    'fs_render_installer'
   );
 });
 
@@ -45,7 +45,7 @@ add_action('admin_menu', function () {
  * Show FromScratch installer notice
  */
 add_action('admin_notices', function () {
-  if (!fromscratch_should_show_installer()) {
+  if (!fs_should_show_installer()) {
     return;
   }
 
@@ -71,7 +71,7 @@ add_action('admin_notices', function () {
 /**
  * Render FromScratch installer
  */
-function fromscratch_render_installer()
+function fs_render_installer()
 {
   if (!current_user_can('manage_options')) {
     return;
