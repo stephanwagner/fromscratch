@@ -39,8 +39,6 @@ add_action('admin_head', function () {
  * Sanitize SVG on upload (DOM-based)
  */
 add_filter('wp_handle_upload_prefilter', function ($file) {
-	global $fs_config;
-
 	if (
 		!isset($file['type'], $file['tmp_name']) ||
 		$file['type'] !== 'image/svg+xml'
@@ -48,11 +46,7 @@ add_filter('wp_handle_upload_prefilter', function ($file) {
 		return $file;
 	}
 
-	if (!isset($fs_config['svg_max_size'])) {
-		$max_size = $fs_config['svg_max_size'];
-	} else {
-		$max_size = 2;
-	}
+	$max_size = fs_config('svg_max_size') ?? 2;
 
 	$size = isset($file['size']) ? (int) $file['size'] : 0;
 	if ($size <= 0 || $size / 1024 / 1024 > $max_size) {

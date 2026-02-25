@@ -1,1 +1,1 @@
-// import './block-options';
+// Editor scripts

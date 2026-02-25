@@ -602,13 +602,10 @@ Tags:
  */
 function fs_get_or_create_menu_id(string $menu_slug): int
 {
-  global $fs_config;
-
-  if (!isset($fs_config['menus'][$menu_slug])) {
-    throw new RuntimeException("Menu config missing for slug: {$menu_slug}");
-  }
-
-  $menu_name = $fs_config['menus'][$menu_slug];
+	$menu_name = fs_config('menus.' . $menu_slug);
+	if ($menu_name === null) {
+		throw new RuntimeException("Menu config missing for slug: {$menu_slug}");
+	}
 
   $menu = wp_get_nav_menu_object($menu_name);
 

@@ -11,12 +11,6 @@ require_once 'inc/bootstrap.php';
 require_once 'inc/lang.php';
 
 /**
- * Load configs
- */
-$fs_config = include __DIR__ . '/config.php';
-$fs_config_variables = include __DIR__ . '/config-variables.php';
-
-/**
  * Install
  */
 if (is_admin()) {

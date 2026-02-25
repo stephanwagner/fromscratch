@@ -5,11 +5,10 @@
  */
 function theme_settings_page()
 {
-	global $fs_config_variables;
 ?>
 	<div class="wrap">
 		
-		<h1><?= $fs_config_variables['title_page'] ?></h1>
+		<h1><?= fs_config_variables('title_page') ?></h1>
 
 		<form method="post" action="options.php" class="page-settings-form">
 			<div class="settings-page-tab-wrapper">
@@ -67,8 +66,8 @@ function theme_settings_page()
 		
 			<div style="margin: 24px 0 32px;">
 				<?php
-				if (sizeof($fs_config_variables['languages']) > 1) {
-					foreach ($fs_config_variables['languages'] as $language) {
+				if (sizeof(fs_config_variables('languages')) > 1) {
+					foreach (fs_config_variables('languages') as $language) {
 						echo '<div onclick="changeSettingsPageLanguage(\'' . $language['id'] . '\')" class="settings-page-language-button settings-page-language-button-' . $language['id'] . ' button' . ($language['id'] == 'de' ? ' button-primary' : '') . '" style="margin-right: 8px">' . $language['nameEnglish'] . '</div>';
 					}
 				}
@@ -138,7 +137,7 @@ function theme_settings_page()
 				</style>
 			</div>
 			<?php
-			foreach ($fs_config_variables['variables']['sections'] as $section) {
+			foreach (fs_config_variables('variables.sections') as $section) {
 				settings_fields('section');
 				do_settings_sections('theme_variables_' . $section['id']);
 			}
@@ -177,16 +176,14 @@ function display_custom_info_field($variable, $variableId, $languageId = null)
 
 function display_custom_info_fields()
 {
-	global $fs_config_variables;
-
-	foreach ($fs_config_variables['variables']['sections'] as $section) {
+	foreach (fs_config_variables('variables.sections') as $section) {
 		add_settings_section('section', $section['title'], null, 'theme_variables_' . $section['id']);
 
 		foreach ($section['variables'] as $variable) {
 			$variableId = 'theme_variables_' . $section['id'] . '_' . $variable['id'];
 
 			if (!empty($variable['translate'])) {
-				foreach ($fs_config_variables['languages'] as $language) {
+				foreach (fs_config_variables('languages') as $language) {
 					$variableIdLang = $variableId . '_' . $language['id'];
 					add_settings_field($variableIdLang, $variable['title'], function () use ($variable, $variableIdLang, $language) {
 						display_custom_info_field($variable, $variableIdLang, $language['id']);
@@ -206,11 +203,9 @@ add_action('admin_init', 'display_custom_info_fields');
 
 function add_custom_info_menu_item()
 {
-	global $fs_config_variables;
-
 	add_options_page(
-		$fs_config_variables['title_page'],
-		$fs_config_variables['title_menu'],
+		fs_config_variables('title_page'),
+		fs_config_variables('title_menu'),
 		'manage_options',
 		'custom-theme-settings',
 		'theme_settings_page'

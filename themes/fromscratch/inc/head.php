@@ -43,10 +43,8 @@ add_action('after_setup_theme', 'fs_add_title_tag');
  */
 function fs_meta_tags()
 {
-	global $fs_config;
-
 	echo '<meta charset="utf-8">' . "\n";
-	foreach ($fs_config['meta'] as $name => $content) {
+	foreach (fs_config('meta') as $name => $content) {
 		echo '<meta name="' . $name . '" content="' . $content . '">' . "\n";
 	}
 }

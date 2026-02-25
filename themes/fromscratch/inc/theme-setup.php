@@ -5,10 +5,8 @@
  */
 function fs_menus()
 {
-	global $fs_config;
-
 	add_theme_support('menus');
-	register_nav_menus($fs_config['menus']);
+	register_nav_menus(fs_config('menus'));
 }
 add_action('after_setup_theme', 'fs_menus');
 
@@ -40,7 +38,7 @@ function fs_remove_blogs()
 	});
 }
 
-if (!empty($fs_config['disable_blogs'])) {
+if (!empty(fs_config('disable_blogs'))) {
 	fs_remove_blogs();
 }
 
@@ -49,8 +47,7 @@ if (!empty($fs_config['disable_blogs'])) {
  */
 function fs_excerpt_length()
 {
-	global $fs_config;
-	return $fs_config['excerpt_length'];
+	return fs_config('excerpt_length');
 }
 add_filter('excerpt_length', 'fs_excerpt_length');
 
@@ -59,8 +56,7 @@ add_filter('excerpt_length', 'fs_excerpt_length');
  */
 function fs_excerpt_more()
 {
-	global $fs_config;
-	return $fs_config['excerpt_more'];
+	return fs_config('excerpt_more');
 }
 add_filter('excerpt_more', 'fs_excerpt_more');
 
@@ -81,13 +77,11 @@ add_action('after_setup_theme', function () {
  * Add custom colors and sizes
  */
 add_filter('wp_theme_json_data_default', function ($theme_json) {
-	global $fs_config;
-
 	$data = $theme_json->get_data();
 
-	$data['settings']['color']['palette'] = $fs_config['theme_colors'];
-	$data['settings']['color']['gradients'] = $fs_config['theme_gradients'];
-	$data['settings']['typography']['fontSizes'] = $fs_config['theme_font_sizes'];
+	$data['settings']['color']['palette'] = fs_config('theme_colors');
+	$data['settings']['color']['gradients'] = fs_config('theme_gradients');
+	$data['settings']['typography']['fontSizes'] = fs_config('theme_font_sizes');
 	// $data['settings']['spacing']['spacingSizes'] = [];
 	// $data['settings']['shadow']['presets'] = [];
 
