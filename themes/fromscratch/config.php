@@ -18,7 +18,11 @@ return [
 	'excerpt_length' => 60,
 
 	// The text to show after the excerpt if it was truncated
-	'excerpt_more' => '...',
+	'excerpt_more' => '…',
+
+	// SVG support: Max size in MB
+	// This is to prevent memory exhaustion and security issues
+	'svg_max_size' => 2,
 
 	// Colors
 	'theme_colors' => [

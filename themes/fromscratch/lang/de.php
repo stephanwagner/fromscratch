@@ -46,4 +46,9 @@ return [
     'MENU_MAIN_MENU' => 'Hauptmenü',
     'MENU_FOOTER_MENU' => 'Footermenü',
     'MENU_SHOW_AS_BUTTON' => 'Diesen Menüpunkt als Button anzeigen',
+
+    // SVG support
+    'SVG_FILE_MUST_BE_UNDER_MAX_SIZE' => 'SVG Datei muss unter %MAX_SIZE% sein. Du hast versucht eine Datei von %SIZE% hochzuladen.',
+    'SVG_FILE_NOT_FOUND' => 'SVG Datei nicht gefunden.',
+    'SVG_INVALID_OR_UNSAFE' => 'Ungültige oder unsichere SVG Datei.',
 ];
