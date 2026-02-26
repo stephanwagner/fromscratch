@@ -36,11 +36,13 @@ add_filter('pings_open', '__return_false');
 
 add_action('admin_menu', function () {
 	remove_menu_page('edit-comments.php');
+	remove_submenu_page('options-general.php', 'options-discussion.php');
 }, 999);
 
 add_action('admin_init', function () {
 	global $pagenow;
-	if ($pagenow === 'edit-comments.php') {
+	$blocked = ['edit-comments.php', 'options-discussion.php'];
+	if (in_array($pagenow, $blocked, true)) {
 		wp_safe_redirect(admin_url());
 		exit;
 	}
