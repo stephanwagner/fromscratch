@@ -4,7 +4,7 @@ defined('ABSPATH') || exit;
 
 /**
  * Write recommended .htaccess rules to WP root (Apache only).
- * Adds: MIME types, mod_expires, no Set-Cookie on static assets, manifest cache, mod_deflate.
+ * Adds: MIME types, Cache-Control via mod_headers, Brotli/deflate, Vary Accept-Encoding.
  * Safe to call multiple times; replaces existing FromScratch block when present.
  *
  * @return bool True if block was written or already present, false if skipped (Nginx, unwritable, etc.)

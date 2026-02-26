@@ -4,23 +4,25 @@
 </IfModule>
 
 <IfModule mod_headers.c>
+    # Static assets: 1 year + immutable (use versioned URLs so updates get new file)
     <FilesMatch "\.(?i:css|js|gif|ico|jpe?g|png|webp|avif|svg|pdf|ttf|eot|otf|woff2?|mp4|mpeg)$">
         Header set Cache-Control "public, max-age=31536000, immutable"
         Header unset Set-Cookie
     </FilesMatch>
-</IfModule>
 
-<IfModule mod_headers.c>
+    # Manifest: 1 week
     <FilesMatch "^manifest\.json$">
         Header set Cache-Control "public, max-age=604800"
         Header unset Set-Cookie
     </FilesMatch>
-</IfModule>
 
-<IfModule mod_headers.c>
+    # HTML/PHP: always revalidate
     <FilesMatch "\.(?i:html|php)$">
         Header set Cache-Control "no-cache, must-revalidate"
     </FilesMatch>
+
+    # Correct caching when compression is used
+    Header append Vary Accept-Encoding
 </IfModule>
 
 <IfModule mod_brotli.c>
@@ -37,8 +39,4 @@
     AddOutputFilterByType DEFLATE application/javascript
     AddOutputFilterByType DEFLATE application/json
     AddOutputFilterByType DEFLATE image/svg+xml
-</IfModule>
-
-<IfModule mod_headers.c>
-    Header append Vary Accept-Encoding
 </IfModule>
