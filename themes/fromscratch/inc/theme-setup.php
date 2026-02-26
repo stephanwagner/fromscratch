@@ -29,12 +29,24 @@ function fs_add_post_thumbnails()
 add_action('after_setup_theme', 'fs_add_post_thumbnails');
 
 /**
- * Remove blogs
+ * Remove blogs menu and block direct access to post screens
  */
 function fs_remove_blogs()
 {
 	add_action('admin_menu', function () {
 		remove_menu_page('edit.php');
+	});
+
+	add_action('admin_init', function () {
+		if (empty(fs_config('disable_blogs'))) {
+			return;
+		}
+		global $pagenow;
+		$blocked = ['edit.php', 'post.php', 'post-new.php'];
+		if (in_array($pagenow, $blocked, true)) {
+			wp_safe_redirect(admin_url());
+			exit;
+		}
 	});
 }
 
