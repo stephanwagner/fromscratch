@@ -1,8 +1,8 @@
 <?php
 return [
 	// Titles
-	'title_page' => 'Theme Einstellungen',
-	'title_menu' => 'Theme Einstellungen',
+	'title_page' => fs_t('SETTINGS_TITLE_PAGE'),
+	'title_menu' => fs_t('SETTINGS_TITLE_MENU'),
 
 	// Languages
 	'languages' => [

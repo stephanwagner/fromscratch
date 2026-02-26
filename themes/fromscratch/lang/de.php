@@ -50,6 +50,8 @@ return [
     'INSTALL_GO_TO_DASHBOARD_BUTTON' => 'Zum Dashboard',
 
     // Theme settings
+    'SETTINGS_TITLE_PAGE' => 'Theme Einstellungen',
+    'SETTINGS_TITLE_MENU' => 'Theme',
     'SETTINGS_TAB_GENERAL' => 'Allgemein',
     'SETTINGS_TAB_TEXTE' => 'Texte',
     'SETTINGS_TAB_DESIGN' => 'Design',
