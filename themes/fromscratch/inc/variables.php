@@ -36,44 +36,50 @@ add_action('load-settings_page_fs-theme-settings', function () {
 	exit;
 });
 
+/** Option group per tab so saving one tab does not affect others. */
+const FS_THEME_OPTION_GROUP_GENERAL = 'fs_theme_general';
+const FS_THEME_OPTION_GROUP_TEXTE = 'fs_theme_texte';
+const FS_THEME_OPTION_GROUP_DESIGN = 'fs_theme_design';
+const FS_THEME_OPTION_GROUP_SECURITY = 'fs_theme_security';
+
 /**
- * Register asset version option (saved with main form)
+ * Register General tab options.
  */
 add_action('admin_init', function () {
-	register_setting('section', 'fromscratch_asset_version', [
+	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_asset_version', [
 		'type' => 'string',
 		'default' => '1',
 		'sanitize_callback' => 'sanitize_text_field',
 	]);
-}, 5);
-
-/**
- * Register design variables option (saved with main form); sanitize by type from config.
- */
-add_action('admin_init', function () {
-	register_setting('section', 'fromscratch_design', [
-		'type' => 'array',
-		'sanitize_callback' => 'fs_sanitize_design_variables',
-	]);
-}, 5);
-
-add_action('admin_init', function () {
-	register_setting('section', 'fromscratch_features', [
+	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_features', [
 		'type' => 'array',
 		'sanitize_callback' => 'fs_sanitize_features',
 	]);
 }, 5);
 
+/**
+ * Register Design tab options.
+ */
 add_action('admin_init', function () {
-	register_setting('section', 'fromscratch_login_limit_attempts', [
+	register_setting(FS_THEME_OPTION_GROUP_DESIGN, 'fromscratch_design', [
+		'type' => 'array',
+		'sanitize_callback' => 'fs_sanitize_design_variables',
+	]);
+}, 5);
+
+/**
+ * Register Security tab options.
+ */
+add_action('admin_init', function () {
+	register_setting(FS_THEME_OPTION_GROUP_SECURITY, 'fromscratch_login_limit_attempts', [
 		'type' => 'integer',
 		'sanitize_callback' => 'fs_sanitize_login_limit_attempts',
 	]);
-	register_setting('section', 'fromscratch_login_limit_lockout_minutes', [
+	register_setting(FS_THEME_OPTION_GROUP_SECURITY, 'fromscratch_login_limit_lockout_minutes', [
 		'type' => 'integer',
 		'sanitize_callback' => 'fs_sanitize_login_limit_lockout_minutes',
 	]);
-	register_setting('section', 'fromscratch_site_password_protection', [
+	register_setting(FS_THEME_OPTION_GROUP_SECURITY, 'fromscratch_site_password_protection', [
 		'type' => 'string',
 		'sanitize_callback' => 'fs_sanitize_site_password_protection',
 	]);
@@ -129,7 +135,8 @@ function fs_sanitize_login_limit_lockout_minutes($value): int
 }
 
 /**
- * Sanitize site password protection checkbox and optionally update stored hash from new password field.
+ * Sanitize site password protection checkbox and update stored password from field.
+ * Non-empty field: set new password. Empty field and save: clear password (reset).
  *
  * @param mixed $value Raw POST value for the checkbox.
  * @return string '1' or ''
@@ -141,6 +148,9 @@ function fs_sanitize_site_password_protection($value): string
 	if ($new_password !== '') {
 		update_option('fromscratch_site_password_hash', wp_hash_password($new_password), true);
 		update_option('fromscratch_site_password_plain', $new_password, true);
+	} else {
+		update_option('fromscratch_site_password_hash', '', true);
+		update_option('fromscratch_site_password_plain', '', true);
 	}
 	return $enabled;
 }
@@ -469,7 +479,8 @@ function theme_settings_page(): void
 			};
 		?>
 		<form method="post" action="options.php" class="page-settings-form">
-			<?php settings_fields('section'); ?>
+			<?php settings_fields(FS_THEME_OPTION_GROUP_GENERAL); ?>
+			<h2 class="title"><?= esc_html(fs_t('SETTINGS_ASSET_VERSION_HEADING')) ?></h2>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row">
@@ -510,7 +521,7 @@ function theme_settings_page(): void
 		</form>
 		<?php elseif ($tab === 'texte') : ?>
 		<form method="post" action="options.php" class="page-settings-form">
-			<?php settings_fields('section'); ?>
+			<?php settings_fields(FS_THEME_OPTION_GROUP_TEXTE); ?>
 			<?php
 			foreach (fs_config_variables('variables.sections') as $section) {
 				do_settings_sections('theme_variables_' . $section['id']);
@@ -537,7 +548,7 @@ function theme_settings_page(): void
 		<div class="notice notice-warning inline" style="margin: 0 0 16px 0;"><p><?= esc_html(fs_t('SETTINGS_SITE_PASSWORD_NO_PASSWORD_SET')) ?></p></div>
 		<?php endif; ?>
 		<form method="post" action="options.php" class="page-settings-form">
-			<?php settings_fields('section'); ?>
+			<?php settings_fields(FS_THEME_OPTION_GROUP_SECURITY); ?>
 			<h2 class="title"><?= esc_html(fs_t('SETTINGS_SECURITY_HEADING_PASSWORD')) ?></h2>
 			<table class="form-table" role="presentation">
 				<tr>
@@ -548,7 +559,7 @@ function theme_settings_page(): void
 							<input type="checkbox" name="fromscratch_site_password_protection" value="1" <?= checked(get_option('fromscratch_site_password_protection'), '1', false) ?>>
 							<?= esc_html(fs_t('SETTINGS_SITE_PASSWORD_PROTECTION_CHECKBOX')) ?>
 						</label>
-						<p class="description"><?= esc_html(fs_t('SETTINGS_SITE_PASSWORD_PROTECTION_DESCRIPTION')) ?></p>
+						<p class="description"><?= wp_kses(fs_t('SETTINGS_SITE_PASSWORD_PROTECTION_DESCRIPTION'), ['br' => []]) ?></p>
 					</td>
 				</tr>
 				<tr>
@@ -576,14 +587,14 @@ function theme_settings_page(): void
 					<th scope="row"><label for="fromscratch_login_limit_attempts"><?= esc_html(fs_t('SETTINGS_LOGIN_LIMIT_ATTEMPTS_LABEL')) ?></label></th>
 					<td>
 						<input type="number" name="fromscratch_login_limit_attempts" id="fromscratch_login_limit_attempts" value="<?= esc_attr((string) $attempts) ?>" min="<?= $attempts_min ?>" max="<?= $attempts_max ?>" class="small-text" style="width: 64px;"> <?= esc_html(fs_t('SETTINGS_LOGIN_LIMIT_ATTEMPTS_UNIT')) ?>
-						<p class="description"><?= esc_html(sprintf(fs_t('SETTINGS_LOGIN_LIMIT_ATTEMPTS_DESCRIPTION'), $attempts_min, $attempts_max)) ?></p>
+						<p class="description"><?= wp_kses(sprintf(fs_t('SETTINGS_LOGIN_LIMIT_ATTEMPTS_DESCRIPTION'), $attempts_min, $attempts_max), ['br' => []]) ?></p>
 					</td>
 				</tr>
 				<tr>
 					<th scope="row"><label for="fromscratch_login_limit_lockout_minutes"><?= esc_html(fs_t('SETTINGS_LOGIN_LIMIT_LOCKOUT_LABEL')) ?></label></th>
 					<td>
 						<input type="number" name="fromscratch_login_limit_lockout_minutes" id="fromscratch_login_limit_lockout_minutes" value="<?= esc_attr((string) $lockout) ?>" min="<?= $lockout_min ?>" max="<?= $lockout_max ?>" class="small-text" style="width: 64px;"> <?= esc_html(fs_t('SETTINGS_LOGIN_LIMIT_LOCKOUT_UNIT')) ?>
-						<p class="description"><?= esc_html(sprintf(fs_t('SETTINGS_LOGIN_LIMIT_LOCKOUT_DESCRIPTION'), $lockout_min, $lockout_max)) ?></p>
+						<p class="description"><?= wp_kses(sprintf(fs_t('SETTINGS_LOGIN_LIMIT_LOCKOUT_DESCRIPTION'), $lockout_min, $lockout_max), ['br' => []]) ?></p>
 					</td>
 				</tr>
 			</table>
@@ -609,7 +620,7 @@ function theme_settings_page(): void
 			<a href="<?= esc_url($clear_design_url) ?>" class="button" onclick="return confirm('<?= esc_js(fs_t('SETTINGS_DESIGN_CLEAR_CONFIRM')) ?>');"><?= esc_html(fs_t('SETTINGS_DESIGN_CLEAR_ALL')) ?></a>
 		</p>
 		<form method="post" action="options.php" class="page-settings-form">
-			<?php settings_fields('section'); ?>
+			<?php settings_fields(FS_THEME_OPTION_GROUP_DESIGN); ?>
 			<?php
 			$design_sections = fs_get_design_sections_resolved();
 			foreach ($design_sections as $section_id => $section) :
@@ -706,13 +717,13 @@ function display_custom_info_fields(): void
 					add_settings_field($variableIdLang, $variable['title'], function () use ($variable, $variableIdLang, $language) {
 						display_custom_info_field($variable, $variableIdLang, $language['id']);
 					}, 'theme_variables_' . $section['id'], 'section');
-					register_setting('section', $variableIdLang);
+					register_setting(FS_THEME_OPTION_GROUP_TEXTE, $variableIdLang);
 				}
 			} else {
 				add_settings_field($variableId, $variable['title'], function () use ($variable, $variableId) {
 					display_custom_info_field($variable, $variableId);
 				}, 'theme_variables_' . $section['id'], 'section');
-				register_setting('section', $variableId);
+				register_setting(FS_THEME_OPTION_GROUP_TEXTE, $variableId);
 			}
 		}
 	}
