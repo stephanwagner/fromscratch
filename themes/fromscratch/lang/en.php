@@ -55,6 +55,7 @@ return [
     'SETTINGS_TAB_GENERAL' => 'General',
     'SETTINGS_TAB_TEXTE' => 'Texts',
     'SETTINGS_TAB_DESIGN' => 'Design',
+    'SETTINGS_TAB_SECURITY' => 'Security',
     'SETTINGS_ASSET_VERSION' => 'Asset version',
     'SETTINGS_ASSET_VERSION_DESCRIPTION' => 'Bump when you change the logo or other static theme files so browsers load the new file.',
     'SETTINGS_BUMP_VERSION' => 'Bump version',
@@ -72,6 +73,15 @@ return [
     'SETTINGS_FEATURE_DUPLICATE_POST_DESCRIPTION' => 'Show “Duplicate” row action for posts, pages, and custom post types.',
     'SETTINGS_FEATURE_SEO' => 'SEO',
     'SETTINGS_FEATURE_SEO_DESCRIPTION' => 'SEO panel (title, description, OG image, noindex) for posts and pages.',
+
+    // Security tab
+    'SETTINGS_LOGIN_LIMIT_ATTEMPTS_LABEL' => 'Max failed login attempts per minute',
+    'SETTINGS_LOGIN_LIMIT_ATTEMPTS_DESCRIPTION' => 'After this many failed attempts per IP per minute, login is blocked. Allowed range: %d–%d.',
+    'SETTINGS_LOGIN_LIMIT_LOCKOUT_LABEL' => 'Lockout duration',
+    'SETTINGS_LOGIN_LIMIT_LOCKOUT_UNIT' => 'minutes',
+    'SETTINGS_LOGIN_LIMIT_LOCKOUT_DESCRIPTION' => 'How long to block login after the limit is reached. Allowed range: %d–%d minutes.',
+    'LOGIN_LIMIT_ERROR_WAIT_ONE_MINUTE' => 'Too many login attempts. Please try again in 1 minute.',
+    'LOGIN_LIMIT_ERROR_WAIT_MINUTES' => 'Too many login attempts. Please try again in %d minutes.',
 
     // Duplicate post/page
     'DUPLICATE_LINK' => 'Duplicate',

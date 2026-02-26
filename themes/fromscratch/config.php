@@ -75,10 +75,6 @@ return [
 		],
 	],
 
-	// SVG support: Max size in MB
-	// This is to prevent memory exhaustion and security issues
-	'svg_max_size' => 2,
-
 	/**
 	 * Design variables: overridable in Settings → Theme Einstellungen → Design.
 	 * IDs become CSS custom properties (e.g. id "color-primary" → --color-primary).
@@ -166,4 +162,16 @@ return [
 			],
 		],
 	],
+
+	// SVG support: Max size in MB
+	// This is to prevent memory exhaustion and security issues
+	'svg_max_size' => 2,
+
+	// Login limit: allowed failed attempts per minute per IP, lockout duration
+	'login_limit_attempts_min' => 3,
+	'login_limit_attempts_max' => 10,
+	'login_limit_attempts_default' => 5,
+	'login_limit_lockout_min' => 1,
+	'login_limit_lockout_max' => 10,
+	'login_limit_lockout_default' => 3,
 ];

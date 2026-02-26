@@ -55,6 +55,7 @@ return [
     'SETTINGS_TAB_GENERAL' => 'Allgemein',
     'SETTINGS_TAB_TEXTE' => 'Texte',
     'SETTINGS_TAB_DESIGN' => 'Design',
+    'SETTINGS_TAB_SECURITY' => 'Sicherheit',
     'SETTINGS_ASSET_VERSION' => 'Asset-Version',
     'SETTINGS_ASSET_VERSION_DESCRIPTION' => 'Erhöhen, wenn du das Logo oder andere statische Theme-Dateien änderst, damit der Browser die neue Datei lädt.',
     'SETTINGS_BUMP_VERSION' => 'Version erhöhen',
@@ -72,6 +73,15 @@ return [
     'SETTINGS_FEATURE_DUPLICATE_POST_DESCRIPTION' => '„Duplizieren“-Aktion für Beiträge, Seiten und benutzerdefinierte Beitragstypen anzeigen.',
     'SETTINGS_FEATURE_SEO' => 'SEO',
     'SETTINGS_FEATURE_SEO_DESCRIPTION' => 'SEO-Bereich (Titel, Beschreibung, OG-Bild, Noindex) für Beiträge und Seiten.',
+
+    // Security tab
+    'SETTINGS_LOGIN_LIMIT_ATTEMPTS_LABEL' => 'Max. fehlgeschlagene Anmeldungen pro Minute',
+    'SETTINGS_LOGIN_LIMIT_ATTEMPTS_DESCRIPTION' => 'Nach so vielen Fehlversuchen pro IP und Minute wird die Anmeldung blockiert. Erlaubter Bereich: %d–%d.',
+    'SETTINGS_LOGIN_LIMIT_LOCKOUT_LABEL' => 'Sperrdauer',
+    'SETTINGS_LOGIN_LIMIT_LOCKOUT_UNIT' => 'Minuten',
+    'SETTINGS_LOGIN_LIMIT_LOCKOUT_DESCRIPTION' => 'Wie lange die Anmeldung nach Erreichen des Limits blockiert wird. Erlaubter Bereich: %d–%d Minuten.',
+    'LOGIN_LIMIT_ERROR_WAIT_ONE_MINUTE' => 'Zu viele Anmeldeversuche. Bitte versuchen Sie es in 1 Minute erneut.',
+    'LOGIN_LIMIT_ERROR_WAIT_MINUTES' => 'Zu viele Anmeldeversuche. Bitte versuchen Sie es in %d Minuten erneut.',
 
     // Duplicate post/page
     'DUPLICATE_LINK' => 'Duplizieren',

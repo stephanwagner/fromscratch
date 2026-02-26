@@ -64,6 +64,17 @@ add_action('admin_init', function () {
 	]);
 }, 5);
 
+add_action('admin_init', function () {
+	register_setting('section', 'fromscratch_login_limit_attempts', [
+		'type' => 'integer',
+		'sanitize_callback' => 'fs_sanitize_login_limit_attempts',
+	]);
+	register_setting('section', 'fromscratch_login_limit_lockout_minutes', [
+		'type' => 'integer',
+		'sanitize_callback' => 'fs_sanitize_login_limit_lockout_minutes',
+	]);
+}, 5);
+
 /**
  * Sanitize theme features option (checkboxes: enable_svg, enable_duplicate_post, enable_seo).
  *
@@ -81,6 +92,36 @@ function fs_sanitize_features($value): array
 		$out[$key] = (!empty($value[$key])) ? 1 : 0;
 	}
 	return $out;
+}
+
+/**
+ * Sanitize login limit attempts (clamp to config min/max).
+ *
+ * @param mixed $value Raw POST value.
+ * @return int
+ */
+function fs_sanitize_login_limit_attempts($value): int
+{
+	$min = (int) (fs_config('login_limit_attempts_min') ?? 3);
+	$max = (int) (fs_config('login_limit_attempts_max') ?? 10);
+	$default = (int) (fs_config('login_limit_attempts_default') ?? 5);
+	$v = is_numeric($value) ? (int) $value : $default;
+	return max($min, min($max, $v));
+}
+
+/**
+ * Sanitize login lockout minutes (clamp to config min/max).
+ *
+ * @param mixed $value Raw POST value.
+ * @return int
+ */
+function fs_sanitize_login_limit_lockout_minutes($value): int
+{
+	$min = (int) (fs_config('login_limit_lockout_min') ?? 1);
+	$max = (int) (fs_config('login_limit_lockout_max') ?? 120);
+	$default = (int) (fs_config('login_limit_lockout_default') ?? 15);
+	$v = is_numeric($value) ? (int) $value : $default;
+	return max($min, min($max, $v));
 }
 
 /**
@@ -365,7 +406,7 @@ function theme_settings_page(): void
 	if (!current_user_can('manage_options')) {
 		wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'fromscratch'));
 	}
-	$tabs = ['general', 'texte', 'design'];
+	$tabs = ['general', 'texte', 'design', 'security'];
 	$tab = isset($_GET['tab']) && in_array($_GET['tab'], $tabs, true) ? $_GET['tab'] : 'general';
 	$base_url = admin_url('options-general.php?page=fs-theme-settings');
 
@@ -393,6 +434,7 @@ function theme_settings_page(): void
 			<a href="<?= esc_url($base_url . '&tab=general') ?>" class="nav-tab <?= $tab === 'general' ? 'nav-tab-active' : '' ?>"><?= esc_html(fs_t('SETTINGS_TAB_GENERAL')) ?></a>
 			<a href="<?= esc_url($base_url . '&tab=texte') ?>" class="nav-tab <?= $tab === 'texte' ? 'nav-tab-active' : '' ?>"><?= esc_html(fs_t('SETTINGS_TAB_TEXTE')) ?></a>
 			<a href="<?= esc_url($base_url . '&tab=design') ?>" class="nav-tab <?= $tab === 'design' ? 'nav-tab-active' : '' ?>"><?= esc_html(fs_t('SETTINGS_TAB_DESIGN')) ?></a>
+			<a href="<?= esc_url($base_url . '&tab=security') ?>" class="nav-tab <?= $tab === 'security' ? 'nav-tab-active' : '' ?>"><?= esc_html(fs_t('SETTINGS_TAB_SECURITY')) ?></a>
 		</nav>
 
 		<?php if ($tab === 'general') : ?>
@@ -453,6 +495,39 @@ function theme_settings_page(): void
 				do_settings_sections('theme_variables_' . $section['id']);
 			}
 			?>
+			<p class="submit"><?php submit_button(); ?></p>
+		</form>
+		<?php elseif ($tab === 'security') : ?>
+		<?php
+			$attempts_min = (int) (fs_config('login_limit_attempts_min') ?? 3);
+			$attempts_max = (int) (fs_config('login_limit_attempts_max') ?? 10);
+			$attempts_default = (int) (fs_config('login_limit_attempts_default') ?? 5);
+			$lockout_min = (int) (fs_config('login_limit_lockout_min') ?? 1);
+			$lockout_max = (int) (fs_config('login_limit_lockout_max') ?? 120);
+			$lockout_default = (int) (fs_config('login_limit_lockout_default') ?? 15);
+			$attempts = (int) get_option('fromscratch_login_limit_attempts', $attempts_default);
+			$lockout = (int) get_option('fromscratch_login_limit_lockout_minutes', $lockout_default);
+			$attempts = max($attempts_min, min($attempts_max, $attempts));
+			$lockout = max($lockout_min, min($lockout_max, $lockout));
+		?>
+		<form method="post" action="options.php" class="page-settings-form">
+			<?php settings_fields('section'); ?>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><label for="fromscratch_login_limit_attempts"><?= esc_html(fs_t('SETTINGS_LOGIN_LIMIT_ATTEMPTS_LABEL')) ?></label></th>
+					<td>
+						<input type="number" name="fromscratch_login_limit_attempts" id="fromscratch_login_limit_attempts" value="<?= esc_attr((string) $attempts) ?>" min="<?= $attempts_min ?>" max="<?= $attempts_max ?>" class="small-text" style="width: 64px;">
+						<p class="description"><?= esc_html(sprintf(fs_t('SETTINGS_LOGIN_LIMIT_ATTEMPTS_DESCRIPTION'), $attempts_min, $attempts_max)) ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="fromscratch_login_limit_lockout_minutes"><?= esc_html(fs_t('SETTINGS_LOGIN_LIMIT_LOCKOUT_LABEL')) ?></label></th>
+					<td>
+						<input type="number" name="fromscratch_login_limit_lockout_minutes" id="fromscratch_login_limit_lockout_minutes" value="<?= esc_attr((string) $lockout) ?>" min="<?= $lockout_min ?>" max="<?= $lockout_max ?>" class="small-text" style="width: 64px;"> <?= esc_html(fs_t('SETTINGS_LOGIN_LIMIT_LOCKOUT_UNIT')) ?>
+						<p class="description"><?= esc_html(sprintf(fs_t('SETTINGS_LOGIN_LIMIT_LOCKOUT_DESCRIPTION'), $lockout_min, $lockout_max)) ?></p>
+					</td>
+				</tr>
+			</table>
 			<p class="submit"><?php submit_button(); ?></p>
 		</form>
 		<?php else : ?>

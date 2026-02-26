@@ -48,6 +48,11 @@ require_once 'inc/menu.php';
 require_once 'inc/dashboard.php';
 
 /**
+ * Login attempt limiting
+ */
+require_once 'inc/login-limit.php';
+
+/**
  * Assets
  */
 require_once 'inc/assets.php';
