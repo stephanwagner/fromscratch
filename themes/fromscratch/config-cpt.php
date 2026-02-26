@@ -46,12 +46,15 @@ return [
 			'menu_icon'      => 'dashicons-portfolio',
 			'capability_type' => 'post',
 			'map_meta_cap'   => true,
-			'supports'       => ['title', 'editor', 'thumbnail', 'excerpt', 'revisions'],
+			'supports'       => ['title', 'editor', 'thumbnail', 'excerpt', 'revisions', 'page-attributes'],
 			'has_archive'    => true,
 			'rewrite'        => ['slug' => 'projects'],
 			'query_var'      => true,
 			'can_export'     => true,
 			'show_in_rest'   => true,
+
+			// TODO Test
+			'hierarchical' => true,
 		],
 	],
 ];
