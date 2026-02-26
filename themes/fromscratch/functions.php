@@ -53,6 +53,11 @@ require_once 'inc/menu.php';
 require_once 'inc/dashboard.php';
 
 /**
+ * Duplicate post/page/custom post type
+ */
+require_once 'inc/duplicate-post.php';
+
+/**
  * Assets
  */
 require_once 'inc/assets.php';

@@ -64,6 +64,14 @@ return [
     'SETTINGS_DESIGN_CLEAR_SUCCESS' => 'Design overrides cleared. All values reset to defaults.',
     'SETTINGS_DESIGN_CLEAR_CONFIRM' => 'Reset all design overrides to defaults?',
 
+    // Duplicate post/page
+    'DUPLICATE_LINK' => 'Duplicate',
+    'DUPLICATE_COPY_SUFFIX' => '(Copy)',
+    'DUPLICATE_ERROR_NO_POST' => 'No post to duplicate.',
+    'DUPLICATE_ERROR_NOT_FOUND' => 'Post not found.',
+    'DUPLICATE_ERROR_PERMISSION' => 'You do not have permission to duplicate this item.',
+    'DUPLICATE_ERROR_INSERT' => 'Failed to create duplicate.',
+
     // SVG support
     'SVG_FILE_MUST_BE_UNDER_MAX_SIZE' => 'SVG file must be under %MAX_SIZE%. You tried to upload a file of %SIZE%.',
     'SVG_FILE_NOT_FOUND' => 'SVG file not found.',

@@ -64,6 +64,14 @@ return [
     'SETTINGS_DESIGN_CLEAR_SUCCESS' => 'Design-Überschreibungen gelöscht. Alle Werte auf Standard zurückgesetzt.',
     'SETTINGS_DESIGN_CLEAR_CONFIRM' => 'Alle Design-Überschreibungen auf Standard zurücksetzen?',
 
+    // Duplicate post/page
+    'DUPLICATE_LINK' => 'Duplizieren',
+    'DUPLICATE_COPY_SUFFIX' => '(Kopie)',
+    'DUPLICATE_ERROR_NO_POST' => 'Kein Beitrag zum Duplizieren.',
+    'DUPLICATE_ERROR_NOT_FOUND' => 'Beitrag nicht gefunden.',
+    'DUPLICATE_ERROR_PERMISSION' => 'Du hast keine Berechtigung, dieses Element zu duplizieren.',
+    'DUPLICATE_ERROR_INSERT' => 'Duplikat konnte nicht erstellt werden.',
+
     // SVG support
     'SVG_FILE_MUST_BE_UNDER_MAX_SIZE' => 'SVG Datei muss unter %MAX_SIZE% sein. Du hast versucht eine Datei von %SIZE% hochzuladen.',
     'SVG_FILE_NOT_FOUND' => 'SVG Datei nicht gefunden.',
