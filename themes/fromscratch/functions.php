@@ -63,6 +63,11 @@ require_once 'inc/site-password.php';
 require_once 'inc/assets.php';
 
 /**
+ * Custom post types
+ */
+require_once 'inc/cpt.php';
+
+/**
  * Variables
  */
 require_once 'inc/variables.php';
