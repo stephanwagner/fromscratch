@@ -77,11 +77,19 @@ add_action('wp_enqueue_scripts', 'fs_styles');
 
 /**
  * Enqueue admin stylesheets (admin.css).
+ * Skipped on block editor screens (post.php, post-new.php) so the style is not
+ * added to the editor iframe (WordPress expects iframe styles via block.json or enqueue_block_assets).
  *
+ * @param string $hook_suffix Current admin page hook from admin_enqueue_scripts.
  * @return void
  */
-function fs_admin_styles(): void
+function fs_admin_styles(string $hook_suffix): void
 {
+	$block_editor_hooks = ['post.php', 'post-new.php'];
+	if (in_array($hook_suffix, $block_editor_hooks, true)) {
+		return;
+	}
+
 	$min = fs_is_debug() ? '' : '.min';
 
 	$file = '/css/admin' . $min . '.css';
