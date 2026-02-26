@@ -212,12 +212,21 @@ add_action('admin_init', 'display_custom_info_fields');
 
 function add_custom_info_menu_item()
 {
-	add_options_page(
+	add_submenu_page(
+		'options-general.php',
 		fs_config_variables('title_page'),
 		fs_config_variables('title_menu'),
 		'manage_options',
 		'custom-theme-settings',
-		'theme_settings_page'
+		'theme_settings_page',
+		0
 	);
 }
-add_action('admin_menu', 'add_custom_info_menu_item');
+add_action('admin_menu', 'add_custom_info_menu_item', 1);
+
+add_filter('submenu_file', function ($submenu_file, $parent_file) {
+	if ($parent_file === 'options-general.php' && isset($_GET['page']) && $_GET['page'] === 'custom-theme-settings') {
+		return 'custom-theme-settings';
+	}
+	return $submenu_file;
+}, 10, 2);
