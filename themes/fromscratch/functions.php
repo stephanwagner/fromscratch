@@ -53,6 +53,11 @@ require_once 'inc/dashboard.php';
 require_once 'inc/login-limit.php';
 
 /**
+ * Site password protection
+ */
+require_once 'inc/site-password.php';
+
+/**
  * Assets
  */
 require_once 'inc/assets.php';

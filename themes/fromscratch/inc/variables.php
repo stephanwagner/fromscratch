@@ -73,6 +73,10 @@ add_action('admin_init', function () {
 		'type' => 'integer',
 		'sanitize_callback' => 'fs_sanitize_login_limit_lockout_minutes',
 	]);
+	register_setting('section', 'fromscratch_site_password_protection', [
+		'type' => 'string',
+		'sanitize_callback' => 'fs_sanitize_site_password_protection',
+	]);
 }, 5);
 
 /**
@@ -122,6 +126,23 @@ function fs_sanitize_login_limit_lockout_minutes($value): int
 	$default = (int) (fs_config('login_limit_lockout_default') ?? 15);
 	$v = is_numeric($value) ? (int) $value : $default;
 	return max($min, min($max, $v));
+}
+
+/**
+ * Sanitize site password protection checkbox and optionally update stored hash from new password field.
+ *
+ * @param mixed $value Raw POST value for the checkbox.
+ * @return string '1' or ''
+ */
+function fs_sanitize_site_password_protection($value): string
+{
+	$enabled = !empty($value) ? '1' : '';
+	$new_password = isset($_POST['fromscratch_site_password_new']) ? trim((string) wp_unslash($_POST['fromscratch_site_password_new'])) : '';
+	if ($new_password !== '') {
+		update_option('fromscratch_site_password_hash', wp_hash_password($new_password), true);
+		update_option('fromscratch_site_password_plain', $new_password, true);
+	}
+	return $enabled;
 }
 
 /**
@@ -434,7 +455,7 @@ function theme_settings_page(): void
 			<a href="<?= esc_url($base_url . '&tab=general') ?>" class="nav-tab <?= $tab === 'general' ? 'nav-tab-active' : '' ?>"><?= esc_html(fs_t('SETTINGS_TAB_GENERAL')) ?></a>
 			<a href="<?= esc_url($base_url . '&tab=texte') ?>" class="nav-tab <?= $tab === 'texte' ? 'nav-tab-active' : '' ?>"><?= esc_html(fs_t('SETTINGS_TAB_TEXTE')) ?></a>
 			<a href="<?= esc_url($base_url . '&tab=design') ?>" class="nav-tab <?= $tab === 'design' ? 'nav-tab-active' : '' ?>"><?= esc_html(fs_t('SETTINGS_TAB_DESIGN')) ?></a>
-			<a href="<?= esc_url($base_url . '&tab=security') ?>" class="nav-tab <?= $tab === 'security' ? 'nav-tab-active' : '' ?>"><?= esc_html(fs_t('SETTINGS_TAB_SECURITY')) ?></a>
+			<a href="<?= esc_url($base_url . '&tab=security') ?>" class="nav-tab <?= $tab === 'security' ? 'nav-tab-active' : '' ?>"><?= esc_html(fs_t('SETTINGS_TAB_SECURITY')) ?><?php if (get_option('fromscratch_site_password_protection') === '1' && get_option('fromscratch_site_password_hash', '') !== '') : ?> <span class="dashicons dashicons-lock" style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle; margin-left: 2px;" aria-hidden="true"></span><?php endif; ?></a>
 		</nav>
 
 		<?php if ($tab === 'general') : ?>
@@ -461,7 +482,7 @@ function theme_settings_page(): void
 					</td>
 				</tr>
 			</table>
-			<h2 class="title" style="margin: 24px 0 8px; font-size: 14px;"><?= esc_html(fs_t('SETTINGS_FEATURES_HEADING')) ?></h2>
+			<h2 class="title"><?= esc_html(fs_t('SETTINGS_FEATURES_HEADING')) ?></h2>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row"><?= esc_html(fs_t('SETTINGS_FEATURE_SVG')) ?></th>
@@ -499,6 +520,8 @@ function theme_settings_page(): void
 		</form>
 		<?php elseif ($tab === 'security') : ?>
 		<?php
+			$site_password_on = get_option('fromscratch_site_password_protection') === '1';
+			$site_password_hash = get_option('fromscratch_site_password_hash', '');
 			$attempts_min = (int) (fs_config('login_limit_attempts_min') ?? 3);
 			$attempts_max = (int) (fs_config('login_limit_attempts_max') ?? 10);
 			$attempts_default = (int) (fs_config('login_limit_attempts_default') ?? 5);
@@ -510,13 +533,49 @@ function theme_settings_page(): void
 			$attempts = max($attempts_min, min($attempts_max, $attempts));
 			$lockout = max($lockout_min, min($lockout_max, $lockout));
 		?>
+		<?php if ($site_password_on && $site_password_hash === '') : ?>
+		<div class="notice notice-warning inline" style="margin: 0 0 16px 0;"><p><?= esc_html(fs_t('SETTINGS_SITE_PASSWORD_NO_PASSWORD_SET')) ?></p></div>
+		<?php endif; ?>
 		<form method="post" action="options.php" class="page-settings-form">
 			<?php settings_fields('section'); ?>
+			<h2 class="title"><?= esc_html(fs_t('SETTINGS_SECURITY_HEADING_PASSWORD')) ?></h2>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?= esc_html(fs_t('SETTINGS_SITE_PASSWORD_PROTECTION_LABEL')) ?></th>
+					<td>
+						<label>
+							<input type="hidden" name="fromscratch_site_password_protection" value="0">
+							<input type="checkbox" name="fromscratch_site_password_protection" value="1" <?= checked(get_option('fromscratch_site_password_protection'), '1', false) ?>>
+							<?= esc_html(fs_t('SETTINGS_SITE_PASSWORD_PROTECTION_CHECKBOX')) ?>
+						</label>
+						<p class="description"><?= esc_html(fs_t('SETTINGS_SITE_PASSWORD_PROTECTION_DESCRIPTION')) ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="fromscratch_site_password_new"><?= esc_html(fs_t('SETTINGS_SITE_PASSWORD_LABEL')) ?></label></th>
+					<td>
+						<input type="password" name="fromscratch_site_password_new" id="fromscratch_site_password_new" class="small-text" style="width: 220px;" value="<?= esc_attr(get_option('fromscratch_site_password_plain', '')) ?>" autocomplete="new-password">
+						<button type="button" class="button" id="fromscratch_site_password_copy" data-copy="<?= esc_attr(fs_t('SETTINGS_SITE_PASSWORD_COPY_BUTTON')) ?>" data-copied="<?= esc_attr(fs_t('SETTINGS_SITE_PASSWORD_COPIED')) ?>"><?= esc_html(fs_t('SETTINGS_SITE_PASSWORD_COPY_BUTTON')) ?></button>
+						<p class="description">
+							<?= esc_html(fs_t('SETTINGS_SITE_PASSWORD_DESCRIPTION')) ?>
+							<a class="fs-description-link -has-icon" href="https://passwordcopy.app" target="_blank">
+								<span class="fs-description-link-icon">
+									<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+										<path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h240q17 0 28.5 11.5T480-800q0 17-11.5 28.5T440-760H200v560h560v-240q0-17 11.5-28.5T800-480q17 0 28.5 11.5T840-440v240q0 33-23.5 56.5T760-120H200Zm560-584L416-360q-11 11-28 11t-28-11q-11-11-11-28t11-28l344-344H600q-17 0-28.5-11.5T560-800q0-17 11.5-28.5T600-840h200q17 0 28.5 11.5T840-800v200q0 17-11.5 28.5T800-560q-17 0-28.5-11.5T760-600v-104Z" />
+									</svg>
+								</span>
+								<span>passwordcopy.app</span>
+							</a>
+						</p>
+					</td>
+				</tr>
+			</table>
+			<h2 class="title"><?= esc_html(fs_t('SETTINGS_SECURITY_HEADING_LOGIN')) ?></h2>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row"><label for="fromscratch_login_limit_attempts"><?= esc_html(fs_t('SETTINGS_LOGIN_LIMIT_ATTEMPTS_LABEL')) ?></label></th>
 					<td>
-						<input type="number" name="fromscratch_login_limit_attempts" id="fromscratch_login_limit_attempts" value="<?= esc_attr((string) $attempts) ?>" min="<?= $attempts_min ?>" max="<?= $attempts_max ?>" class="small-text" style="width: 64px;">
+						<input type="number" name="fromscratch_login_limit_attempts" id="fromscratch_login_limit_attempts" value="<?= esc_attr((string) $attempts) ?>" min="<?= $attempts_min ?>" max="<?= $attempts_max ?>" class="small-text" style="width: 64px;"> <?= esc_html(fs_t('SETTINGS_LOGIN_LIMIT_ATTEMPTS_UNIT')) ?>
 						<p class="description"><?= esc_html(sprintf(fs_t('SETTINGS_LOGIN_LIMIT_ATTEMPTS_DESCRIPTION'), $attempts_min, $attempts_max)) ?></p>
 					</td>
 				</tr>
@@ -530,6 +589,20 @@ function theme_settings_page(): void
 			</table>
 			<p class="submit"><?php submit_button(); ?></p>
 		</form>
+		<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			var copyBtn = document.getElementById('fromscratch_site_password_copy');
+			if (!copyBtn) return;
+			copyBtn.addEventListener('click', function() {
+				var input = document.getElementById('fromscratch_site_password_new');
+				if (!input || !input.value) return;
+				navigator.clipboard.writeText(input.value).then(function() {
+					copyBtn.textContent = copyBtn.getAttribute('data-copied');
+					setTimeout(function() { copyBtn.textContent = copyBtn.getAttribute('data-copy'); }, 1500);
+				});
+			});
+		});
+		</script>
 		<?php else : ?>
 		<p class="description" style="margin-bottom: 8px;"><?= esc_html(fs_t('SETTINGS_DESIGN_DESCRIPTION')) ?></p>
 		<p style="margin-bottom: 16px;">
@@ -543,7 +616,7 @@ function theme_settings_page(): void
 				$section_title = $section['title'];
 			?>
 			<div class="fromscratch-design-section" style="margin-bottom: 24px;">
-				<h2 class="title" style="margin: 0 0 8px 0; font-size: 14px;"><?= esc_html($section_title) ?></h2>
+				<h2 class="title"><?= esc_html($section_title) ?></h2>
 				<table class="form-table" role="presentation">
 					<tbody>
 					<?php foreach ($section['variables'] as $v) :

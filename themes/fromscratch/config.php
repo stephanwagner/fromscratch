@@ -174,4 +174,7 @@ return [
 	'login_limit_lockout_min' => 1,
 	'login_limit_lockout_max' => 10,
 	'login_limit_lockout_default' => 3,
+
+	// Site password protection: cookie duration in days (access token validity)
+	'site_password_cookie_days' => 14, // 2 weeks
 ];
