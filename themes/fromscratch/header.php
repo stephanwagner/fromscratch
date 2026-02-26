@@ -19,7 +19,7 @@
 
 				<div class="logo__container">
 					<a href="/">
-						<img class="logo__image" src="<?= get_template_directory_uri() ?>/img/logo.png" alt="">
+						<img class="logo__image" src="<?= asset_url('/img/logo.png') ?>" alt="">
 					</a>
 				</div>
 

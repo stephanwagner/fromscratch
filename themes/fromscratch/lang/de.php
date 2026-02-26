@@ -49,6 +49,14 @@ return [
     'INSTALL_COMPLETE_MESSAGE' => 'FromScratch ist installiert.',
     'INSTALL_GO_TO_DASHBOARD_BUTTON' => 'Zum Dashboard',
 
+    // Theme settings
+    'SETTINGS_TAB_GENERAL' => 'Allgemein',
+    'SETTINGS_TAB_TEXTE' => 'Texte',
+    'SETTINGS_TAB_DESIGN' => 'Design',
+    'SETTINGS_ASSET_VERSION' => 'Asset-Version',
+    'SETTINGS_ASSET_VERSION_DESCRIPTION' => 'Erhöhen, wenn du das Logo oder andere statische Theme-Dateien änderst, damit der Browser die neue Datei lädt.',
+    'SETTINGS_BUMP_VERSION' => 'Version erhöhen',
+
     // SVG support
     'SVG_FILE_MUST_BE_UNDER_MAX_SIZE' => 'SVG Datei muss unter %MAX_SIZE% sein. Du hast versucht eine Datei von %SIZE% hochzuladen.',
     'SVG_FILE_NOT_FOUND' => 'SVG Datei nicht gefunden.',

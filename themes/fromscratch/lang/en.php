@@ -49,6 +49,14 @@ return [
     'INSTALL_COMPLETE_MESSAGE' => 'FromScratch is installed.',
     'INSTALL_GO_TO_DASHBOARD_BUTTON' => 'Go to dashboard',
 
+    // Theme settings
+    'SETTINGS_TAB_GENERAL' => 'General',
+    'SETTINGS_TAB_TEXTE' => 'Texts',
+    'SETTINGS_TAB_DESIGN' => 'Design',
+    'SETTINGS_ASSET_VERSION' => 'Asset version',
+    'SETTINGS_ASSET_VERSION_DESCRIPTION' => 'Bump when you change the logo or other static theme files so browsers load the new file.',
+    'SETTINGS_BUMP_VERSION' => 'Bump version',
+
     // SVG support
     'SVG_FILE_MUST_BE_UNDER_MAX_SIZE' => 'SVG file must be under %MAX_SIZE%. You tried to upload a file of %SIZE%.',
     'SVG_FILE_NOT_FOUND' => 'SVG file not found.',
