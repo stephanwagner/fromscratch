@@ -1,7 +1,7 @@
 <?php
 return [
-	// Disable blogs
-	'disable_blogs' => false,
+	// Enable blogs
+	'enable_blogs' => true,
 
 	// Meta tags
 	'meta' => [
@@ -19,10 +19,6 @@ return [
 
 	// The text to show after the excerpt if it was truncated
 	'excerpt_more' => '…',
-
-	// SVG support: Max size in MB
-	// This is to prevent memory exhaustion and security issues
-	'svg_max_size' => 2,
 
 	// Colors
 	'theme_colors' => [
@@ -77,5 +73,9 @@ return [
 			'size' => 22,
 			'slug' => 'xl',
 		],
-	]
+	],
+
+	// SVG support: Max size in MB
+	// This is to prevent memory exhaustion and security issues
+	'svg_max_size' => 2,
 ];

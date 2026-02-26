@@ -3,7 +3,9 @@
 defined('ABSPATH') || exit;
 
 /**
- * Get the current language
+ * Get the current language code (first two chars of locale, e.g. "en", "de").
+ *
+ * @return string Two-letter language code.
  */
 function fs_get_lang(): string
 {
@@ -15,7 +17,10 @@ function fs_get_lang(): string
 }
 
 /**
- * Load the translations for a given language
+ * Load the translations for a given language (cached per request).
+ *
+ * @param string $lang Two-letter language code (e.g. "en", "de").
+ * @return array<string, string> Key => translated string.
  */
 function fs_load_translations(string $lang): array
 {
@@ -39,7 +44,11 @@ function fs_load_translations(string $lang): array
 }
 
 /**
- * Translate a given key
+ * Translate a key using theme lang files; supports %KEY% placeholders in replacements.
+ *
+ * @param string        $key     Translation key (e.g. "MENU_MAIN_MENU").
+ * @param array<string> $replace Optional associative array to replace %KEY% in the string.
+ * @return string Translated string or key if not found.
  */
 function fs_t(string $key, array $replace = []): string
 {

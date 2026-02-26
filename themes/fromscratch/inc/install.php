@@ -13,7 +13,9 @@ add_action('admin_init', function () {
 });
 
 /**
- * Should show FromScratch installer
+ * Whether to show the FromScratch setup installer (not yet completed or skipped).
+ *
+ * @return bool True if installer should be shown, false if already done or skipped.
  */
 function fs_should_show_installer(): bool
 {
@@ -73,9 +75,11 @@ add_action('admin_notices', function () {
 
 
 /**
- * Render FromScratch installer
+ * Render the FromScratch installer page (theme setup wizard).
+ *
+ * @return void
  */
-function fs_render_installer()
+function fs_render_installer(): void
 {
   if (!current_user_can('manage_options')) {
     return;
@@ -354,7 +358,12 @@ if (isset($_POST['fromscratch_run_install'])) {
   echo '<div class="notice notice-success"><p>FromScratch installation completed.</p></div>';
 }
 
-function fromscratch_run_install()
+/**
+ * Run the FromScratch installation: theme info, pages, menus, options.
+ *
+ * @return void
+ */
+function fromscratch_run_install(): void
 {
   if (get_option('fromscratch_installed')) {
     wp_die('FromScratch installation is already complete.');
@@ -625,7 +634,11 @@ Tags:
 }
 
 /**
- * Get menu ID by slug
+ * Get nav menu term_id by config slug; create menu and assign to location if missing.
+ *
+ * @param string $menu_slug Key from config menus (e.g. "main_menu", "footer_menu").
+ * @return int Nav menu term ID.
+ * @throws RuntimeException If menu config is missing for the slug.
  */
 function fs_get_or_create_menu_id(string $menu_slug): int
 {
@@ -648,7 +661,10 @@ function fs_get_or_create_menu_id(string $menu_slug): int
 }
 
 /**
- * Get page ID by slug
+ * Get page ID by post slug (path).
+ *
+ * @param string $slug Page slug (path).
+ * @return int|null Page ID or null if not found.
  */
 function fs_get_page_id_by_slug(string $slug): ?int
 {
@@ -657,7 +673,11 @@ function fs_get_page_id_by_slug(string $slug): ?int
 }
 
 /**
- * Assign menu to location
+ * Assign a nav menu to a theme location (e.g. main_menu, footer_menu).
+ *
+ * @param string $location Theme location key from config.
+ * @param int    $menu_id  Nav menu term ID.
+ * @return void
  */
 function fs_assign_menu_to_location(string $location, int $menu_id): void
 {

@@ -75,7 +75,10 @@ add_filter('wp_handle_upload_prefilter', function ($file) {
 });
 
 /**
- * DOM-based SVG sanitizer
+ * Sanitize SVG markup: strip scripts, event handlers, and disallowed elements/attributes.
+ *
+ * @param string $svg Raw SVG string (e.g. file contents).
+ * @return string Sanitized SVG or empty string on parse failure.
  */
 function fs_svg_sanitize(string $svg): string
 {
@@ -285,7 +288,9 @@ function fs_svg_sanitize(string $svg): string
 
 /**
  * Get width and height from the root <svg> (attributes or viewBox).
- * Returns [ 'width' => int, 'height' => int ] or [] on failure.
+ *
+ * @param string $file_path Path to SVG file.
+ * @return array{width: int, height: int}|array{} Associative array with width/height, or empty on failure.
  */
 function fs_svg_get_dimensions(string $file_path): array
 {

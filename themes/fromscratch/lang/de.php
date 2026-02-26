@@ -56,6 +56,7 @@ return [
     'SETTINGS_ASSET_VERSION' => 'Asset-Version',
     'SETTINGS_ASSET_VERSION_DESCRIPTION' => 'Erhöhen, wenn du das Logo oder andere statische Theme-Dateien änderst, damit der Browser die neue Datei lädt.',
     'SETTINGS_BUMP_VERSION' => 'Version erhöhen',
+    'SETTINGS_BUMP_SUCCESS' => 'Asset-Version wurde auf %s erhöht.',
 
     // SVG support
     'SVG_FILE_MUST_BE_UNDER_MAX_SIZE' => 'SVG Datei muss unter %MAX_SIZE% sein. Du hast versucht eine Datei von %SIZE% hochzuladen.',

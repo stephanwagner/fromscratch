@@ -42,10 +42,12 @@ if (!function_exists('asset_url')) {
 
 /**
  * Get the hash for assets
+ * 
+ * @param string $file Path relative to theme root.
+ * @return int File modification time.
  */
-function fs_asset_hash($file)
+function fs_asset_hash(string $file): int
 {
-	// Return time when debugging
 	if (fs_is_debug()) {
 		return time();
 	}
@@ -54,9 +56,11 @@ function fs_asset_hash($file)
 }
 
 /**
- * Stylesheets
+ * Enqueue front-end stylesheets (main.css).
+ *
+ * @return void
  */
-function fs_styles()
+function fs_styles(): void
 {
 	$min = fs_is_debug() ? '' : '.min';
 
@@ -72,9 +76,11 @@ function fs_styles()
 add_action('wp_enqueue_scripts', 'fs_styles');
 
 /**
- * Admin stylesheets
+ * Enqueue admin stylesheets (admin.css).
+ *
+ * @return void
  */
-function fs_admin_styles()
+function fs_admin_styles(): void
 {
 	$min = fs_is_debug() ? '' : '.min';
 
@@ -89,9 +95,11 @@ function fs_admin_styles()
 add_action('admin_enqueue_scripts', 'fs_admin_styles');
 
 /**
- * Scripts
+ * Enqueue front-end scripts (main.js).
+ *
+ * @return void
  */
-function fs_scripts()
+function fs_scripts(): void
 {
 	$min = fs_is_debug() ? '' : '.min';
 
@@ -108,9 +116,11 @@ function fs_scripts()
 add_action('wp_enqueue_scripts', 'fs_scripts');
 
 /**
- * Admin scripts
+ * Enqueue admin scripts (admin.js).
+ *
+ * @return void
  */
-function fs_admin_scripts()
+function fs_admin_scripts(): void
 {
 	$min = fs_is_debug() ? '' : '.min';
 
@@ -127,9 +137,11 @@ function fs_admin_scripts()
 add_action('admin_enqueue_scripts', 'fs_admin_scripts');
 
 /**
- * Block editor scripts
+ * Enqueue block editor scripts (editor.js).
+ *
+ * @return void
  */
-function fs_editor_scripts()
+function fs_editor_scripts(): void
 {
 	$min = fs_is_debug() ? '' : '.min';
 

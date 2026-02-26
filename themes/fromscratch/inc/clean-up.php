@@ -3,9 +3,11 @@
 defined('ABSPATH') || exit;
 
 /**
- * Clean up head
+ * Remove generator, RSD, shortlink, emoji and REST discovery from head.
+ *
+ * @return void
  */
-function fs_clean_up_head()
+function fs_clean_up_head(): void
 {
 	// Head
 	remove_action('wp_head', 'wp_generator');
@@ -24,7 +26,12 @@ function fs_clean_up_head()
 }
 add_action('init', 'fs_clean_up_head');
 
-function fs_clean_up_styles()
+/**
+ * Dequeue classic theme styles (block wrapper styles) when not needed.
+ *
+ * @return void
+ */
+function fs_clean_up_styles(): void
 {
 	wp_dequeue_style('classic-theme-styles');
 }

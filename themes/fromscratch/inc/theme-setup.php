@@ -3,9 +3,11 @@
 defined('ABSPATH') || exit;
 
 /**
- * Menus
+ * Register theme menus from config.
+ *
+ * @return void
  */
-function fs_menus()
+function fs_menus(): void
 {
 	add_theme_support('menus');
 	register_nav_menus(fs_config('menus'));
@@ -13,34 +15,40 @@ function fs_menus()
 add_action('after_setup_theme', 'fs_menus');
 
 /**
- * Support alignwide and alignfull
+ * Support alignwide and alignfull for block editor.
+ *
+ * @return void
  */
-function fs_add_alignwide()
+function fs_add_alignwide(): void
 {
 	add_theme_support('align-wide');
 }
 add_action('after_setup_theme', 'fs_add_alignwide');
 
 /**
- * Support post thumbnails
+ * Support post thumbnails (featured images).
+ *
+ * @return void
  */
-function fs_add_post_thumbnails()
+function fs_add_post_thumbnails(): void
 {
 	add_theme_support('post-thumbnails');
 }
 add_action('after_setup_theme', 'fs_add_post_thumbnails');
 
 /**
- * Remove blogs menu and block direct access to post screens
+ * Remove blogs menu and block direct access to post screens when blogs are disabled.
+ *
+ * @return void
  */
-function fs_remove_blogs()
+function fs_remove_blogs(): void
 {
 	add_action('admin_menu', function () {
 		remove_menu_page('edit.php');
 	});
 
 	add_action('admin_init', function () {
-		if (empty(fs_config('disable_blogs'))) {
+		if (fs_config('enable_blogs') !== false) {
 			return;
 		}
 		global $pagenow;
@@ -52,25 +60,30 @@ function fs_remove_blogs()
 	});
 }
 
-if (!empty(fs_config('disable_blogs'))) {
+// Only disable blogs when explicitly false; missing or true = enabled by default
+if (fs_config('enable_blogs') === false) {
 	fs_remove_blogs();
 }
 
 /**
- * Excerpt length
+ * Filter excerpt length from config.
+ *
+ * @return int Length used when trimming excerpts.
  */
-function fs_excerpt_length()
+function fs_excerpt_length(): int
 {
-	return fs_config('excerpt_length');
+	return (int) fs_config('excerpt_length');
 }
 add_filter('excerpt_length', 'fs_excerpt_length');
 
 /**
- * Excerpt more
+ * Filter excerpt "more" string from config.
+ *
+ * @return string Text shown after truncated excerpt (e.g. "…").
  */
-function fs_excerpt_more()
+function fs_excerpt_more(): string
 {
-	return fs_config('excerpt_more');
+	return (string) fs_config('excerpt_more');
 }
 add_filter('excerpt_more', 'fs_excerpt_more');
 

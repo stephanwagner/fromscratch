@@ -5,7 +5,7 @@ defined('ABSPATH') || exit;
 /**
  * Theme settings: handle "Bump" asset version
  */
-add_action('load-settings_page_custom-theme-settings', function () {
+add_action('load-settings_page_fs-theme-settings', function () {
 	if (!current_user_can('manage_options')) {
 		return;
 	}
@@ -15,7 +15,8 @@ add_action('load-settings_page_custom-theme-settings', function () {
 	$current = get_option('fromscratch_asset_version', '1');
 	$next = is_numeric($current) ? (string) ((int) $current + 1) : '2';
 	update_option('fromscratch_asset_version', $next);
-	wp_safe_redirect(admin_url('options-general.php?page=custom-theme-settings'));
+	set_transient('fromscratch_bump_notice', $next, 30);
+	wp_safe_redirect(admin_url('options-general.php?page=fs-theme-settings'));
 	exit;
 });
 
@@ -31,18 +32,28 @@ add_action('admin_init', function () {
 }, 5);
 
 /**
- * Variables
+ * Output the theme settings page (Settings → Theme Einstellungen): tabs, asset version, variables, design.
+ *
+ * @return void
  */
-function theme_settings_page()
+function theme_settings_page(): void
 {
 	$asset_version = get_option('fromscratch_asset_version', '1');
 	$bump_url = wp_nonce_url(
-		add_query_arg('fromscratch_bump', '1', admin_url('options-general.php?page=custom-theme-settings')),
+		add_query_arg('fromscratch_bump', '1', admin_url('options-general.php?page=fs-theme-settings')),
 		'fromscratch_bump_asset_version'
 	);
+	$bump_notice = get_transient('fromscratch_bump_notice');
+	if ($bump_notice !== false) {
+		delete_transient('fromscratch_bump_notice');
+	}
 ?>
 	<div class="wrap">
 		<h1><?= esc_html(fs_config_variables('title_page')) ?></h1>
+
+		<?php if ($bump_notice !== false) : ?>
+			<div class="notice notice-success is-dismissible"><p><strong><?= esc_html(sprintf(fs_t('SETTINGS_BUMP_SUCCESS'), $bump_notice)) ?></strong></p></div>
+		<?php endif; ?>
 
 		<form method="post" action="options.php" class="page-settings-form" id="fromscratch-settings-form">
 			<?php settings_fields('section'); ?>
@@ -62,10 +73,8 @@ function theme_settings_page()
 						</th>
 						<td>
 							<input type="text" name="fromscratch_asset_version" id="fromscratch_asset_version" value="<?= esc_attr($asset_version) ?>" class="small-text" style="width: 5em;">
+							<a href="<?= esc_url($bump_url) ?>" class="button" style="margin-left: 8px;"><?= esc_html(fs_t('SETTINGS_BUMP_VERSION')) ?></a>
 							<p class="description"><?= esc_html(fs_t('SETTINGS_ASSET_VERSION_DESCRIPTION')) ?></p>
-							<p style="margin-top: 8px;">
-								<a href="<?= esc_url($bump_url) ?>" class="button"><?= esc_html(fs_t('SETTINGS_BUMP_VERSION')) ?></a>
-							</p>
 						</td>
 					</tr>
 				</table>
@@ -157,7 +166,15 @@ function theme_settings_page()
 <?php
 }
 
-function display_custom_info_field($variable, $variableId, $languageId = null)
+/**
+ * Output a single template variable field (text or textarea) for the theme settings page.
+ *
+ * @param array<string,mixed> $variable   Variable config (type, width, rows, description, etc.).
+ * @param string              $variableId Option name / field name.
+ * @param string|null         $languageId Optional language code for translatable fields.
+ * @return void
+ */
+function display_custom_info_field($variable, $variableId, $languageId = null): void
 {
 	if ($languageId) {
 		echo '<div class="page-settings-language-container page-settings-language-container-' . $languageId . '">';
@@ -183,7 +200,12 @@ function display_custom_info_field($variable, $variableId, $languageId = null)
 	}
 }
 
-function display_custom_info_fields()
+/**
+ * Register settings sections and fields for theme variables (Texte tab).
+ *
+ * @return void
+ */
+function display_custom_info_fields(): void
 {
 	foreach (fs_config_variables('variables.sections') as $section) {
 		add_settings_section('section', $section['title'], null, 'theme_variables_' . $section['id']);
@@ -210,14 +232,19 @@ function display_custom_info_fields()
 }
 add_action('admin_init', 'display_custom_info_fields');
 
-function add_custom_info_menu_item()
+/**
+ * Add theme settings submenu under Settings (first position).
+ *
+ * @return void
+ */
+function add_custom_info_menu_item(): void
 {
 	add_submenu_page(
 		'options-general.php',
 		fs_config_variables('title_page'),
 		fs_config_variables('title_menu'),
 		'manage_options',
-		'custom-theme-settings',
+		'fs-theme-settings',
 		'theme_settings_page',
 		0
 	);
@@ -225,8 +252,8 @@ function add_custom_info_menu_item()
 add_action('admin_menu', 'add_custom_info_menu_item', 1);
 
 add_filter('submenu_file', function ($submenu_file, $parent_file) {
-	if ($parent_file === 'options-general.php' && isset($_GET['page']) && $_GET['page'] === 'custom-theme-settings') {
-		return 'custom-theme-settings';
+	if ($parent_file === 'options-general.php' && isset($_GET['page']) && $_GET['page'] === 'fs-theme-settings') {
+		return 'fs-theme-settings';
 	}
 	return $submenu_file;
 }, 10, 2);
