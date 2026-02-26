@@ -38,7 +38,7 @@ return [
 					// 	'type' => 'textarea',
 					// 	'rows' => 4,
 					// 	'width' => 400
-					// ]
+					// ],
 				],
 			],
 		],

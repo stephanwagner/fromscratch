@@ -32,7 +32,7 @@ add_action('load-settings_page_fs-theme-settings', function () {
 	}
 	delete_option('fromscratch_design');
 	set_transient('fromscratch_clear_design_notice', '1', 30);
-	wp_safe_redirect(admin_url('options-general.php?page=fs-theme-settings&fromscratch_tab=design'));
+	wp_safe_redirect(admin_url('options-general.php?page=fs-theme-settings&tab=design'));
 	exit;
 });
 
@@ -305,17 +305,16 @@ function fs_sanitize_design_variables($input): array
 }
 
 /**
- * Output the theme settings page (Settings → Theme Einstellungen): tabs, asset version, variables, design.
+ * Theme settings: one menu page with three tab-URLs (?tab=general|texte|design). Tabs are links to different URLs.
  *
  * @return void
  */
 function theme_settings_page(): void
 {
-	$asset_version = get_option('fromscratch_asset_version', '1');
-	$bump_url = wp_nonce_url(
-		add_query_arg('fromscratch_bump', '1', admin_url('options-general.php?page=fs-theme-settings')),
-		'fromscratch_bump_asset_version'
-	);
+	$tabs = ['general', 'texte', 'design'];
+	$tab = isset($_GET['tab']) && in_array($_GET['tab'], $tabs, true) ? $_GET['tab'] : 'general';
+	$base_url = admin_url('options-general.php?page=fs-theme-settings');
+
 	$bump_notice = get_transient('fromscratch_bump_notice');
 	if ($bump_notice !== false) {
 		delete_transient('fromscratch_bump_notice');
@@ -324,134 +323,97 @@ function theme_settings_page(): void
 	if ($clear_design_notice !== false) {
 		delete_transient('fromscratch_clear_design_notice');
 	}
-	$clear_design_url = wp_nonce_url(
-		add_query_arg('fromscratch_clear_design', '1', admin_url('options-general.php?page=fs-theme-settings')),
-		'fromscratch_clear_design'
-	);
+	$bump_url = wp_nonce_url(add_query_arg('fromscratch_bump', '1', $base_url), 'fromscratch_bump_asset_version');
+	$clear_design_url = wp_nonce_url(add_query_arg(['fromscratch_clear_design' => '1', 'tab' => 'design'], $base_url), 'fromscratch_clear_design');
 ?>
 	<div class="wrap">
 		<h1><?= esc_html(fs_config_variables('title_page')) ?></h1>
-
-		<?php if ($bump_notice !== false) : ?>
+		<?php if ($bump_notice !== false && $tab === 'general') : ?>
 			<div class="notice notice-success is-dismissible"><p><strong><?= esc_html(sprintf(fs_t('SETTINGS_BUMP_SUCCESS'), $bump_notice)) ?></strong></p></div>
 		<?php endif; ?>
-		<?php if ($clear_design_notice !== false) : ?>
+		<?php if ($clear_design_notice !== false && $tab === 'design') : ?>
 			<div class="notice notice-success is-dismissible"><p><strong><?= esc_html(fs_t('SETTINGS_DESIGN_CLEAR_SUCCESS')) ?></strong></p></div>
 		<?php endif; ?>
 
-		<form method="post" action="options.php" class="page-settings-form" id="fromscratch-settings-form">
+		<nav class="nav-tab-wrapper wp-clearfix" aria-label="Secondary menu">
+			<a href="<?= esc_url($base_url . '&tab=general') ?>" class="nav-tab <?= $tab === 'general' ? 'nav-tab-active' : '' ?>"><?= esc_html(fs_t('SETTINGS_TAB_GENERAL')) ?></a>
+			<a href="<?= esc_url($base_url . '&tab=texte') ?>" class="nav-tab <?= $tab === 'texte' ? 'nav-tab-active' : '' ?>"><?= esc_html(fs_t('SETTINGS_TAB_TEXTE')) ?></a>
+			<a href="<?= esc_url($base_url . '&tab=design') ?>" class="nav-tab <?= $tab === 'design' ? 'nav-tab-active' : '' ?>"><?= esc_html(fs_t('SETTINGS_TAB_DESIGN')) ?></a>
+		</nav>
+
+		<?php if ($tab === 'general') : ?>
+		<form method="post" action="options.php" class="page-settings-form">
 			<?php settings_fields('section'); ?>
-
-			<nav class="nav-tab-wrapper wp-clearfix" aria-label="Secondary menu">
-				<button type="button" class="nav-tab nav-tab-active" data-fromscratch-tab="general" role="tab" aria-selected="true"><?= esc_html(fs_t('SETTINGS_TAB_GENERAL')) ?></button>
-				<button type="button" class="nav-tab" data-fromscratch-tab="texte" role="tab"><?= esc_html(fs_t('SETTINGS_TAB_TEXTE')) ?></button>
-				<button type="button" class="nav-tab" data-fromscratch-tab="design" role="tab"><?= esc_html(fs_t('SETTINGS_TAB_DESIGN')) ?></button>
-			</nav>
-
-			<div id="fromscratch-panel-general" class="fromscratch-settings-panel" role="tabpanel">
-				<h2><?= esc_html(fs_t('SETTINGS_TAB_GENERAL')) ?></h2>
-				<table class="form-table" role="presentation">
-					<tr>
-						<th scope="row">
-							<label for="fromscratch_asset_version"><?= esc_html(fs_t('SETTINGS_ASSET_VERSION')) ?></label>
-						</th>
-						<td>
-							<input type="text" name="fromscratch_asset_version" id="fromscratch_asset_version" value="<?= esc_attr($asset_version) ?>" class="small-text" style="width: 64px;">
-							<a href="<?= esc_url($bump_url) ?>" class="button" style="margin-left: 8px;"><?= esc_html(fs_t('SETTINGS_BUMP_VERSION')) ?></a>
-							<p class="description"><?= esc_html(fs_t('SETTINGS_ASSET_VERSION_DESCRIPTION')) ?></p>
-						</td>
-					</tr>
-				</table>
-			</div>
-
-			<div id="fromscratch-panel-texte" class="fromscratch-settings-panel" role="tabpanel" hidden>
-				<h2><?= esc_html(fs_t('SETTINGS_TAB_TEXTE')) ?></h2>
-				<?php
-				foreach (fs_config_variables('variables.sections') as $section) {
-					do_settings_sections('theme_variables_' . $section['id']);
-				}
-				?>
-			</div>
-
-			<div id="fromscratch-panel-design" class="fromscratch-settings-panel" role="tabpanel" hidden>
-				<h2><?= esc_html(fs_t('SETTINGS_TAB_DESIGN')) ?></h2>
-				<p class="description" style="margin-bottom: 8px;"><?= esc_html(fs_t('SETTINGS_DESIGN_DESCRIPTION')) ?></p>
-				<p style="margin-bottom: 16px;">
-					<a href="<?= esc_url($clear_design_url) ?>" class="button" onclick="return confirm('<?= esc_js(fs_t('SETTINGS_DESIGN_CLEAR_CONFIRM')) ?>');"><?= esc_html(fs_t('SETTINGS_DESIGN_CLEAR_ALL')) ?></a>
-				</p>
-				<?php
-				$design_sections = fs_get_design_sections_resolved();
-				foreach ($design_sections as $section_id => $section) :
-					$section_title = $section['title'];
-				?>
-				<div class="fromscratch-design-section" style="margin-bottom: 24px;">
-					<h3 style="margin: 0 0 8px 0; font-size: 14px;"><?= esc_html($section_title) ?></h3>
-					<table class="form-table" role="presentation">
-						<tbody>
-						<?php foreach ($section['variables'] as $v) :
-							$var_id = $v['id'] ?? '';
-							$var_title = $v['title'] ?? $var_id;
-							$var_type = (isset($v['type']) && $v['type'] === 'color') ? 'color' : 'text';
-							$override = fs_design_variable_override($var_id);
-							$default = $v['default'] ?? '';
-							$input_name = 'fromscratch_design[' . esc_attr($var_id) . ']';
-						?>
-							<tr>
-								<th scope="row" style="font-weight: normal; width: 220px;">
-									<code style="font-size: 12px;">--<?= esc_html($var_id) ?></code>
-								</th>
-								<td>
-									<label for="fromscratch_design_<?= esc_attr($var_id) ?>" class="screen-reader-text"><?= esc_html($var_title) ?></label>
-									<?php if ($var_type === 'color') : ?>
-									<input type="text" name="<?= $input_name ?>" id="fromscratch_design_<?= esc_attr($var_id) ?>" value="<?= esc_attr($override) ?>" placeholder="<?= esc_attr($default) ?>" class="code" style="width: 120px;" maxlength="22">
-									<?php else : ?>
-									<input type="text" name="<?= $input_name ?>" id="fromscratch_design_<?= esc_attr($var_id) ?>" value="<?= esc_attr($override) ?>" placeholder="<?= esc_attr($default) ?>" class="regular-text" style="width: 200px;">
-									<?php endif; ?>
-									<span class="description" style="margin-left: 8px; color: #646970;"><?= esc_html($var_title) ?></span>
-								</td>
-							</tr>
-						<?php endforeach; ?>
-						</tbody>
-					</table>
-				</div>
-				<?php endforeach; ?>
-			</div>
-
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row">
+						<label for="fromscratch_asset_version"><?= esc_html(fs_t('SETTINGS_ASSET_VERSION')) ?></label>
+					</th>
+					<td>
+						<input type="text" name="fromscratch_asset_version" id="fromscratch_asset_version" value="<?= esc_attr(get_option('fromscratch_asset_version', '1')) ?>" class="small-text" style="width: 64px;">
+						<a href="<?= esc_url($bump_url) ?>" class="button" style="margin-left: 8px;"><?= esc_html(fs_t('SETTINGS_BUMP_VERSION')) ?></a>
+						<p class="description"><?= esc_html(fs_t('SETTINGS_ASSET_VERSION_DESCRIPTION')) ?></p>
+					</td>
+				</tr>
+			</table>
 			<p class="submit"><?php submit_button(); ?></p>
 		</form>
-
-		<script>
-			(function() {
-				var form = document.getElementById('fromscratch-settings-form');
-				if (!form) return;
-				var tabs = form.querySelectorAll('[data-fromscratch-tab]');
-				var panels = form.querySelectorAll('.fromscratch-settings-panel');
-				function showTab(id) {
-					tabs.forEach(function(t) {
-						var isActive = t.getAttribute('data-fromscratch-tab') === id;
-						t.classList.toggle('nav-tab-active', isActive);
-						t.setAttribute('aria-selected', isActive);
-					});
-					panels.forEach(function(p) {
-						p.hidden = p.id !== 'fromscratch-panel-' + id;
-					});
-				}
-				var match = /fromscratch_tab=([^&]+)/.exec(location.search);
-				if (match && match[1]) {
-					showTab(match[1]);
-					if (history.replaceState) {
-						var clean = location.search.replace(/&?fromscratch_tab=[^&]*/, '').replace(/^\?&/, '?') || '?page=fs-theme-settings';
-						if (clean === '?') clean = location.search;
-						history.replaceState(null, '', location.pathname + clean);
-					}
-				}
-				tabs.forEach(function(tab) {
-					tab.addEventListener('click', function() {
-						showTab(this.getAttribute('data-fromscratch-tab'));
-					});
-				});
-			})();
-		</script>
+		<?php elseif ($tab === 'texte') : ?>
+		<form method="post" action="options.php" class="page-settings-form">
+			<?php settings_fields('section'); ?>
+			<?php
+			foreach (fs_config_variables('variables.sections') as $section) {
+				do_settings_sections('theme_variables_' . $section['id']);
+			}
+			?>
+			<p class="submit"><?php submit_button(); ?></p>
+		</form>
+		<?php else : ?>
+		<p class="description" style="margin-bottom: 8px;"><?= esc_html(fs_t('SETTINGS_DESIGN_DESCRIPTION')) ?></p>
+		<p style="margin-bottom: 16px;">
+			<a href="<?= esc_url($clear_design_url) ?>" class="button" onclick="return confirm('<?= esc_js(fs_t('SETTINGS_DESIGN_CLEAR_CONFIRM')) ?>');"><?= esc_html(fs_t('SETTINGS_DESIGN_CLEAR_ALL')) ?></a>
+		</p>
+		<form method="post" action="options.php" class="page-settings-form">
+			<?php settings_fields('section'); ?>
+			<?php
+			$design_sections = fs_get_design_sections_resolved();
+			foreach ($design_sections as $section_id => $section) :
+				$section_title = $section['title'];
+			?>
+			<div class="fromscratch-design-section" style="margin-bottom: 24px;">
+				<h2 class="title" style="margin: 0 0 8px 0; font-size: 14px;"><?= esc_html($section_title) ?></h2>
+				<table class="form-table" role="presentation">
+					<tbody>
+					<?php foreach ($section['variables'] as $v) :
+						$var_id = $v['id'] ?? '';
+						$var_title = $v['title'] ?? $var_id;
+						$var_type = (isset($v['type']) && $v['type'] === 'color') ? 'color' : 'text';
+						$override = fs_design_variable_override($var_id);
+						$default = $v['default'] ?? '';
+						$input_name = 'fromscratch_design[' . esc_attr($var_id) . ']';
+					?>
+						<tr>
+							<th scope="row" style="font-weight: normal; width: 220px;">
+								<code style="font-size: 12px;">--<?= esc_html($var_id) ?></code>
+							</th>
+							<td>
+								<label for="fromscratch_design_<?= esc_attr($var_id) ?>" class="screen-reader-text"><?= esc_html($var_title) ?></label>
+								<?php if ($var_type === 'color') : ?>
+								<input type="text" name="<?= $input_name ?>" id="fromscratch_design_<?= esc_attr($var_id) ?>" value="<?= esc_attr($override) ?>" placeholder="<?= esc_attr($default) ?>" class="code" style="width: 120px;" maxlength="22">
+								<?php else : ?>
+								<input type="text" name="<?= $input_name ?>" id="fromscratch_design_<?= esc_attr($var_id) ?>" value="<?= esc_attr($override) ?>" placeholder="<?= esc_attr($default) ?>" class="regular-text" style="width: 200px;">
+								<?php endif; ?>
+								<span class="description" style="margin-left: 8px; color: #646970;"><?= esc_html($var_title) ?></span>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
+			<?php endforeach; ?>
+			<p class="submit"><?php submit_button(); ?></p>
+		</form>
+		<?php endif; ?>
 	</div>
 <?php
 }
@@ -523,7 +485,7 @@ function display_custom_info_fields(): void
 add_action('admin_init', 'display_custom_info_fields');
 
 /**
- * Add theme settings submenu under Settings (first position).
+ * Add theme settings (one menu item) under Settings. Tabs are separate URLs: ?page=fs-theme-settings&tab=general|texte|design.
  *
  * @return void
  */
