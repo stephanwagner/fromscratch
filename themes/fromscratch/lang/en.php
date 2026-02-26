@@ -22,6 +22,8 @@ return [
     'INSTALL_MEDIA_SIZES_DESCRIPTION' => 'Thumbnail, Medium, Large.',
     'INSTALL_PERMALINKS_TITLE' => 'Permalinks',
     'INSTALL_PERMALINKS_DESCRIPTION' => 'Use pretty permalinks.',
+    'INSTALL_HTACCESS_TITLE' => '.htaccess',
+    'INSTALL_HTACCESS_DESCRIPTION' => 'Add recommended rules to .htaccess in the WordPress root: expires, no Set-Cookie on static assets, deflate. Apache only; Nginx needs manual config.',
     'INSTALL_PAGES_TITLE' => 'Pages',
     'INSTALL_PAGES_TABLE_HEADING_PAGE' => 'Page',
     'INSTALL_PAGES_TABLE_HEADING_TITLE' => 'Title',

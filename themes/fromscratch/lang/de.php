@@ -22,6 +22,8 @@ return [
     'INSTALL_MEDIA_SIZES_DESCRIPTION' => 'Thumbnail, Medium, Groß.',
     'INSTALL_PERMALINKS_TITLE' => 'Permalinks',
     'INSTALL_PERMALINKS_DESCRIPTION' => 'Benutze schöne Permalinks.',
+    'INSTALL_HTACCESS_TITLE' => '.htaccess',
+    'INSTALL_HTACCESS_DESCRIPTION' => 'Empfohlene Regeln in die .htaccess im WordPress-Stammverzeichnis schreiben: Expires, kein Set-Cookie bei statischen Dateien, Deflate. Nur Apache; Nginx manuell konfigurieren.',
     'INSTALL_PAGES_TITLE' => 'Seiten',
     'INSTALL_PAGES_TABLE_HEADING_PAGE' => 'Seite',
     'INSTALL_PAGES_TABLE_HEADING_TITLE' => 'Titel',

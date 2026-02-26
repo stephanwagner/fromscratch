@@ -26,7 +26,7 @@ function fs_clean_up_styles()
 {
 	wp_dequeue_style('classic-theme-styles');
 }
-add_action('wp_enqueue_scripts', 'fs_clean_up_styles', 100);
+add_action('wp_enqueue_scripts', 'fs_clean_up_styles', 999);
 
 /**
  * Disable and remove comments everywhere

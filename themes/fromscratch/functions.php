@@ -6,6 +6,11 @@
 require_once 'inc/bootstrap.php';
 
 /**
+ * Cache headers
+ */
+require_once 'inc/headers.php';
+
+/**
  * Languages
  */
 require_once 'inc/lang.php';
@@ -41,6 +46,11 @@ require_once 'inc/svg-support.php';
  * Menu
  */
 require_once 'inc/menu.php';
+
+/**
+ * Dashboard
+ */
+require_once 'inc/dashboard.php';
 
 /**
  * Assets

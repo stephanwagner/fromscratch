@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/htaccess.php';
+
 /**
  * Debug
  */
@@ -164,6 +166,21 @@ function fs_render_installer()
             <td>
               <p class="description">
                 <?= fs_t('INSTALL_PERMALINKS_DESCRIPTION') ?>
+              </p>
+            </td>
+          </tr>
+
+          <!-- .htaccess (Apache only) -->
+          <tr>
+            <th scope="row">
+              <label>
+                <input type="checkbox" name="install[htaccess]" checked>
+                <?= fs_t('INSTALL_HTACCESS_TITLE') ?>
+              </label>
+            </th>
+            <td>
+              <p class="description">
+                <?= fs_t('INSTALL_HTACCESS_DESCRIPTION') ?>
               </p>
             </td>
           </tr>
@@ -406,6 +423,14 @@ Tags:
       $wp_rewrite->set_permalink_structure('/%postname%/');
       flush_rewrite_rules();
     }
+  }
+
+  /**
+   * .htaccess (Apache only)
+   */
+  $installHtaccess = isset($_POST['install']['htaccess']) && $_POST['install']['htaccess'] === 'on';
+  if ($installHtaccess) {
+    fs_write_htaccess();
   }
 
   /**
