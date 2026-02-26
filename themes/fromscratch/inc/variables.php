@@ -72,7 +72,7 @@ function theme_settings_page(): void
 							<label for="fromscratch_asset_version"><?= esc_html(fs_t('SETTINGS_ASSET_VERSION')) ?></label>
 						</th>
 						<td>
-							<input type="text" name="fromscratch_asset_version" id="fromscratch_asset_version" value="<?= esc_attr($asset_version) ?>" class="small-text" style="width: 5em;">
+							<input type="text" name="fromscratch_asset_version" id="fromscratch_asset_version" value="<?= esc_attr($asset_version) ?>" class="small-text" style="width: 64px;">
 							<a href="<?= esc_url($bump_url) ?>" class="button" style="margin-left: 8px;"><?= esc_html(fs_t('SETTINGS_BUMP_VERSION')) ?></a>
 							<p class="description"><?= esc_html(fs_t('SETTINGS_ASSET_VERSION_DESCRIPTION')) ?></p>
 						</td>
@@ -130,20 +130,6 @@ function theme_settings_page(): void
 			<p class="submit"><?php submit_button(); ?></p>
 		</form>
 
-		<style>
-			.fromscratch-settings-panel { margin-top: 16px; }
-			.fromscratch-settings-panel h2 { padding-top: 20px; position: relative; }
-			.fromscratch-settings-panel h2::after {
-				content: ''; display: block; position: absolute; height: 2px; top: -1px; left: 0;
-				width: 100%; max-width: 620px; background: #d0d0d0;
-			}
-			input.settings-page-textfield, textarea.settings-page-textfield {
-				border-radius: 2px; border-color: #ccc; color: #373737; padding: 1px 8px;
-			}
-			textarea.settings-page-textfield { resize: vertical; }
-			.page-settings-form .form-table .widefat th { padding: 8px 10px; }
-			.page-settings-description { color: #aaa; font-size: 12px; padding: 4px 0 0 4px; }
-		</style>
 		<script>
 			(function() {
 				var form = document.getElementById('fromscratch-settings-form');
