@@ -70,6 +70,7 @@ export default [
     output: {
       file: `${base}/js/editor${prod ? '.min' : ''}.js`,
       format: 'iife',
+      globals: { wp: 'wp' },
       sourcemap: !prod,
     },
     plugins: [

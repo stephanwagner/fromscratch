@@ -76,4 +76,17 @@ return [
     'SVG_FILE_MUST_BE_UNDER_MAX_SIZE' => 'SVG file must be under %MAX_SIZE%. You tried to upload a file of %SIZE%.',
     'SVG_FILE_NOT_FOUND' => 'SVG file not found.',
     'SVG_INVALID_OR_UNSAFE' => 'Invalid or unsafe SVG file.',
+
+    // SEO panel
+    'SEO_PANEL_TITLE' => 'SEO',
+    'SEO_TITLE_LABEL' => 'Title',
+    'SEO_TITLE_HELP' => 'Recommended length: up to 60 characters.',
+    'SEO_DESCRIPTION_LABEL' => 'Description',
+    'SEO_DESCRIPTION_HELP' => 'Recommended length: up to 160 characters.',
+    'SEO_OG_IMAGE_LABEL' => 'Social Media Preview Image',
+    'SEO_OG_IMAGE_HELP' => 'Best size: 1200 × 630 px. Fallback: featured image if set.',
+    'SEO_OG_IMAGE_BUTTON' => 'Select image',
+    'SEO_OG_IMAGE_REMOVE' => 'Remove image',
+    'SEO_NOINDEX_LABEL' => 'No index',
+    'SEO_NOINDEX_HELP' => 'Ask search engines not to index this page.',
 ];

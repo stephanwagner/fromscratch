@@ -58,6 +58,11 @@ require_once 'inc/dashboard.php';
 require_once 'inc/duplicate-post.php';
 
 /**
+ * SEO (post/page meta and document panel)
+ */
+require_once 'inc/seo.php';
+
+/**
  * Assets
  */
 require_once 'inc/assets.php';
