@@ -5,7 +5,12 @@
 			if (get_option('theme_variables_footer_text')) {
 				echo get_option('theme_variables_footer_text');
 			} else {
-				echo 'Go to <a href="' . esc_url(admin_url('options-general.php?page=fs-theme-settings&tab=texte')) . '">Settings › ' . esc_html(fs_config_variables('title_menu')) . '</a> to edit this text';
+				$menu_label = esc_html(fs_config_variables('title_menu'));
+				if (current_user_can('manage_options')) {
+					echo 'Go to <a href="' . esc_url(admin_url('options-general.php?page=fs-theme-settings&tab=texte')) . '">Settings › ' . $menu_label . '</a> to edit this text';
+				} else {
+					echo 'Go to Settings › ' . $menu_label . ' to edit this text';
+				}
 			}
 			?>
 		</div>

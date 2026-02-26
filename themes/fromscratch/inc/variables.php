@@ -362,6 +362,9 @@ function fs_sanitize_design_variables($input): array
  */
 function theme_settings_page(): void
 {
+	if (!current_user_can('manage_options')) {
+		wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'fromscratch'));
+	}
 	$tabs = ['general', 'texte', 'design'];
 	$tab = isset($_GET['tab']) && in_array($_GET['tab'], $tabs, true) ? $_GET['tab'] : 'general';
 	$base_url = admin_url('options-general.php?page=fs-theme-settings');
