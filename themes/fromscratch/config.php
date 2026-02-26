@@ -78,4 +78,92 @@ return [
 	// SVG support: Max size in MB
 	// This is to prevent memory exhaustion and security issues
 	'svg_max_size' => 2,
+
+	/**
+	 * Design variables: overridable in Settings → Theme Einstellungen → Design.
+	 * IDs become CSS custom properties (e.g. id "color-primary" → --color-primary).
+	 * Sections "colors", "gradients", "font_sizes" are derived from theme_colors, theme_gradients, theme_font_sizes above.
+	 */
+	'design' => [
+		'sections' => [
+			'colors' => [
+				'title' => 'Farben',
+				'from' => 'theme_colors',
+				'variables' => [
+					['id' => 'color-error', 'title' => 'Fehler', 'default' => '#f33', 'type' => 'color'],
+					['id' => 'color-warning', 'title' => 'Warnung', 'default' => '#fc0', 'type' => 'color'],
+					['id' => 'color-success', 'title' => 'Erfolg', 'default' => '#5d5', 'type' => 'color'],
+				],
+			],
+			'gradients' => [
+				'title' => 'Verläufe',
+				'from' => 'theme_gradients',
+			],
+			'font_sizes' => [
+				'title' => 'Schriftgrößen',
+				'from' => 'theme_font_sizes',
+			],
+			'typography' => [
+				'title' => 'Typografie',
+				'variables' => [
+					['id' => 'primary-font', 'title' => 'Schriftart', 'default' => 'Open Sans, sans-serif', 'type' => 'text'],
+					['id' => 'default-text-color', 'title' => 'Standard Textfarbe', 'default' => '#222', 'type' => 'color'],
+					['id' => 'default-font-size', 'title' => 'Standard Schriftgröße', 'default' => '16px', 'type' => 'text'],
+					['id' => 'default-line-height', 'title' => 'Standard Zeilenhöhe', 'default' => '1.6', 'type' => 'text'],
+				],
+			],
+			'content' => [
+				'title' => 'Inhalt & Abstände',
+				'variables' => [
+					['id' => 'max-content-width', 'title' => 'Max. Inhaltsbreite', 'default' => '1200px', 'type' => 'text'],
+					['id' => 'narrow-content-width', 'title' => 'Schmale Inhaltsbreite', 'default' => '900px', 'type' => 'text'],
+					['id' => 'very-narrow-content-width', 'title' => 'Sehr schmale Breite', 'default' => '600px', 'type' => 'text'],
+					['id' => 'content-padding-xl', 'title' => 'Innenabstand XL', 'default' => '64px', 'type' => 'text'],
+					['id' => 'content-padding-l', 'title' => 'Innenabstand L', 'default' => '64px', 'type' => 'text'],
+					['id' => 'content-padding-m', 'title' => 'Innenabstand M', 'default' => '48px', 'type' => 'text'],
+					['id' => 'content-padding-s', 'title' => 'Innenabstand S', 'default' => '32px', 'type' => 'text'],
+					['id' => 'content-padding-xs', 'title' => 'Innenabstand XS', 'default' => '24px', 'type' => 'text'],
+				],
+			],
+			'header' => [
+				'title' => 'Header',
+				'variables' => [
+					['id' => 'header-height', 'title' => 'Header-Höhe', 'default' => '120px', 'type' => 'text'],
+					['id' => 'header-height-mobile', 'title' => 'Header-Höhe (mobil)', 'default' => '80px', 'type' => 'text'],
+					['id' => 'header-height-scrolled', 'title' => 'Header-Höhe (gescrollt)', 'default' => '62px', 'type' => 'text'],
+				],
+			],
+			'menu' => [
+				'title' => 'Menü',
+				'variables' => [
+					['id' => 'menu-width', 'title' => 'Menübreite', 'default' => '280px', 'type' => 'text'],
+				],
+			],
+			'breakpoints' => [
+				'title' => 'Breakpoints',
+				'variables' => [
+					['id' => 'mobile-breakpoint', 'title' => 'Mobil-Umschlag', 'default' => '900px', 'type' => 'text'],
+					['id' => 'breakpoint-xl', 'title' => 'Breakpoint XL', 'default' => '1400px', 'type' => 'text'],
+					['id' => 'breakpoint-l', 'title' => 'Breakpoint L', 'default' => '1200px', 'type' => 'text'],
+					['id' => 'breakpoint-m', 'title' => 'Breakpoint M', 'default' => '900px', 'type' => 'text'],
+					['id' => 'breakpoint-s', 'title' => 'Breakpoint S', 'default' => '600px', 'type' => 'text'],
+					['id' => 'breakpoint-xs', 'title' => 'Breakpoint XS', 'default' => '400px', 'type' => 'text'],
+				],
+			],
+			'transitions' => [
+				'title' => 'Übergänge',
+				'variables' => [
+					['id' => 'default-transition-speed', 'title' => 'Standard Übergangsdauer', 'default' => '280ms', 'type' => 'text'],
+					['id' => 'slow-transition-speed', 'title' => 'Langsame Übergangsdauer', 'default' => '460ms', 'type' => 'text'],
+				],
+			],
+			'border-radius' => [
+				'title' => 'Eckenradius',
+				'variables' => [
+					['id' => 'small-border-radius', 'title' => 'Klein', 'default' => '8px', 'type' => 'text'],
+					['id' => 'default-border-radius', 'title' => 'Standard', 'default' => '16px', 'type' => 'text'],
+				],
+			],
+		],
+	],
 ];

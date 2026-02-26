@@ -21,6 +21,22 @@ add_action('load-settings_page_fs-theme-settings', function () {
 });
 
 /**
+ * Theme settings: handle "Clear all" design overrides
+ */
+add_action('load-settings_page_fs-theme-settings', function () {
+	if (!current_user_can('manage_options')) {
+		return;
+	}
+	if (empty($_GET['fromscratch_clear_design']) || empty($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'fromscratch_clear_design')) {
+		return;
+	}
+	delete_option('fromscratch_design');
+	set_transient('fromscratch_clear_design_notice', '1', 30);
+	wp_safe_redirect(admin_url('options-general.php?page=fs-theme-settings&fromscratch_tab=design'));
+	exit;
+});
+
+/**
  * Register asset version option (saved with main form)
  */
 add_action('admin_init', function () {
@@ -30,6 +46,263 @@ add_action('admin_init', function () {
 		'sanitize_callback' => 'sanitize_text_field',
 	]);
 }, 5);
+
+/**
+ * Register design variables option (saved with main form); sanitize by type from config.
+ */
+add_action('admin_init', function () {
+	register_setting('section', 'fromscratch_design', [
+		'type' => 'array',
+		'sanitize_callback' => 'fs_sanitize_design_variables',
+	]);
+}, 5);
+
+/**
+ * Sanitize a string for use as CSS custom property value (prevent breaking out of :root block).
+ *
+ * @param string $value Raw value.
+ * @return string Safe value (allowed: alphanumeric, space, #.,()%-_/:;"' and common units).
+ */
+function fs_sanitize_css_custom_property_value(string $value): string
+{
+	$value = preg_replace('/[^\w\s#.,()%\-\/_\\:;"\']/', '', $value);
+	$value = str_replace(["\r", "\n", "\t", '<', '>'], '', $value);
+	return substr($value, 0, 500);
+}
+
+/**
+ * Get all design variables as a flat list from config (id, title, default, type).
+ * Sections with 'from' => 'theme_colors' are built from config theme_colors (single source for WP panel + Design tab).
+ *
+ * @return array<int, array{id: string, title: string, default: string, type: string}>
+ */
+function fs_get_design_variables_list(): array
+{
+	$sections = fs_config('design.sections');
+	if (!is_array($sections)) {
+		return [];
+	}
+	$list = [];
+	foreach ($sections as $section) {
+		$variables = [];
+
+		if (!empty($section['from']) && $section['from'] === 'theme_colors') {
+			$theme_colors = fs_config('theme_colors');
+			if (is_array($theme_colors)) {
+				foreach ($theme_colors as $tc) {
+					if (!empty($tc['slug']) && isset($tc['color'])) {
+						$variables[] = [
+							'id' => 'color-' . (string) $tc['slug'],
+							'title' => isset($tc['name']) ? (string) $tc['name'] : (string) $tc['slug'],
+							'default' => (string) $tc['color'],
+							'type' => 'color',
+						];
+					}
+				}
+			}
+		}
+
+		if (!empty($section['from']) && $section['from'] === 'theme_gradients') {
+			$theme_gradients = fs_config('theme_gradients');
+			if (is_array($theme_gradients)) {
+				foreach ($theme_gradients as $tg) {
+					if (!empty($tg['slug']) && isset($tg['gradient'])) {
+						$variables[] = [
+							'id' => 'gradient-' . (string) $tg['slug'],
+							'title' => isset($tg['name']) ? (string) $tg['name'] : (string) $tg['slug'],
+							'default' => (string) $tg['gradient'],
+							'type' => 'text',
+						];
+					}
+				}
+			}
+		}
+
+		if (!empty($section['from']) && $section['from'] === 'theme_font_sizes') {
+			$theme_font_sizes = fs_config('theme_font_sizes');
+			if (is_array($theme_font_sizes)) {
+				foreach ($theme_font_sizes as $tfs) {
+					if (!empty($tfs['slug']) && isset($tfs['size'])) {
+						$variables[] = [
+							'id' => 'font-size-' . (string) $tfs['slug'],
+							'title' => isset($tfs['name']) ? (string) $tfs['name'] : (string) $tfs['slug'],
+							'default' => (string) $tfs['size'] . 'px',
+							'type' => 'text',
+						];
+					}
+				}
+			}
+		}
+
+		if (!empty($section['variables']) && is_array($section['variables'])) {
+			foreach ($section['variables'] as $v) {
+				if (!empty($v['id']) && isset($v['default'])) {
+					$variables[] = [
+						'id' => (string) $v['id'],
+						'title' => isset($v['title']) ? (string) $v['title'] : $v['id'],
+						'default' => (string) $v['default'],
+						'type' => isset($v['type']) && in_array($v['type'], ['color', 'text'], true) ? $v['type'] : 'text',
+					];
+				}
+			}
+		}
+
+		foreach ($variables as $v) {
+			$list[] = $v;
+		}
+	}
+	return $list;
+}
+
+/**
+ * Get design sections with variables resolved (theme_colors, theme_gradients, theme_font_sizes expanded).
+ * Use this for the Design tab UI so each section has a full 'variables' array.
+ *
+ * @return array<string, array{title: string, variables: array<int, array{id: string, title: string, default: string, type: string}>}>
+ */
+function fs_get_design_sections_resolved(): array
+{
+	$sections = fs_config('design.sections');
+	if (!is_array($sections)) {
+		return [];
+	}
+	$resolved = [];
+	foreach ($sections as $section_id => $section) {
+		$variables = [];
+
+		if (!empty($section['from']) && $section['from'] === 'theme_colors') {
+			$theme_colors = fs_config('theme_colors');
+			if (is_array($theme_colors)) {
+				foreach ($theme_colors as $tc) {
+					if (!empty($tc['slug']) && isset($tc['color'])) {
+						$variables[] = [
+							'id' => 'color-' . (string) $tc['slug'],
+							'title' => isset($tc['name']) ? (string) $tc['name'] : (string) $tc['slug'],
+							'default' => (string) $tc['color'],
+							'type' => 'color',
+						];
+					}
+				}
+			}
+		}
+
+		if (!empty($section['from']) && $section['from'] === 'theme_gradients') {
+			$theme_gradients = fs_config('theme_gradients');
+			if (is_array($theme_gradients)) {
+				foreach ($theme_gradients as $tg) {
+					if (!empty($tg['slug']) && isset($tg['gradient'])) {
+						$variables[] = [
+							'id' => 'gradient-' . (string) $tg['slug'],
+							'title' => isset($tg['name']) ? (string) $tg['name'] : (string) $tg['slug'],
+							'default' => (string) $tg['gradient'],
+							'type' => 'text',
+						];
+					}
+				}
+			}
+		}
+
+		if (!empty($section['from']) && $section['from'] === 'theme_font_sizes') {
+			$theme_font_sizes = fs_config('theme_font_sizes');
+			if (is_array($theme_font_sizes)) {
+				foreach ($theme_font_sizes as $tfs) {
+					if (!empty($tfs['slug']) && isset($tfs['size'])) {
+						$variables[] = [
+							'id' => 'font-size-' . (string) $tfs['slug'],
+							'title' => isset($tfs['name']) ? (string) $tfs['name'] : (string) $tfs['slug'],
+							'default' => (string) $tfs['size'] . 'px',
+							'type' => 'text',
+						];
+					}
+				}
+			}
+		}
+
+		if (!empty($section['variables']) && is_array($section['variables'])) {
+			foreach ($section['variables'] as $v) {
+				if (!empty($v['id']) && isset($v['default'])) {
+					$variables[] = [
+						'id' => (string) $v['id'],
+						'title' => isset($v['title']) ? (string) $v['title'] : $v['id'],
+						'default' => (string) $v['default'],
+						'type' => isset($v['type']) && in_array($v['type'], ['color', 'text'], true) ? $v['type'] : 'text',
+					];
+				}
+			}
+		}
+
+		if ($variables !== []) {
+			$resolved[$section_id] = [
+				'title' => isset($section['title']) ? (string) $section['title'] : $section_id,
+				'variables' => $variables,
+			];
+		}
+	}
+	return $resolved;
+}
+
+/**
+ * Get the override value for a design variable (saved custom value only). Empty string when using default.
+ * Use for the form input value: show override if set, else empty so placeholder (default) is visible.
+ *
+ * @param string $id Variable id (e.g. "color-primary").
+ * @return string Override value or '' when using default.
+ */
+function fs_design_variable_override(string $id): string
+{
+	$saved = get_option('fromscratch_design', []);
+	if (is_array($saved) && array_key_exists($id, $saved) && $saved[$id] !== '') {
+		return (string) $saved[$id];
+	}
+	return '';
+}
+
+/**
+ * Get effective value for a design variable (override if set, otherwise default from config).
+ * Use for CSS output and anywhere the final value is needed.
+ *
+ * @param string $id Variable id (e.g. "color-primary").
+ * @return string
+ */
+function fs_design_variable_value(string $id): string
+{
+	$override = fs_design_variable_override($id);
+	if ($override !== '') {
+		return $override;
+	}
+	foreach (fs_get_design_variables_list() as $v) {
+		if ($v['id'] === $id) {
+			return $v['default'];
+		}
+	}
+	return '';
+}
+
+/**
+ * Sanitize design variables on save: only persist non-empty overrides. Empty field = use default (do not store).
+ *
+ * @param array<string, string>|mixed $input Posted values.
+ * @return array<string, string>
+ */
+function fs_sanitize_design_variables($input): array
+{
+	$vars = fs_get_design_variables_list();
+	$by_id = [];
+	foreach ($vars as $v) {
+		$by_id[$v['id']] = $v;
+	}
+	$result = [];
+	$input = is_array($input) ? $input : [];
+	foreach ($by_id as $id => $def) {
+		$val = isset($input[$id]) ? $input[$id] : '';
+		$val = is_string($val) ? trim($val) : '';
+		if ($val === '') {
+			continue;
+		}
+		$result[$id] = sanitize_text_field($val);
+	}
+	return $result;
+}
 
 /**
  * Output the theme settings page (Settings → Theme Einstellungen): tabs, asset version, variables, design.
@@ -47,12 +320,23 @@ function theme_settings_page(): void
 	if ($bump_notice !== false) {
 		delete_transient('fromscratch_bump_notice');
 	}
+	$clear_design_notice = get_transient('fromscratch_clear_design_notice');
+	if ($clear_design_notice !== false) {
+		delete_transient('fromscratch_clear_design_notice');
+	}
+	$clear_design_url = wp_nonce_url(
+		add_query_arg('fromscratch_clear_design', '1', admin_url('options-general.php?page=fs-theme-settings')),
+		'fromscratch_clear_design'
+	);
 ?>
 	<div class="wrap">
 		<h1><?= esc_html(fs_config_variables('title_page')) ?></h1>
 
 		<?php if ($bump_notice !== false) : ?>
 			<div class="notice notice-success is-dismissible"><p><strong><?= esc_html(sprintf(fs_t('SETTINGS_BUMP_SUCCESS'), $bump_notice)) ?></strong></p></div>
+		<?php endif; ?>
+		<?php if ($clear_design_notice !== false) : ?>
+			<div class="notice notice-success is-dismissible"><p><strong><?= esc_html(fs_t('SETTINGS_DESIGN_CLEAR_SUCCESS')) ?></strong></p></div>
 		<?php endif; ?>
 
 		<form method="post" action="options.php" class="page-settings-form" id="fromscratch-settings-form">
@@ -91,40 +375,46 @@ function theme_settings_page(): void
 
 			<div id="fromscratch-panel-design" class="fromscratch-settings-panel" role="tabpanel" hidden>
 				<h2><?= esc_html(fs_t('SETTINGS_TAB_DESIGN')) ?></h2>
-				<table class="widefat striped">
-                <thead>
-                  <tr>
-				  	<th style="padding: 8px 10px; line-height: 1.4em; font-weight: bold"><?= fs_t('Variable') ?></th>
-                    <th style="padding: 8px 10px; line-height: 1.4em; font-weight: bold"><?= fs_t('Titel') ?></th>
-                    <th style="padding: 8px 10px; line-height: 1.4em; font-weight: bold"><?= fs_t('Wert') ?></th>
-                    <th style="padding: 8px 10px; line-height: 1.4em; font-weight: bold"></th>
-                  </tr>
-                </thead>
-                <tbody>
-
-                  <tr>
-                    <td><code>--color-gray-200</code></td>
-                    <td>
-                      <input
-                        type="text"
-                        name="pages[homepage][title]"
-                        value="Grau 200"
-                        class="regular-text" style="width: 180px">
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        name="pages[homepage][slug]"
-                        value="#444444"
-                        class="code" style="width: 180px">
-                    </td>
-					<td>
-						<div class="button">
-							<span class="dashicons dashicons-trash"></span>
-						</div>
-					</td>
-                  </tr>
-				</table>
+				<p class="description" style="margin-bottom: 8px;"><?= esc_html(fs_t('SETTINGS_DESIGN_DESCRIPTION')) ?></p>
+				<p style="margin-bottom: 16px;">
+					<a href="<?= esc_url($clear_design_url) ?>" class="button" onclick="return confirm('<?= esc_js(fs_t('SETTINGS_DESIGN_CLEAR_CONFIRM')) ?>');"><?= esc_html(fs_t('SETTINGS_DESIGN_CLEAR_ALL')) ?></a>
+				</p>
+				<?php
+				$design_sections = fs_get_design_sections_resolved();
+				foreach ($design_sections as $section_id => $section) :
+					$section_title = $section['title'];
+				?>
+				<div class="fromscratch-design-section" style="margin-bottom: 24px;">
+					<h3 style="margin: 0 0 8px 0; font-size: 14px;"><?= esc_html($section_title) ?></h3>
+					<table class="form-table" role="presentation">
+						<tbody>
+						<?php foreach ($section['variables'] as $v) :
+							$var_id = $v['id'] ?? '';
+							$var_title = $v['title'] ?? $var_id;
+							$var_type = (isset($v['type']) && $v['type'] === 'color') ? 'color' : 'text';
+							$override = fs_design_variable_override($var_id);
+							$default = $v['default'] ?? '';
+							$input_name = 'fromscratch_design[' . esc_attr($var_id) . ']';
+						?>
+							<tr>
+								<th scope="row" style="font-weight: normal; width: 220px;">
+									<code style="font-size: 12px;">--<?= esc_html($var_id) ?></code>
+								</th>
+								<td>
+									<label for="fromscratch_design_<?= esc_attr($var_id) ?>" class="screen-reader-text"><?= esc_html($var_title) ?></label>
+									<?php if ($var_type === 'color') : ?>
+									<input type="text" name="<?= $input_name ?>" id="fromscratch_design_<?= esc_attr($var_id) ?>" value="<?= esc_attr($override) ?>" placeholder="<?= esc_attr($default) ?>" class="code" style="width: 120px;" maxlength="22">
+									<?php else : ?>
+									<input type="text" name="<?= $input_name ?>" id="fromscratch_design_<?= esc_attr($var_id) ?>" value="<?= esc_attr($override) ?>" placeholder="<?= esc_attr($default) ?>" class="regular-text" style="width: 200px;">
+									<?php endif; ?>
+									<span class="description" style="margin-left: 8px; color: #646970;"><?= esc_html($var_title) ?></span>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+				<?php endforeach; ?>
 			</div>
 
 			<p class="submit"><?php submit_button(); ?></p>
@@ -136,14 +426,28 @@ function theme_settings_page(): void
 				if (!form) return;
 				var tabs = form.querySelectorAll('[data-fromscratch-tab]');
 				var panels = form.querySelectorAll('.fromscratch-settings-panel');
+				function showTab(id) {
+					tabs.forEach(function(t) {
+						var isActive = t.getAttribute('data-fromscratch-tab') === id;
+						t.classList.toggle('nav-tab-active', isActive);
+						t.setAttribute('aria-selected', isActive);
+					});
+					panels.forEach(function(p) {
+						p.hidden = p.id !== 'fromscratch-panel-' + id;
+					});
+				}
+				var match = /fromscratch_tab=([^&]+)/.exec(location.search);
+				if (match && match[1]) {
+					showTab(match[1]);
+					if (history.replaceState) {
+						var clean = location.search.replace(/&?fromscratch_tab=[^&]*/, '').replace(/^\?&/, '?') || '?page=fs-theme-settings';
+						if (clean === '?') clean = location.search;
+						history.replaceState(null, '', location.pathname + clean);
+					}
+				}
 				tabs.forEach(function(tab) {
 					tab.addEventListener('click', function() {
-						var id = this.getAttribute('data-fromscratch-tab');
-						tabs.forEach(function(t) { t.classList.toggle('nav-tab-active', t === tab); t.setAttribute('aria-selected', t === tab); });
-						panels.forEach(function(p) {
-							var show = p.id === 'fromscratch-panel-' + id;
-							p.hidden = !show;
-						});
+						showTab(this.getAttribute('data-fromscratch-tab'));
 					});
 				});
 			})();
@@ -243,3 +547,26 @@ add_filter('submenu_file', function ($submenu_file, $parent_file) {
 	}
 	return $submenu_file;
 }, 10, 2);
+
+/**
+ * Output :root { --var: value; } for design variables so SCSS var() picks them up.
+ *
+ * @return void
+ */
+function fs_output_design_css(): void
+{
+	$vars = fs_get_design_variables_list();
+	if ($vars === []) {
+		return;
+	}
+	$lines = [];
+	foreach ($vars as $v) {
+		$value = fs_design_variable_value($v['id']);
+		$value = fs_sanitize_css_custom_property_value($value);
+		$lines[] = '  --' . $v['id'] . ': ' . $value . ';';
+	}
+	if ($lines === []) {
+		return;
+	}
+	echo "\n<style id=\"fromscratch-design-vars\">\n:root {\n" . implode("\n", $lines) . "\n}\n</style>\n";
+}

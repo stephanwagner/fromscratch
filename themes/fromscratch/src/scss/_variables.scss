@@ -1,6 +1,9 @@
 @use 'sass:string';
 @use "sass:list";
 
+// Design variables: many entries use var(--variable-id, fallback). Override in Settings → Theme Einstellungen → Design.
+// Variable IDs and defaults are defined once in config.php under design.sections; keep fallbacks here in sync.
+
 // Paths
 $themePath: '/wp-content/themes/fromscratch';
 
@@ -8,7 +11,7 @@ $themePath: '/wp-content/themes/fromscratch';
 @function color($value) {
   @each $name, $color in $colors {
     @if $name == $value {
-      @return var(--color-$name, $color);
+      @return var(--color-#{$name}, $color);
     }
   }
   @return $value;

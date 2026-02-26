@@ -57,6 +57,10 @@ return [
     'SETTINGS_ASSET_VERSION_DESCRIPTION' => 'Erhöhen, wenn du das Logo oder andere statische Theme-Dateien änderst, damit der Browser die neue Datei lädt.',
     'SETTINGS_BUMP_VERSION' => 'Version erhöhen',
     'SETTINGS_BUMP_SUCCESS' => 'Asset-Version wurde auf %s erhöht.',
+    'SETTINGS_DESIGN_DESCRIPTION' => 'SCSS-Designvariablen überschreiben. Werte werden als CSS Custom Properties (:root) ausgegeben. Neue Variablen in config.php unter design.sections anlegen.',
+    'SETTINGS_DESIGN_CLEAR_ALL' => 'Alle zurücksetzen',
+    'SETTINGS_DESIGN_CLEAR_SUCCESS' => 'Design-Überschreibungen gelöscht. Alle Werte auf Standard zurückgesetzt.',
+    'SETTINGS_DESIGN_CLEAR_CONFIRM' => 'Alle Design-Überschreibungen auf Standard zurücksetzen?',
 
     // SVG support
     'SVG_FILE_MUST_BE_UNDER_MAX_SIZE' => 'SVG Datei muss unter %MAX_SIZE% sein. Du hast versucht eine Datei von %SIZE% hochzuladen.',

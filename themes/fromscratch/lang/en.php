@@ -57,6 +57,10 @@ return [
     'SETTINGS_ASSET_VERSION_DESCRIPTION' => 'Bump when you change the logo or other static theme files so browsers load the new file.',
     'SETTINGS_BUMP_VERSION' => 'Bump version',
     'SETTINGS_BUMP_SUCCESS' => 'Asset version increased to %s.',
+    'SETTINGS_DESIGN_DESCRIPTION' => 'Override SCSS design variables. Values are output as CSS custom properties (:root). Add new variables in config.php under design.sections.',
+    'SETTINGS_DESIGN_CLEAR_ALL' => 'Clear all',
+    'SETTINGS_DESIGN_CLEAR_SUCCESS' => 'Design overrides cleared. All values reset to defaults.',
+    'SETTINGS_DESIGN_CLEAR_CONFIRM' => 'Reset all design overrides to defaults?',
 
     // SVG support
     'SVG_FILE_MUST_BE_UNDER_MAX_SIZE' => 'SVG file must be under %MAX_SIZE%. You tried to upload a file of %SIZE%.',
