@@ -64,6 +64,15 @@ return [
     'SETTINGS_DESIGN_CLEAR_SUCCESS' => 'Design-Überschreibungen gelöscht. Alle Werte auf Standard zurückgesetzt.',
     'SETTINGS_DESIGN_CLEAR_CONFIRM' => 'Alle Design-Überschreibungen auf Standard zurücksetzen?',
 
+    // Theme features (General tab)
+    'SETTINGS_FEATURES_HEADING' => 'Theme-Funktionen',
+    'SETTINGS_FEATURE_SVG' => 'SVG-Unterstützung',
+    'SETTINGS_FEATURE_SVG_DESCRIPTION' => 'SVG-Uploads erlauben (mit Größen- und Sicherheitsprüfung).',
+    'SETTINGS_FEATURE_DUPLICATE_POST' => 'Beitrag/Seite duplizieren',
+    'SETTINGS_FEATURE_DUPLICATE_POST_DESCRIPTION' => '„Duplizieren“-Aktion für Beiträge, Seiten und benutzerdefinierte Beitragstypen anzeigen.',
+    'SETTINGS_FEATURE_SEO' => 'SEO',
+    'SETTINGS_FEATURE_SEO_DESCRIPTION' => 'SEO-Bereich (Titel, Beschreibung, OG-Bild, Noindex) für Beiträge und Seiten.',
+
     // Duplicate post/page
     'DUPLICATE_LINK' => 'Duplizieren',
     'DUPLICATE_COPY_SUFFIX' => '(Kopie)',

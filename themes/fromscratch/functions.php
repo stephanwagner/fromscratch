@@ -38,11 +38,6 @@ require_once 'inc/head.php';
 require_once 'inc/theme-setup.php';
 
 /**
- * Support SVG
- */
-require_once 'inc/svg-support.php';
-
-/**
  * Menu
  */
 require_once 'inc/menu.php';
@@ -53,16 +48,6 @@ require_once 'inc/menu.php';
 require_once 'inc/dashboard.php';
 
 /**
- * Duplicate post/page/custom post type
- */
-require_once 'inc/duplicate-post.php';
-
-/**
- * SEO (post/page meta and document panel)
- */
-require_once 'inc/seo.php';
-
-/**
  * Assets
  */
 require_once 'inc/assets.php';
@@ -71,3 +56,24 @@ require_once 'inc/assets.php';
  * Variables
  */
 require_once 'inc/variables.php';
+
+/**
+ * Support SVG
+ */
+if (fs_theme_feature_enabled('svg')) {
+    require_once 'inc/svg-support.php';
+}
+
+/**
+ * Duplicate post/page/custom post type
+ */
+if (fs_theme_feature_enabled('duplicate_post')) {
+    require_once 'inc/duplicate-post.php';
+}
+
+/**
+ * SEO (post/page meta and document panel)
+ */
+if (fs_theme_feature_enabled('seo')) {
+    require_once 'inc/seo.php';
+}

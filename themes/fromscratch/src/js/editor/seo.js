@@ -1,6 +1,10 @@
 (function (wp) {
   'use strict';
 
+  if (typeof fromscratchFeatures === 'undefined' || !fromscratchFeatures.seo) {
+    return;
+  }
+
   const el = wp.element.createElement;
   const { registerPlugin } = wp.plugins;
   const { PluginDocumentSettingPanel } = wp.editPost;

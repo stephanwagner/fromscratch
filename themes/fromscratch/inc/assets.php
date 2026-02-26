@@ -171,5 +171,8 @@ function fs_editor_scripts(): void
 		fs_asset_hash($file),
 		true
 	);
+	wp_localize_script('fromscratch-editor', 'fromscratchFeatures', [
+		'seo' => function_exists('fs_theme_feature_enabled') && fs_theme_feature_enabled('seo'),
+	]);
 }
 add_action('enqueue_block_editor_assets', 'fs_editor_scripts');

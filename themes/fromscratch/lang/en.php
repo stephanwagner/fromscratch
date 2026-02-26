@@ -64,6 +64,15 @@ return [
     'SETTINGS_DESIGN_CLEAR_SUCCESS' => 'Design overrides cleared. All values reset to defaults.',
     'SETTINGS_DESIGN_CLEAR_CONFIRM' => 'Reset all design overrides to defaults?',
 
+    // Theme features (General tab)
+    'SETTINGS_FEATURES_HEADING' => 'Theme features',
+    'SETTINGS_FEATURE_SVG' => 'SVG support',
+    'SETTINGS_FEATURE_SVG_DESCRIPTION' => 'Allow SVG uploads (with size and safety checks).',
+    'SETTINGS_FEATURE_DUPLICATE_POST' => 'Duplicate post/page',
+    'SETTINGS_FEATURE_DUPLICATE_POST_DESCRIPTION' => 'Show “Duplicate” row action for posts, pages, and custom post types.',
+    'SETTINGS_FEATURE_SEO' => 'SEO',
+    'SETTINGS_FEATURE_SEO_DESCRIPTION' => 'SEO panel (title, description, OG image, noindex) for posts and pages.',
+
     // Duplicate post/page
     'DUPLICATE_LINK' => 'Duplicate',
     'DUPLICATE_COPY_SUFFIX' => '(Copy)',

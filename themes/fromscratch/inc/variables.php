@@ -57,6 +57,57 @@ add_action('admin_init', function () {
 	]);
 }, 5);
 
+add_action('admin_init', function () {
+	register_setting('section', 'fromscratch_features', [
+		'type' => 'array',
+		'sanitize_callback' => 'fs_sanitize_features',
+	]);
+}, 5);
+
+/**
+ * Sanitize theme features option (checkboxes: enable_svg, enable_duplicate_post, enable_seo).
+ *
+ * @param array<string, int>|mixed $value Raw POST value.
+ * @return array<string, int>
+ */
+function fs_sanitize_features($value): array
+{
+	if (!is_array($value)) {
+		return [];
+	}
+	$keys = ['enable_svg', 'enable_duplicate_post', 'enable_seo'];
+	$out = [];
+	foreach ($keys as $key) {
+		$out[$key] = (!empty($value[$key])) ? 1 : 0;
+	}
+	return $out;
+}
+
+/**
+ * Check whether a theme feature is enabled (Settings → Theme → General).
+ * When the option was never saved, all features are considered enabled.
+ *
+ * @param string $feature One of: svg, duplicate_post, seo.
+ * @return bool
+ */
+function fs_theme_feature_enabled(string $feature): bool
+{
+	$map = [
+		'svg' => 'enable_svg',
+		'duplicate_post' => 'enable_duplicate_post',
+		'seo' => 'enable_seo',
+	];
+	$key = $map[$feature] ?? '';
+	if ($key === '') {
+		return false;
+	}
+	$options = get_option('fromscratch_features', []);
+	if (!is_array($options) || !array_key_exists($key, $options)) {
+		return true;
+	}
+	return (int) $options[$key] === 1;
+}
+
 /**
  * Sanitize a string for use as CSS custom property value (prevent breaking out of :root block).
  *
@@ -342,6 +393,15 @@ function theme_settings_page(): void
 		</nav>
 
 		<?php if ($tab === 'general') : ?>
+		<?php
+			$features = get_option('fromscratch_features', []);
+			if (!is_array($features)) {
+				$features = [];
+			}
+			$feat = function ($key) use ($features) {
+				return isset($features[$key]) ? (int) $features[$key] : 1;
+			};
+		?>
 		<form method="post" action="options.php" class="page-settings-form">
 			<?php settings_fields('section'); ?>
 			<table class="form-table" role="presentation">
@@ -353,6 +413,30 @@ function theme_settings_page(): void
 						<input type="text" name="fromscratch_asset_version" id="fromscratch_asset_version" value="<?= esc_attr(get_option('fromscratch_asset_version', '1')) ?>" class="small-text" style="width: 64px;">
 						<a href="<?= esc_url($bump_url) ?>" class="button" style="margin-left: 8px;"><?= esc_html(fs_t('SETTINGS_BUMP_VERSION')) ?></a>
 						<p class="description"><?= esc_html(fs_t('SETTINGS_ASSET_VERSION_DESCRIPTION')) ?></p>
+					</td>
+				</tr>
+			</table>
+			<h2 class="title" style="margin: 24px 0 8px; font-size: 14px;"><?= esc_html(fs_t('SETTINGS_FEATURES_HEADING')) ?></h2>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?= esc_html(fs_t('SETTINGS_FEATURE_SVG')) ?></th>
+					<td>
+						<input type="hidden" name="fromscratch_features[enable_svg]" value="0">
+						<label><input type="checkbox" name="fromscratch_features[enable_svg]" value="1" <?= checked($feat('enable_svg'), 1, false) ?>> <?= esc_html(fs_t('SETTINGS_FEATURE_SVG_DESCRIPTION')) ?></label>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?= esc_html(fs_t('SETTINGS_FEATURE_DUPLICATE_POST')) ?></th>
+					<td>
+						<input type="hidden" name="fromscratch_features[enable_duplicate_post]" value="0">
+						<label><input type="checkbox" name="fromscratch_features[enable_duplicate_post]" value="1" <?= checked($feat('enable_duplicate_post'), 1, false) ?>> <?= esc_html(fs_t('SETTINGS_FEATURE_DUPLICATE_POST_DESCRIPTION')) ?></label>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?= esc_html(fs_t('SETTINGS_FEATURE_SEO')) ?></th>
+					<td>
+						<input type="hidden" name="fromscratch_features[enable_seo]" value="0">
+						<label><input type="checkbox" name="fromscratch_features[enable_seo]" value="1" <?= checked($feat('enable_seo'), 1, false) ?>> <?= esc_html(fs_t('SETTINGS_FEATURE_SEO_DESCRIPTION')) ?></label>
 					</td>
 				</tr>
 			</table>
