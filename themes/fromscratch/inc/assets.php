@@ -1,5 +1,7 @@
 <?php
 
+defined('ABSPATH') || exit;
+
 /**
  * Asset version for static assets (logo, etc.). Bump in Theme settings → General when you change files.
  *

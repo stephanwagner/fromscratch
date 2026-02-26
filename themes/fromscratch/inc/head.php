@@ -1,4 +1,7 @@
 <?php
+
+defined('ABSPATH') || exit;
+
 /**
  * Add title tag
  */

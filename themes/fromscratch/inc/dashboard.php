@@ -1,4 +1,7 @@
 <?php
+
+defined('ABSPATH') || exit;
+
 // TODO
 
 // Security messages
