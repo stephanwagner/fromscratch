@@ -182,4 +182,17 @@ return [
 
 	// Site password protection: cookie duration in days (access token validity)
 	'site_password_cookie_days' => 14, // 2 weeks
+
+	/**
+	 * HTTP response headers sent on the front-end (not admin/AJAX/REST).
+	 * Header name => value. Empty value skips the header.
+	 */
+	'headers' => [
+		'Cache-Control' => 'no-cache, must-revalidate, max-age=0',
+		'X-Content-Type-Options' => 'nosniff',
+		'X-Frame-Options' => 'SAMEORIGIN',
+		'Referrer-Policy' => 'strict-origin-when-cross-origin',
+		'X-Permitted-Cross-Domain-Policies' => 'none',
+	],
+
 ];

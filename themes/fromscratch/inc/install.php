@@ -220,7 +220,7 @@ function fs_render_installer(): void
                 </label>
               </p>
               <p class="description"><?= esc_html__('Stores the values in WordPress media settings.', 'fromscratch') ?></p>
-              <div data-fs-checkbox-toggle-content="media">
+              <div data-fs-checkbox-toggle-content="media" style="margin-top: 12px;">
                 <?php
                 $install_media_sizes = [
                   'thumbnail' => ['name' => __('Thumbnail'), 'width' => 300, 'height' => 300],
@@ -232,7 +232,7 @@ function fs_render_installer(): void
                   $w = (int) $size['width'];
                   $h = (int) $size['height'];
                 ?>
-                  <p style="margin-bottom: 8px;">
+                  <div style="margin-bottom: 8px;">
                     <label>
                       <span style="display: inline-block; min-width: 120px;"><?= esc_html($size['name']) ?></span>
                       <input type="number" name="media[<?= esc_attr($slug) ?>][width]" value="<?= $w ?>" class="small-text" min="1" style="width: 72px;"> ×
@@ -241,10 +241,10 @@ function fs_render_installer(): void
                     <?php if ($slug === 'thumbnail') { ?>
                       <label style="margin-left: 12px;">
                         <input type="checkbox" name="media[thumbnail][crop]" value="1">
-                        <?= esc_html__('Crop thumbnail to exact dimensions', 'fromscratch') ?>
+                        <?= esc_html__('Crop to exact dimensions', 'fromscratch') ?>
                       </label>
                     <?php } ?>
-                  </p>
+                  </div>
                 <?php
                 }
                 ?>
@@ -264,10 +264,10 @@ function fs_render_installer(): void
               <p style="margin-top: 0;">
                 <label>
                   <input type="checkbox" name="install[permalinks]" checked>
-                  <?= esc_html__('Enable pretty permalinks', 'fromscratch') ?>
+                  <?= esc_html__('Set permalink structure to “Post name”', 'fromscratch') ?>
                 </label>
               </p>
-              <p class="description"><?= esc_html__('Sets the permalink structure to /%postname%/ so URLs look like /about/ instead of ?p=123.', 'fromscratch') ?></p>
+              <p class="description"><?= esc_html__('Sets the permalink structure to “Post name” (/%postname%/), so URLs look like /about/ instead of ?p=123.', 'fromscratch') ?></p>
             </td>
           </tr>
 
@@ -286,10 +286,11 @@ function fs_render_installer(): void
               $htaccess_config = fs_get_htaccess_config();
               if ($htaccess_config !== '') {
               ?>
-                <details style="margin-top: 8px;">
+                <details class="fs-details" style="margin-top: 8px;">
                   <summary style="cursor: pointer;"><?= esc_html__('Show config', 'fromscratch') ?></summary>
                   <div style="margin-top: 8px;">
-                    <textarea id="fs-htaccess-config" class="large-text code" rows="16" style="width: 100%; max-width: 640px; font-size: 12px; font-family: monospace;"><?= esc_textarea($htaccess_config) ?></textarea>
+                    <p class="description" style="margin-bottom: 8px;"><?= esc_html__('Be careful when editing this. Incorrect rules can break your site or make it inaccessible.', 'fromscratch') ?></p>
+                    <textarea id="fs-htaccess-config" class="large-text code" rows="27" style="width: 100%; font-size: 12px; font-family: monospace;"><?= esc_textarea($htaccess_config) ?></textarea>
                   </div>
                 </details>
               <?php
@@ -306,11 +307,13 @@ function fs_render_installer(): void
               $nginx_config = fs_get_nginx_config();
               if ($nginx_config !== '') {
               ?>
-                <details style="margin-top: 8px;">
+                <details class="fs-details" style="margin-top: 8px;">
                   <summary style="cursor: pointer;"><?= esc_html__('Show config', 'fromscratch') ?></summary>
-                  <div style="margin-top: 8px; position: relative;">
-                    <pre id="fs-nginx-config" style="margin: 0; padding: 12px; background: #f6f7f7; border: 1px solid #c3c4c7; border-radius: 4px; overflow: auto; max-height: 280px; font-size: 12px;"><?= esc_html($nginx_config) ?></pre>
-                    <button type="button" class="button button-small" style="margin-top: 8px;" data-fs-copy-from-source="fs-nginx-config" data-fs-copy-feedback-text="<?= esc_attr__('Copied', 'fromscratch') ?>"><?= esc_html__('Copy', 'fromscratch') ?></button>
+                  <div style="margin-top: 8px;">
+                    <textarea id="fs-nginx-config" class="large-text code" rows="27" readonly style="width: 100%; font-size: 12px; font-family: monospace;"><?= esc_textarea($nginx_config) ?></textarea>
+                    <div>
+                      <button type="button" class="button button-small" data-fs-copy-from-source="fs-nginx-config" data-fs-copy-feedback-text="<?= esc_attr__('Copied', 'fromscratch') ?>"><?= esc_html__('Copy', 'fromscratch') ?></button>
+                    </div>
                   </div>
                 </details>
               <?php
@@ -335,14 +338,14 @@ function fs_render_installer(): void
                 </label>
               </p>
               <p class="description"><?= esc_html__('Pages will only be created if they don\'t exist yet.', 'fromscratch') ?></p>
-              <div data-fs-checkbox-toggle-content="pages">
-                <table class="widefat striped" style="max-width: 600px; margin-top: 8px;">
+              <div data-fs-checkbox-toggle-content="pages" style="margin-top: 8px;">
+                <table class="widefat striped fs-table-tight">
                   <thead>
                     <tr>
-                      <th style="padding: 8px 10px; line-height: 1.4em; width: 32px;"></th>
-                      <th style="padding: 8px 10px; line-height: 1.4em"><?= esc_html__('Page', 'fromscratch') ?></th>
-                      <th style="padding: 8px 10px; line-height: 1.4em"><?= esc_html__('Title', 'fromscratch') ?></th>
-                      <th style="padding: 8px 10px; line-height: 1.4em"><?= esc_html__('Slug', 'fromscratch') ?></th>
+                      <th></th>
+                      <th><?= esc_html__('Page', 'fromscratch') ?></th>
+                      <th><?= esc_html__('Title', 'fromscratch') ?></th>
+                      <th><?= esc_html__('Slug', 'fromscratch') ?></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -472,7 +475,7 @@ function fs_render_installer(): void
 
         <h2><?= esc_html__('Users', 'fromscratch') ?></h2>
 
-        <p class="description"><?= esc_html__('At least one user must have developer rights.', 'fromscratch') ?></p>
+        <p class="description"><?= esc_html__('At least one user requires developer privileges to manage technical settings and system-level functionality.', 'fromscratch') ?></p>
 
         <?php
         $current_user = wp_get_current_user();
@@ -484,59 +487,61 @@ function fs_render_installer(): void
                 <!-- Current user -->
                 <div style="flex: 1; min-width: 280px; padding: 16px; background: #f6f7f7; border: 1px solid #c3c4c7; border-radius: 4px;">
                   <h3 style="margin: 0 0 12px 0; font-size: 14px;"><?= esc_html__('Current user', 'fromscratch') ?></h3>
-                  <p style="margin-bottom: 12px;">
-                    <label for="developer_current_username"><?= esc_html__('Username', 'fromscratch') ?></label><br>
+                  <div style="margin-bottom: 12px;">
+                    <label class="fs-input-label" for="developer_current_username"><?= esc_html__('Username', 'fromscratch') ?></label>
                     <input type="text" id="developer_current_username" value="<?= esc_attr($current_user->user_login) ?>" class="regular-text" style="width: 100%;" readonly>
-                  </p>
-                  <p style="margin-bottom: 12px;">
-                    <label for="developer_current_email"><?= esc_html__('Email', 'fromscratch') ?></label><br>
+                  </div>
+                  <div style="margin-bottom: 12px;">
+                    <label class="fs-input-label" for="developer_current_email"><?= esc_html__('Email', 'fromscratch') ?></label>
                     <input type="email" name="developer[current_user][email]" id="developer_current_email" value="<?= esc_attr($current_user->user_email) ?>" class="regular-text" style="width: 100%;" autocomplete="email">
-                  </p>
-                  <p style="margin-bottom: 12px;">
-                    <label for="developer_current_password"><?= esc_html__('Password', 'fromscratch') ?></label><br>
+                  </div>
+                  <div style="margin-bottom: 12px;">
+                    <label class="fs-input-label" for="developer_current_password"><?= esc_html__('Password', 'fromscratch') ?></label>
                     <input type="password" name="developer[current_user][password]" id="developer_current_password" value="" class="regular-text" style="width: 100%;" autocomplete="off">
-                    <span class="description"><?= esc_html__('Leave empty to keep current password.', 'fromscratch') ?></span>
-                  </p>
-                  <p style="margin-bottom: 0;">
+                    <div class="fs-input-description description"><?= esc_html__('Leave empty to keep current password.', 'fromscratch') ?></div>
+                  </div>
+                  <div style="margin-bottom: 0;">
                     <label>
                       <input type="checkbox" name="developer[current_user][has_developer_rights]" value="1" checked>
                       <?= esc_html__('Has developer rights', 'fromscratch') ?>
                     </label>
-                  </p>
+                  </div>
                 </div>
                 <!-- Optional additional user -->
                 <div style="flex: 1; min-width: 280px; padding: 16px; background: #f6f7f7; border: 1px solid #c3c4c7; border-radius: 4px;">
                   <h3 style="margin: 0 0 12px 0; font-size: 14px;"><?= esc_html__('Add another admin user', 'fromscratch') ?></h3>
-                  <p style="margin-bottom: 12px;">
-                    <label for="developer_new_username"><?= esc_html__('Username', 'fromscratch') ?></label><br>
+                  <div style="margin-bottom: 12px;">
+                    <label class="fs-input-label" for="developer_new_username"><?= esc_html__('Username', 'fromscratch') ?></label>
                     <input type="text" name="developer[new_user][username]" id="developer_new_username" value="" class="regular-text" style="width: 100%;" autocomplete="off">
-                  </p>
-                  <p style="margin-bottom: 12px;">
-                    <label for="developer_new_email"><?= esc_html__('Email', 'fromscratch') ?></label><br>
+                  </div>
+                  <div style="margin-bottom: 12px;">
+                    <label class="fs-input-label" for="developer_new_email"><?= esc_html__('Email', 'fromscratch') ?></label>
                     <input type="email" name="developer[new_user][email]" id="developer_new_email" value="" class="regular-text" style="width: 100%;" autocomplete="off">
-                  </p>
-                  <p style="margin-bottom: 12px;">
-                    <label for="developer_new_password"><?= esc_html__('Password', 'fromscratch') ?></label><br>
+                  </div>
+                  <div style="margin-bottom: 12px;">
+                    <label class="fs-input-label" for="developer_new_password"><?= esc_html__('Password', 'fromscratch') ?></label>
                     <input type="password" name="developer[new_user][password]" id="developer_new_password" value="" class="regular-text" style="width: 100%;" autocomplete="new-password">
-                    <a class="fs-description-link -gray -has-icon" href="https://passwordcopy.app" target="_blank" rel="noopener" style="margin-left: 4px;">
-                      <span class="fs-description-link-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
-                          <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h240q17 0 28.5 11.5T480-800q0 17-11.5 28.5T440-760H200v560h560v-240q0-17 11.5-28.5T800-480q17 0 28.5 11.5T840-440v240q0 33-23.5 56.5T760-120H200Zm560-584L416-360q-11 11-28 11t-28-11q-11-11-11-28t11-28l344-344H600q-17 0-28.5-11.5T560-800q0-17 11.5-28.5T600-840h200q17 0 28.5 11.5T840-800v200q0 17-11.5 28.5T800-560q-17 0-28.5-11.5T760-600v-104Z" />
-                        </svg></span>
-                      <span>passwordcopy.app</span>
-                    </a>
-                  </p>
-                  <p>
+                    <div class="fs-input-description">
+                      <a class="fs-description-link -has-icon" href="https://passwordcopy.app" target="_blank" rel="noopener">
+                        <span class="fs-description-link-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+                            <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h240q17 0 28.5 11.5T480-800q0 17-11.5 28.5T440-760H200v560h560v-240q0-17 11.5-28.5T800-480q17 0 28.5 11.5T840-440v240q0 33-23.5 56.5T760-120H200Zm560-584L416-360q-11 11-28 11t-28-11q-11-11-11-28t11-28l344-344H600q-17 0-28.5-11.5T560-800q0-17 11.5-28.5T600-840h200q17 0 28.5 11.5T840-800v200q0 17-11.5 28.5T800-560q-17 0-28.5-11.5T760-600v-104Z" />
+                          </svg></span>
+                        <span>passwordcopy.app</span>
+                      </a>
+                    </div>
+                  </div>
+                  <div style="margin-bottom: 12px;">
                     <label>
                       <input type="checkbox" name="developer[new_user][has_developer_rights]" value="1">
                       <?= esc_html__('Has developer rights', 'fromscratch') ?>
                     </label>
-                  </p>
-                  <p style="margin-bottom: 0;">
+                  </div>
+                  <div>
                     <label>
                       <input type="checkbox" name="developer[new_user][login_after_setup]" value="1">
                       <?= esc_html__('Log in as this user after setup', 'fromscratch') ?>
                     </label>
-                  </p>
+                  </div>
                 </div>
               </div>
             </td>

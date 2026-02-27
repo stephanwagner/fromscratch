@@ -24,17 +24,74 @@
   display: none !important;
 }
 
-.fs-description-link {
+.fs-details {
+  summary {
+    position: relative;
+    padding-left: 12px;
+    cursor: pointer;
+    list-style: none;
 
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &::before {
+      content: "›";
+      position: absolute;
+      left: 0;
+      top: 0;
+      transition: transform 280ms;
+      transform: translateY(-1px) translateX(1px) scale(1.25);
+    }
+  }
+
+  &[open] summary::before {
+    transform: translateY(-1px) translateX(1px) scale(1.25) rotate(90deg);
+  }
+}
+
+.fs-input-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.fs-input-description {
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.fs-table-tight {
+  width: auto;
+
+  th {
+    width: auto;
+  }
+
+  th,
+  td {
+    padding: 8px 6px;
+
+    &:first-child {
+      padding-left: 12px;
+    }
+
+    &:last-child {
+      padding-right: 12px;
+    }
+  }
+}
+
+.fs-description-link {
   &.-has-icon {
     display: inline-flex;
     align-items: center;
     gap: 2px;
 
     .fs-description-link-icon {
-      width: 18px;
-      height: 18px;
-      transform: translateY(2px);
+      width: 16px;
+      height: 16px;
+      transform: translateY(1px);
 
       svg {
         display: block;

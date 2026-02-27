@@ -9,10 +9,24 @@
 defined('ABSPATH') || exit;
 
 add_action('send_headers', function () {
+	// Skip admin, AJAX, REST
 	if (is_admin() || wp_doing_ajax() || wp_is_json_request()) {
 		return;
 	}
 
-	// Revalidate every time — never serve an old page from cache
-	header('Cache-Control: public, max-age=0, must-revalidate');
+	// Apply headers from config
+	$headers = fs_config('headers');
+	if (is_array($headers)) {
+		foreach ($headers as $name => $value) {
+			if ($value !== '' && $value !== null) {
+				header(sprintf('%s: %s', $name, $value));
+			}
+		}
+	}
+
+	// Never cache logged-in users
+	if (is_user_logged_in()) {
+		header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+		header('Pragma: no-cache');
+	}
 }, 0);

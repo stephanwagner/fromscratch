@@ -75,8 +75,8 @@ msgstr "Mediengrößen setzen"
 msgid "Stores the values in WordPress media settings."
 msgstr "Speichert die Werte in den WordPress-Medieneinstellungen."
 
-msgid "Crop thumbnail to exact dimensions"
-msgstr "Vorschaubild auf exakte Maße zuschneiden"
+msgid "Crop to exact dimensions"
+msgstr "Auf exakte Maße zuschneiden"
 
 msgid "System"
 msgstr "System"
@@ -84,11 +84,11 @@ msgstr "System"
 msgid "Permalinks"
 msgstr "Permalinks"
 
-msgid "Enable pretty permalinks"
-msgstr "Schöne Permalinks aktivieren"
+msgid "Set permalink structure to “Post name”"
+msgstr "Permalink-Struktur auf „Beitragsname“ setzen"
 
-msgid "Sets the permalink structure to /%postname%/ so URLs look like /about/ instead of ?p=123."
-msgstr "Setzt die Permalink-Struktur auf /%postname%/, sodass URLs z. B. /impressum/ statt ?p=123 lauten."
+msgid "Sets the permalink structure to “Post name” (/%postname%/), so URLs look like /about/ instead of ?p=123."
+msgstr "Setzt die Permalink-Struktur auf „Beitragsname“ (/%postname%/), sodass URLs wie /kontakt/ statt ?p=123 verwendet werden."
 
 msgid "Apache (.htaccess)"
 msgstr "Apache (.htaccess)"
@@ -102,11 +102,14 @@ msgstr "Schreibt Expires-Header, entfernt Set-Cookie bei statischen Dateien und 
 msgid "Show config"
 msgstr "Konfig anzeigen"
 
+msgid "Be careful when editing this. Incorrect rules can break your site or make it inaccessible."
+msgstr "Vorsicht beim Bearbeiten: Fehlerhafte Regeln können deine Webseite beschädigen oder unerreichbar machen."
+
 msgid "Nginx"
 msgstr "Nginx"
 
 msgid "Recommended snippet for Nginx: add to your server block for gzip, long cache on static assets, and Vary Accept-Encoding. Copy and paste into your Nginx config."
-msgstr "Empfohlener Snippet für Nginx: in den server-Block einfügen für Gzip, langer Cache bei statischen Dateien und Vary Accept-Encoding. In die Nginx-Konfiguration kopieren."
+msgstr "Empfohlener Snippet für Nginx: in den Server-Block einfügen für Gzip, langer Cache bei statischen Dateien und Vary Accept-Encoding. In die Nginx-Konfiguration kopieren."
 
 msgid "Copied"
 msgstr "Kopiert"
@@ -186,8 +189,8 @@ msgstr "Zeigt das Menü „Beiträge“ im Admin und erlaubt das Anlegen und Bea
 msgid "Users"
 msgstr "Benutzer"
 
-msgid "At least one user must have developer rights."
-msgstr "Mindestens ein Benutzer muss Entwicklerrechte haben."
+msgid "At least one user requires developer privileges to manage technical settings and system-level functionality."
+msgstr "Mindestens ein Benutzer benötigt Entwicklerrechte, um technische Einstellungen und systemrelevante Funktionen verwalten zu können."
 
 msgid "Current user"
 msgstr "Aktueller Benutzer"
