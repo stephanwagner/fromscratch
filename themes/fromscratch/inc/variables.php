@@ -481,6 +481,7 @@ function theme_settings_page(): void
 		<form method="post" action="options.php" class="page-settings-form">
 			<?php settings_fields(FS_THEME_OPTION_GROUP_GENERAL); ?>
 			<h2 class="title"><?= esc_html(fs_t('SETTINGS_ASSET_VERSION_HEADING')) ?></h2>
+			<p class="description" style="margin-bottom: 8px;"><?= esc_html(fs_t('SETTINGS_ASSET_VERSION_INTRO')) ?></p>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row">
@@ -493,6 +494,7 @@ function theme_settings_page(): void
 					</td>
 				</tr>
 			</table>
+			<hr>
 			<h2 class="title"><?= esc_html(fs_t('SETTINGS_FEATURES_HEADING')) ?></h2>
 			<table class="form-table" role="presentation">
 				<tr>
@@ -500,6 +502,7 @@ function theme_settings_page(): void
 					<td>
 						<input type="hidden" name="fromscratch_features[enable_svg]" value="0">
 						<label><input type="checkbox" name="fromscratch_features[enable_svg]" value="1" <?= checked($feat('enable_svg'), 1, false) ?>> <?= esc_html(fs_t('SETTINGS_FEATURE_SVG_DESCRIPTION')) ?></label>
+						<p class="description fs-description-adjust-checkbox"><?= esc_html(fs_t('SETTINGS_FEATURE_SVG_HELP')) ?></p>
 					</td>
 				</tr>
 				<tr>
@@ -507,6 +510,7 @@ function theme_settings_page(): void
 					<td>
 						<input type="hidden" name="fromscratch_features[enable_duplicate_post]" value="0">
 						<label><input type="checkbox" name="fromscratch_features[enable_duplicate_post]" value="1" <?= checked($feat('enable_duplicate_post'), 1, false) ?>> <?= esc_html(fs_t('SETTINGS_FEATURE_DUPLICATE_POST_DESCRIPTION')) ?></label>
+						<p class="description fs-description-adjust-checkbox"><?= esc_html(fs_t('SETTINGS_FEATURE_DUPLICATE_POST_HELP')) ?></p>
 					</td>
 				</tr>
 				<tr>
@@ -581,6 +585,7 @@ function theme_settings_page(): void
 					</td>
 				</tr>
 			</table>
+			<hr>
 			<h2 class="title"><?= esc_html(fs_t('SETTINGS_SECURITY_HEADING_LOGIN')) ?></h2>
 			<table class="form-table" role="presentation">
 				<tr>
