@@ -52,3 +52,33 @@ function fs_write_htaccess(): bool
 	}
 	return true;
 }
+
+/**
+ * Return recommended .htaccess block content (with FromScratch markers) for display or edit. Reads from template.
+ *
+ * @return string .htaccess block content or empty string if template missing.
+ */
+function fs_get_htaccess_config(): string
+{
+	$marker_start = '# BEGIN FromScratch';
+	$marker_end   = '# END FromScratch';
+	$template     = __DIR__ . '/htaccess-file.txt';
+	if (!is_readable($template)) {
+		return '';
+	}
+	return $marker_start . "\n" . trim(file_get_contents($template)) . "\n" . $marker_end;
+}
+
+/**
+ * Return recommended nginx config snippet (for copy/paste into server block). Nginx config cannot be written from PHP.
+ *
+ * @return string Nginx config content or empty string if template missing.
+ */
+function fs_get_nginx_config(): string
+{
+	$template = __DIR__ . '/nginx-file.conf';
+	if (!is_readable($template)) {
+		return '';
+	}
+	return trim(file_get_contents($template));
+}

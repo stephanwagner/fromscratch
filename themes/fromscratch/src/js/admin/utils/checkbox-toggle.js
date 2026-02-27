@@ -1,5 +1,5 @@
 /**
- * Reusable: toggle content blocks by scope. Checkbox has data-fs-checkbox-toggle="SCOPE",
+ * Toggle content blocks by scope. Checkbox has data-fs-checkbox-toggle="SCOPE",
  * content has data-fs-checkbox-toggle-content="SCOPE". All elements with matching scope are shown/hidden.
  *
  * @param {HTMLElement} [root=document] - Root to query within.

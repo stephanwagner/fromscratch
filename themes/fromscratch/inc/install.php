@@ -247,7 +247,7 @@ function fs_render_installer(): void
             </td>
           </tr>
 
-          <!-- .htaccess (Apache only) -->
+          <!-- Apache .htaccess -->
           <tr>
             <th scope="row"><?= fs_t('INSTALL_HTACCESS_TITLE') ?></th>
             <td>
@@ -258,6 +258,40 @@ function fs_render_installer(): void
                 </label>
               </p>
               <p class="description"><?= esc_html(fs_t('INSTALL_HTACCESS_DESCRIPTION')) ?></p>
+              <?php
+              $htaccess_config = fs_get_htaccess_config();
+              if ($htaccess_config !== '') {
+                ?>
+                <details style="margin-top: 8px;">
+                  <summary style="cursor: pointer;"><?= esc_html(fs_t('INSTALL_NGINX_SHOW_CONFIG')) ?></summary>
+                  <div style="margin-top: 8px;">
+                    <textarea id="fs-htaccess-config" class="large-text code" rows="16" style="width: 100%; max-width: 640px; font-size: 12px; font-family: monospace;"><?= esc_textarea($htaccess_config) ?></textarea>
+                  </div>
+                </details>
+                <?php
+              }
+              ?>
+            </td>
+          </tr>
+          <!-- Nginx (copy snippet) -->
+          <tr>
+            <th scope="row"><?= fs_t('INSTALL_NGINX_TITLE') ?></th>
+            <td>
+              <p class="description"><?= esc_html(fs_t('INSTALL_NGINX_DESCRIPTION')) ?></p>
+              <?php
+              $nginx_config = fs_get_nginx_config();
+              if ($nginx_config !== '') {
+                ?>
+                <details style="margin-top: 8px;">
+                  <summary style="cursor: pointer;"><?= esc_html(fs_t('INSTALL_NGINX_SHOW_CONFIG')) ?></summary>
+                  <div style="margin-top: 8px; position: relative;">
+                    <pre id="fs-nginx-config" style="margin: 0; padding: 12px; background: #f6f7f7; border: 1px solid #c3c4c7; border-radius: 4px; overflow: auto; max-height: 280px; font-size: 12px;"><?= esc_html($nginx_config) ?></pre>
+                    <button type="button" class="button button-small" style="margin-top: 8px;" data-fs-copy-from-source="fs-nginx-config" data-fs-copy-feedback-text="<?= esc_attr(fs_t('INSTALL_NGINX_COPIED')) ?>"><?= esc_html(fs_t('INSTALL_NGINX_COPY')) ?></button>
+                  </div>
+                </details>
+                <?php
+              }
+              ?>
             </td>
           </tr>
         </table>
