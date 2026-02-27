@@ -6,12 +6,13 @@ return [
     'MENU_FOOTER_MENU' => 'Footer menu',
     'MENU_SHOW_AS_BUTTON' => 'Show this menu item as a button',
 
+    // Image sizes
+    'IMAGE_SIZE_SMALL' => 'Small',
+
     // Install
     'INSTALL_SECTION_THEME' => 'Theme',
     'INSTALL_SECTION_MEDIA' => 'Media',
     'INSTALL_SECTION_SYSTEM' => 'System',
-    'INSTALL_SECTION_PAGES' => 'Pages',
-    'INSTALL_SECTION_NAVIGATION' => 'Navigation',
     'INSTALL_SECTION_CONTENT' => 'Content',
     'INSTALL_SECTION_DEVELOPER' => 'Developer',
     'INSTALL_THEME_NAME_TITLE' => 'Theme name',

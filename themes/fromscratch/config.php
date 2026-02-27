@@ -160,6 +160,14 @@ return [
 		],
 	],
 
+	/**
+	 * Extra image sizes: each is added to Settings → Media and registered with add_image_size().
+	 * width/height are fallbacks when the user hasn't changed them on Settings → Media. Set during theme install too.
+	 */
+	'image_sizes_extra' => [
+		['slug' => 'small', 'name' => fs_t('IMAGE_SIZE_SMALL'), 'width' => 600, 'height' => 600],
+	],
+
 	// SVG support: Max size in MB
 	// This is to prevent memory exhaustion and security issues
 	'svg_max_size' => 2,

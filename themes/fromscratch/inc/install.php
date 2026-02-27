@@ -151,11 +151,9 @@ function fs_render_installer(): void
       <form method="post">
         <?php wp_nonce_field('fromscratch_install'); ?>
 
-        <table class="form-table" role="presentation">
+        <h2><?= esc_html(fs_t('INSTALL_SECTION_THEME')) ?></h2>
 
-          <tr class="fs-install-section-row">
-            <td colspan="2"><h2 class="fs-install-section-title"><?= esc_html(fs_t('INSTALL_SECTION_THEME')) ?></h2></td>
-          </tr>
+        <table class="form-table" role="presentation">
           <tr>
             <th scope="row">
               <label>
@@ -187,10 +185,13 @@ function fs_render_installer(): void
               <input type="text" name="theme[description]" value="<?= fs_t('INSTALL_THEME_DESCRIPTION_FORM_DESCRIPTION', ['NAME' => get_bloginfo('name')]) ?>" class="regular-text">
             </td>
           </tr>
+        </table>
 
-          <tr class="fs-install-section-row">
-            <td colspan="2"><h2 class="fs-install-section-title"><?= esc_html(fs_t('INSTALL_SECTION_MEDIA')) ?></h2></td>
-          </tr>
+        <hr>
+
+        <h2><?= esc_html(fs_t('INSTALL_SECTION_MEDIA')) ?></h2>
+
+        <table class="form-table" role="presentation">
           <tr>
             <th scope="row"><?= fs_t('INSTALL_MEDIA_SIZES_TITLE') ?></th>
             <td>
@@ -202,18 +203,37 @@ function fs_render_installer(): void
               </p>
               <p class="description"><?= esc_html(fs_t('INSTALL_MEDIA_SIZES_DESCRIPTION')) ?></p>
               <div data-fs-checkbox-toggle-content="media">
-                <p>
-                  <input type="number" name="media[thumbnail]" value="600" class="small-text"> px
-                  <input type="number" name="media[medium]" value="1200" class="small-text"> px
-                  <input type="number" name="media[large]" value="2400" class="small-text"> px
-                </p>
+                <?php
+                $install_media_sizes = [
+                  'thumbnail' => ['name' => 'Thumbnail', 'width' => 300, 'height' => 300],
+                  'small' => ['name' => 'Small', 'width' => 600, 'height' => 600],
+                  'medium' => ['name' => 'Medium', 'width' => 1200, 'height' => 1200],
+                  'large' => ['name' => 'Large', 'width' => 2400, 'height' => 2400],
+                ];
+                foreach ($install_media_sizes as $slug => $size) {
+                  $w = (int) $size['width'];
+                  $h = (int) $size['height'];
+                  ?>
+                  <p style="margin-bottom: 8px;">
+                    <label>
+                      <span style="display: inline-block; min-width: 120px;"><?= esc_html($size['name']) ?></span>
+                      <input type="number" name="media[<?= esc_attr($slug) ?>][width]" value="<?= $w ?>" class="small-text" min="1" style="width: 72px;"> ×
+                      <input type="number" name="media[<?= esc_attr($slug) ?>][height]" value="<?= $h ?>" class="small-text" min="0" style="width: 72px;"> px
+                    </label>
+                  </p>
+                  <?php
+                }
+                ?>
               </div>
             </td>
           </tr>
+        </table>
 
-          <tr class="fs-install-section-row">
-            <td colspan="2"><h2 class="fs-install-section-title"><?= esc_html(fs_t('INSTALL_SECTION_SYSTEM')) ?></h2></td>
-          </tr>
+        <hr>
+
+        <h2><?= esc_html(fs_t('INSTALL_SECTION_SYSTEM')) ?></h2>
+
+        <table class="form-table" role="presentation">
           <tr>
             <th scope="row"><?= fs_t('INSTALL_PERMALINKS_TITLE') ?></th>
             <td>
@@ -240,10 +260,13 @@ function fs_render_installer(): void
               <p class="description"><?= esc_html(fs_t('INSTALL_HTACCESS_DESCRIPTION')) ?></p>
             </td>
           </tr>
+        </table>
 
-          <tr class="fs-install-section-row">
-            <td colspan="2"><h2 class="fs-install-section-title"><?= esc_html(fs_t('INSTALL_SECTION_PAGES')) ?></h2></td>
-          </tr>
+        <hr>
+
+        <h2><?= esc_html(fs_t('INSTALL_SECTION_CONTENT')) ?></h2>
+
+        <table class="form-table" role="presentation">
           <tr>
             <th scope="row"><?= fs_t('INSTALL_PAGES_TITLE') ?></th>
             <td>
@@ -343,9 +366,6 @@ function fs_render_installer(): void
             </td>
           </tr>
 
-          <tr class="fs-install-section-row">
-            <td colspan="2"><h2 class="fs-install-section-title"><?= esc_html(fs_t('INSTALL_SECTION_NAVIGATION')) ?></h2></td>
-          </tr>
           <tr>
             <th scope="row"><?= fs_t('INSTALL_MENUS_TITLE') ?></th>
             <td>
@@ -359,9 +379,6 @@ function fs_render_installer(): void
             </td>
           </tr>
 
-          <tr class="fs-install-section-row">
-            <td colspan="2"><h2 class="fs-install-section-title"><?= esc_html(fs_t('INSTALL_SECTION_CONTENT')) ?></h2></td>
-          </tr>
           <tr>
             <th scope="row"><?= fs_t('INSTALL_BLOGS_TITLE') ?></th>
             <td>
@@ -374,10 +391,13 @@ function fs_render_installer(): void
               <p class="description"><?= esc_html(fs_t('INSTALL_BLOGS_DESCRIPTION')) ?></p>
             </td>
           </tr>
+        </table>
 
-          <tr class="fs-install-section-row">
-            <td colspan="2"><h2 class="fs-install-section-title"><?= esc_html(fs_t('INSTALL_SECTION_DEVELOPER')) ?></h2></td>
-          </tr>
+        <hr>
+
+        <h2><?= esc_html(fs_t('INSTALL_SECTION_DEVELOPER')) ?></h2>
+
+        <table class="form-table" role="presentation">
           <tr>
             <th scope="row"><?= fs_t('INSTALL_DEVELOPER_TITLE') ?></th>
             <td>
@@ -488,33 +508,40 @@ Tags:
   file_put_contents($style_file, $style_css);
 
   /**
-   * Media sizes
+   * Media sizes (built-in only; set during install). Extra sizes are edited on Settings → Media.
    */
   $installMedia = isset($_POST['install']['media']) && $_POST['install']['media'] === 'on';
 
   if ($installMedia) {
-    // Thumbnail
-    $thumbnail = $_POST['media']['thumbnail'];
-    update_option('thumbnail_size_w', $thumbnail);
-    update_option('thumbnail_size_h', $thumbnail);
-    update_option('thumbnail_crop', 0);
-
-    // Medium
-    $medium = $_POST['media']['medium'];
-    update_option('medium_size_w', $medium);
-    update_option('medium_size_h', $medium);
-
-    // Medium Large (often forgotten!)
-    update_option('medium_large_size_w', $medium);
-    update_option('medium_large_size_h', $medium);
-
-    // Large
-    $large = $_POST['media']['large'];
-    update_option('large_size_w', $large);
-    update_option('large_size_h', $large);
-
-    // Big image threshold (WP auto downscaling)
-    update_option('big_image_size_threshold', $large);
+    $install_media_defaults = [
+      'thumbnail' => ['width' => 300, 'height' => 300],
+      'small' => ['width' => 600, 'height' => 600],
+      'medium' => ['width' => 1200, 'height' => 0],
+      'large' => ['width' => 2400, 'height' => 0],
+    ];
+    $large_width = 0;
+    foreach ($install_media_defaults as $slug => $defaults) {
+      $posted_w = isset($_POST['media'][$slug]['width']) ? (int) $_POST['media'][$slug]['width'] : $defaults['width'];
+      $posted_h = isset($_POST['media'][$slug]['height']) ? (int) $_POST['media'][$slug]['height'] : $defaults['height'];
+      if ($slug === 'thumbnail') {
+        update_option('thumbnail_size_w', $posted_w);
+        update_option('thumbnail_size_h', $posted_h);
+        update_option('thumbnail_crop', 0);
+      } elseif ($slug === 'small') {
+        update_option('small_size_w', $posted_w);
+        update_option('small_size_h', $posted_h);
+      } elseif ($slug === 'medium') {
+        update_option('medium_size_w', $posted_w);
+        update_option('medium_size_h', $posted_h);
+      } elseif ($slug === 'large') {
+        update_option('large_size_w', $posted_w);
+        update_option('large_size_h', $posted_h);
+        $large_width = $posted_w;
+      }
+    }
+    if ($large_width > 0) {
+      update_option('big_image_size_threshold', $large_width);
+    }
   }
 
   /**

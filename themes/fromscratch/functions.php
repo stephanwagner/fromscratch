@@ -80,6 +80,13 @@ require_once 'inc/cpt.php';
 require_once 'inc/variables.php';
 
 /**
+ * Media: extra image size options on Settings → Media (from config image_sizes_extra)
+ */
+if (is_admin()) {
+	require_once 'inc/media-sizes.php';
+}
+
+/**
  * Support SVG
  */
 if (fs_theme_feature_enabled('svg')) {

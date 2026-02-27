@@ -26,15 +26,46 @@ function fs_add_alignwide(): void
 add_action('after_setup_theme', 'fs_add_alignwide');
 
 /**
- * Support post thumbnails (featured images).
+ * Support post thumbnails (featured images) and register extra image sizes from config (options {slug}_size_w, {slug}_size_h on Settings → Media).
  *
  * @return void
  */
 function fs_add_post_thumbnails(): void
 {
 	add_theme_support('post-thumbnails');
+
+	$extra = fs_config('image_sizes_extra');
+	if (!is_array($extra)) {
+		return;
+	}
+	foreach ($extra as $size) {
+		$slug = isset($size['slug']) ? $size['slug'] : '';
+		if ($slug === '') {
+			continue;
+		}
+		$default_w = isset($size['width']) ? (int) $size['width'] : 0;
+		$default_h = isset($size['height']) ? (int) $size['height'] : 0;
+		$w = (int) get_option($slug . '_size_w', $default_w);
+		$h = (int) get_option($slug . '_size_h', $default_h);
+		if ($w > 0) {
+			add_image_size($slug, $w, $h, false);
+		}
+	}
 }
 add_action('after_setup_theme', 'fs_add_post_thumbnails');
+
+/**
+ * Remove medium_large image size from WordPress: do not generate it on upload and hide from image size dropdown.
+ */
+add_filter('intermediate_image_sizes', function (array $sizes): array {
+	return array_values(array_filter($sizes, function ($size): bool {
+		return $size !== 'medium_large';
+	}));
+});
+add_filter('image_size_names_choose', function (array $sizes): array {
+	unset($sizes['medium_large']);
+	return $sizes;
+});
 
 /**
  * Remove blogs menu and block direct access to post screens when blogs are disabled.
