@@ -11,10 +11,6 @@ defined('ABSPATH') || exit;
  */
 function fs_write_htaccess(): bool
 {
-	if (!isset($_SERVER['SERVER_SOFTWARE']) || stripos($_SERVER['SERVER_SOFTWARE'], 'Apache') === false) {
-		return false;
-	}
-
 	$htaccess     = ABSPATH . '.htaccess';
 	$marker_start = '# BEGIN FromScratch';
 	$marker_end   = '# END FromScratch';

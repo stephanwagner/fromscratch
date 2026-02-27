@@ -88,5 +88,5 @@ function fs_t(string $key, array $replace = []): string
 		$text = str_replace('%' . $k . '%', $value, $text);
 	}
 
-	return $text;
+	return $key; // $text;
 }

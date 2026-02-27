@@ -3,6 +3,18 @@
 defined('ABSPATH') || exit;
 
 /**
+ * Remove WordPress version.
+ *
+ * @return void
+ */
+function fs_clean_up_version(): void
+{
+	add_filter('admin_footer_text', '__return_empty_string');
+	add_filter('update_footer', '__return_empty_string', 11);
+}
+add_action('init', 'fs_clean_up_version');
+
+/**
  * Remove generator, RSD, shortlink, emoji and REST discovery from head.
  *
  * @return void
@@ -55,9 +67,7 @@ add_action('admin_init', function () {
 		wp_safe_redirect(admin_url());
 		exit;
 	}
-});
 
-add_action('admin_init', function () {
 	foreach (get_post_types([], 'names') as $post_type) {
 		remove_post_type_support($post_type, 'comments');
 		remove_post_type_support($post_type, 'trackbacks');

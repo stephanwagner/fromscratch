@@ -6,22 +6,32 @@ require_once __DIR__ . '/install-system.php';
 
 /**
  * Redirect to install page only when setup is not completed and user tries to access Theme settings, Tools, Users, or their subpages.
- * On all other admin pages we show the notice only (no redirect, no skip).
+ * On all other admin pages (e.g. Dashboard, Themes list) we do not redirect — the notice is shown only.
  */
 add_action('admin_init', function () {
   if (fs_setup_completed()) {
     return;
   }
-  global $pagenow;
-  global $parent_file;
-  $on_settings = ($pagenow === 'options-general.php') || ($parent_file === 'options-general.php');
-  $on_tools = ($pagenow === 'tools.php') || ($parent_file === 'tools.php');
-  $on_users = ($pagenow === 'users.php') || ($parent_file === 'users.php') || ($pagenow === 'user-new.php') || ($pagenow === 'user-edit.php') || ($pagenow === 'profile.php');
-  $on_others = ($pagenow === 'theme-editor.php') || ($pagenow === 'nav-menus.php') || ($pagenow === 'customize.php') || ($pagenow === 'site-editor.php');
-  if (!$on_settings && !$on_tools && !$on_users && !$on_others) {
+  if (defined('DOING_AJAX') && DOING_AJAX) {
     return;
   }
-  if (defined('DOING_AJAX') && DOING_AJAX) {
+  if (isset($_GET['page']) && $_GET['page'] === 'fromscratch-install') {
+    return;
+  }
+  global $pagenow;
+  $redirect_pages = [
+    'options-general.php',
+    'tools.php',
+    'users.php',
+    'user-new.php',
+    'user-edit.php',
+    'profile.php',
+    'nav-menus.php',
+    'customize.php',
+    'theme-editor.php',
+    'site-editor.php',
+  ];
+  if (!in_array($pagenow, $redirect_pages, true)) {
     return;
   }
   wp_safe_redirect(admin_url('themes.php?page=fromscratch-install'));
@@ -76,7 +86,8 @@ add_action('admin_menu', function () {
     __('Install theme', 'fromscratch'),
     'manage_options',
     'fromscratch-install',
-    'fs_render_installer'
+    'fs_render_installer',
+    1
   );
 });
 
@@ -597,7 +608,8 @@ Description: ' . $theme_desc . '
 Version: 1.0.0
 License: Private
 License URI: 
-Text Domain: 
+Text Domain: fromscratch
+Domain Path: /languages
 Tags: 
 */
 ';
