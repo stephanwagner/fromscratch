@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "watch": "concurrently \"npm run watch:js\" \"npm run watch:css\"",
-    "watch:js": "rollup -c -w",
+    "watch:js": "MODE=dev rollup -c -w",
     "watch:css": "sass themes/fromscratch/src/scss:themes/fromscratch/css --watch --source-map",
     "build": "npm run build:js && npm run build:css",
     "build:js": "MODE=dev rollup -c && MODE=prod rollup -c",

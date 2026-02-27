@@ -19,3 +19,29 @@
 .fs-description-adjust-checkbox {
   padding-left: 24px;
 }
+
+.fs-hidden {
+  display: none !important;
+}
+
+// Install page section titles
+.appearance_page_fromscratch-install {
+  .fs-install-section-row {
+    td {
+      padding-bottom: 0;
+      border-bottom: none;
+      vertical-align: bottom;
+    }
+  }
+  .fs-install-section-title {
+    margin: 0 0 4px 0;
+    padding: 0;
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #1d2327;
+  }
+  .fs-install-section-row + tr th,
+  .fs-install-section-row + tr td {
+    padding-top: 12px;
+  }
+}

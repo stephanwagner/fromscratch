@@ -48,9 +48,6 @@ function fs_remove_blogs(): void
 	});
 
 	add_action('admin_init', function () {
-		if (fs_config('enable_blogs') !== false) {
-			return;
-		}
 		global $pagenow;
 		$blocked = ['edit.php', 'post.php', 'post-new.php'];
 		if (in_array($pagenow, $blocked, true)) {
@@ -60,10 +57,12 @@ function fs_remove_blogs(): void
 	});
 }
 
-// Only disable blogs when explicitly false; missing or true = enabled by default
-if (fs_config('enable_blogs') === false) {
-	fs_remove_blogs();
-}
+// Disable blogs when the feature is turned off in Settings → Theme (default: enabled). Run late so options are available.
+add_action('after_setup_theme', function () {
+	if (function_exists('fs_theme_feature_enabled') && !fs_theme_feature_enabled('blogs')) {
+		fs_remove_blogs();
+	}
+}, 20);
 
 /**
  * Filter excerpt length from config.

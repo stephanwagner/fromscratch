@@ -96,7 +96,7 @@ function fs_sanitize_features($value): array
 	if (!is_array($value)) {
 		return [];
 	}
-	$keys = ['enable_svg', 'enable_duplicate_post', 'enable_seo'];
+	$keys = ['enable_blogs', 'enable_svg', 'enable_duplicate_post', 'enable_seo'];
 	$out = [];
 	foreach ($keys as $key) {
 		$out[$key] = (!empty($value[$key])) ? 1 : 0;
@@ -159,12 +159,13 @@ function fs_sanitize_site_password_protection($value): string
  * Check whether a theme feature is enabled (Settings → Theme → General).
  * When the option was never saved, all features are considered enabled.
  *
- * @param string $feature One of: svg, duplicate_post, seo.
+ * @param string $feature One of: blogs, svg, duplicate_post, seo.
  * @return bool
  */
 function fs_theme_feature_enabled(string $feature): bool
 {
 	$map = [
+		'blogs' => 'enable_blogs',
 		'svg' => 'enable_svg',
 		'duplicate_post' => 'enable_duplicate_post',
 		'seo' => 'enable_seo',
@@ -497,6 +498,13 @@ function theme_settings_page(): void
 			<hr>
 			<h2 class="title"><?= esc_html(fs_t('SETTINGS_FEATURES_HEADING')) ?></h2>
 			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?= esc_html(fs_t('SETTINGS_FEATURE_BLOGS')) ?></th>
+					<td>
+						<input type="hidden" name="fromscratch_features[enable_blogs]" value="0">
+						<label><input type="checkbox" name="fromscratch_features[enable_blogs]" value="1" <?= checked($feat('enable_blogs'), 1, false) ?>> <?= esc_html(fs_t('SETTINGS_FEATURE_BLOGS_DESCRIPTION')) ?></label>
+					</td>
+				</tr>
 				<tr>
 					<th scope="row"><?= esc_html(fs_t('SETTINGS_FEATURE_SVG')) ?></th>
 					<td>

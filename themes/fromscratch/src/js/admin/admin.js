@@ -1,1 +1,1 @@
-// Admin scripts
+import './utils/checkbox-toggle';

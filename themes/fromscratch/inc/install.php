@@ -153,8 +153,9 @@ function fs_render_installer(): void
 
         <table class="form-table" role="presentation">
 
-          <!-- Theme name and description -->
-
+          <tr class="fs-install-section-row">
+            <td colspan="2"><h2 class="fs-install-section-title"><?= esc_html(fs_t('INSTALL_SECTION_THEME')) ?></h2></td>
+          </tr>
           <tr>
             <th scope="row">
               <label>
@@ -165,14 +166,16 @@ function fs_render_installer(): void
               <input type="text" name="theme[name]" value="<?= get_bloginfo('name') ?>" class="regular-text">
             </td>
           </tr>
-          <th scope="row">
-            <label>
-              <?= fs_t('INSTALL_THEME_SLUG_TITLE') ?>
-            </label>
-          </th>
-          <td>
-            <input type="text" name="theme[slug]" value="<?= sanitize_title(get_bloginfo('name')); ?>" class="regular-text">
-          </td>
+          <tr>
+            <th scope="row">
+              <label>
+                <?= fs_t('INSTALL_THEME_SLUG_TITLE') ?>
+              </label>
+            </th>
+            <td>
+              <input type="text" name="theme[slug]" value="<?= sanitize_title(get_bloginfo('name')); ?>" class="regular-text">
+              <p class="description"><?= esc_html(fs_t('INSTALL_THEME_SLUG_DESCRIPTION')) ?></p>
+            </td>
           </tr>
           <tr>
             <th scope="row">
@@ -185,65 +188,74 @@ function fs_render_installer(): void
             </td>
           </tr>
 
-          <!-- Media sizes -->
+          <tr class="fs-install-section-row">
+            <td colspan="2"><h2 class="fs-install-section-title"><?= esc_html(fs_t('INSTALL_SECTION_MEDIA')) ?></h2></td>
+          </tr>
           <tr>
-            <th scope="row">
-              <label>
-                <input type="checkbox" name="install[media]" checked>
-                <?= fs_t('INSTALL_MEDIA_SIZES_TITLE') ?>
-              </label>
-            </th>
+            <th scope="row"><?= fs_t('INSTALL_MEDIA_SIZES_TITLE') ?></th>
             <td>
-              <input type="number" name="media[thumbnail]" value="600" class="small-text"> px
-              <input type="number" name="media[medium]" value="1200" class="small-text"> px
-              <input type="number" name="media[large]" value="2400" class="small-text"> px
-              <p class="description">
-                <?= fs_t('INSTALL_MEDIA_SIZES_DESCRIPTION') ?>
+              <p style="margin-top: 0;">
+                <label>
+                  <input type="checkbox" name="install[media]" checked data-fs-checkbox-toggle="media">
+                  <?= esc_html(fs_t('INSTALL_MEDIA_SIZES_LABEL')) ?>
+                </label>
               </p>
+              <p class="description"><?= esc_html(fs_t('INSTALL_MEDIA_SIZES_DESCRIPTION')) ?></p>
+              <div data-fs-checkbox-toggle-content="media">
+                <p>
+                  <input type="number" name="media[thumbnail]" value="600" class="small-text"> px
+                  <input type="number" name="media[medium]" value="1200" class="small-text"> px
+                  <input type="number" name="media[large]" value="2400" class="small-text"> px
+                </p>
+              </div>
             </td>
           </tr>
 
-          <!-- Permalinks -->
+          <tr class="fs-install-section-row">
+            <td colspan="2"><h2 class="fs-install-section-title"><?= esc_html(fs_t('INSTALL_SECTION_SYSTEM')) ?></h2></td>
+          </tr>
           <tr>
-            <th scope="row">
-              <label>
-                <input type="checkbox" name="install[permalinks]" checked>
-                <?= fs_t('INSTALL_PERMALINKS_TITLE') ?>
-              </label>
-            </th>
+            <th scope="row"><?= fs_t('INSTALL_PERMALINKS_TITLE') ?></th>
             <td>
-              <p class="description">
-                <?= fs_t('INSTALL_PERMALINKS_DESCRIPTION') ?>
+              <p style="margin-top: 0;">
+                <label>
+                  <input type="checkbox" name="install[permalinks]" checked>
+                  <?= esc_html(fs_t('INSTALL_PERMALINKS_LABEL')) ?>
+                </label>
               </p>
+              <p class="description"><?= esc_html(fs_t('INSTALL_PERMALINKS_DESCRIPTION')) ?></p>
             </td>
           </tr>
 
           <!-- .htaccess (Apache only) -->
           <tr>
-            <th scope="row">
-              <label>
-                <input type="checkbox" name="install[htaccess]" checked>
-                <?= fs_t('INSTALL_HTACCESS_TITLE') ?>
-              </label>
-            </th>
+            <th scope="row"><?= fs_t('INSTALL_HTACCESS_TITLE') ?></th>
             <td>
-              <p class="description">
-                <?= fs_t('INSTALL_HTACCESS_DESCRIPTION') ?>
+              <p style="margin-top: 0;">
+                <label>
+                  <input type="checkbox" name="install[htaccess]" checked>
+                  <?= esc_html(fs_t('INSTALL_HTACCESS_LABEL')) ?>
+                </label>
               </p>
+              <p class="description"><?= esc_html(fs_t('INSTALL_HTACCESS_DESCRIPTION')) ?></p>
             </td>
           </tr>
 
-          <!-- Pages -->
+          <tr class="fs-install-section-row">
+            <td colspan="2"><h2 class="fs-install-section-title"><?= esc_html(fs_t('INSTALL_SECTION_PAGES')) ?></h2></td>
+          </tr>
           <tr>
-            <th scope="row">
-              <label>
-                <input type="checkbox" name="install[pages]" checked>
-                <?= fs_t('INSTALL_PAGES_TITLE') ?>
-              </label>
-            </th>
+            <th scope="row"><?= fs_t('INSTALL_PAGES_TITLE') ?></th>
             <td>
-
-              <table class="widefat striped" style="max-width: 600px">
+              <p style="margin-top: 0;">
+                <label>
+                  <input type="checkbox" name="install[pages]" checked data-fs-checkbox-toggle="pages">
+                  <?= esc_html(fs_t('INSTALL_PAGES_LABEL')) ?>
+                </label>
+              </p>
+              <p class="description"><?= esc_html(fs_t('INSTALL_PAGES_DESCRIPTION')) ?></p>
+              <div data-fs-checkbox-toggle-content="pages">
+              <table class="widefat striped" style="max-width: 600px; margin-top: 8px;">
                 <thead>
                   <tr>
                     <th style="padding: 8px 10px; line-height: 1.4em"><?= fs_t('INSTALL_PAGES_TABLE_HEADING_PAGE') ?></th>
@@ -327,28 +339,45 @@ function fs_render_installer(): void
 
                 </tbody>
               </table>
-
-              <p class="description">
-                <?= fs_t('INSTALL_PAGES_DESCRIPTION') ?>
-              </p>
-
+              </div>
             </td>
           </tr>
 
-          <!-- Menus -->
+          <tr class="fs-install-section-row">
+            <td colspan="2"><h2 class="fs-install-section-title"><?= esc_html(fs_t('INSTALL_SECTION_NAVIGATION')) ?></h2></td>
+          </tr>
           <tr>
-            <th scope="row">
-              <label>
-                <input type="checkbox" name="install[menus]" checked>
-                <?= fs_t('INSTALL_MENUS_TITLE') ?>
-              </label>
-            </th>
+            <th scope="row"><?= fs_t('INSTALL_MENUS_TITLE') ?></th>
             <td>
-              <?= fs_t('INSTALL_MENUS_DESCRIPTION') ?>
+              <p style="margin-top: 0;">
+                <label>
+                  <input type="checkbox" name="install[menus]" checked>
+                  <?= esc_html(fs_t('INSTALL_MENUS_LABEL')) ?>
+                </label>
+              </p>
+              <p class="description"><?= esc_html(fs_t('INSTALL_MENUS_DESCRIPTION')) ?></p>
             </td>
           </tr>
 
-          <!-- Developer (required: use current user and/or create new) -->
+          <tr class="fs-install-section-row">
+            <td colspan="2"><h2 class="fs-install-section-title"><?= esc_html(fs_t('INSTALL_SECTION_CONTENT')) ?></h2></td>
+          </tr>
+          <tr>
+            <th scope="row"><?= fs_t('INSTALL_BLOGS_TITLE') ?></th>
+            <td>
+              <p style="margin-top: 0;">
+                <label>
+                  <input type="checkbox" name="install[blogs]" value="1" checked>
+                  <?= esc_html(fs_t('INSTALL_BLOGS_LABEL')) ?>
+                </label>
+              </p>
+              <p class="description"><?= esc_html(fs_t('INSTALL_BLOGS_DESCRIPTION')) ?></p>
+            </td>
+          </tr>
+
+          <tr class="fs-install-section-row">
+            <td colspan="2"><h2 class="fs-install-section-title"><?= esc_html(fs_t('INSTALL_SECTION_DEVELOPER')) ?></h2></td>
+          </tr>
           <tr>
             <th scope="row"><?= fs_t('INSTALL_DEVELOPER_TITLE') ?></th>
             <td>
@@ -666,6 +695,16 @@ Tags:
       }
     }
   }
+
+  /**
+   * Blogs: save enable_blogs from install form (default on)
+   */
+  $features = get_option('fromscratch_features', []);
+  if (!is_array($features)) {
+    $features = [];
+  }
+  $features['enable_blogs'] = !empty($_POST['install']['blogs']) ? 1 : 0;
+  update_option('fromscratch_features', $features);
 
   /**
    * Developer user(s): use current user and/or create new (at least one required)
