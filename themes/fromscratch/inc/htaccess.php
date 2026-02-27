@@ -19,7 +19,7 @@ function fs_write_htaccess(): bool
 	$marker_start = '# BEGIN FromScratch';
 	$marker_end   = '# END FromScratch';
 
-	$template = __DIR__ . '/htaccess-file.txt';
+	$template = __DIR__ . '/install-htaccess.txt';
 	if (!is_readable($template)) {
 		return false;
 	}
@@ -62,7 +62,7 @@ function fs_get_htaccess_config(): string
 {
 	$marker_start = '# BEGIN FromScratch';
 	$marker_end   = '# END FromScratch';
-	$template     = __DIR__ . '/htaccess-file.txt';
+	$template     = __DIR__ . '/install-htaccess.txt';
 	if (!is_readable($template)) {
 		return '';
 	}
@@ -76,7 +76,7 @@ function fs_get_htaccess_config(): string
  */
 function fs_get_nginx_config(): string
 {
-	$template = __DIR__ . '/nginx-file.conf';
+	$template = __DIR__ . '/install-nginx.conf';
 	if (!is_readable($template)) {
 		return '';
 	}

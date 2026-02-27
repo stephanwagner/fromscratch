@@ -148,7 +148,7 @@ function fs_render_installer(): void
         <?= fs_t('INSTALL_DESCRIPTION') ?>
       </p>
 
-      <form method="post">
+      <form method="post" autocomplete="off">
         <?php wp_nonce_field('fromscratch_install'); ?>
 
         <h2><?= esc_html(fs_t('INSTALL_SECTION_THEME')) ?></h2>
@@ -185,6 +185,22 @@ function fs_render_installer(): void
               <input type="text" name="theme[description]" value="<?= fs_t('INSTALL_THEME_DESCRIPTION_FORM_DESCRIPTION', ['NAME' => get_bloginfo('name')]) ?>" class="regular-text">
             </td>
           </tr>
+          <tr>
+            <th scope="row">
+              <label for="theme_author"><?= fs_t('INSTALL_THEME_AUTHOR_TITLE') ?></label>
+            </th>
+            <td>
+              <input type="text" name="theme[author]" id="theme_author" value="" class="regular-text">
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">
+              <label for="theme_author_uri"><?= fs_t('INSTALL_THEME_AUTHOR_URI_TITLE') ?></label>
+            </th>
+            <td>
+              <input type="url" name="theme[author_uri]" id="theme_author_uri" value="" class="regular-text">
+            </td>
+          </tr>
         </table>
 
         <hr>
@@ -205,10 +221,10 @@ function fs_render_installer(): void
               <div data-fs-checkbox-toggle-content="media">
                 <?php
                 $install_media_sizes = [
-                  'thumbnail' => ['name' => 'Thumbnail', 'width' => 300, 'height' => 300],
-                  'small' => ['name' => 'Small', 'width' => 600, 'height' => 600],
-                  'medium' => ['name' => 'Medium', 'width' => 1200, 'height' => 1200],
-                  'large' => ['name' => 'Large', 'width' => 2400, 'height' => 2400],
+                  'thumbnail' => ['name' => __('Thumbnail'), 'width' => 300, 'height' => 300],
+                  'small' => ['name' => fs_t('IMAGE_SIZE_SMALL'), 'width' => 600, 'height' => 600],
+                  'medium' => ['name' => __('Medium'), 'width' => 1200, 'height' => 1200],
+                  'large' => ['name' => __('Large'), 'width' => 2400, 'height' => 2400],
                 ];
                 foreach ($install_media_sizes as $slug => $size) {
                   $w = (int) $size['width'];
@@ -220,6 +236,12 @@ function fs_render_installer(): void
                       <input type="number" name="media[<?= esc_attr($slug) ?>][width]" value="<?= $w ?>" class="small-text" min="1" style="width: 72px;"> ×
                       <input type="number" name="media[<?= esc_attr($slug) ?>][height]" value="<?= $h ?>" class="small-text" min="0" style="width: 72px;"> px
                     </label>
+                    <?php if ($slug === 'thumbnail') { ?>
+                      <label style="margin-left: 12px;">
+                        <input type="checkbox" name="media[thumbnail][crop]" value="1">
+                        <?= esc_html(fs_t('INSTALL_MEDIA_THUMBNAIL_CROP_LABEL')) ?>
+                      </label>
+                    <?php } ?>
                   </p>
                   <?php
                 }
@@ -315,6 +337,7 @@ function fs_render_installer(): void
               <table class="widefat striped" style="max-width: 600px; margin-top: 8px;">
                 <thead>
                   <tr>
+                    <th style="padding: 8px 10px; line-height: 1.4em; width: 32px;"></th>
                     <th style="padding: 8px 10px; line-height: 1.4em"><?= fs_t('INSTALL_PAGES_TABLE_HEADING_PAGE') ?></th>
                     <th style="padding: 8px 10px; line-height: 1.4em"><?= fs_t('INSTALL_PAGES_TABLE_HEADING_TITLE') ?></th>
                     <th style="padding: 8px 10px; line-height: 1.4em"><?= fs_t('INSTALL_PAGES_TABLE_HEADING_SLUG') ?></th>
@@ -323,6 +346,10 @@ function fs_render_installer(): void
                 <tbody>
 
                   <tr>
+                    <td style="vertical-align: middle;">
+                      <input type="hidden" name="pages[homepage][add]" value="1">
+                      <input type="checkbox" checked disabled aria-label="<?= esc_attr__('Add page', 'fromscratch') ?>">
+                    </td>
                     <td><strong><?= fs_t('INSTALL_PAGES_HOMEPAGE_TITLE') ?></strong></td>
                     <td>
                       <input
@@ -341,6 +368,10 @@ function fs_render_installer(): void
                   </tr>
 
                   <tr>
+                    <td style="vertical-align: middle;">
+                      <input type="hidden" name="pages[contact][add]" value="1">
+                      <input type="checkbox" checked disabled aria-label="<?= esc_attr__('Add page', 'fromscratch') ?>">
+                    </td>
                     <td><strong><?= fs_t('INSTALL_PAGES_CONTACT_TITLE') ?></strong></td>
                     <td>
                       <input
@@ -359,6 +390,10 @@ function fs_render_installer(): void
                   </tr>
 
                   <tr>
+                    <td style="vertical-align: middle;">
+                      <label class="screen-reader-text"><?= esc_html(sprintf(__('Add %s page', 'fromscratch'), fs_t('INSTALL_PAGES_IMPRINT_TITLE'))) ?></label>
+                      <input type="checkbox" name="pages[imprint][add]" value="1" checked>
+                    </td>
                     <td><strong><?= fs_t('INSTALL_PAGES_IMPRINT_TITLE') ?></strong></td>
                     <td>
                       <input
@@ -377,6 +412,10 @@ function fs_render_installer(): void
                   </tr>
 
                   <tr>
+                    <td style="vertical-align: middle;">
+                      <input type="hidden" name="pages[privacy][add]" value="1">
+                      <input type="checkbox" checked disabled aria-label="<?= esc_attr__('Add page', 'fromscratch') ?>">
+                    </td>
                     <td><strong><?= fs_t('INSTALL_PAGES_PRIVACY_TITLE') ?></strong></td>
                     <td>
                       <input
@@ -431,45 +470,73 @@ function fs_render_installer(): void
 
         <h2><?= esc_html(fs_t('INSTALL_SECTION_DEVELOPER')) ?></h2>
 
-        <table class="form-table" role="presentation">
+        <p class="description"><?= esc_html(fs_t('INSTALL_DEVELOPER_INTRO')) ?></p>
+
+        <?php
+        $current_user = wp_get_current_user();
+        ?>
+        <table class="form-table" role="presentation" style="margin-top: 16px;">
           <tr>
-            <th scope="row"><?= fs_t('INSTALL_DEVELOPER_TITLE') ?></th>
-            <td>
-              <p class="description" style="margin-bottom: 12px;"><?= fs_t('INSTALL_DEVELOPER_RECOMMEND_NOTICE') ?></p>
-              <p style="margin-bottom: 12px;">
-                <label>
-                  <input type="checkbox" name="developer[use_current_user]" value="1">
-                  <?= fs_t('INSTALL_DEVELOPER_USE_CURRENT_USER') ?>
-                </label>
-              </p>
-              <p class="description" style="margin-bottom: 12px;"><?= fs_t('INSTALL_DEVELOPER_OR_CREATE') ?></p>
-              <p>
-                <label for="developer_username"><?= fs_t('INSTALL_DEVELOPER_USERNAME') ?></label><br>
-                <input type="text" name="developer[username]" id="developer_username" value="" class="regular-text" autocomplete="off">
-              </p>
-              <p>
-                <label for="developer_email"><?= fs_t('INSTALL_DEVELOPER_EMAIL') ?></label><br>
-                <input type="email" name="developer[email]" id="developer_email" value="" class="regular-text" autocomplete="off">
-              </p>
-              <p>
-                <label for="developer_password"><?= fs_t('INSTALL_DEVELOPER_PASSWORD') ?></label><br>
-                <input type="password" name="developer[password]" id="developer_password" value="" class="regular-text" autocomplete="new-password">
-                <a class="fs-description-link -has-icon" href="https://passwordcopy.app" target="_blank" rel="noopener" style="margin-left: 8px;">
-                  <span class="fs-description-link-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h240q17 0 28.5 11.5T480-800q0 17-11.5 28.5T440-760H200v560h560v-240q0-17 11.5-28.5T800-480q17 0 28.5 11.5T840-440v240q0 33-23.5 56.5T760-120H200Zm560-584L416-360q-11 11-28 11t-28-11q-11-11-11-28t11-28l344-344H600q-17 0-28.5-11.5T560-800q0-17 11.5-28.5T600-840h200q17 0 28.5 11.5T840-800v200q0 17-11.5 28.5T800-560q-17 0-28.5-11.5T760-600v-104Z" /></svg>
-                  </span>
-                  <span>passwordcopy.app</span>
-                </a>
-              </p>
-              <p style="margin-top: 12px;">
-                <label>
-                  <input type="checkbox" name="developer[login_after_setup]" value="1">
-                  <?= fs_t('INSTALL_DEVELOPER_LOGIN_AFTER_SETUP') ?>
-                </label>
-              </p>
+            <td colspan="2" style="padding: 0; border: none; vertical-align: top;">
+              <div style="display: flex; flex-wrap: wrap; gap: 24px;">
+                <!-- Current user -->
+                <div style="flex: 1; min-width: 280px; padding: 16px; background: #f6f7f7; border: 1px solid #c3c4c7; border-radius: 4px;">
+                  <h3 style="margin: 0 0 12px 0; font-size: 14px;"><?= esc_html(fs_t('INSTALL_DEVELOPER_CURRENT_USER')) ?></h3>
+                  <p style="margin-bottom: 12px;">
+                    <label for="developer_current_username"><?= esc_html(fs_t('INSTALL_DEVELOPER_USERNAME')) ?></label><br>
+                    <input type="text" id="developer_current_username" value="<?= esc_attr($current_user->user_login) ?>" class="regular-text" style="width: 100%;" readonly>
+                  </p>
+                  <p style="margin-bottom: 12px;">
+                    <label for="developer_current_email"><?= esc_html(fs_t('INSTALL_DEVELOPER_EMAIL')) ?></label><br>
+                    <input type="email" name="developer[current_user][email]" id="developer_current_email" value="<?= esc_attr($current_user->user_email) ?>" class="regular-text" style="width: 100%;" autocomplete="email">
+                  </p>
+                  <p style="margin-bottom: 12px;">
+                    <label for="developer_current_password"><?= esc_html(fs_t('INSTALL_DEVELOPER_PASSWORD')) ?></label><br>
+                    <input type="password" name="developer[current_user][password]" id="developer_current_password" value="" class="regular-text" style="width: 100%;" autocomplete="off">
+                    <span class="description"><?= esc_html(fs_t('INSTALL_DEVELOPER_PASSWORD_LEAVE_EMPTY')) ?></span>
+                  </p>
+                  <p style="margin-bottom: 0;">
+                    <label>
+                      <input type="checkbox" name="developer[current_user][has_developer_rights]" value="1" checked>
+                      <?= esc_html(fs_t('INSTALL_DEVELOPER_HAS_DEVELOPER_RIGHTS')) ?>
+                    </label>
+                  </p>
+                </div>
+                <!-- Optional additional user -->
+                <div style="flex: 1; min-width: 280px; padding: 16px; background: #f6f7f7; border: 1px solid #c3c4c7; border-radius: 4px;">
+                  <h3 style="margin: 0 0 12px 0; font-size: 14px;"><?= esc_html(fs_t('INSTALL_DEVELOPER_ADD_ANOTHER_USER')) ?></h3>
+                  <p style="margin-bottom: 12px;">
+                    <label for="developer_new_username"><?= esc_html(fs_t('INSTALL_DEVELOPER_USERNAME')) ?></label><br>
+                    <input type="text" name="developer[new_user][username]" id="developer_new_username" value="" class="regular-text" style="width: 100%;" autocomplete="off">
+                  </p>
+                  <p style="margin-bottom: 12px;">
+                    <label for="developer_new_email"><?= esc_html(fs_t('INSTALL_DEVELOPER_EMAIL')) ?></label><br>
+                    <input type="email" name="developer[new_user][email]" id="developer_new_email" value="" class="regular-text" style="width: 100%;" autocomplete="off">
+                  </p>
+                  <p style="margin-bottom: 12px;">
+                    <label for="developer_new_password"><?= esc_html(fs_t('INSTALL_DEVELOPER_PASSWORD')) ?></label><br>
+                    <input type="password" name="developer[new_user][password]" id="developer_new_password" value="" class="regular-text" style="width: 100%;" autocomplete="new-password">
+                    <a class="fs-description-link -gray -has-icon" href="https://passwordcopy.app" target="_blank" rel="noopener" style="margin-left: 4px;">
+                      <span class="fs-description-link-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h240q17 0 28.5 11.5T480-800q0 17-11.5 28.5T440-760H200v560h560v-240q0-17 11.5-28.5T800-480q17 0 28.5 11.5T840-440v240q0 33-23.5 56.5T760-120H200Zm560-584L416-360q-11 11-28 11t-28-11q-11-11-11-28t11-28l344-344H600q-17 0-28.5-11.5T560-800q0-17 11.5-28.5T600-840h200q17 0 28.5 11.5T840-800v200q0 17-11.5 28.5T800-560q-17 0-28.5-11.5T760-600v-104Z" /></svg></span>
+                      <span>passwordcopy.app</span>
+                    </a>
+                  </p>
+                  <p>
+                    <label>
+                      <input type="checkbox" name="developer[new_user][has_developer_rights]" value="1">
+                      <?= esc_html(fs_t('INSTALL_DEVELOPER_HAS_DEVELOPER_RIGHTS')) ?>
+                    </label>
+                  </p>
+                  <p style="margin-bottom: 0;">
+                    <label>
+                      <input type="checkbox" name="developer[new_user][login_after_setup]" value="1">
+                      <?= esc_html(fs_t('INSTALL_DEVELOPER_LOGIN_AFTER_SETUP')) ?>
+                    </label>
+                  </p>
+                </div>
+              </div>
             </td>
           </tr>
-
         </table>
 
         <p>
@@ -507,13 +574,15 @@ function fromscratch_run_install(): void
     return;
   }
 
-  $use_current = !empty($_POST['developer']['use_current_user']);
-  $dev_user = !empty(trim($_POST['developer']['username'] ?? ''));
-  $dev_email = !empty(trim($_POST['developer']['email'] ?? ''));
-  $dev_pass = !empty($_POST['developer']['password'] ?? '');
-  $create_new = $dev_user && $dev_email && $dev_pass;
+  $current_has_dev = !empty($_POST['developer']['current_user']['has_developer_rights']);
+  $new_username = !empty(trim($_POST['developer']['new_user']['username'] ?? ''));
+  $new_email = !empty(trim($_POST['developer']['new_user']['email'] ?? ''));
+  $new_pass = !empty($_POST['developer']['new_user']['password'] ?? '');
+  $new_has_dev = !empty($_POST['developer']['new_user']['has_developer_rights']);
+  $create_new = $new_username && $new_email && $new_pass;
 
-  if (!$use_current && !$create_new) {
+  $has_at_least_one_developer = $current_has_dev || ($create_new && $new_has_dev);
+  if (!$has_at_least_one_developer) {
     set_transient('fromscratch_install_error', 'developer_required', 30);
     wp_safe_redirect(admin_url('themes.php?page=fromscratch-install'));
     exit;
@@ -521,17 +590,19 @@ function fromscratch_run_install(): void
 
   $theme_name = sanitize_text_field($_POST['theme']['name'] ?? '');
   $theme_desc = sanitize_text_field($_POST['theme']['description'] ?? '');
+  $theme_author = sanitize_text_field($_POST['theme']['author'] ?? '');
+  $theme_author_uri = esc_url_raw($_POST['theme']['author_uri'] ?? '');
 
   /**
-   * Theme infos
+   * Theme infos (style.css header)
    */
   $style_css = '/*
 Theme Name: ' . $theme_name . '
-Author: Stephan Wagner
-Author URI: https://stephanwagner.me
+Author: ' . $theme_author . '
+Author URI: ' . $theme_author_uri . '
 Description: ' . $theme_desc . '
 Version: 1.0.0
-License: Proprietary
+License: Private
 License URI: 
 Text Domain: 
 Tags: 
@@ -560,7 +631,8 @@ Tags:
       if ($slug === 'thumbnail') {
         update_option('thumbnail_size_w', $posted_w);
         update_option('thumbnail_size_h', $posted_h);
-        update_option('thumbnail_crop', 0);
+        $thumbnail_crop = !empty($_POST['media']['thumbnail']['crop']) ? 1 : 0;
+        update_option('thumbnail_crop', $thumbnail_crop);
       } elseif ($slug === 'small') {
         update_option('small_size_w', $posted_w);
         update_option('small_size_h', $posted_h);
@@ -635,10 +707,14 @@ Tags:
       wp_delete_comment($comment->comment_ID, true);
     }
 
-    // Add pages
-    $pages = $_POST['pages'];
+    // Add pages (imprint only if checkbox checked; others always added via hidden input)
+    $pages = $_POST['pages'] ?? [];
 
     foreach ($pages as $page_id => $page) {
+      $add_page = !empty($page['add']);
+      if (!$add_page) {
+        continue;
+      }
 
       $page_obj = get_page_by_path($page['slug']);
 
@@ -768,20 +844,34 @@ Tags:
   update_option('fromscratch_features', $features);
 
   /**
-   * Developer user(s): use current user and/or create new (at least one required)
+   * Developer: update current user (name, email, password, developer flag) and optionally create new user.
    */
-  $use_current_developer = !empty($_POST['developer']['use_current_user']);
-  if ($use_current_developer) {
-    $current_id = get_current_user_id();
-    if ($current_id) {
+  $current_id = get_current_user_id();
+  if ($current_id) {
+    $cur_email = isset($_POST['developer']['current_user']['email']) ? sanitize_email(wp_unslash($_POST['developer']['current_user']['email'])) : '';
+    $cur_password = isset($_POST['developer']['current_user']['password']) ? $_POST['developer']['current_user']['password'] : '';
+    $cur_has_dev = !empty($_POST['developer']['current_user']['has_developer_rights']);
+
+    $user_data = [
+      'ID' => $current_id,
+      'user_email' => $cur_email ?: get_userdata($current_id)->user_email,
+    ];
+    if ($cur_password !== '' && strlen($cur_password) >= 8) {
+      $user_data['user_pass'] = $cur_password;
+    }
+    wp_update_user($user_data);
+    if ($cur_has_dev) {
       update_user_meta($current_id, 'fromscratch_developer', '1');
+    } else {
+      delete_user_meta($current_id, 'fromscratch_developer');
     }
   }
 
-  $dev_username = isset($_POST['developer']['username']) ? sanitize_user(wp_unslash($_POST['developer']['username']), true) : '';
-  $dev_email = isset($_POST['developer']['email']) ? sanitize_email(wp_unslash($_POST['developer']['email'])) : '';
-  $dev_password = isset($_POST['developer']['password']) ? $_POST['developer']['password'] : '';
   $new_developer_user_id = 0;
+  $dev_username = isset($_POST['developer']['new_user']['username']) ? sanitize_user(wp_unslash($_POST['developer']['new_user']['username']), true) : '';
+  $dev_email = isset($_POST['developer']['new_user']['email']) ? sanitize_email(wp_unslash($_POST['developer']['new_user']['email'])) : '';
+  $dev_password = isset($_POST['developer']['new_user']['password']) ? $_POST['developer']['new_user']['password'] : '';
+  $new_has_dev = !empty($_POST['developer']['new_user']['has_developer_rights']);
   if ($dev_username && $dev_email && strlen($dev_password) >= 8 && !username_exists($dev_username) && !email_exists($dev_email)) {
     $user_id = wp_insert_user([
       'user_login' => $dev_username,
@@ -790,12 +880,14 @@ Tags:
       'role' => 'administrator',
     ]);
     if (!is_wp_error($user_id)) {
-      update_user_meta($user_id, 'fromscratch_developer', '1');
+      if ($new_has_dev) {
+        update_user_meta($user_id, 'fromscratch_developer', '1');
+      }
       $new_developer_user_id = (int) $user_id;
     }
   }
 
-  $login_after_setup = !empty($_POST['developer']['login_after_setup']) && $new_developer_user_id > 0;
+  $login_after_setup = !empty($_POST['developer']['new_user']['login_after_setup']) && $new_developer_user_id > 0;
   if ($login_after_setup) {
     set_transient('fromscratch_login_as_dev', $new_developer_user_id, 60);
   }

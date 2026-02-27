@@ -24,6 +24,37 @@
   display: none !important;
 }
 
+.fs-description-link {
+
+  &.-has-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+
+    .fs-description-link-icon {
+      width: 18px;
+      height: 18px;
+      transform: translateY(2px);
+
+      svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+
+  &:not(:hover) {
+    &.-gray {
+      color: #646970;
+    }
+  }
+}
+
+
+
+
+// TODO remove
 // Install page section titles
 .appearance_page_fromscratch-install {
   .fs-install-section-row {
@@ -33,6 +64,7 @@
       vertical-align: bottom;
     }
   }
+
   .fs-install-section-title {
     margin: 0 0 4px 0;
     padding: 0;
@@ -40,8 +72,9 @@
     font-weight: 600;
     color: #1d2327;
   }
-  .fs-install-section-row + tr th,
-  .fs-install-section-row + tr td {
+
+  .fs-install-section-row+tr th,
+  .fs-install-section-row+tr td {
     padding-top: 12px;
   }
 }
