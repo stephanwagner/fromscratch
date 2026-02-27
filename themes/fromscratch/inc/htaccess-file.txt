@@ -4,7 +4,7 @@
 </IfModule>
 
 <IfModule mod_headers.c>
-    # Static assets: 1 year + immutable (use versioned URLs so updates get new file)
+    # Static assets: 1 year
     <FilesMatch "\.(?i:css|js|gif|ico|jpe?g|png|webp|avif|svg|pdf|ttf|eot|otf|woff2?|mp4|mpeg)$">
         Header set Cache-Control "public, max-age=31536000, immutable"
         Header unset Set-Cookie

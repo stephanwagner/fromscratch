@@ -23,6 +23,13 @@ if (is_admin()) {
 }
 
 /**
+ * Developer user (flag and Edit User section)
+ */
+if (is_admin()) {
+    require_once 'inc/developer-user.php';
+}
+
+/**
  * Clean up
  */
 require_once 'inc/clean-up.php';

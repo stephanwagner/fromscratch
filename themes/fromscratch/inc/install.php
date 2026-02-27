@@ -5,39 +5,81 @@ defined('ABSPATH') || exit;
 require_once __DIR__ . '/htaccess.php';
 
 /**
- * Debug
+ * Whether setup has been completed (install wizard finished successfully).
+ *
+ * @return bool True if setup is complete, false if not yet run.
+ */
+function fs_setup_completed(): bool
+{
+  return (bool) get_option('fromscratch_install_success');
+}
+
+/**
+ * Redirect to install page only when setup is not completed and user tries to access Theme settings, Tools, Users, or their subpages.
+ * On all other admin pages we show the notice only (no redirect, no skip).
  */
 add_action('admin_init', function () {
-  // delete_option('fromscratch_install_skipped');
-  // delete_option('fromscratch_install_success');
+  if (fs_setup_completed()) {
+    return;
+  }
+  global $pagenow;
+  $page = isset($_GET['page']) ? $_GET['page'] : '';
+  $on_theme_settings = ($pagenow === 'options-general.php' && $page === 'fs-theme-settings');
+  $on_tools = ($pagenow === 'tools.php');
+  $on_users = in_array($pagenow, ['users.php', 'user-new.php', 'user-edit.php', 'profile.php'], true);
+  if (!$on_theme_settings && !$on_tools && !$on_users) {
+    return;
+  }
+  if (defined('DOING_AJAX') && DOING_AJAX) {
+    return;
+  }
+  wp_safe_redirect(admin_url('themes.php?page=fromscratch-install'));
+  exit;
+}, 5);
+
+/**
+ * After switching to this theme, redirect to install page if setup not completed.
+ */
+add_action('after_switch_theme', function () {
+  if (fs_setup_completed()) {
+    return;
+  }
+  if (get_stylesheet() !== 'fromscratch') {
+    return;
+  }
+  wp_safe_redirect(admin_url('themes.php?page=fromscratch-install'));
+  exit;
 });
 
 /**
- * Whether to show the FromScratch setup installer (not yet completed or skipped).
- *
- * @return bool True if installer should be shown, false if already done or skipped.
+ * After install: if user chose "Log in as developer user", switch to the new dev user and redirect to dashboard.
  */
-function fs_should_show_installer(): bool
-{
-  if (get_option('fromscratch_install_success')) {
-    return false;
-  }
-
-  if (get_option('fromscratch_install_skipped')) {
-    return false;
-  }
-
-  return true;
-}
-
-/** 
- * Add FromScratch installer to admin menu
- */
-add_action('admin_menu', function () {
-  if (!fs_should_show_installer() && !isset($_GET['fromscratch_success'])) {
+add_action('admin_init', function () {
+  $user_id = get_transient('fromscratch_login_as_dev');
+  if (!$user_id || !isset($_GET['page']) || $_GET['page'] !== 'fromscratch-install' || !isset($_GET['fromscratch_success'])) {
     return;
   }
+  $user = get_userdata($user_id);
+  if (!$user) {
+    delete_transient('fromscratch_login_as_dev');
+    return;
+  }
+  delete_transient('fromscratch_login_as_dev');
+  wp_logout();
+  wp_clear_auth_cookie();
+  wp_set_current_user($user_id);
+  wp_set_auth_cookie($user_id, true);
+  wp_safe_redirect(admin_url());
+  exit;
+}, 1);
 
+/**
+ * Add FromScratch installer to admin menu (when setup not completed).
+ */
+add_action('admin_menu', function () {
+  if (fs_setup_completed() && !isset($_GET['fromscratch_success'])) {
+    return;
+  }
   add_theme_page(
     fs_t('INSTALL_MENU_TITLE'),
     fs_t('INSTALL_MENU_TITLE'),
@@ -48,10 +90,10 @@ add_action('admin_menu', function () {
 });
 
 /**
- * Show FromScratch installer notice
+ * Show FromScratch installer notice (when not on the install page; redirect usually sends users there).
  */
 add_action('admin_notices', function () {
-  if (!fs_should_show_installer()) {
+  if (fs_setup_completed()) {
     return;
   }
 
@@ -61,14 +103,10 @@ add_action('admin_notices', function () {
   }
 
   echo '<div class="notice notice-warning">';
-  echo '<p><strong>' . fs_t('INSTALL_NOTICE_TITLE') . '</strong></p>';
-  echo '<p>' . fs_t('INSTALL_NOTICE_DESCRIPTION') . '</p>';
+  echo '<p><strong>' . esc_html(fs_t('INSTALL_NOTICE_TITLE')) . '</strong></p>';
+  echo '<p>' . esc_html(fs_t('INSTALL_NOTICE_DESCRIPTION')) . '</p>';
   echo '<p>';
-  echo '<a href="' . esc_url(admin_url('themes.php?page=fromscratch-install')) . '" class="button button-primary">' . fs_t('INSTALL_NOTICE_BUTTON_GO_TO_INSTALLER') . '</a> ';
-  echo '<a href="' . esc_url(wp_nonce_url(
-    admin_url('themes.php?page=fromscratch-install&fromscratch_skip=1'),
-    'fromscratch_skip'
-  )) . '" class="button">' . fs_t('INSTALL_NOTICE_BUTTON_SKIP_SETUP') . '</a>';
+  echo '<a href="' . esc_url(admin_url('themes.php?page=fromscratch-install')) . '" class="button button-primary">' . esc_html(fs_t('INSTALL_NOTICE_BUTTON_GO_TO_INSTALLER')) . '</a>';
   echo '</p>';
   echo '</div>';
 });
@@ -102,6 +140,10 @@ function fs_render_installer(): void
       </p>
 
     <?php } else { ?>
+      <?php if (get_transient('fromscratch_install_error') === 'developer_required') {
+        delete_transient('fromscratch_install_error');
+        echo '<div class="notice notice-error"><p>' . esc_html(fs_t('INSTALL_DEVELOPER_REQUIRED_ERROR')) . '</p></div>';
+      } ?>
       <p>
         <?= fs_t('INSTALL_DESCRIPTION') ?>
       </p>
@@ -306,23 +348,51 @@ function fs_render_installer(): void
             </td>
           </tr>
 
+          <!-- Developer (required: use current user and/or create new) -->
+          <tr>
+            <th scope="row"><?= fs_t('INSTALL_DEVELOPER_TITLE') ?></th>
+            <td>
+              <p class="description" style="margin-bottom: 12px;"><?= fs_t('INSTALL_DEVELOPER_RECOMMEND_NOTICE') ?></p>
+              <p style="margin-bottom: 12px;">
+                <label>
+                  <input type="checkbox" name="developer[use_current_user]" value="1">
+                  <?= fs_t('INSTALL_DEVELOPER_USE_CURRENT_USER') ?>
+                </label>
+              </p>
+              <p class="description" style="margin-bottom: 12px;"><?= fs_t('INSTALL_DEVELOPER_OR_CREATE') ?></p>
+              <p>
+                <label for="developer_username"><?= fs_t('INSTALL_DEVELOPER_USERNAME') ?></label><br>
+                <input type="text" name="developer[username]" id="developer_username" value="" class="regular-text" autocomplete="off">
+              </p>
+              <p>
+                <label for="developer_email"><?= fs_t('INSTALL_DEVELOPER_EMAIL') ?></label><br>
+                <input type="email" name="developer[email]" id="developer_email" value="" class="regular-text" autocomplete="off">
+              </p>
+              <p>
+                <label for="developer_password"><?= fs_t('INSTALL_DEVELOPER_PASSWORD') ?></label><br>
+                <input type="password" name="developer[password]" id="developer_password" value="" class="regular-text" autocomplete="new-password">
+                <a class="fs-description-link -has-icon" href="https://passwordcopy.app" target="_blank" rel="noopener" style="margin-left: 8px;">
+                  <span class="fs-description-link-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h240q17 0 28.5 11.5T480-800q0 17-11.5 28.5T440-760H200v560h560v-240q0-17 11.5-28.5T800-480q17 0 28.5 11.5T840-440v240q0 33-23.5 56.5T760-120H200Zm560-584L416-360q-11 11-28 11t-28-11q-11-11-11-28t11-28l344-344H600q-17 0-28.5-11.5T560-800q0-17 11.5-28.5T600-840h200q17 0 28.5 11.5T840-800v200q0 17-11.5 28.5T800-560q-17 0-28.5-11.5T760-600v-104Z" /></svg>
+                  </span>
+                  <span>passwordcopy.app</span>
+                </a>
+              </p>
+              <p style="margin-top: 12px;">
+                <label>
+                  <input type="checkbox" name="developer[login_after_setup]" value="1">
+                  <?= fs_t('INSTALL_DEVELOPER_LOGIN_AFTER_SETUP') ?>
+                </label>
+              </p>
+            </td>
+          </tr>
+
         </table>
 
         <p>
           <button class="button button-primary" name="fromscratch_run_install">
             <?= fs_t('INSTALL_RUN_SETUP_BUTTON') ?>
           </button>
-
-          <a
-            href="<?php echo esc_url(
-                    wp_nonce_url(
-                      admin_url('themes.php?page=fromscratch-install&fromscratch_skip=1'),
-                      'fromscratch_skip'
-                    )
-                  ); ?>"
-            class="button">
-            <?= fs_t('INSTALL_SKIP_SETUP_BUTTON') ?>
-          </a>
         </p>
       </form>
 
@@ -330,22 +400,6 @@ function fs_render_installer(): void
   </div>
 <?php
 }
-
-/**
- * Skip FromScratch installation
- */
-add_action('admin_init', function () {
-  if (
-    isset($_GET['fromscratch_skip']) &&
-    $_GET['fromscratch_skip'] === '1' &&
-    check_admin_referer('fromscratch_skip')
-  ) {
-    update_option('fromscratch_install_skipped', true);
-
-    wp_safe_redirect(wp_get_referer() ?: admin_url());
-    exit;
-  }
-});
 
 /**
  * Run FromScratch installation
@@ -368,6 +422,18 @@ function fromscratch_run_install(): void
   if (get_option('fromscratch_installed')) {
     wp_die('FromScratch installation is already complete.');
     return;
+  }
+
+  $use_current = !empty($_POST['developer']['use_current_user']);
+  $dev_user = !empty(trim($_POST['developer']['username'] ?? ''));
+  $dev_email = !empty(trim($_POST['developer']['email'] ?? ''));
+  $dev_pass = !empty($_POST['developer']['password'] ?? '');
+  $create_new = $dev_user && $dev_email && $dev_pass;
+
+  if (!$use_current && !$create_new) {
+    set_transient('fromscratch_install_error', 'developer_required', 30);
+    wp_safe_redirect(admin_url('themes.php?page=fromscratch-install'));
+    exit;
   }
 
   $theme_name = sanitize_text_field($_POST['theme']['name'] ?? '');
@@ -602,6 +668,39 @@ Tags:
   }
 
   /**
+   * Developer user(s): use current user and/or create new (at least one required)
+   */
+  $use_current_developer = !empty($_POST['developer']['use_current_user']);
+  if ($use_current_developer) {
+    $current_id = get_current_user_id();
+    if ($current_id) {
+      update_user_meta($current_id, 'fromscratch_developer', '1');
+    }
+  }
+
+  $dev_username = isset($_POST['developer']['username']) ? sanitize_user(wp_unslash($_POST['developer']['username']), true) : '';
+  $dev_email = isset($_POST['developer']['email']) ? sanitize_email(wp_unslash($_POST['developer']['email'])) : '';
+  $dev_password = isset($_POST['developer']['password']) ? $_POST['developer']['password'] : '';
+  $new_developer_user_id = 0;
+  if ($dev_username && $dev_email && strlen($dev_password) >= 8 && !username_exists($dev_username) && !email_exists($dev_email)) {
+    $user_id = wp_insert_user([
+      'user_login' => $dev_username,
+      'user_email' => $dev_email,
+      'user_pass' => $dev_password,
+      'role' => 'administrator',
+    ]);
+    if (!is_wp_error($user_id)) {
+      update_user_meta($user_id, 'fromscratch_developer', '1');
+      $new_developer_user_id = (int) $user_id;
+    }
+  }
+
+  $login_after_setup = !empty($_POST['developer']['login_after_setup']) && $new_developer_user_id > 0;
+  if ($login_after_setup) {
+    set_transient('fromscratch_login_as_dev', $new_developer_user_id, 60);
+  }
+
+  /**
    * Rename theme
    */
   $themes_dir = WP_CONTENT_DIR . '/themes';
@@ -622,7 +721,6 @@ Tags:
    * Save install complete
    */
   update_option('fromscratch_install_success', true);
-  delete_option('fromscratch_install_skipped');
 
   /**
    * Redirect
