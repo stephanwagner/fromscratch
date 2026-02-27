@@ -1,0 +1,231 @@
+# German translation for FromScratch theme (install page).
+# Copyright (C) 2026
+# This file is distributed under the same license as the FromScratch theme.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: FromScratch 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-01-01 00:00+0000\n"
+"PO-Revision-Date: 2025-01-01 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: de_DE\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: \n"
+
+# Install page
+msgid "Install theme"
+msgstr "Theme installieren"
+
+msgid "FromScratch isn't set up yet."
+msgstr "FromScratch ist noch nicht eingerichtet."
+
+msgid "A one-time initialization is required to configure core options and activate essential system features."
+msgstr "Eine einmalige Initialisierung ist erforderlich, um zentrale Optionen zu konfigurieren und grundlegende Systemfunktionen zu aktivieren."
+
+msgid "Go to installer"
+msgstr "Zum Installierer"
+
+msgid "Install FromScratch"
+msgstr "FromScratch installieren"
+
+msgid "FromScratch is installed."
+msgstr "FromScratch ist installiert."
+
+msgid "Go to dashboard"
+msgstr "Zum Dashboard"
+
+msgid "At least one user must have developer rights. Either check \"Has developer rights\" for the current user or add another user and check it there."
+msgstr "Mindestens ein Benutzer muss Entwicklerrechte haben. Entweder „Hat Entwicklerrechte“ beim aktuellen Benutzer setzen oder einen weiteren anlegen und dort setzen."
+
+msgid "Before getting started, a one-time initialization is required to configure essential system components and ensure a stable, high-performance environment."
+msgstr "Vor dem Start ist eine einmalige Initialisierung erforderlich, um grundlegende Systemkomponenten zu konfigurieren und eine stabile sowie performante Umgebung sicherzustellen."
+
+msgid "Theme"
+msgstr "Theme"
+
+msgid "Theme name"
+msgstr "Theme Name"
+
+msgid "Theme folder"
+msgstr "Theme Ordner"
+
+msgid "Use only lowercase letters, numbers and hyphens."
+msgstr "Nur Kleinbuchstaben, Zahlen und Bindestriche verwenden."
+
+msgid "Theme description"
+msgstr "Theme Beschreibung"
+
+msgid "Theme of the webpage %s."
+msgstr "Theme der Webseite %s."
+
+msgid "Theme Author"
+msgstr "Theme Autor"
+
+msgid "Theme Author URI"
+msgstr "Theme Autor URI"
+
+msgid "Media"
+msgstr "Medien"
+
+msgid "Media sizes"
+msgstr "Mediengrößen"
+
+msgid "Set media sizes"
+msgstr "Mediengrößen setzen"
+
+msgid "Stores the values in WordPress media settings."
+msgstr "Speichert die Werte in den WordPress-Medieneinstellungen."
+
+msgid "Crop thumbnail to exact dimensions"
+msgstr "Vorschaubild auf exakte Maße zuschneiden"
+
+msgid "System"
+msgstr "System"
+
+msgid "Permalinks"
+msgstr "Permalinks"
+
+msgid "Enable pretty permalinks"
+msgstr "Schöne Permalinks aktivieren"
+
+msgid "Sets the permalink structure to /%postname%/ so URLs look like /about/ instead of ?p=123."
+msgstr "Setzt die Permalink-Struktur auf /%postname%/, sodass URLs z. B. /impressum/ statt ?p=123 lauten."
+
+msgid "Apache (.htaccess)"
+msgstr "Apache (.htaccess)"
+
+msgid "Apply recommended rules to .htaccess"
+msgstr "Empfohlene Regeln in .htaccess eintragen"
+
+msgid "Writes Expires headers, removes Set-Cookie on static assets, and enables gzip/deflate in the WordPress root .htaccess."
+msgstr "Schreibt Expires-Header, entfernt Set-Cookie bei statischen Dateien und aktiviert gzip/deflate in der .htaccess im WordPress-Root."
+
+msgid "Show config"
+msgstr "Konfig anzeigen"
+
+msgid "Nginx"
+msgstr "Nginx"
+
+msgid "Recommended snippet for Nginx: add to your server block for gzip, long cache on static assets, and Vary Accept-Encoding. Copy and paste into your Nginx config."
+msgstr "Empfohlener Snippet für Nginx: in den server-Block einfügen für Gzip, langer Cache bei statischen Dateien und Vary Accept-Encoding. In die Nginx-Konfiguration kopieren."
+
+msgid "Copied"
+msgstr "Kopiert"
+
+msgid "Copy"
+msgstr "Kopieren"
+
+msgid "Content"
+msgstr "Inhalt"
+
+msgid "Pages"
+msgstr "Seiten"
+
+msgid "Create pages"
+msgstr "Seiten anlegen"
+
+msgid "Pages will only be created if they don't exist yet."
+msgstr "Seiten werden nur erstellt, wenn sie noch nicht existieren."
+
+msgid "Page"
+msgstr "Seite"
+
+msgid "Title"
+msgstr "Titel"
+
+msgid "Slug"
+msgstr "Slug"
+
+msgid "Add page"
+msgstr "Seite hinzufügen"
+
+msgid "Add %s page"
+msgstr "%s-Seite hinzufügen"
+
+msgid "Homepage"
+msgstr "Startseite"
+
+msgid "homepage"
+msgstr "startseite"
+
+msgid "Contact"
+msgstr "Kontakt"
+
+msgid "contact"
+msgstr "kontakt"
+
+msgid "Imprint"
+msgstr "Impressum"
+
+msgid "imprint"
+msgstr "impressum"
+
+msgid "Privacy"
+msgstr "Datenschutz"
+
+msgid "privacy"
+msgstr "datenschutz"
+
+msgid "Menus"
+msgstr "Menüs"
+
+msgid "Assign created pages to menus"
+msgstr "Erstellte Seiten in Menüs eintragen"
+
+msgid "Adds the pages to the configured menu locations."
+msgstr "Fügt die Seiten den konfigurierten Menü-Positionen hinzu."
+
+msgid "Blogs"
+msgstr "Blogs"
+
+msgid "Enable blogs"
+msgstr "Blogs aktivieren"
+
+msgid "Shows the Posts menu in the admin and allows creating and editing blog posts. You can change this later in Theme settings."
+msgstr "Zeigt das Menü „Beiträge“ im Admin und erlaubt das Anlegen und Bearbeiten von Blog-Beiträgen. Später unter Theme-Einstellungen änderbar."
+
+msgid "Users"
+msgstr "Benutzer"
+
+msgid "At least one user must have developer rights."
+msgstr "Mindestens ein Benutzer muss Entwicklerrechte haben."
+
+msgid "Current user"
+msgstr "Aktueller Benutzer"
+
+msgid "Username"
+msgstr "Benutzername"
+
+msgid "Email"
+msgstr "E-Mail"
+
+msgid "Password"
+msgstr "Passwort"
+
+msgid "Leave empty to keep current password."
+msgstr "Leer lassen, um das aktuelle Passwort beizubehalten."
+
+msgid "Has developer rights"
+msgstr "Hat Entwicklerrechte"
+
+msgid "Add another admin user"
+msgstr "Weiteren Admin Benutzer anlegen"
+
+msgid "Log in as this user after setup"
+msgstr "Nach dem Setup als dieser Benutzer anmelden"
+
+msgid "Run setup"
+msgstr "Setup ausführen"
+
+msgid "Slider"
+msgstr "Slider"
+
+# Context: Image size (for "Small" in media sizes list)
+msgctxt "Image size"
+msgid "Small"
+msgstr "Klein"

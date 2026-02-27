@@ -13,12 +13,12 @@ require_once 'inc/headers.php';
 /**
  * Languages
  */
-require_once 'inc/lang.php';
+require_once 'inc/language.php';
 
 /**
- * Install
+ * Install (wizard and success page)
  */
-if (is_admin() && !fs_setup_completed() && !isset($_GET['fromscratch_success'])) {
+if (is_admin() && (!fs_setup_completed() || isset($_GET['fromscratch_success']))) {
     require_once 'inc/install.php';
 }
 

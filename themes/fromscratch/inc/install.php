@@ -72,8 +72,8 @@ add_action('admin_menu', function () {
     return;
   }
   add_theme_page(
-    fs_t('INSTALL_MENU_TITLE'),
-    fs_t('INSTALL_MENU_TITLE'),
+    __('Install theme', 'fromscratch'),
+    __('Install theme', 'fromscratch'),
     'manage_options',
     'fromscratch-install',
     'fs_render_installer'
@@ -94,10 +94,10 @@ add_action('admin_notices', function () {
   }
 
   echo '<div class="notice notice-warning">';
-  echo '<p><strong>' . esc_html(fs_t('INSTALL_NOTICE_TITLE')) . '</strong></p>';
-  echo '<p>' . esc_html(fs_t('INSTALL_NOTICE_DESCRIPTION')) . '</p>';
+  echo '<p><strong>' . esc_html__('FromScratch isn\'t set up yet.', 'fromscratch') . '</strong></p>';
+  echo '<p>' . esc_html__('A one-time initialization is required to configure core options and activate essential system features.', 'fromscratch') . '</p>';
   echo '<p>';
-  echo '<a href="' . esc_url(admin_url('themes.php?page=fromscratch-install')) . '" class="button button-primary">' . esc_html(fs_t('INSTALL_NOTICE_BUTTON_GO_TO_INSTALLER')) . '</a>';
+  echo '<a href="' . esc_url(admin_url('themes.php?page=fromscratch-install')) . '" class="button button-primary">' . esc_html__('Go to installer', 'fromscratch') . '</a>';
   echo '</p>';
   echo '</div>';
 });
@@ -116,69 +116,69 @@ function fs_render_installer(): void
 
 ?>
   <div class="wrap">
-    <h1><?= fs_t('INSTALL_TITLE') ?></h1>
+    <h1><?= esc_html__('Install FromScratch', 'fromscratch') ?></h1>
 
     <?php if (get_option('fromscratch_install_success')) { ?>
 
       <div class="notice notice-success">
-        <p><?= fs_t('INSTALL_COMPLETE_MESSAGE') ?></p>
+        <p><?= esc_html__('FromScratch is installed.', 'fromscratch') ?></p>
       </div>
 
       <p>
         <a
           href="<?php echo esc_url(admin_url()); ?>"
-          class="button button-primary"><?= fs_t('INSTALL_GO_TO_DASHBOARD_BUTTON') ?></a>
+          class="button button-primary"><?= esc_html__('Go to dashboard', 'fromscratch') ?></a>
       </p>
 
     <?php } else { ?>
       <?php if (get_transient('fromscratch_install_error') === 'developer_required') {
         delete_transient('fromscratch_install_error');
-        echo '<div class="notice notice-error"><p>' . esc_html(fs_t('INSTALL_DEVELOPER_REQUIRED_ERROR')) . '</p></div>';
+        echo '<div class="notice notice-error"><p>' . esc_html__('At least one user must have developer rights. Either check "Has developer rights" for the current user or add another user and check it there.', 'fromscratch') . '</p></div>';
       } ?>
       <p>
-        <?= fs_t('INSTALL_DESCRIPTION') ?>
+        <?= esc_html__('Before getting started, a one-time initialization is required to configure essential system components and ensure a stable, high-performance environment.', 'fromscratch') ?>
       </p>
 
       <form method="post" autocomplete="off">
         <?php wp_nonce_field('fromscratch_install'); ?>
 
-        <h2><?= esc_html(fs_t('INSTALL_SECTION_THEME')) ?></h2>
+        <h2><?= esc_html__('Theme', 'fromscratch') ?></h2>
 
         <table class="form-table" role="presentation">
           <tr>
             <th scope="row">
               <label>
-                <?= fs_t('INSTALL_THEME_NAME_TITLE') ?>
+                <?= esc_html__('Theme name', 'fromscratch') ?>
               </label>
             </th>
             <td>
-              <input type="text" name="theme[name]" value="<?= get_bloginfo('name') ?>" class="regular-text">
+              <input type="text" name="theme[name]" value="<?= esc_attr(get_bloginfo('name')) ?>" class="regular-text">
             </td>
           </tr>
           <tr>
             <th scope="row">
               <label>
-                <?= fs_t('INSTALL_THEME_SLUG_TITLE') ?>
+                <?= esc_html__('Theme folder', 'fromscratch') ?>
               </label>
             </th>
             <td>
-              <input type="text" name="theme[slug]" value="<?= sanitize_title(get_bloginfo('name')); ?>" class="regular-text">
-              <p class="description"><?= esc_html(fs_t('INSTALL_THEME_SLUG_DESCRIPTION')) ?></p>
+              <input type="text" name="theme[slug]" value="<?= esc_attr(sanitize_title(get_bloginfo('name'))) ?>" class="regular-text">
+              <p class="description"><?= esc_html__('Use only lowercase letters, numbers and hyphens.', 'fromscratch') ?></p>
             </td>
           </tr>
           <tr>
             <th scope="row">
               <label>
-                <?= fs_t('INSTALL_THEME_DESCRIPTION_TITLE') ?>
+                <?= esc_html__('Theme description', 'fromscratch') ?>
               </label>
             </th>
             <td>
-              <input type="text" name="theme[description]" value="<?= fs_t('INSTALL_THEME_DESCRIPTION_FORM_DESCRIPTION', ['NAME' => get_bloginfo('name')]) ?>" class="regular-text">
+              <input type="text" name="theme[description]" value="<?= esc_attr(sprintf(__('Theme of the webpage %s.', 'fromscratch'), get_bloginfo('name'))) ?>" class="regular-text">
             </td>
           </tr>
           <tr>
             <th scope="row">
-              <label for="theme_author"><?= fs_t('INSTALL_THEME_AUTHOR_TITLE') ?></label>
+              <label for="theme_author"><?= esc_html__('Theme Author', 'fromscratch') ?></label>
             </th>
             <td>
               <input type="text" name="theme[author]" id="theme_author" value="" class="regular-text">
@@ -186,7 +186,7 @@ function fs_render_installer(): void
           </tr>
           <tr>
             <th scope="row">
-              <label for="theme_author_uri"><?= fs_t('INSTALL_THEME_AUTHOR_URI_TITLE') ?></label>
+              <label for="theme_author_uri"><?= esc_html__('Theme Author URI', 'fromscratch') ?></label>
             </th>
             <td>
               <input type="url" name="theme[author_uri]" id="theme_author_uri" value="" class="regular-text">
@@ -196,24 +196,24 @@ function fs_render_installer(): void
 
         <hr>
 
-        <h2><?= esc_html(fs_t('INSTALL_SECTION_MEDIA')) ?></h2>
+        <h2><?= esc_html__('Media', 'fromscratch') ?></h2>
 
         <table class="form-table" role="presentation">
           <tr>
-            <th scope="row"><?= fs_t('INSTALL_MEDIA_SIZES_TITLE') ?></th>
+            <th scope="row"><?= esc_html__('Media sizes', 'fromscratch') ?></th>
             <td>
               <p style="margin-top: 0;">
                 <label>
                   <input type="checkbox" name="install[media]" checked data-fs-checkbox-toggle="media">
-                  <?= esc_html(fs_t('INSTALL_MEDIA_SIZES_LABEL')) ?>
+                  <?= esc_html__('Set media sizes', 'fromscratch') ?>
                 </label>
               </p>
-              <p class="description"><?= esc_html(fs_t('INSTALL_MEDIA_SIZES_DESCRIPTION')) ?></p>
+              <p class="description"><?= esc_html__('Stores the values in WordPress media settings.', 'fromscratch') ?></p>
               <div data-fs-checkbox-toggle-content="media">
                 <?php
                 $install_media_sizes = [
                   'thumbnail' => ['name' => __('Thumbnail'), 'width' => 300, 'height' => 300],
-                  'small' => ['name' => fs_t('IMAGE_SIZE_SMALL'), 'width' => 600, 'height' => 600],
+                  'small' => ['name' => _x('Small', 'Image size', 'fromscratch'), 'width' => 600, 'height' => 600],
                   'medium' => ['name' => __('Medium'), 'width' => 1200, 'height' => 1200],
                   'large' => ['name' => __('Large'), 'width' => 2400, 'height' => 2400],
                 ];
@@ -230,7 +230,7 @@ function fs_render_installer(): void
                     <?php if ($slug === 'thumbnail') { ?>
                       <label style="margin-left: 12px;">
                         <input type="checkbox" name="media[thumbnail][crop]" value="1">
-                        <?= esc_html(fs_t('INSTALL_MEDIA_THUMBNAIL_CROP_LABEL')) ?>
+                        <?= esc_html__('Crop thumbnail to exact dimensions', 'fromscratch') ?>
                       </label>
                     <?php } ?>
                   </p>
@@ -244,39 +244,39 @@ function fs_render_installer(): void
 
         <hr>
 
-        <h2><?= esc_html(fs_t('INSTALL_SECTION_SYSTEM')) ?></h2>
+        <h2><?= esc_html__('System', 'fromscratch') ?></h2>
 
         <table class="form-table" role="presentation">
           <tr>
-            <th scope="row"><?= fs_t('INSTALL_PERMALINKS_TITLE') ?></th>
+            <th scope="row"><?= esc_html__('Permalinks', 'fromscratch') ?></th>
             <td>
               <p style="margin-top: 0;">
                 <label>
                   <input type="checkbox" name="install[permalinks]" checked>
-                  <?= esc_html(fs_t('INSTALL_PERMALINKS_LABEL')) ?>
+                  <?= esc_html__('Enable pretty permalinks', 'fromscratch') ?>
                 </label>
               </p>
-              <p class="description"><?= esc_html(fs_t('INSTALL_PERMALINKS_DESCRIPTION')) ?></p>
+              <p class="description"><?= esc_html__('Sets the permalink structure to /%postname%/ so URLs look like /about/ instead of ?p=123.', 'fromscratch') ?></p>
             </td>
           </tr>
 
           <!-- Apache .htaccess -->
           <tr>
-            <th scope="row"><?= fs_t('INSTALL_HTACCESS_TITLE') ?></th>
+            <th scope="row"><?= esc_html__('Apache (.htaccess)', 'fromscratch') ?></th>
             <td>
               <p style="margin-top: 0;">
                 <label>
                   <input type="checkbox" name="install[htaccess]" checked>
-                  <?= esc_html(fs_t('INSTALL_HTACCESS_LABEL')) ?>
+                  <?= esc_html__('Apply recommended rules to .htaccess', 'fromscratch') ?>
                 </label>
               </p>
-              <p class="description"><?= esc_html(fs_t('INSTALL_HTACCESS_DESCRIPTION')) ?></p>
+              <p class="description"><?= esc_html__('Writes Expires headers, removes Set-Cookie on static assets, and enables gzip/deflate in the WordPress root .htaccess.', 'fromscratch') ?></p>
               <?php
               $htaccess_config = fs_get_htaccess_config();
               if ($htaccess_config !== '') {
               ?>
                 <details style="margin-top: 8px;">
-                  <summary style="cursor: pointer;"><?= esc_html(fs_t('INSTALL_NGINX_SHOW_CONFIG')) ?></summary>
+                  <summary style="cursor: pointer;"><?= esc_html__('Show config', 'fromscratch') ?></summary>
                   <div style="margin-top: 8px;">
                     <textarea id="fs-htaccess-config" class="large-text code" rows="16" style="width: 100%; max-width: 640px; font-size: 12px; font-family: monospace;"><?= esc_textarea($htaccess_config) ?></textarea>
                   </div>
@@ -288,18 +288,18 @@ function fs_render_installer(): void
           </tr>
           <!-- Nginx (copy snippet) -->
           <tr>
-            <th scope="row"><?= fs_t('INSTALL_NGINX_TITLE') ?></th>
+            <th scope="row"><?= esc_html__('Nginx', 'fromscratch') ?></th>
             <td>
-              <p class="description"><?= esc_html(fs_t('INSTALL_NGINX_DESCRIPTION')) ?></p>
+              <p class="description"><?= esc_html__('Recommended snippet for Nginx: add to your server block for gzip, long cache on static assets, and Vary Accept-Encoding. Copy and paste into your Nginx config.', 'fromscratch') ?></p>
               <?php
               $nginx_config = fs_get_nginx_config();
               if ($nginx_config !== '') {
               ?>
                 <details style="margin-top: 8px;">
-                  <summary style="cursor: pointer;"><?= esc_html(fs_t('INSTALL_NGINX_SHOW_CONFIG')) ?></summary>
+                  <summary style="cursor: pointer;"><?= esc_html__('Show config', 'fromscratch') ?></summary>
                   <div style="margin-top: 8px; position: relative;">
                     <pre id="fs-nginx-config" style="margin: 0; padding: 12px; background: #f6f7f7; border: 1px solid #c3c4c7; border-radius: 4px; overflow: auto; max-height: 280px; font-size: 12px;"><?= esc_html($nginx_config) ?></pre>
-                    <button type="button" class="button button-small" style="margin-top: 8px;" data-fs-copy-from-source="fs-nginx-config" data-fs-copy-feedback-text="<?= esc_attr(fs_t('INSTALL_NGINX_COPIED')) ?>"><?= esc_html(fs_t('INSTALL_NGINX_COPY')) ?></button>
+                    <button type="button" class="button button-small" style="margin-top: 8px;" data-fs-copy-from-source="fs-nginx-config" data-fs-copy-feedback-text="<?= esc_attr__('Copied', 'fromscratch') ?>"><?= esc_html__('Copy', 'fromscratch') ?></button>
                   </div>
                 </details>
               <?php
@@ -311,27 +311,27 @@ function fs_render_installer(): void
 
         <hr>
 
-        <h2><?= esc_html(fs_t('INSTALL_SECTION_CONTENT')) ?></h2>
+        <h2><?= esc_html__('Content', 'fromscratch') ?></h2>
 
         <table class="form-table" role="presentation">
           <tr>
-            <th scope="row"><?= fs_t('INSTALL_PAGES_TITLE') ?></th>
+            <th scope="row"><?= esc_html__('Pages', 'fromscratch') ?></th>
             <td>
               <p style="margin-top: 0;">
                 <label>
                   <input type="checkbox" name="install[pages]" checked data-fs-checkbox-toggle="pages">
-                  <?= esc_html(fs_t('INSTALL_PAGES_LABEL')) ?>
+                  <?= esc_html__('Create pages', 'fromscratch') ?>
                 </label>
               </p>
-              <p class="description"><?= esc_html(fs_t('INSTALL_PAGES_DESCRIPTION')) ?></p>
+              <p class="description"><?= esc_html__('Pages will only be created if they don\'t exist yet.', 'fromscratch') ?></p>
               <div data-fs-checkbox-toggle-content="pages">
                 <table class="widefat striped" style="max-width: 600px; margin-top: 8px;">
                   <thead>
                     <tr>
                       <th style="padding: 8px 10px; line-height: 1.4em; width: 32px;"></th>
-                      <th style="padding: 8px 10px; line-height: 1.4em"><?= fs_t('INSTALL_PAGES_TABLE_HEADING_PAGE') ?></th>
-                      <th style="padding: 8px 10px; line-height: 1.4em"><?= fs_t('INSTALL_PAGES_TABLE_HEADING_TITLE') ?></th>
-                      <th style="padding: 8px 10px; line-height: 1.4em"><?= fs_t('INSTALL_PAGES_TABLE_HEADING_SLUG') ?></th>
+                      <th style="padding: 8px 10px; line-height: 1.4em"><?= esc_html__('Page', 'fromscratch') ?></th>
+                      <th style="padding: 8px 10px; line-height: 1.4em"><?= esc_html__('Title', 'fromscratch') ?></th>
+                      <th style="padding: 8px 10px; line-height: 1.4em"><?= esc_html__('Slug', 'fromscratch') ?></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -341,19 +341,19 @@ function fs_render_installer(): void
                         <input type="hidden" name="pages[homepage][add]" value="1">
                         <input type="checkbox" checked disabled aria-label="<?= esc_attr__('Add page', 'fromscratch') ?>">
                       </td>
-                      <td><strong><?= fs_t('INSTALL_PAGES_HOMEPAGE_TITLE') ?></strong></td>
+                      <td><strong><?= esc_html__('Homepage', 'fromscratch') ?></strong></td>
                       <td>
                         <input
                           type="text"
                           name="pages[homepage][title]"
-                          value="<?= fs_t('INSTALL_PAGES_HOMEPAGE_FORM_TITLE') ?>"
+                          value="<?= esc_attr__('Homepage', 'fromscratch') ?>"
                           class="regular-text" style="width: 180px">
                       </td>
                       <td>
                         <input
                           type="text"
                           name="pages[homepage][slug]"
-                          value="<?= fs_t('INSTALL_PAGES_HOMEPAGE_FORM_SLUG') ?>"
+                          value="<?= esc_attr__('homepage', 'fromscratch') ?>"
                           class="regular-text" style="width: 180px">
                       </td>
                     </tr>
@@ -363,41 +363,41 @@ function fs_render_installer(): void
                         <input type="hidden" name="pages[contact][add]" value="1">
                         <input type="checkbox" checked disabled aria-label="<?= esc_attr__('Add page', 'fromscratch') ?>">
                       </td>
-                      <td><strong><?= fs_t('INSTALL_PAGES_CONTACT_TITLE') ?></strong></td>
+                      <td><strong><?= esc_html__('Contact', 'fromscratch') ?></strong></td>
                       <td>
                         <input
                           type="text"
                           name="pages[contact][title]"
-                          value="<?= fs_t('INSTALL_PAGES_CONTACT_FORM_TITLE') ?>"
+                          value="<?= esc_attr__('Contact', 'fromscratch') ?>"
                           class="regular-text" style="width: 180px">
                       </td>
                       <td>
                         <input
                           type="text"
                           name="pages[contact][slug]"
-                          value="<?= fs_t('INSTALL_PAGES_CONTACT_FORM_SLUG') ?>"
+                          value="<?= esc_attr__('contact', 'fromscratch') ?>"
                           class="regular-text" style="width: 180px">
                       </td>
                     </tr>
 
                     <tr>
                       <td style="vertical-align: middle;">
-                        <label class="screen-reader-text"><?= esc_html(sprintf(__('Add %s page', 'fromscratch'), fs_t('INSTALL_PAGES_IMPRINT_TITLE'))) ?></label>
+                        <label class="screen-reader-text"><?= esc_html(sprintf(__('Add %s page', 'fromscratch'), __('Imprint', 'fromscratch'))) ?></label>
                         <input type="checkbox" name="pages[imprint][add]" value="1" checked>
                       </td>
-                      <td><strong><?= fs_t('INSTALL_PAGES_IMPRINT_TITLE') ?></strong></td>
+                      <td><strong><?= esc_html__('Imprint', 'fromscratch') ?></strong></td>
                       <td>
                         <input
                           type="text"
                           name="pages[imprint][title]"
-                          value="<?= fs_t('INSTALL_PAGES_IMPRINT_FORM_TITLE') ?>"
+                          value="<?= esc_attr__('Imprint', 'fromscratch') ?>"
                           class="regular-text" style="width: 180px">
                       </td>
                       <td>
                         <input
                           type="text"
                           name="pages[imprint][slug]"
-                          value="<?= fs_t('INSTALL_PAGES_IMPRINT_FORM_SLUG') ?>"
+                          value="<?= esc_attr__('imprint', 'fromscratch') ?>"
                           class="regular-text" style="width: 180px">
                       </td>
                     </tr>
@@ -407,19 +407,19 @@ function fs_render_installer(): void
                         <input type="hidden" name="pages[privacy][add]" value="1">
                         <input type="checkbox" checked disabled aria-label="<?= esc_attr__('Add page', 'fromscratch') ?>">
                       </td>
-                      <td><strong><?= fs_t('INSTALL_PAGES_PRIVACY_TITLE') ?></strong></td>
+                      <td><strong><?= esc_html__('Privacy', 'fromscratch') ?></strong></td>
                       <td>
                         <input
                           type="text"
                           name="pages[privacy][title]"
-                          value="<?= fs_t('INSTALL_PAGES_PRIVACY_FORM_TITLE') ?>"
+                          value="<?= esc_attr__('Privacy', 'fromscratch') ?>"
                           class="regular-text" style="width: 180px">
                       </td>
                       <td>
                         <input
                           type="text"
                           name="pages[privacy][slug]"
-                          value="<?= fs_t('INSTALL_PAGES_PRIVACY_FORM_SLUG') ?>"
+                          value="<?= esc_attr__('privacy', 'fromscratch') ?>"
                           class="regular-text" style="width: 180px">
                       </td>
                     </tr>
@@ -431,37 +431,37 @@ function fs_render_installer(): void
           </tr>
 
           <tr>
-            <th scope="row"><?= fs_t('INSTALL_MENUS_TITLE') ?></th>
+            <th scope="row"><?= esc_html__('Menus', 'fromscratch') ?></th>
             <td>
               <p style="margin-top: 0;">
                 <label>
                   <input type="checkbox" name="install[menus]" checked>
-                  <?= esc_html(fs_t('INSTALL_MENUS_LABEL')) ?>
+                  <?= esc_html__('Assign created pages to menus', 'fromscratch') ?>
                 </label>
               </p>
-              <p class="description"><?= esc_html(fs_t('INSTALL_MENUS_DESCRIPTION')) ?></p>
+              <p class="description"><?= esc_html__('Adds the pages to the configured menu locations.', 'fromscratch') ?></p>
             </td>
           </tr>
 
           <tr>
-            <th scope="row"><?= fs_t('INSTALL_BLOGS_TITLE') ?></th>
+            <th scope="row"><?= esc_html__('Blogs', 'fromscratch') ?></th>
             <td>
               <p style="margin-top: 0;">
                 <label>
                   <input type="checkbox" name="install[blogs]" value="1" checked>
-                  <?= esc_html(fs_t('INSTALL_BLOGS_LABEL')) ?>
+                  <?= esc_html__('Enable blogs', 'fromscratch') ?>
                 </label>
               </p>
-              <p class="description"><?= esc_html(fs_t('INSTALL_BLOGS_DESCRIPTION')) ?></p>
+              <p class="description"><?= esc_html__('Shows the Posts menu in the admin and allows creating and editing blog posts. You can change this later in Theme settings.', 'fromscratch') ?></p>
             </td>
           </tr>
         </table>
 
         <hr>
 
-        <h2><?= esc_html(fs_t('INSTALL_SECTION_DEVELOPER')) ?></h2>
+        <h2><?= esc_html__('Users', 'fromscratch') ?></h2>
 
-        <p class="description"><?= esc_html(fs_t('INSTALL_DEVELOPER_INTRO')) ?></p>
+        <p class="description"><?= esc_html__('At least one user must have developer rights.', 'fromscratch') ?></p>
 
         <?php
         $current_user = wp_get_current_user();
@@ -472,40 +472,40 @@ function fs_render_installer(): void
               <div style="display: flex; flex-wrap: wrap; gap: 24px;">
                 <!-- Current user -->
                 <div style="flex: 1; min-width: 280px; padding: 16px; background: #f6f7f7; border: 1px solid #c3c4c7; border-radius: 4px;">
-                  <h3 style="margin: 0 0 12px 0; font-size: 14px;"><?= esc_html(fs_t('INSTALL_DEVELOPER_CURRENT_USER')) ?></h3>
+                  <h3 style="margin: 0 0 12px 0; font-size: 14px;"><?= esc_html__('Current user', 'fromscratch') ?></h3>
                   <p style="margin-bottom: 12px;">
-                    <label for="developer_current_username"><?= esc_html(fs_t('INSTALL_DEVELOPER_USERNAME')) ?></label><br>
+                    <label for="developer_current_username"><?= esc_html__('Username', 'fromscratch') ?></label><br>
                     <input type="text" id="developer_current_username" value="<?= esc_attr($current_user->user_login) ?>" class="regular-text" style="width: 100%;" readonly>
                   </p>
                   <p style="margin-bottom: 12px;">
-                    <label for="developer_current_email"><?= esc_html(fs_t('INSTALL_DEVELOPER_EMAIL')) ?></label><br>
+                    <label for="developer_current_email"><?= esc_html__('Email', 'fromscratch') ?></label><br>
                     <input type="email" name="developer[current_user][email]" id="developer_current_email" value="<?= esc_attr($current_user->user_email) ?>" class="regular-text" style="width: 100%;" autocomplete="email">
                   </p>
                   <p style="margin-bottom: 12px;">
-                    <label for="developer_current_password"><?= esc_html(fs_t('INSTALL_DEVELOPER_PASSWORD')) ?></label><br>
+                    <label for="developer_current_password"><?= esc_html__('Password', 'fromscratch') ?></label><br>
                     <input type="password" name="developer[current_user][password]" id="developer_current_password" value="" class="regular-text" style="width: 100%;" autocomplete="off">
-                    <span class="description"><?= esc_html(fs_t('INSTALL_DEVELOPER_PASSWORD_LEAVE_EMPTY')) ?></span>
+                    <span class="description"><?= esc_html__('Leave empty to keep current password.', 'fromscratch') ?></span>
                   </p>
                   <p style="margin-bottom: 0;">
                     <label>
                       <input type="checkbox" name="developer[current_user][has_developer_rights]" value="1" checked>
-                      <?= esc_html(fs_t('INSTALL_DEVELOPER_HAS_DEVELOPER_RIGHTS')) ?>
+                      <?= esc_html__('Has developer rights', 'fromscratch') ?>
                     </label>
                   </p>
                 </div>
                 <!-- Optional additional user -->
                 <div style="flex: 1; min-width: 280px; padding: 16px; background: #f6f7f7; border: 1px solid #c3c4c7; border-radius: 4px;">
-                  <h3 style="margin: 0 0 12px 0; font-size: 14px;"><?= esc_html(fs_t('INSTALL_DEVELOPER_ADD_ANOTHER_USER')) ?></h3>
+                  <h3 style="margin: 0 0 12px 0; font-size: 14px;"><?= esc_html__('Add another admin user', 'fromscratch') ?></h3>
                   <p style="margin-bottom: 12px;">
-                    <label for="developer_new_username"><?= esc_html(fs_t('INSTALL_DEVELOPER_USERNAME')) ?></label><br>
+                    <label for="developer_new_username"><?= esc_html__('Username', 'fromscratch') ?></label><br>
                     <input type="text" name="developer[new_user][username]" id="developer_new_username" value="" class="regular-text" style="width: 100%;" autocomplete="off">
                   </p>
                   <p style="margin-bottom: 12px;">
-                    <label for="developer_new_email"><?= esc_html(fs_t('INSTALL_DEVELOPER_EMAIL')) ?></label><br>
+                    <label for="developer_new_email"><?= esc_html__('Email', 'fromscratch') ?></label><br>
                     <input type="email" name="developer[new_user][email]" id="developer_new_email" value="" class="regular-text" style="width: 100%;" autocomplete="off">
                   </p>
                   <p style="margin-bottom: 12px;">
-                    <label for="developer_new_password"><?= esc_html(fs_t('INSTALL_DEVELOPER_PASSWORD')) ?></label><br>
+                    <label for="developer_new_password"><?= esc_html__('Password', 'fromscratch') ?></label><br>
                     <input type="password" name="developer[new_user][password]" id="developer_new_password" value="" class="regular-text" style="width: 100%;" autocomplete="new-password">
                     <a class="fs-description-link -gray -has-icon" href="https://passwordcopy.app" target="_blank" rel="noopener" style="margin-left: 4px;">
                       <span class="fs-description-link-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
@@ -517,13 +517,13 @@ function fs_render_installer(): void
                   <p>
                     <label>
                       <input type="checkbox" name="developer[new_user][has_developer_rights]" value="1">
-                      <?= esc_html(fs_t('INSTALL_DEVELOPER_HAS_DEVELOPER_RIGHTS')) ?>
+                      <?= esc_html__('Has developer rights', 'fromscratch') ?>
                     </label>
                   </p>
                   <p style="margin-bottom: 0;">
                     <label>
                       <input type="checkbox" name="developer[new_user][login_after_setup]" value="1">
-                      <?= esc_html(fs_t('INSTALL_DEVELOPER_LOGIN_AFTER_SETUP')) ?>
+                      <?= esc_html__('Log in as this user after setup', 'fromscratch') ?>
                     </label>
                   </p>
                 </div>
@@ -534,7 +534,7 @@ function fs_render_installer(): void
 
         <p>
           <button class="button button-primary" name="fromscratch_run_install">
-            <?= fs_t('INSTALL_RUN_SETUP_BUTTON') ?>
+            <?= esc_html__('Run setup', 'fromscratch') ?>
           </button>
         </p>
       </form>
@@ -763,24 +763,24 @@ Tags:
   if ($installMenus) {
     $menuItems = [
       'slider' => [
-        'title' => fs_t('INSTALL_MENU_LINK_SLIDER_TITLE'),
+        'title' => __('Slider', 'fromscratch'),
         'menu' => 'main_menu',
         'link' => '/#slider'
       ],
       'contact' => [
-        'title' => fs_t('INSTALL_PAGES_CONTACT_FORM_TITLE'),
+        'title' => __('Contact', 'fromscratch'),
         'menu' => 'main_menu',
         'is-button' => true
       ],
     ];
     if (!empty($_POST['pages']['imprint']['add'])) {
       $menuItems['imprint'] = [
-        'title' => fs_t('INSTALL_PAGES_IMPRINT_FORM_TITLE'),
+        'title' => __('Imprint', 'fromscratch'),
         'menu' => 'footer_menu'
       ];
     }
     $menuItems['privacy'] = [
-      'title' => fs_t('INSTALL_PAGES_PRIVACY_FORM_TITLE'),
+      'title' => __('Privacy', 'fromscratch'),
       'menu' => 'footer_menu'
     ];
 

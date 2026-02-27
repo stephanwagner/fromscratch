@@ -12,6 +12,7 @@ add_action('send_headers', function () {
 	if (is_admin() || wp_doing_ajax() || wp_is_json_request()) {
 		return;
 	}
+
 	// Revalidate every time — never serve an old page from cache
 	header('Cache-Control: public, max-age=0, must-revalidate');
 }, 0);
