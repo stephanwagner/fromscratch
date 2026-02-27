@@ -46,7 +46,7 @@ function fs_load_translations(string $lang): array
 /**
  * Translate a key using theme lang files; supports %KEY% placeholders in replacements.
  *
- * @param string        $key     Translation key (e.g. "MENU_MAIN_MENU").
+ * @param string $key Translation key (e.g. "MENU_MAIN_MENU").
  * @param array<string> $replace Optional associative array to replace %KEY% in the string.
  * @return string Translated string or key if not found.
  */

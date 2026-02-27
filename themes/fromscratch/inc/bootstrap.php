@@ -13,6 +13,16 @@ function fs_is_debug(): bool
 }
 
 /**
+ * Whether setup has been completed (install wizard finished successfully).
+ *
+ * @return bool True if setup is complete, false if not yet run.
+ */
+function fs_setup_completed(): bool
+{
+  return (bool) get_option('fromscratch_install_success');
+}
+
+/**
  * Get theme config
  *
  * @param string|null $key Optional. Key or dot path, e.g. 'menus', 'meta.viewport'.

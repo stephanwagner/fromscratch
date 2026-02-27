@@ -2,17 +2,7 @@
 
 defined('ABSPATH') || exit;
 
-require_once __DIR__ . '/htaccess.php';
-
-/**
- * Whether setup has been completed (install wizard finished successfully).
- *
- * @return bool True if setup is complete, false if not yet run.
- */
-function fs_setup_completed(): bool
-{
-  return (bool) get_option('fromscratch_install_success');
-}
+require_once __DIR__ . '/install-system.php';
 
 /**
  * Redirect to install page only when setup is not completed and user tries to access Theme settings, Tools, Users, or their subpages.
@@ -23,11 +13,12 @@ add_action('admin_init', function () {
     return;
   }
   global $pagenow;
-  $page = isset($_GET['page']) ? $_GET['page'] : '';
-  $on_theme_settings = ($pagenow === 'options-general.php' && $page === 'fs-theme-settings');
-  $on_tools = ($pagenow === 'tools.php');
-  $on_users = in_array($pagenow, ['users.php', 'user-new.php', 'user-edit.php', 'profile.php'], true);
-  if (!$on_theme_settings && !$on_tools && !$on_users) {
+  global $parent_file;
+  $on_settings = ($pagenow === 'options-general.php') || ($parent_file === 'options-general.php');
+  $on_tools = ($pagenow === 'tools.php') || ($parent_file === 'tools.php');
+  $on_users = ($pagenow === 'users.php') || ($parent_file === 'users.php') || ($pagenow === 'user-new.php') || ($pagenow === 'user-edit.php') || ($pagenow === 'profile.php');
+  $on_others = ($pagenow === 'theme-editor.php') || ($pagenow === 'nav-menus.php') || ($pagenow === 'customize.php') || ($pagenow === 'site-editor.php');
+  if (!$on_settings && !$on_tools && !$on_users && !$on_others) {
     return;
   }
   if (defined('DOING_AJAX') && DOING_AJAX) {
@@ -229,7 +220,7 @@ function fs_render_installer(): void
                 foreach ($install_media_sizes as $slug => $size) {
                   $w = (int) $size['width'];
                   $h = (int) $size['height'];
-                  ?>
+                ?>
                   <p style="margin-bottom: 8px;">
                     <label>
                       <span style="display: inline-block; min-width: 120px;"><?= esc_html($size['name']) ?></span>
@@ -243,7 +234,7 @@ function fs_render_installer(): void
                       </label>
                     <?php } ?>
                   </p>
-                  <?php
+                <?php
                 }
                 ?>
               </div>
@@ -283,14 +274,14 @@ function fs_render_installer(): void
               <?php
               $htaccess_config = fs_get_htaccess_config();
               if ($htaccess_config !== '') {
-                ?>
+              ?>
                 <details style="margin-top: 8px;">
                   <summary style="cursor: pointer;"><?= esc_html(fs_t('INSTALL_NGINX_SHOW_CONFIG')) ?></summary>
                   <div style="margin-top: 8px;">
                     <textarea id="fs-htaccess-config" class="large-text code" rows="16" style="width: 100%; max-width: 640px; font-size: 12px; font-family: monospace;"><?= esc_textarea($htaccess_config) ?></textarea>
                   </div>
                 </details>
-                <?php
+              <?php
               }
               ?>
             </td>
@@ -303,7 +294,7 @@ function fs_render_installer(): void
               <?php
               $nginx_config = fs_get_nginx_config();
               if ($nginx_config !== '') {
-                ?>
+              ?>
                 <details style="margin-top: 8px;">
                   <summary style="cursor: pointer;"><?= esc_html(fs_t('INSTALL_NGINX_SHOW_CONFIG')) ?></summary>
                   <div style="margin-top: 8px; position: relative;">
@@ -311,7 +302,7 @@ function fs_render_installer(): void
                     <button type="button" class="button button-small" style="margin-top: 8px;" data-fs-copy-from-source="fs-nginx-config" data-fs-copy-feedback-text="<?= esc_attr(fs_t('INSTALL_NGINX_COPIED')) ?>"><?= esc_html(fs_t('INSTALL_NGINX_COPY')) ?></button>
                   </div>
                 </details>
-                <?php
+              <?php
               }
               ?>
             </td>
@@ -334,107 +325,107 @@ function fs_render_installer(): void
               </p>
               <p class="description"><?= esc_html(fs_t('INSTALL_PAGES_DESCRIPTION')) ?></p>
               <div data-fs-checkbox-toggle-content="pages">
-              <table class="widefat striped" style="max-width: 600px; margin-top: 8px;">
-                <thead>
-                  <tr>
-                    <th style="padding: 8px 10px; line-height: 1.4em; width: 32px;"></th>
-                    <th style="padding: 8px 10px; line-height: 1.4em"><?= fs_t('INSTALL_PAGES_TABLE_HEADING_PAGE') ?></th>
-                    <th style="padding: 8px 10px; line-height: 1.4em"><?= fs_t('INSTALL_PAGES_TABLE_HEADING_TITLE') ?></th>
-                    <th style="padding: 8px 10px; line-height: 1.4em"><?= fs_t('INSTALL_PAGES_TABLE_HEADING_SLUG') ?></th>
-                  </tr>
-                </thead>
-                <tbody>
+                <table class="widefat striped" style="max-width: 600px; margin-top: 8px;">
+                  <thead>
+                    <tr>
+                      <th style="padding: 8px 10px; line-height: 1.4em; width: 32px;"></th>
+                      <th style="padding: 8px 10px; line-height: 1.4em"><?= fs_t('INSTALL_PAGES_TABLE_HEADING_PAGE') ?></th>
+                      <th style="padding: 8px 10px; line-height: 1.4em"><?= fs_t('INSTALL_PAGES_TABLE_HEADING_TITLE') ?></th>
+                      <th style="padding: 8px 10px; line-height: 1.4em"><?= fs_t('INSTALL_PAGES_TABLE_HEADING_SLUG') ?></th>
+                    </tr>
+                  </thead>
+                  <tbody>
 
-                  <tr>
-                    <td style="vertical-align: middle;">
-                      <input type="hidden" name="pages[homepage][add]" value="1">
-                      <input type="checkbox" checked disabled aria-label="<?= esc_attr__('Add page', 'fromscratch') ?>">
-                    </td>
-                    <td><strong><?= fs_t('INSTALL_PAGES_HOMEPAGE_TITLE') ?></strong></td>
-                    <td>
-                      <input
-                        type="text"
-                        name="pages[homepage][title]"
-                        value="<?= fs_t('INSTALL_PAGES_HOMEPAGE_FORM_TITLE') ?>"
-                        class="regular-text" style="width: 180px">
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        name="pages[homepage][slug]"
-                        value="<?= fs_t('INSTALL_PAGES_HOMEPAGE_FORM_SLUG') ?>"
-                        class="regular-text" style="width: 180px">
-                    </td>
-                  </tr>
+                    <tr>
+                      <td style="vertical-align: middle;">
+                        <input type="hidden" name="pages[homepage][add]" value="1">
+                        <input type="checkbox" checked disabled aria-label="<?= esc_attr__('Add page', 'fromscratch') ?>">
+                      </td>
+                      <td><strong><?= fs_t('INSTALL_PAGES_HOMEPAGE_TITLE') ?></strong></td>
+                      <td>
+                        <input
+                          type="text"
+                          name="pages[homepage][title]"
+                          value="<?= fs_t('INSTALL_PAGES_HOMEPAGE_FORM_TITLE') ?>"
+                          class="regular-text" style="width: 180px">
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          name="pages[homepage][slug]"
+                          value="<?= fs_t('INSTALL_PAGES_HOMEPAGE_FORM_SLUG') ?>"
+                          class="regular-text" style="width: 180px">
+                      </td>
+                    </tr>
 
-                  <tr>
-                    <td style="vertical-align: middle;">
-                      <input type="hidden" name="pages[contact][add]" value="1">
-                      <input type="checkbox" checked disabled aria-label="<?= esc_attr__('Add page', 'fromscratch') ?>">
-                    </td>
-                    <td><strong><?= fs_t('INSTALL_PAGES_CONTACT_TITLE') ?></strong></td>
-                    <td>
-                      <input
-                        type="text"
-                        name="pages[contact][title]"
-                        value="<?= fs_t('INSTALL_PAGES_CONTACT_FORM_TITLE') ?>"
-                        class="regular-text" style="width: 180px">
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        name="pages[contact][slug]"
-                        value="<?= fs_t('INSTALL_PAGES_CONTACT_FORM_SLUG') ?>"
-                        class="regular-text" style="width: 180px">
-                    </td>
-                  </tr>
+                    <tr>
+                      <td style="vertical-align: middle;">
+                        <input type="hidden" name="pages[contact][add]" value="1">
+                        <input type="checkbox" checked disabled aria-label="<?= esc_attr__('Add page', 'fromscratch') ?>">
+                      </td>
+                      <td><strong><?= fs_t('INSTALL_PAGES_CONTACT_TITLE') ?></strong></td>
+                      <td>
+                        <input
+                          type="text"
+                          name="pages[contact][title]"
+                          value="<?= fs_t('INSTALL_PAGES_CONTACT_FORM_TITLE') ?>"
+                          class="regular-text" style="width: 180px">
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          name="pages[contact][slug]"
+                          value="<?= fs_t('INSTALL_PAGES_CONTACT_FORM_SLUG') ?>"
+                          class="regular-text" style="width: 180px">
+                      </td>
+                    </tr>
 
-                  <tr>
-                    <td style="vertical-align: middle;">
-                      <label class="screen-reader-text"><?= esc_html(sprintf(__('Add %s page', 'fromscratch'), fs_t('INSTALL_PAGES_IMPRINT_TITLE'))) ?></label>
-                      <input type="checkbox" name="pages[imprint][add]" value="1" checked>
-                    </td>
-                    <td><strong><?= fs_t('INSTALL_PAGES_IMPRINT_TITLE') ?></strong></td>
-                    <td>
-                      <input
-                        type="text"
-                        name="pages[imprint][title]"
-                        value="<?= fs_t('INSTALL_PAGES_IMPRINT_FORM_TITLE') ?>"
-                        class="regular-text" style="width: 180px">
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        name="pages[imprint][slug]"
-                        value="<?= fs_t('INSTALL_PAGES_IMPRINT_FORM_SLUG') ?>"
-                        class="regular-text" style="width: 180px">
-                    </td>
-                  </tr>
+                    <tr>
+                      <td style="vertical-align: middle;">
+                        <label class="screen-reader-text"><?= esc_html(sprintf(__('Add %s page', 'fromscratch'), fs_t('INSTALL_PAGES_IMPRINT_TITLE'))) ?></label>
+                        <input type="checkbox" name="pages[imprint][add]" value="1" checked>
+                      </td>
+                      <td><strong><?= fs_t('INSTALL_PAGES_IMPRINT_TITLE') ?></strong></td>
+                      <td>
+                        <input
+                          type="text"
+                          name="pages[imprint][title]"
+                          value="<?= fs_t('INSTALL_PAGES_IMPRINT_FORM_TITLE') ?>"
+                          class="regular-text" style="width: 180px">
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          name="pages[imprint][slug]"
+                          value="<?= fs_t('INSTALL_PAGES_IMPRINT_FORM_SLUG') ?>"
+                          class="regular-text" style="width: 180px">
+                      </td>
+                    </tr>
 
-                  <tr>
-                    <td style="vertical-align: middle;">
-                      <input type="hidden" name="pages[privacy][add]" value="1">
-                      <input type="checkbox" checked disabled aria-label="<?= esc_attr__('Add page', 'fromscratch') ?>">
-                    </td>
-                    <td><strong><?= fs_t('INSTALL_PAGES_PRIVACY_TITLE') ?></strong></td>
-                    <td>
-                      <input
-                        type="text"
-                        name="pages[privacy][title]"
-                        value="<?= fs_t('INSTALL_PAGES_PRIVACY_FORM_TITLE') ?>"
-                        class="regular-text" style="width: 180px">
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        name="pages[privacy][slug]"
-                        value="<?= fs_t('INSTALL_PAGES_PRIVACY_FORM_SLUG') ?>"
-                        class="regular-text" style="width: 180px">
-                    </td>
-                  </tr>
+                    <tr>
+                      <td style="vertical-align: middle;">
+                        <input type="hidden" name="pages[privacy][add]" value="1">
+                        <input type="checkbox" checked disabled aria-label="<?= esc_attr__('Add page', 'fromscratch') ?>">
+                      </td>
+                      <td><strong><?= fs_t('INSTALL_PAGES_PRIVACY_TITLE') ?></strong></td>
+                      <td>
+                        <input
+                          type="text"
+                          name="pages[privacy][title]"
+                          value="<?= fs_t('INSTALL_PAGES_PRIVACY_FORM_TITLE') ?>"
+                          class="regular-text" style="width: 180px">
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          name="pages[privacy][slug]"
+                          value="<?= fs_t('INSTALL_PAGES_PRIVACY_FORM_SLUG') ?>"
+                          class="regular-text" style="width: 180px">
+                      </td>
+                    </tr>
 
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
               </div>
             </td>
           </tr>
@@ -517,7 +508,9 @@ function fs_render_installer(): void
                     <label for="developer_new_password"><?= esc_html(fs_t('INSTALL_DEVELOPER_PASSWORD')) ?></label><br>
                     <input type="password" name="developer[new_user][password]" id="developer_new_password" value="" class="regular-text" style="width: 100%;" autocomplete="new-password">
                     <a class="fs-description-link -gray -has-icon" href="https://passwordcopy.app" target="_blank" rel="noopener" style="margin-left: 4px;">
-                      <span class="fs-description-link-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h240q17 0 28.5 11.5T480-800q0 17-11.5 28.5T440-760H200v560h560v-240q0-17 11.5-28.5T800-480q17 0 28.5 11.5T840-440v240q0 33-23.5 56.5T760-120H200Zm560-584L416-360q-11 11-28 11t-28-11q-11-11-11-28t11-28l344-344H600q-17 0-28.5-11.5T560-800q0-17 11.5-28.5T600-840h200q17 0 28.5 11.5T840-800v200q0 17-11.5 28.5T800-560q-17 0-28.5-11.5T760-600v-104Z" /></svg></span>
+                      <span class="fs-description-link-icon"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+                          <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h240q17 0 28.5 11.5T480-800q0 17-11.5 28.5T440-760H200v560h560v-240q0-17 11.5-28.5T800-480q17 0 28.5 11.5T840-440v240q0 33-23.5 56.5T760-120H200Zm560-584L416-360q-11 11-28 11t-28-11q-11-11-11-28t11-28l344-344H600q-17 0-28.5-11.5T560-800q0-17 11.5-28.5T600-840h200q17 0 28.5 11.5T840-800v200q0 17-11.5 28.5T800-560q-17 0-28.5-11.5T760-600v-104Z" />
+                        </svg></span>
                       <span>passwordcopy.app</span>
                     </a>
                   </p>
@@ -769,7 +762,6 @@ Tags:
 
   if ($installMenus) {
     $menuItems = [
-      // Main menu
       'slider' => [
         'title' => fs_t('INSTALL_MENU_LINK_SLIDER_TITLE'),
         'menu' => 'main_menu',
@@ -780,16 +772,16 @@ Tags:
         'menu' => 'main_menu',
         'is-button' => true
       ],
-
-      // Footer menu
-      'imprint' => [
+    ];
+    if (!empty($_POST['pages']['imprint']['add'])) {
+      $menuItems['imprint'] = [
         'title' => fs_t('INSTALL_PAGES_IMPRINT_FORM_TITLE'),
         'menu' => 'footer_menu'
-      ],
-      'privacy' => [
-        'title' => fs_t('INSTALL_PAGES_PRIVACY_FORM_TITLE'),
-        'menu' => 'footer_menu'
-      ],
+      ];
+    }
+    $menuItems['privacy'] = [
+      'title' => fs_t('INSTALL_PAGES_PRIVACY_FORM_TITLE'),
+      'menu' => 'footer_menu'
     ];
 
 
@@ -932,10 +924,10 @@ Tags:
  */
 function fs_get_or_create_menu_id(string $menu_slug): int
 {
-	$menu_name = fs_config('menus.' . $menu_slug);
-	if ($menu_name === null) {
-		throw new RuntimeException("Menu config missing for slug: {$menu_slug}");
-	}
+  $menu_name = fs_config('menus.' . $menu_slug);
+  if ($menu_name === null) {
+    throw new RuntimeException("Menu config missing for slug: {$menu_slug}");
+  }
 
   $menu = wp_get_nav_menu_object($menu_name);
 

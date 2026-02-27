@@ -18,7 +18,7 @@ require_once 'inc/lang.php';
 /**
  * Install
  */
-if (is_admin()) {
+if (is_admin() && !fs_setup_completed() && !isset($_GET['fromscratch_success'])) {
     require_once 'inc/install.php';
 }
 
