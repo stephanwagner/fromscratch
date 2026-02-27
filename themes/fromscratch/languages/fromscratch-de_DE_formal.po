@@ -222,6 +222,19 @@ msgstr "Setup ausführen"
 msgid "Slider"
 msgstr "Slider"
 
+# Developer (Edit User section)
+msgid "Developer"
+msgstr "Entwickler"
+
+msgid "Developer rights"
+msgstr "Entwicklerrechte"
+
+msgid "This user has developer rights"
+msgstr "Dieser Benutzer hat Entwicklerrechte"
+
+msgid "At least one user must have developer rights. Add another developer before removing yours."
+msgstr "Mindestens ein Benutzer muss Entwicklerrechte haben. Lege zuerst einen weiteren Entwickler an, bevor du deine entfernst."
+
 # Context: Image size (for "Small" in media sizes list)
 msgctxt "Image size"
 msgid "Small"

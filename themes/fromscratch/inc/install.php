@@ -129,7 +129,7 @@ function fs_render_installer(): void
   <div class="wrap">
     <h1><?= esc_html__('Install FromScratch', 'fromscratch') ?></h1>
 
-    <?php if (get_option('fromscratch_install_success')) { ?>
+    <?php if (fs_setup_completed()) { ?>
 
       <div class="notice notice-success">
         <p><?= esc_html__('FromScratch is installed.', 'fromscratch') ?></p>
@@ -578,7 +578,7 @@ if (isset($_POST['fromscratch_run_install'])) {
  */
 function fromscratch_run_install(): void
 {
-  if (get_option('fromscratch_installed')) {
+  if (fs_setup_completed()) {
     wp_die('FromScratch installation is already complete.');
     return;
   }
@@ -869,10 +869,12 @@ Tags:
       $user_data['user_pass'] = $cur_password;
     }
     wp_update_user($user_data);
-    if ($cur_has_dev) {
-      update_user_meta($current_id, 'fromscratch_developer', '1');
-    } else {
-      delete_user_meta($current_id, 'fromscratch_developer');
+    if (function_exists('fs_user_is_administrator') && fs_user_is_administrator($current_id)) {
+      if ($cur_has_dev) {
+        update_user_meta($current_id, 'fromscratch_developer', '1');
+      } else {
+        delete_user_meta($current_id, 'fromscratch_developer');
+      }
     }
   }
 
