@@ -35,6 +35,7 @@ function initCopyFromSource(root = document) {
   });
 }
 
+// Expose for reuse (e.g. after dynamic content)
 window.fromscratchInitCopyFromSource = initCopyFromSource;
 
 document.addEventListener('DOMContentLoaded', () => {

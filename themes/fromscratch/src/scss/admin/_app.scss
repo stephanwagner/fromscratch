@@ -27,7 +27,7 @@
 .fs-notice-error {
   ul {
     list-style-type: none;
-    
+
     li {
       position: relative;
       margin: 0 0 8px;
@@ -135,27 +135,8 @@
 
 
 
-// TODO remove
-// Install page section titles
-.appearance_page_fromscratch-install {
-  .fs-install-section-row {
-    td {
-      padding-bottom: 0;
-      border-bottom: none;
-      vertical-align: bottom;
-    }
-  }
-
-  .fs-install-section-title {
-    margin: 0 0 4px 0;
-    padding: 0;
-    font-size: 1.1em;
-    font-weight: 600;
-    color: #1d2327;
-  }
-
-  .fs-install-section-row+tr th,
-  .fs-install-section-row+tr td {
-    padding-top: 12px;
-  }
+// Forced checkbox
+input[type="checkbox"][data-fs-forced='1'] {
+  cursor: not-allowed;
+  opacity: 0.35;
 }

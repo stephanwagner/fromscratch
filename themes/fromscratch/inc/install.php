@@ -210,7 +210,7 @@ function fs_render_installer(): void
       };
       ?>
 
-      <form method="post" autocomplete="off">
+      <form class="fromscratch__install-form" data-fs-install-form method="post" autocomplete="off">
         <?php wp_nonce_field('fromscratch_install'); ?>
 
         <h2><?= esc_html__('Theme', 'fromscratch') ?></h2>

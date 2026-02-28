@@ -1,3 +1,6 @@
+// Utils
 import './utils/checkbox-toggle';
 import './utils/copy-from-source';
-import './utils/developer';
+
+// Pages
+import './pages/install-theme';
