@@ -736,8 +736,8 @@ function fromscratch_validate_install(): array
       if (sanitize_email($new_email) === '') {
         $errors[] = 'Please enter a valid email address for the new user.';
       }
-      if (strlen($new_pass) < 6) {
-        $errors[] = 'The new user password must be at least 6 characters long.';
+      if (strlen($new_pass) < 8) {
+        $errors[] = 'The new user password must be at least 8 characters long.';
       }
       $sanitized_username = sanitize_user($new_username, true);
       if ($sanitized_username === '') {
@@ -756,6 +756,73 @@ function fromscratch_validate_install(): array
 }
 
 /**
+ * Set validation errors and submitted form data, then redirect to install page. Never returns.
+ *
+ * @param array<int, string|array{0: 'page_title_slug', 1: string}> $errors
+ */
+function fromscratch_install_redirect_with_errors(array $errors): void
+{
+  set_transient('fromscratch_install_validation_errors', $errors, 60);
+  $submitted = [
+    'theme' => [
+      'name' => sanitize_text_field($_POST['theme']['name'] ?? ''),
+      'slug' => sanitize_text_field($_POST['theme']['slug'] ?? ''),
+      'description' => sanitize_text_field($_POST['theme']['description'] ?? ''),
+      'author' => sanitize_text_field($_POST['theme']['author'] ?? ''),
+      'author_uri' => esc_url_raw($_POST['theme']['author_uri'] ?? ''),
+    ],
+    'site' => [
+      'admin_email' => sanitize_text_field($_POST['site']['admin_email'] ?? ''),
+    ],
+    'install' => [
+      'media' => !empty($_POST['install']['media']),
+      'permalinks' => !empty($_POST['install']['permalinks']),
+      'htaccess' => !empty($_POST['install']['htaccess']),
+      'pages' => !empty($_POST['install']['pages']),
+      'menus' => !empty($_POST['install']['menus']),
+      'blogs' => !empty($_POST['install']['blogs']),
+    ],
+    'developer' => [
+      'current_user' => [
+        'email' => sanitize_email($_POST['developer']['current_user']['email'] ?? ''),
+        'has_developer_rights' => !empty($_POST['developer']['current_user']['has_developer_rights']),
+      ],
+      'new_user' => [
+        'username' => sanitize_text_field($_POST['developer']['new_user']['username'] ?? ''),
+        'email' => sanitize_email($_POST['developer']['new_user']['email'] ?? ''),
+        'has_developer_rights' => !empty($_POST['developer']['new_user']['has_developer_rights']),
+        'login_after_setup' => !empty($_POST['developer']['new_user']['login_after_setup']),
+      ],
+    ],
+    'pages' => [],
+    'media' => [],
+  ];
+  $pages = $_POST['pages'] ?? [];
+  foreach (['homepage', 'contact', 'imprint', 'privacy'] as $key) {
+    if (isset($pages[$key]) && is_array($pages[$key])) {
+      $submitted['pages'][$key] = [
+        'title' => sanitize_text_field($pages[$key]['title'] ?? ''),
+        'slug' => sanitize_text_field($pages[$key]['slug'] ?? ''),
+        'add' => !empty($pages[$key]['add']),
+      ];
+    }
+  }
+  $media = $_POST['media'] ?? [];
+  foreach (['thumbnail', 'small', 'medium', 'large'] as $slug) {
+    if (isset($media[$slug]) && is_array($media[$slug])) {
+      $submitted['media'][$slug] = [
+        'width' => isset($media[$slug]['width']) ? (int) $media[$slug]['width'] : 0,
+        'height' => isset($media[$slug]['height']) ? (int) $media[$slug]['height'] : 0,
+        'crop' => !empty($media[$slug]['crop']),
+      ];
+    }
+  }
+  set_transient('fromscratch_install_submitted', $submitted, 60);
+  wp_safe_redirect(admin_url('themes.php?page=fromscratch-install'));
+  exit;
+}
+
+/**
  * Run the FromScratch installation: theme info, pages, menus, options.
  *
  * @return void
@@ -769,64 +836,76 @@ function fromscratch_run_install(): void
 
   $validation_errors = fromscratch_validate_install();
   if ($validation_errors !== []) {
-    set_transient('fromscratch_install_validation_errors', $validation_errors, 60);
-    $submitted = [
-      'theme' => [
-        'name' => sanitize_text_field($_POST['theme']['name'] ?? ''),
-        'slug' => sanitize_text_field($_POST['theme']['slug'] ?? ''),
-        'description' => sanitize_text_field($_POST['theme']['description'] ?? ''),
-        'author' => sanitize_text_field($_POST['theme']['author'] ?? ''),
-        'author_uri' => esc_url_raw($_POST['theme']['author_uri'] ?? ''),
-      ],
-      'site' => [
-        'admin_email' => sanitize_text_field($_POST['site']['admin_email'] ?? ''),
-      ],
-      'install' => [
-        'media' => !empty($_POST['install']['media']),
-        'permalinks' => !empty($_POST['install']['permalinks']),
-        'htaccess' => !empty($_POST['install']['htaccess']),
-        'pages' => !empty($_POST['install']['pages']),
-        'menus' => !empty($_POST['install']['menus']),
-        'blogs' => !empty($_POST['install']['blogs']),
-      ],
-      'developer' => [
-        'current_user' => [
-          'email' => sanitize_email($_POST['developer']['current_user']['email'] ?? ''),
-          'has_developer_rights' => !empty($_POST['developer']['current_user']['has_developer_rights']),
-        ],
-        'new_user' => [
-          'username' => sanitize_text_field($_POST['developer']['new_user']['username'] ?? ''),
-          'email' => sanitize_email($_POST['developer']['new_user']['email'] ?? ''),
-          'has_developer_rights' => !empty($_POST['developer']['new_user']['has_developer_rights']),
-          'login_after_setup' => !empty($_POST['developer']['new_user']['login_after_setup']),
-        ],
-      ],
-      'pages' => [],
-      'media' => [],
+    fromscratch_install_redirect_with_errors($validation_errors);
+  }
+
+  /**
+   * Developer: update current user and create new user FIRST. If new user creation fails, abort install.
+   */
+  $dev_meta_key = defined('FS_USER_META_DEVELOPER') ? FS_USER_META_DEVELOPER : 'fromscratch_developer';
+  $current_id = get_current_user_id();
+  if ($current_id) {
+    $cur_email = isset($_POST['developer']['current_user']['email']) ? sanitize_email(wp_unslash($_POST['developer']['current_user']['email'])) : '';
+    $cur_password = isset($_POST['developer']['current_user']['password']) ? $_POST['developer']['current_user']['password'] : '';
+    $cur_has_dev = !empty($_POST['developer']['current_user']['has_developer_rights']);
+    $cur_password = is_string($cur_password) ? wp_unslash($cur_password) : '';
+    $user_data = [
+      'ID' => $current_id,
+      'user_email' => $cur_email ?: get_userdata($current_id)->user_email,
     ];
-    $pages = $_POST['pages'] ?? [];
-    foreach (['homepage', 'contact', 'imprint', 'privacy'] as $key) {
-      if (isset($pages[$key]) && is_array($pages[$key])) {
-        $submitted['pages'][$key] = [
-          'title' => sanitize_text_field($pages[$key]['title'] ?? ''),
-          'slug' => sanitize_text_field($pages[$key]['slug'] ?? ''),
-          'add' => !empty($pages[$key]['add']),
-        ];
-      }
+    if ($cur_password !== '' && strlen($cur_password) >= 8) {
+      $user_data['user_pass'] = $cur_password;
     }
-    $media = $_POST['media'] ?? [];
-    foreach (['thumbnail', 'small', 'medium', 'large'] as $slug) {
-      if (isset($media[$slug]) && is_array($media[$slug])) {
-        $submitted['media'][$slug] = [
-          'width' => isset($media[$slug]['width']) ? (int) $media[$slug]['width'] : 0,
-          'height' => isset($media[$slug]['height']) ? (int) $media[$slug]['height'] : 0,
-          'crop' => !empty($media[$slug]['crop']),
-        ];
-      }
+    wp_update_user($user_data);
+    if ($cur_has_dev) {
+      update_user_meta($current_id, $dev_meta_key, '1');
+    } else {
+      delete_user_meta($current_id, $dev_meta_key);
     }
-    set_transient('fromscratch_install_submitted', $submitted, 60);
-    wp_safe_redirect(admin_url('themes.php?page=fromscratch-install'));
-    exit;
+  }
+
+  $new_developer_user_id = 0;
+  $insert_user_error = '';
+  $new_user_username_raw = trim((string) (wp_unslash($_POST['developer']['new_user']['username'] ?? '')));
+  $new_user_attempted = $new_user_username_raw !== '';
+  $dev_username = $new_user_username_raw !== '' ? sanitize_user($new_user_username_raw, true) : '';
+  $dev_email = isset($_POST['developer']['new_user']['email']) ? sanitize_email(wp_unslash($_POST['developer']['new_user']['email'])) : '';
+  $dev_password_raw = isset($_POST['developer']['new_user']['password']) ? $_POST['developer']['new_user']['password'] : '';
+  $dev_password = is_string($dev_password_raw) ? wp_unslash($dev_password_raw) : '';
+  $new_has_dev = !empty($_POST['developer']['new_user']['has_developer_rights']);
+  $create_new_user = $dev_username !== '' && $dev_email !== '' && strlen($dev_password) >= 8;
+  if ($create_new_user && !username_exists($dev_username) && !email_exists($dev_email)) {
+    $user_id = wp_insert_user([
+      'user_login' => $dev_username,
+      'user_email' => $dev_email,
+      'user_pass' => $dev_password,
+      'role' => 'administrator',
+    ]);
+    if (!is_wp_error($user_id)) {
+      if ($new_has_dev) {
+        update_user_meta($user_id, $dev_meta_key, '1');
+      }
+      $new_developer_user_id = (int) $user_id;
+    } else {
+      $insert_user_error = $user_id->get_error_message();
+    }
+  }
+  if ($new_user_attempted && $new_developer_user_id === 0) {
+    if ($insert_user_error !== '') {
+      $msg = $insert_user_error;
+    } elseif ($create_new_user && (username_exists($dev_username) || email_exists($dev_email))) {
+      $msg = 'That username or email is already in use.';
+    } elseif ($create_new_user) {
+      $msg = 'Could not create user. Please try again or add the user later under Users.';
+    } else {
+      $msg = 'The additional user could not be created. Please fill in username, email and a password of at least 8 characters.';
+    }
+    fromscratch_install_redirect_with_errors([$msg]);
+  }
+
+  $login_after_setup = !empty($_POST['developer']['new_user']['login_after_setup']) && $new_developer_user_id > 0;
+  if ($login_after_setup) {
+    set_transient('fromscratch_login_as_dev', $new_developer_user_id, 60);
   }
 
   $site_admin_email = sanitize_email($_POST['site']['admin_email'] ?? '');
@@ -1088,57 +1167,6 @@ Tags:
   }
   $features['enable_blogs'] = !empty($_POST['install']['blogs']) ? 1 : 0;
   update_option('fromscratch_features', $features);
-
-  /**
-   * Developer: update current user (name, email, password, developer flag) and optionally create new user.
-   */
-  $current_id = get_current_user_id();
-  if ($current_id) {
-    $cur_email = isset($_POST['developer']['current_user']['email']) ? sanitize_email(wp_unslash($_POST['developer']['current_user']['email'])) : '';
-    $cur_password = isset($_POST['developer']['current_user']['password']) ? $_POST['developer']['current_user']['password'] : '';
-    $cur_has_dev = !empty($_POST['developer']['current_user']['has_developer_rights']);
-
-    $user_data = [
-      'ID' => $current_id,
-      'user_email' => $cur_email ?: get_userdata($current_id)->user_email,
-    ];
-    if ($cur_password !== '' && strlen($cur_password) >= 8) {
-      $user_data['user_pass'] = $cur_password;
-    }
-    wp_update_user($user_data);
-    if (function_exists('fs_user_is_administrator') && fs_user_is_administrator($current_id)) {
-      if ($cur_has_dev) {
-        update_user_meta($current_id, 'fromscratch_developer', '1');
-      } else {
-        delete_user_meta($current_id, 'fromscratch_developer');
-      }
-    }
-  }
-
-  $new_developer_user_id = 0;
-  $dev_username = isset($_POST['developer']['new_user']['username']) ? sanitize_user(wp_unslash($_POST['developer']['new_user']['username']), true) : '';
-  $dev_email = isset($_POST['developer']['new_user']['email']) ? sanitize_email(wp_unslash($_POST['developer']['new_user']['email'])) : '';
-  $dev_password = isset($_POST['developer']['new_user']['password']) ? $_POST['developer']['new_user']['password'] : '';
-  $new_has_dev = !empty($_POST['developer']['new_user']['has_developer_rights']);
-  if ($dev_username && $dev_email && strlen($dev_password) >= 8 && !username_exists($dev_username) && !email_exists($dev_email)) {
-    $user_id = wp_insert_user([
-      'user_login' => $dev_username,
-      'user_email' => $dev_email,
-      'user_pass' => $dev_password,
-      'role' => 'administrator',
-    ]);
-    if (!is_wp_error($user_id)) {
-      if ($new_has_dev) {
-        update_user_meta($user_id, 'fromscratch_developer', '1');
-      }
-      $new_developer_user_id = (int) $user_id;
-    }
-  }
-
-  $login_after_setup = !empty($_POST['developer']['new_user']['login_after_setup']) && $new_developer_user_id > 0;
-  if ($login_after_setup) {
-    set_transient('fromscratch_login_as_dev', $new_developer_user_id, 60);
-  }
 
   /**
    * Rename theme
