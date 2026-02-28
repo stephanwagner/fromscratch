@@ -55,6 +55,10 @@ add_action('admin_init', function () {
 		'type' => 'array',
 		'sanitize_callback' => 'fs_sanitize_features',
 	]);
+	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'admin_email', [
+		'type' => 'string',
+		'sanitize_callback' => 'sanitize_email',
+	]);
 }, 5);
 
 /**
@@ -481,6 +485,19 @@ function theme_settings_page(): void
 		?>
 		<form method="post" action="options.php" class="page-settings-form">
 			<?php settings_fields(FS_THEME_OPTION_GROUP_GENERAL); ?>
+			<h2 class="title"><?= esc_html(fs_t('SETTINGS_SITE_HEADING')) ?></h2>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row">
+						<label for="admin_email"><?= esc_html(fs_t('SETTINGS_SITE_ADMIN_EMAIL')) ?></label>
+					</th>
+					<td>
+						<input type="email" name="admin_email" id="admin_email" value="<?= esc_attr(get_option('admin_email')) ?>" class="regular-text">
+						<p class="description"><?= esc_html(fs_t('SETTINGS_SITE_ADMIN_EMAIL_DESCRIPTION')) ?></p>
+					</td>
+				</tr>
+			</table>
+			<hr>
 			<h2 class="title"><?= esc_html(fs_t('SETTINGS_ASSET_VERSION_HEADING')) ?></h2>
 			<p class="description" style="margin-bottom: 8px;"><?= esc_html(fs_t('SETTINGS_ASSET_VERSION_INTRO')) ?></p>
 			<table class="form-table" role="presentation">

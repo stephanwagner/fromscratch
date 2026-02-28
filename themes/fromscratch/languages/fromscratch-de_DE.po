@@ -36,8 +36,14 @@ msgstr "Zum Dashboard"
 msgid "At least one user must have developer rights. Either check \"Has developer rights\" for the current user or add another user and check it there."
 msgstr "Mindestens ein Benutzer muss Entwicklerrechte haben. Entweder „Hat Entwicklerrechte“ beim aktuellen Benutzer setzen oder einen weiteren anlegen und dort setzen."
 
-msgid "Before getting started, a one-time initialization is required to configure essential system components and ensure a stable, high-performance environment."
-msgstr "Vor dem Start ist eine einmalige Initialisierung erforderlich, um grundlegende Systemkomponenten zu konfigurieren und eine stabile sowie performante Umgebung sicherzustellen."
+msgid "This theme requires a one-time initialization to activate core functionality and ensure a clean development foundation."
+msgstr "Dieses Theme erfordert eine einmalige Initialisierung, um Kernfunktionen zu aktivieren und eine saubere Entwicklungsbasis sicherzustellen."
+
+msgid "Site"
+msgstr "Seite"
+
+msgid "Used for system notifications, updates, and critical error recovery."
+msgstr "Wird für Systembenachrichtigungen, Updates und die Fehlerwiederherstellung verwendet."
 
 msgid "Theme"
 msgstr "Theme"

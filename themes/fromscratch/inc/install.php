@@ -15,6 +15,14 @@ add_action('admin_init', function () {
   if (defined('DOING_AJAX') && DOING_AJAX) {
     return;
   }
+  // After theme activation, redirect once to the installer (without fighting core activation redirects).
+  if (get_transient('fromscratch_redirect_to_installer')) {
+    delete_transient('fromscratch_redirect_to_installer');
+    if (!isset($_GET['page']) || $_GET['page'] !== 'fromscratch-install') {
+      wp_safe_redirect(admin_url('themes.php?page=fromscratch-install'));
+      exit;
+    }
+  }
   if (isset($_GET['page']) && $_GET['page'] === 'fromscratch-install') {
     return;
   }
@@ -39,7 +47,7 @@ add_action('admin_init', function () {
 }, 5);
 
 /**
- * After switching to this theme, redirect to install page if setup not completed.
+ * After switching to this theme, schedule a redirect to the installer.
  */
 add_action('after_switch_theme', function () {
   if (fs_setup_completed()) {
@@ -48,8 +56,7 @@ add_action('after_switch_theme', function () {
   if (get_stylesheet() !== 'fromscratch') {
     return;
   }
-  wp_safe_redirect(admin_url('themes.php?page=fromscratch-install'));
-  exit;
+  set_transient('fromscratch_redirect_to_installer', '1', 60);
 });
 
 /**
@@ -146,9 +153,11 @@ function fs_render_installer(): void
         delete_transient('fromscratch_install_error');
         echo '<div class="notice notice-error"><p>' . esc_html__('At least one user must have developer rights. Either check "Has developer rights" for the current user or add another user and check it there.', 'fromscratch') . '</p></div>';
       } ?>
-      <p>
-        <?= esc_html__('Before getting started, a one-time initialization is required to configure essential system components and ensure a stable, high-performance environment.', 'fromscratch') ?>
-      </p>
+      <div class="notice notice-info" style="margin: 1em 0;">
+        <p style="margin: 0.5em 0;">
+          <?= esc_html__('This theme requires a one-time initialization to activate core functionality and ensure a clean development foundation.', 'fromscratch') ?>
+        </p>
+      </div>
 
       <form method="post" autocomplete="off">
         <?php wp_nonce_field('fromscratch_install'); ?>
@@ -473,6 +482,22 @@ function fs_render_installer(): void
 
         <hr>
 
+        <h2><?= esc_html__('Site', 'fromscratch') ?></h2>
+
+        <table class="form-table" role="presentation">
+          <tr>
+            <th scope="row">
+              <label for="site_admin_email"><?= esc_html__('Administrator email', 'fromscratch') ?></label>
+            </th>
+            <td>
+              <input type="email" name="site[admin_email]" id="site_admin_email" value="<?= esc_attr(get_option('admin_email')) ?>" class="regular-text">
+              <p class="description"><?= esc_html__('Used for system notifications, updates, and critical error recovery.', 'fromscratch') ?></p>
+            </td>
+          </tr>
+        </table>
+
+        <hr>
+
         <h2><?= esc_html__('Users', 'fromscratch') ?></h2>
 
         <p class="description"><?= esc_html__('At least one user requires developer privileges to manage technical settings and system-level functionality.', 'fromscratch') ?></p>
@@ -595,6 +620,11 @@ function fromscratch_run_install(): void
     set_transient('fromscratch_install_error', 'developer_required', 30);
     wp_safe_redirect(admin_url('themes.php?page=fromscratch-install'));
     exit;
+  }
+
+  $site_admin_email = sanitize_email($_POST['site']['admin_email'] ?? '');
+  if ($site_admin_email !== '') {
+    update_option('admin_email', $site_admin_email);
   }
 
   $theme_name = sanitize_text_field($_POST['theme']['name'] ?? '');
