@@ -151,3 +151,68 @@ function fs_developer_user_profile_update(int $user_id): void
     delete_user_meta($user_id, FS_USER_META_DEVELOPER);
   }
 }
+
+/**
+ * Restrict admin for non-developers: block Tools, Plugins, Design (Themes, Theme Editor, Site Editor).
+ * Move Menus under Settings for everyone so non-developers can still edit menus.
+ */
+add_action('admin_init', function () {
+  if (!is_user_logged_in() || !function_exists('fs_setup_completed') || !fs_setup_completed()) {
+    return;
+  }
+  if (defined('DOING_AJAX') && DOING_AJAX) {
+    return;
+  }
+  if (fs_is_developer_user((int) get_current_user_id())) {
+    return;
+  }
+  global $pagenow;
+  $blocked = ['tools.php', 'plugins.php', 'themes.php', 'site-editor.php', 'theme-editor.php', 'options-media.php', 'options-permalink.php'];
+  if (in_array($pagenow, $blocked, true)) {
+    wp_safe_redirect(admin_url());
+    exit;
+  }
+}, 20);
+
+add_action('admin_menu', function () {
+  if (!function_exists('fs_setup_completed') || !fs_setup_completed()) {
+    return;
+  }
+
+  // Move Menus from Appearance to Settings for everyone (direct link to nav-menus.php), after Theme settings.
+  global $submenu;
+  remove_submenu_page('themes.php', 'nav-menus.php');
+  $menus_item = [
+    __('Menus'),
+    'edit_theme_options',
+    admin_url('nav-menus.php'),
+  ];
+  $settings = &$submenu['options-general.php'];
+  $insert_at = null;
+  foreach ($settings as $i => $item) {
+    if (isset($item[2]) && $item[2] === 'fs-theme-settings') {
+      $insert_at = $i + 1;
+      break;
+    }
+  }
+  if ($insert_at !== null) {
+    array_splice($settings, $insert_at, 0, [$menus_item]);
+  } else {
+    $settings[] = $menus_item;
+  }
+
+  // Non-developers: hide Tools, Plugins, Appearance, and Media settings.
+  if (!is_user_logged_in() || !fs_is_developer_user((int) get_current_user_id())) {
+    remove_menu_page('tools.php');
+    remove_menu_page('plugins.php');
+    remove_menu_page('themes.php');
+    remove_submenu_page('options-general.php', 'options-media.php');
+    remove_submenu_page('options-general.php', 'options-permalink.php');
+  }
+}, 999);
+
+add_action('load-nav-menus.php', function () {
+  global $parent_file, $submenu_file;
+  $parent_file = 'options-general.php';
+  $submenu_file = admin_url('nav-menus.php');
+});
