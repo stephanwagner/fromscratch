@@ -57,6 +57,39 @@ msgstr "Theme Ordner"
 msgid "Use only lowercase letters, numbers and hyphens."
 msgstr "Nur Kleinbuchstaben, Zahlen und Bindestriche verwenden."
 
+msgid "The following errors occurred during initialization:"
+msgstr "Bei der Initialisierung sind folgende Fehler aufgetreten:"
+
+msgid "Theme folder is required."
+msgstr "Theme-Ordner ist erforderlich."
+
+msgid "Theme folder may only contain lowercase letters (a-z), numbers (0-9), and hyphens."
+msgstr "Der Theme-Ordner darf nur Kleinbuchstaben (a-z), Ziffern (0-9) und Bindestriche enthalten."
+
+msgid "A theme or folder with that name already exists. Choose a different theme folder."
+msgstr "Ein Theme oder Ordner mit diesem Namen existiert bereits. Wähle einen anderen Theme-Ordner."
+
+msgid "Please enter a valid administration email address."
+msgstr "Bitte gib eine gültige E-Mail-Adresse für die Administration ein."
+
+msgid "To add another user, please fill in username, email, and password."
+msgstr "Um einen weiteren Benutzer anzulegen, fülle Benutzername, E-Mail und Passwort aus."
+
+msgid "Please enter a valid email address for the new user."
+msgstr "Bitte gib eine gültige E-Mail-Adresse für den neuen Benutzer ein."
+
+msgid "The new user password must be at least 8 characters long."
+msgstr "Das Passwort des neuen Benutzers muss mindestens 8 Zeichen lang sein."
+
+msgid "Please enter a valid username for the new user."
+msgstr "Bitte gib einen gültigen Benutzernamen für den neuen Benutzer ein."
+
+msgid "That username is already in use."
+msgstr "Dieser Benutzername wird bereits verwendet."
+
+msgid "That email address is already in use."
+msgstr "Diese E-Mail-Adresse wird bereits verwendet."
+
 msgid "Theme description"
 msgstr "Theme Beschreibung"
 
@@ -197,6 +230,9 @@ msgstr "Benutzer"
 
 msgid "At least one user requires developer privileges to manage technical settings and system-level functionality."
 msgstr "Mindestens ein Benutzer benötigt Entwicklerrechte, um technische Einstellungen und systemrelevante Funktionen verwalten zu können."
+
+msgid "The user account you provide to your customer or end user should not have developer rights."
+msgstr "Der Benutzer, den du dem Kunden oder Endnutzer gibst, sollte keine Entwicklerrechte haben."
 
 msgid "Current user"
 msgstr "Aktueller Benutzer"

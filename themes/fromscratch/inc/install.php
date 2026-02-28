@@ -149,15 +149,44 @@ function fs_render_installer(): void
       </p>
 
     <?php } else { ?>
-      <?php if (get_transient('fromscratch_install_error') === 'developer_required') {
-        delete_transient('fromscratch_install_error');
-        echo '<div class="notice notice-error"><p>' . esc_html__('At least one user must have developer rights. Either check "Has developer rights" for the current user or add another user and check it there.', 'fromscratch') . '</p></div>';
-      } ?>
+      <?php
+      $install_errors = get_transient('fromscratch_install_validation_errors');
+      $has_install_errors = is_array($install_errors) && $install_errors !== [];
+      if ($has_install_errors) {
+        delete_transient('fromscratch_install_validation_errors');
+        echo '<div class="notice notice-error fs-notice-error"><p><strong>' . esc_html__('The following errors occurred during initialization:', 'fromscratch') . '</strong></p><ul>';
+        foreach ($install_errors as $msg) {
+          echo '<li>' . esc_html($msg) . '</li>';
+        }
+        echo '</ul></div>';
+      }
+      if (!$has_install_errors) {
+        ?>
       <div class="notice notice-info" style="margin: 1em 0;">
         <p style="margin: 0.5em 0;">
           <?= esc_html__('This theme requires a one-time initialization to activate core functionality and ensure a clean development foundation.', 'fromscratch') ?>
         </p>
       </div>
+        <?php
+      }
+      $install_submitted = get_transient('fromscratch_install_submitted');
+      if (!is_array($install_submitted)) {
+        $install_submitted = [];
+      } else {
+        delete_transient('fromscratch_install_submitted');
+      }
+      /** @param array $key @param mixed $default */
+      $fs_install_val = function (array $key, $default = '') use ($install_submitted) {
+        $v = $install_submitted;
+        foreach ($key as $k) {
+          if (!is_array($v) || !array_key_exists($k, $v)) {
+            return $default;
+          }
+          $v = $v[$k];
+        }
+        return $v;
+      };
+      ?>
 
       <form method="post" autocomplete="off">
         <?php wp_nonce_field('fromscratch_install'); ?>
@@ -172,7 +201,7 @@ function fs_render_installer(): void
               </label>
             </th>
             <td>
-              <input type="text" name="theme[name]" value="<?= esc_attr(get_bloginfo('name')) ?>" class="regular-text">
+              <input type="text" name="theme[name]" value="<?= esc_attr($fs_install_val(['theme', 'name'], get_bloginfo('name'))) ?>" class="regular-text">
             </td>
           </tr>
           <tr>
@@ -182,7 +211,7 @@ function fs_render_installer(): void
               </label>
             </th>
             <td>
-              <input type="text" name="theme[slug]" value="<?= esc_attr(sanitize_title(get_bloginfo('name'))) ?>" class="regular-text">
+              <input type="text" name="theme[slug]" value="<?= esc_attr($fs_install_val(['theme', 'slug'], sanitize_title(get_bloginfo('name')))) ?>" class="regular-text">
               <p class="description"><?= esc_html__('Use only lowercase letters, numbers and hyphens.', 'fromscratch') ?></p>
             </td>
           </tr>
@@ -193,7 +222,7 @@ function fs_render_installer(): void
               </label>
             </th>
             <td>
-              <input type="text" name="theme[description]" value="<?= esc_attr(sprintf(__('Theme of the webpage %s.', 'fromscratch'), get_bloginfo('name'))) ?>" class="regular-text">
+              <input type="text" name="theme[description]" value="<?= esc_attr($fs_install_val(['theme', 'description'], sprintf(__('Theme of the webpage %s.', 'fromscratch'), get_bloginfo('name')))) ?>" class="regular-text">
             </td>
           </tr>
           <tr>
@@ -201,7 +230,7 @@ function fs_render_installer(): void
               <label for="theme_author"><?= esc_html__('Theme Author', 'fromscratch') ?></label>
             </th>
             <td>
-              <input type="text" name="theme[author]" id="theme_author" value="" class="regular-text">
+              <input type="text" name="theme[author]" id="theme_author" value="<?= esc_attr($fs_install_val(['theme', 'author'])) ?>" class="regular-text">
             </td>
           </tr>
           <tr>
@@ -209,7 +238,7 @@ function fs_render_installer(): void
               <label for="theme_author_uri"><?= esc_html__('Theme Author URI', 'fromscratch') ?></label>
             </th>
             <td>
-              <input type="url" name="theme[author_uri]" id="theme_author_uri" value="" class="regular-text">
+              <input type="url" name="theme[author_uri]" id="theme_author_uri" value="<?= esc_attr($fs_install_val(['theme', 'author_uri'])) ?>" class="regular-text">
             </td>
           </tr>
         </table>
@@ -224,7 +253,7 @@ function fs_render_installer(): void
             <td>
               <p style="margin-top: 0;">
                 <label>
-                  <input type="checkbox" name="install[media]" checked data-fs-checkbox-toggle="media">
+                  <input type="checkbox" name="install[media]" value="1" <?= !empty($fs_install_val(['install', 'media'], true)) ? ' checked' : '' ?> data-fs-checkbox-toggle="media">
                   <?= esc_html__('Set media sizes', 'fromscratch') ?>
                 </label>
               </p>
@@ -238,8 +267,10 @@ function fs_render_installer(): void
                   'large' => ['name' => __('Large'), 'width' => 2400, 'height' => 2400],
                 ];
                 foreach ($install_media_sizes as $slug => $size) {
-                  $w = (int) $size['width'];
-                  $h = (int) $size['height'];
+                  $media_submitted = $fs_install_val(['media', $slug], []);
+                  $m = is_array($media_submitted) ? $media_submitted : [];
+                  $w = isset($m['width']) && $m['width'] > 0 ? (int) $m['width'] : (int) $size['width'];
+                  $h = isset($m['height']) ? (int) $m['height'] : (int) $size['height'];
                 ?>
                   <div style="margin-bottom: 8px;">
                     <label>
@@ -249,7 +280,7 @@ function fs_render_installer(): void
                     </label>
                     <?php if ($slug === 'thumbnail') { ?>
                       <label style="margin-left: 12px;">
-                        <input type="checkbox" name="media[thumbnail][crop]" value="1">
+                        <input type="checkbox" name="media[thumbnail][crop]" value="1" <?= !empty($fs_install_val(['media', 'thumbnail', 'crop'])) ? ' checked' : '' ?>>
                         <?= esc_html__('Crop to exact dimensions', 'fromscratch') ?>
                       </label>
                     <?php } ?>
@@ -272,7 +303,7 @@ function fs_render_installer(): void
             <td>
               <p style="margin-top: 0;">
                 <label>
-                  <input type="checkbox" name="install[permalinks]" checked>
+                  <input type="checkbox" name="install[permalinks]" value="1" <?= !empty($fs_install_val(['install', 'permalinks'], true)) ? ' checked' : '' ?>>
                   <?= esc_html__('Set permalink structure to “Post name”', 'fromscratch') ?>
                 </label>
               </p>
@@ -286,7 +317,7 @@ function fs_render_installer(): void
             <td>
               <p style="margin-top: 0;">
                 <label>
-                  <input type="checkbox" name="install[htaccess]" checked>
+                  <input type="checkbox" name="install[htaccess]" value="1" <?= !empty($fs_install_val(['install', 'htaccess'], true)) ? ' checked' : '' ?>>
                   <?= esc_html__('Apply recommended rules to .htaccess', 'fromscratch') ?>
                 </label>
               </p>
@@ -342,7 +373,7 @@ function fs_render_installer(): void
             <td>
               <p style="margin-top: 0;">
                 <label>
-                  <input type="checkbox" name="install[pages]" checked data-fs-checkbox-toggle="pages">
+                  <input type="checkbox" name="install[pages]" value="1" <?= !empty($fs_install_val(['install', 'pages'], true)) ? ' checked' : '' ?> data-fs-checkbox-toggle="pages">
                   <?= esc_html__('Create pages', 'fromscratch') ?>
                 </label>
               </p>
@@ -369,14 +400,14 @@ function fs_render_installer(): void
                         <input
                           type="text"
                           name="pages[homepage][title]"
-                          value="<?= esc_attr__('Homepage', 'fromscratch') ?>"
+                          value="<?= esc_attr($fs_install_val(['pages', 'homepage', 'title'], __('Homepage', 'fromscratch'))) ?>"
                           class="regular-text" style="width: 180px">
                       </td>
                       <td>
                         <input
                           type="text"
                           name="pages[homepage][slug]"
-                          value="<?= esc_attr__('homepage', 'fromscratch') ?>"
+                          value="<?= esc_attr($fs_install_val(['pages', 'homepage', 'slug'], __('homepage', 'fromscratch'))) ?>"
                           class="regular-text" style="width: 180px">
                       </td>
                     </tr>
@@ -391,14 +422,14 @@ function fs_render_installer(): void
                         <input
                           type="text"
                           name="pages[contact][title]"
-                          value="<?= esc_attr__('Contact', 'fromscratch') ?>"
+                          value="<?= esc_attr($fs_install_val(['pages', 'contact', 'title'], __('Contact', 'fromscratch'))) ?>"
                           class="regular-text" style="width: 180px">
                       </td>
                       <td>
                         <input
                           type="text"
                           name="pages[contact][slug]"
-                          value="<?= esc_attr__('contact', 'fromscratch') ?>"
+                          value="<?= esc_attr($fs_install_val(['pages', 'contact', 'slug'], __('contact', 'fromscratch'))) ?>"
                           class="regular-text" style="width: 180px">
                       </td>
                     </tr>
@@ -406,21 +437,21 @@ function fs_render_installer(): void
                     <tr>
                       <td style="vertical-align: middle;">
                         <label class="screen-reader-text"><?= esc_html(sprintf(__('Add %s page', 'fromscratch'), __('Imprint', 'fromscratch'))) ?></label>
-                        <input type="checkbox" name="pages[imprint][add]" value="1" checked>
+                        <input type="checkbox" name="pages[imprint][add]" value="1" <?= !empty($fs_install_val(['pages', 'imprint', 'add'], true)) ? ' checked' : '' ?>>
                       </td>
                       <td><strong><?= esc_html__('Imprint', 'fromscratch') ?></strong></td>
                       <td>
                         <input
                           type="text"
                           name="pages[imprint][title]"
-                          value="<?= esc_attr__('Imprint', 'fromscratch') ?>"
+                          value="<?= esc_attr($fs_install_val(['pages', 'imprint', 'title'], __('Imprint', 'fromscratch'))) ?>"
                           class="regular-text" style="width: 180px">
                       </td>
                       <td>
                         <input
                           type="text"
                           name="pages[imprint][slug]"
-                          value="<?= esc_attr__('imprint', 'fromscratch') ?>"
+                          value="<?= esc_attr($fs_install_val(['pages', 'imprint', 'slug'], __('imprint', 'fromscratch'))) ?>"
                           class="regular-text" style="width: 180px">
                       </td>
                     </tr>
@@ -435,14 +466,14 @@ function fs_render_installer(): void
                         <input
                           type="text"
                           name="pages[privacy][title]"
-                          value="<?= esc_attr__('Privacy', 'fromscratch') ?>"
+                          value="<?= esc_attr($fs_install_val(['pages', 'privacy', 'title'], __('Privacy', 'fromscratch'))) ?>"
                           class="regular-text" style="width: 180px">
                       </td>
                       <td>
                         <input
                           type="text"
                           name="pages[privacy][slug]"
-                          value="<?= esc_attr__('privacy', 'fromscratch') ?>"
+                          value="<?= esc_attr($fs_install_val(['pages', 'privacy', 'slug'], __('privacy', 'fromscratch'))) ?>"
                           class="regular-text" style="width: 180px">
                       </td>
                     </tr>
@@ -458,7 +489,7 @@ function fs_render_installer(): void
             <td>
               <p style="margin-top: 0;">
                 <label>
-                  <input type="checkbox" name="install[menus]" checked>
+                  <input type="checkbox" name="install[menus]" value="1" <?= !empty($fs_install_val(['install', 'menus'], true)) ? ' checked' : '' ?>>
                   <?= esc_html__('Assign created pages to menus', 'fromscratch') ?>
                 </label>
               </p>
@@ -471,7 +502,7 @@ function fs_render_installer(): void
             <td>
               <p style="margin-top: 0;">
                 <label>
-                  <input type="checkbox" name="install[blogs]" value="1" checked>
+                  <input type="checkbox" name="install[blogs]" value="1" <?= !empty($fs_install_val(['install', 'blogs'], true)) ? ' checked' : '' ?>>
                   <?= esc_html__('Enable blogs', 'fromscratch') ?>
                 </label>
               </p>
@@ -490,7 +521,7 @@ function fs_render_installer(): void
               <label for="site_admin_email"><?= esc_html__('Administrator email', 'fromscratch') ?></label>
             </th>
             <td>
-              <input type="email" name="site[admin_email]" id="site_admin_email" value="<?= esc_attr(get_option('admin_email')) ?>" class="regular-text">
+              <input type="email" name="site[admin_email]" id="site_admin_email" value="<?= esc_attr($fs_install_val(['site', 'admin_email'], get_option('admin_email'))) ?>" class="regular-text">
               <p class="description"><?= esc_html__('Used for system notifications, updates, and critical error recovery.', 'fromscratch') ?></p>
             </td>
           </tr>
@@ -501,6 +532,7 @@ function fs_render_installer(): void
         <h2><?= esc_html__('Users', 'fromscratch') ?></h2>
 
         <p class="description"><?= esc_html__('At least one user requires developer privileges to manage technical settings and system-level functionality.', 'fromscratch') ?></p>
+        <p class="description"><?= esc_html__('The user account you provide to your customer or end user should not have developer rights.', 'fromscratch') ?></p>
 
         <?php
         $current_user = wp_get_current_user();
@@ -518,7 +550,7 @@ function fs_render_installer(): void
                   </div>
                   <div style="margin-bottom: 12px;">
                     <label class="fs-input-label" for="developer_current_email"><?= esc_html__('Email', 'fromscratch') ?></label>
-                    <input type="email" name="developer[current_user][email]" id="developer_current_email" value="<?= esc_attr($current_user->user_email) ?>" class="regular-text" style="width: 100%;" autocomplete="email">
+                    <input type="email" name="developer[current_user][email]" id="developer_current_email" value="<?= esc_attr($fs_install_val(['developer', 'current_user', 'email'], $current_user->user_email)) ?>" class="regular-text" style="width: 100%;" autocomplete="email">
                   </div>
                   <div style="margin-bottom: 12px;">
                     <label class="fs-input-label" for="developer_current_password"><?= esc_html__('Password', 'fromscratch') ?></label>
@@ -527,7 +559,7 @@ function fs_render_installer(): void
                   </div>
                   <div style="margin-bottom: 0;">
                     <label>
-                      <input type="checkbox" name="developer[current_user][has_developer_rights]" value="1" checked>
+                      <input type="checkbox" name="developer[current_user][has_developer_rights]" value="1" <?= !empty($fs_install_val(['developer', 'current_user', 'has_developer_rights'])) ? ' checked' : '' ?>>
                       <?= esc_html__('Has developer rights', 'fromscratch') ?>
                     </label>
                   </div>
@@ -537,11 +569,11 @@ function fs_render_installer(): void
                   <h3 style="margin: 0 0 12px 0; font-size: 14px;"><?= esc_html__('Add another admin user', 'fromscratch') ?></h3>
                   <div style="margin-bottom: 12px;">
                     <label class="fs-input-label" for="developer_new_username"><?= esc_html__('Username', 'fromscratch') ?></label>
-                    <input type="text" name="developer[new_user][username]" id="developer_new_username" value="" class="regular-text" style="width: 100%;" autocomplete="off">
+                    <input type="text" name="developer[new_user][username]" id="developer_new_username" value="<?= esc_attr($fs_install_val(['developer', 'new_user', 'username'])) ?>" class="regular-text" style="width: 100%;" autocomplete="off">
                   </div>
                   <div style="margin-bottom: 12px;">
                     <label class="fs-input-label" for="developer_new_email"><?= esc_html__('Email', 'fromscratch') ?></label>
-                    <input type="email" name="developer[new_user][email]" id="developer_new_email" value="" class="regular-text" style="width: 100%;" autocomplete="off">
+                    <input type="email" name="developer[new_user][email]" id="developer_new_email" value="<?= esc_attr($fs_install_val(['developer', 'new_user', 'email'])) ?>" class="regular-text" style="width: 100%;" autocomplete="off">
                   </div>
                   <div style="margin-bottom: 12px;">
                     <label class="fs-input-label" for="developer_new_password"><?= esc_html__('Password', 'fromscratch') ?></label>
@@ -557,13 +589,13 @@ function fs_render_installer(): void
                   </div>
                   <div style="margin-bottom: 12px;">
                     <label>
-                      <input type="checkbox" name="developer[new_user][has_developer_rights]" value="1">
+                      <input type="checkbox" name="developer[new_user][has_developer_rights]" value="1" <?= !empty($fs_install_val(['developer', 'new_user', 'has_developer_rights'])) ? ' checked' : '' ?>>
                       <?= esc_html__('Has developer rights', 'fromscratch') ?>
                     </label>
                   </div>
                   <div>
                     <label>
-                      <input type="checkbox" name="developer[new_user][login_after_setup]" value="1">
+                      <input type="checkbox" name="developer[new_user][login_after_setup]" value="1" <?= !empty($fs_install_val(['developer', 'new_user', 'login_after_setup'])) ? ' checked' : '' ?>>
                       <?= esc_html__('Log in as this user after setup', 'fromscratch') ?>
                     </label>
                   </div>
@@ -597,6 +629,77 @@ if (isset($_POST['fromscratch_run_install'])) {
 }
 
 /**
+ * Validate install form. Returns array of translated error messages; empty array means valid.
+ *
+ * @return list<string>
+ */
+function fromscratch_validate_install(): array
+{
+  $errors = [];
+
+  // Developer: at least one user must have developer rights
+  $current_has_dev = !empty($_POST['developer']['current_user']['has_developer_rights']);
+  $new_username = trim((string) ($_POST['developer']['new_user']['username'] ?? ''));
+  $new_email = trim((string) ($_POST['developer']['new_user']['email'] ?? ''));
+  $new_pass = (string) ($_POST['developer']['new_user']['password'] ?? '');
+  $new_has_dev = !empty($_POST['developer']['new_user']['has_developer_rights']);
+  $create_new = $new_username !== '' && $new_email !== '' && $new_pass !== '';
+
+  $has_at_least_one_developer = $current_has_dev || ($create_new && $new_has_dev);
+  if (!$has_at_least_one_developer) {
+    $errors[] = __('At least one user must have developer rights. Either check "Has developer rights" for the current user or add another user and check it there.', 'fromscratch');
+  }
+
+  // Theme slug: only a-z, 0-9, hyphens; required
+  $theme_slug_raw = trim((string) ($_POST['theme']['slug'] ?? ''));
+  $theme_slug_normalized = strtolower($theme_slug_raw);
+  if ($theme_slug_normalized === '') {
+    $errors[] = __('Theme folder is required.', 'fromscratch');
+  } elseif (!preg_match('/^[a-z0-9-]+$/', $theme_slug_normalized)) {
+    $errors[] = __('Theme folder may only contain lowercase letters (a-z), numbers (0-9), and hyphens.', 'fromscratch');
+  } else {
+    $themes_dir = WP_CONTENT_DIR . '/themes';
+    $target_dir = $themes_dir . '/' . $theme_slug_normalized;
+    if ($theme_slug_normalized !== 'fromscratch' && is_dir($target_dir)) {
+      $errors[] = __('A theme or folder with that name already exists. Choose a different theme folder.', 'fromscratch');
+    }
+  }
+
+  // Administration email: if provided, must be valid
+  $site_admin_email = sanitize_email($_POST['site']['admin_email'] ?? '');
+  $site_admin_email_raw = trim((string) ($_POST['site']['admin_email'] ?? ''));
+  if ($site_admin_email_raw !== '' && $site_admin_email === '') {
+    $errors[] = __('Please enter a valid administration email address.', 'fromscratch');
+  }
+
+  // New user: if any field is filled, all three required; email valid; password min length
+  if ($new_username !== '' || $new_email !== '' || $new_pass !== '') {
+    if ($new_username === '' || $new_email === '' || $new_pass === '') {
+      $errors[] = __('To add another user, please fill in username, email, and password.', 'fromscratch');
+    } else {
+      if (sanitize_email($new_email) === '') {
+        $errors[] = __('Please enter a valid email address for the new user.', 'fromscratch');
+      }
+      if (strlen($new_pass) < 8) {
+        $errors[] = __('The new user password must be at least 8 characters long.', 'fromscratch');
+      }
+      $sanitized_username = sanitize_user($new_username, true);
+      if ($sanitized_username === '') {
+        $errors[] = __('Please enter a valid username for the new user.', 'fromscratch');
+      }
+      if ($sanitized_username !== '' && username_exists($sanitized_username)) {
+        $errors[] = __('That username is already in use.', 'fromscratch');
+      }
+      if (sanitize_email($new_email) !== '' && email_exists(sanitize_email($new_email))) {
+        $errors[] = __('That email address is already in use.', 'fromscratch');
+      }
+    }
+  }
+
+  return $errors;
+}
+
+/**
  * Run the FromScratch installation: theme info, pages, menus, options.
  *
  * @return void
@@ -608,16 +711,64 @@ function fromscratch_run_install(): void
     return;
   }
 
-  $current_has_dev = !empty($_POST['developer']['current_user']['has_developer_rights']);
-  $new_username = !empty(trim($_POST['developer']['new_user']['username'] ?? ''));
-  $new_email = !empty(trim($_POST['developer']['new_user']['email'] ?? ''));
-  $new_pass = !empty($_POST['developer']['new_user']['password'] ?? '');
-  $new_has_dev = !empty($_POST['developer']['new_user']['has_developer_rights']);
-  $create_new = $new_username && $new_email && $new_pass;
-
-  $has_at_least_one_developer = $current_has_dev || ($create_new && $new_has_dev);
-  if (!$has_at_least_one_developer) {
-    set_transient('fromscratch_install_error', 'developer_required', 30);
+  $validation_errors = fromscratch_validate_install();
+  if ($validation_errors !== []) {
+    set_transient('fromscratch_install_validation_errors', $validation_errors, 60);
+    $submitted = [
+      'theme' => [
+        'name' => sanitize_text_field($_POST['theme']['name'] ?? ''),
+        'slug' => sanitize_text_field($_POST['theme']['slug'] ?? ''),
+        'description' => sanitize_text_field($_POST['theme']['description'] ?? ''),
+        'author' => sanitize_text_field($_POST['theme']['author'] ?? ''),
+        'author_uri' => esc_url_raw($_POST['theme']['author_uri'] ?? ''),
+      ],
+      'site' => [
+        'admin_email' => sanitize_text_field($_POST['site']['admin_email'] ?? ''),
+      ],
+      'install' => [
+        'media' => !empty($_POST['install']['media']),
+        'permalinks' => !empty($_POST['install']['permalinks']),
+        'htaccess' => !empty($_POST['install']['htaccess']),
+        'pages' => !empty($_POST['install']['pages']),
+        'menus' => !empty($_POST['install']['menus']),
+        'blogs' => !empty($_POST['install']['blogs']),
+      ],
+      'developer' => [
+        'current_user' => [
+          'email' => sanitize_email($_POST['developer']['current_user']['email'] ?? ''),
+          'has_developer_rights' => !empty($_POST['developer']['current_user']['has_developer_rights']),
+        ],
+        'new_user' => [
+          'username' => sanitize_text_field($_POST['developer']['new_user']['username'] ?? ''),
+          'email' => sanitize_email($_POST['developer']['new_user']['email'] ?? ''),
+          'has_developer_rights' => !empty($_POST['developer']['new_user']['has_developer_rights']),
+          'login_after_setup' => !empty($_POST['developer']['new_user']['login_after_setup']),
+        ],
+      ],
+      'pages' => [],
+      'media' => [],
+    ];
+    $pages = $_POST['pages'] ?? [];
+    foreach (['homepage', 'contact', 'imprint', 'privacy'] as $key) {
+      if (isset($pages[$key]) && is_array($pages[$key])) {
+        $submitted['pages'][$key] = [
+          'title' => sanitize_text_field($pages[$key]['title'] ?? ''),
+          'slug' => sanitize_text_field($pages[$key]['slug'] ?? ''),
+          'add' => !empty($pages[$key]['add']),
+        ];
+      }
+    }
+    $media = $_POST['media'] ?? [];
+    foreach (['thumbnail', 'small', 'medium', 'large'] as $slug) {
+      if (isset($media[$slug]) && is_array($media[$slug])) {
+        $submitted['media'][$slug] = [
+          'width' => isset($media[$slug]['width']) ? (int) $media[$slug]['width'] : 0,
+          'height' => isset($media[$slug]['height']) ? (int) $media[$slug]['height'] : 0,
+          'crop' => !empty($media[$slug]['crop']),
+        ];
+      }
+    }
+    set_transient('fromscratch_install_submitted', $submitted, 60);
     wp_safe_redirect(admin_url('themes.php?page=fromscratch-install'));
     exit;
   }
@@ -944,8 +1095,8 @@ Tags:
   $old_dir = $themes_dir . '/' . $old_slug;
   $new_dir = $themes_dir . '/' . $new_slug;
 
-  // Rename at the VERY END
-  if (is_dir($old_dir) && is_dir($new_dir) && $old_dir !== $new_dir) {
+  // Rename at the VERY END (validated: slug is a-z0-9-, target dir does not exist or is current)
+  if (is_dir($old_dir) && $old_slug !== $new_slug && !is_dir($new_dir)) {
     rename($old_dir, $new_dir);
     switch_theme($new_slug);
   }

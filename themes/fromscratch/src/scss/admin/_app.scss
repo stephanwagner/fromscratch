@@ -24,6 +24,30 @@
   display: none !important;
 }
 
+.fs-notice-error {
+  ul {
+    list-style-type: none;
+    
+    li {
+      position: relative;
+      margin: 0 0 8px;
+      padding-left: 12px;
+
+      &::before {
+        content: "›";
+        position: absolute;
+        left: 2px;
+        top: -1px;
+        transform: scale(1.25);
+      }
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
 .fs-details {
   summary {
     position: relative;
