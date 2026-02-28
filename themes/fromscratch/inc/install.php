@@ -155,8 +155,19 @@ function fs_render_installer(): void
       if ($has_install_errors) {
         delete_transient('fromscratch_install_validation_errors');
         echo '<div class="notice notice-error fs-notice-error"><p><strong>' . esc_html__('The following errors occurred during initialization:', 'fromscratch') . '</strong></p><ul>';
-        foreach ($install_errors as $msg) {
-          echo '<li>' . esc_html($msg) . '</li>';
+        foreach ($install_errors as $item) {
+          if (is_array($item) && isset($item[0], $item[1]) && $item[0] === 'page_title_slug') {
+            $page_labels = [
+              'homepage' => __('Homepage', 'fromscratch'),
+              'contact' => __('Contact', 'fromscratch'),
+              'imprint' => __('Imprint', 'fromscratch'),
+              'privacy' => __('Privacy', 'fromscratch'),
+            ];
+            $label = $page_labels[$item[1]] ?? $item[1];
+            echo '<li>' . esc_html(sprintf(__('Please enter a title and slug for the %s page.', 'fromscratch'), $label)) . '</li>';
+          } else {
+            echo '<li>' . esc_html(__($item, 'fromscratch')) . '</li>';
+          }
         }
         echo '</ul></div>';
       }
@@ -238,7 +249,7 @@ function fs_render_installer(): void
               <label for="theme_author_uri"><?= esc_html__('Theme Author URI', 'fromscratch') ?></label>
             </th>
             <td>
-              <input type="url" name="theme[author_uri]" id="theme_author_uri" value="<?= esc_attr($fs_install_val(['theme', 'author_uri'])) ?>" class="regular-text">
+              <input type="text" name="theme[author_uri]" id="theme_author_uri" value="<?= esc_attr($fs_install_val(['theme', 'author_uri'])) ?>" class="regular-text">
             </td>
           </tr>
         </table>
@@ -629,9 +640,10 @@ if (isset($_POST['fromscratch_run_install'])) {
 }
 
 /**
- * Validate install form. Returns array of translated error messages; empty array means valid.
+ * Validate install form. Returns array of error items (string msgid or array for page_title_slug); empty array means valid.
+ * Strings are translated when displayed on the install page.
  *
- * @return list<string>
+ * @return array<int, string|array{0: 'page_title_slug', 1: string}>
  */
 function fromscratch_validate_install(): array
 {
@@ -647,51 +659,84 @@ function fromscratch_validate_install(): array
 
   $has_at_least_one_developer = $current_has_dev || ($create_new && $new_has_dev);
   if (!$has_at_least_one_developer) {
-    $errors[] = __('At least one user must have developer rights. Either check "Has developer rights" for the current user or add another user and check it there.', 'fromscratch');
+    $errors[] = 'At least one user must have developer rights. Either check "Has developer rights" for the current user or add another user and check it there.';
+  }
+
+  // Theme name: required
+  $theme_name = trim((string) ($_POST['theme']['name'] ?? ''));
+  if ($theme_name === '') {
+    $errors[] = 'Theme name is required.';
   }
 
   // Theme slug: only a-z, 0-9, hyphens; required
   $theme_slug_raw = trim((string) ($_POST['theme']['slug'] ?? ''));
   $theme_slug_normalized = strtolower($theme_slug_raw);
   if ($theme_slug_normalized === '') {
-    $errors[] = __('Theme folder is required.', 'fromscratch');
-  } elseif (!preg_match('/^[a-z0-9-]+$/', $theme_slug_normalized)) {
-    $errors[] = __('Theme folder may only contain lowercase letters (a-z), numbers (0-9), and hyphens.', 'fromscratch');
+    $errors[] = 'Theme folder is required.';
+  } elseif (!preg_match('/^[a-z][a-z0-9-]*$/', $theme_slug_normalized)) {
+    $errors[] = 'Theme folder may only contain lowercase letters (a-z), numbers (0-9), and hyphens, and must start with a letter.';
   } else {
     $themes_dir = WP_CONTENT_DIR . '/themes';
     $target_dir = $themes_dir . '/' . $theme_slug_normalized;
     if ($theme_slug_normalized !== 'fromscratch' && is_dir($target_dir)) {
-      $errors[] = __('A theme or folder with that name already exists. Choose a different theme folder.', 'fromscratch');
+      $errors[] = 'A theme or folder with that name already exists. Choose a different theme folder.';
     }
   }
 
-  // Administration email: if provided, must be valid
+  // Administration email: required and valid
   $site_admin_email = sanitize_email($_POST['site']['admin_email'] ?? '');
   $site_admin_email_raw = trim((string) ($_POST['site']['admin_email'] ?? ''));
-  if ($site_admin_email_raw !== '' && $site_admin_email === '') {
-    $errors[] = __('Please enter a valid administration email address.', 'fromscratch');
+  if ($site_admin_email_raw === '') {
+    $errors[] = 'Administration email address is required.';
+  } elseif ($site_admin_email === '') {
+    $errors[] = 'Please enter a valid administration email address.';
+  }
+
+  // Current user email: required and valid
+  $current_user_email_raw = trim((string) ($_POST['developer']['current_user']['email'] ?? ''));
+  $current_user_email = sanitize_email($current_user_email_raw);
+  if ($current_user_email_raw === '') {
+    $errors[] = 'Current user email address is required.';
+  } elseif ($current_user_email === '') {
+    $errors[] = 'Please enter a valid email address for the current user.';
+  }
+
+  // Pages: when "Create pages" is checked, all page titles and slugs are required
+  $install_pages = !empty($_POST['install']['pages']);
+  if ($install_pages) {
+    $pages_required = ['homepage', 'contact', 'privacy'];
+    if (!empty($_POST['pages']['imprint']['add'])) {
+      $pages_required[] = 'imprint';
+    }
+    foreach ($pages_required as $key) {
+      $title = trim((string) ($_POST['pages'][$key]['title'] ?? ''));
+      $slug = trim((string) ($_POST['pages'][$key]['slug'] ?? ''));
+      if ($title === '' || $slug === '') {
+        $errors[] = ['page_title_slug', $key];
+      }
+    }
   }
 
   // New user: if any field is filled, all three required; email valid; password min length
   if ($new_username !== '' || $new_email !== '' || $new_pass !== '') {
     if ($new_username === '' || $new_email === '' || $new_pass === '') {
-      $errors[] = __('To add another user, please fill in username, email, and password.', 'fromscratch');
+      $errors[] = 'To add another user, please fill in username, email, and password.';
     } else {
       if (sanitize_email($new_email) === '') {
-        $errors[] = __('Please enter a valid email address for the new user.', 'fromscratch');
+        $errors[] = 'Please enter a valid email address for the new user.';
       }
       if (strlen($new_pass) < 8) {
-        $errors[] = __('The new user password must be at least 8 characters long.', 'fromscratch');
+        $errors[] = 'The new user password must be at least 8 characters long.';
       }
       $sanitized_username = sanitize_user($new_username, true);
       if ($sanitized_username === '') {
-        $errors[] = __('Please enter a valid username for the new user.', 'fromscratch');
+        $errors[] = 'Please enter a valid username for the new user.';
       }
       if ($sanitized_username !== '' && username_exists($sanitized_username)) {
-        $errors[] = __('That username is already in use.', 'fromscratch');
+        $errors[] = 'That username is already in use.';
       }
       if (sanitize_email($new_email) !== '' && email_exists(sanitize_email($new_email))) {
-        $errors[] = __('That email address is already in use.', 'fromscratch');
+        $errors[] = 'That email address is already in use.';
       }
     }
   }

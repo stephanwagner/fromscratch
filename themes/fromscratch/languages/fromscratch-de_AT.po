@@ -60,17 +60,32 @@ msgstr "Nur Kleinbuchstaben, Zahlen und Bindestriche verwenden."
 msgid "The following errors occurred during initialization:"
 msgstr "Bei der Initialisierung sind folgende Fehler aufgetreten:"
 
-msgid "Theme folder is required."
-msgstr "Theme-Ordner ist erforderlich."
+msgid "Theme name is required."
+msgstr "Theme Name ist erforderlich."
 
-msgid "Theme folder may only contain lowercase letters (a-z), numbers (0-9), and hyphens."
-msgstr "Der Theme-Ordner darf nur Kleinbuchstaben (a-z), Ziffern (0-9) und Bindestriche enthalten."
+msgid "Theme folder is required."
+msgstr "Theme Ordner ist erforderlich."
+
+msgid "Theme folder may only contain lowercase letters (a-z), numbers (0-9), and hyphens, and must start with a letter."
+msgstr "Der Theme-Ordner darf nur Kleinbuchstaben (a-z), Ziffern (0-9) und Bindestriche enthalten und muss mit einem Buchstaben beginnen."
 
 msgid "A theme or folder with that name already exists. Choose a different theme folder."
-msgstr "Ein Theme oder Ordner mit diesem Namen existiert bereits. Wähle einen anderen Theme-Ordner."
+msgstr "Ein Theme oder Ordner mit diesem Namen existiert bereits. Wähle einen anderen Theme Ordner."
+
+msgid "Administration email address is required."
+msgstr "Die E-Mail-Adresse der Administration ist erforderlich."
 
 msgid "Please enter a valid administration email address."
 msgstr "Bitte gib eine gültige E-Mail-Adresse für die Administration ein."
+
+msgid "Current user email address is required."
+msgstr "Die E-Mail-Adresse des aktuellen Benutzers ist erforderlich."
+
+msgid "Please enter a valid email address for the current user."
+msgstr "Bitte gib eine gültige E-Mail-Adresse für den aktuellen Benutzer ein."
+
+msgid "Please enter a title and slug for the %s page."
+msgstr "Bitte gib einen Titel und einen Slug für die Seite %s ein."
 
 msgid "To add another user, please fill in username, email, and password."
 msgstr "Um einen weiteren Benutzer anzulegen, fülle Benutzername, E-Mail und Passwort aus."
