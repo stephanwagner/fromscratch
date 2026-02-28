@@ -736,8 +736,8 @@ function fromscratch_validate_install(): array
       if (sanitize_email($new_email) === '') {
         $errors[] = 'Please enter a valid email address for the new user.';
       }
-      if (strlen($new_pass) < 8) {
-        $errors[] = 'The new user password must be at least 8 characters long.';
+      if (strlen($new_pass) < 6) {
+        $errors[] = 'The new user password must be at least 6 characters long.';
       }
       $sanitized_username = sanitize_user($new_username, true);
       if ($sanitized_username === '') {
