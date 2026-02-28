@@ -167,7 +167,7 @@ add_action('admin_init', function () {
     return;
   }
   global $pagenow;
-  $blocked = ['tools.php', 'plugins.php', 'themes.php', 'site-editor.php', 'theme-editor.php', 'options-media.php', 'options-permalink.php'];
+  $blocked = ['tools.php', 'plugins.php', 'themes.php', 'site-editor.php', 'theme-editor.php', 'options-media.php', 'options-permalink.php', 'options-writing.php', 'options-reading.php'];
   if (in_array($pagenow, $blocked, true)) {
     wp_safe_redirect(admin_url());
     exit;
@@ -201,11 +201,13 @@ add_action('admin_menu', function () {
     $settings[] = $menus_item;
   }
 
-  // Non-developers: hide Tools, Plugins, Appearance, and Media settings.
+  // Non-developers: hide Tools, Plugins, Appearance, Reading, Writing, and Media settings.
   if (!is_user_logged_in() || !fs_is_developer_user((int) get_current_user_id())) {
     remove_menu_page('tools.php');
     remove_menu_page('plugins.php');
     remove_menu_page('themes.php');
+    remove_submenu_page('options-general.php', 'options-reading.php');
+    remove_submenu_page('options-general.php', 'options-writing.php');
     remove_submenu_page('options-general.php', 'options-media.php');
     remove_submenu_page('options-general.php', 'options-permalink.php');
   }
@@ -216,3 +218,40 @@ add_action('load-nav-menus.php', function () {
   $parent_file = 'options-general.php';
   $submenu_file = admin_url('nav-menus.php');
 });
+
+/**
+ * On Settings → General, hide specific rows for non-developers (e.g. WordPress Address URL).
+ * Also prevent saving those options so they cannot be changed via tampered requests.
+ */
+add_action('load-options-general.php', function () {
+  if (is_multisite() || fs_is_developer_user((int) get_current_user_id())) {
+    return;
+  }
+  $hide_field_ids = ['siteurl', 'home', 'users_can_register', 'default_role'];
+  add_action('admin_head', function () use ($hide_field_ids) {
+    $selectors = array_map(function ($id) {
+      return '.form-table tr:has(#' . esc_attr($id) . ')';
+    }, $hide_field_ids);
+    echo '<style>', implode(', ', $selectors), ' { display: none !important; }</style>';
+  }, 1);
+});
+
+add_action('admin_init', function () {
+  if (fs_is_developer_user((int) get_current_user_id())) {
+    return;
+  }
+  $protected_options = [
+    'siteurl',
+    'home',
+    'users_can_register',
+    'default_role',
+    'show_on_front',
+    'page_on_front',
+    'page_for_posts',
+  ];
+  foreach ($protected_options as $option) {
+    add_filter('pre_update_option_' . $option, function ($value, $old_value) {
+      return $old_value;
+    }, 10, 2);
+  }
+}, 1);

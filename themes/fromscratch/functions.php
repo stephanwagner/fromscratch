@@ -17,9 +17,9 @@ if (is_admin() && (!fs_setup_completed() || isset($_GET['fromscratch_success']))
     require_once 'inc/install.php';
 }
 
-// Developer user (flag and Edit User section)
+// User rights (developer flag, restricted settings for non-developers)
 if (is_admin()) {
-    require_once 'inc/developer-user.php';
+    require_once 'inc/user-rights.php';
 }
 
 // Clean up
