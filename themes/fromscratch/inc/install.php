@@ -140,12 +140,23 @@ function fs_render_installer(): void
 
       <div class="notice notice-success">
         <p><?= esc_html__('FromScratch is installed.', 'fromscratch') ?></p>
+        <p><?= wp_kses(
+              sprintf(
+                /* translators: %s: link to Theme settings page */
+                __('You can change more settings in the <a href="%s">Theme settings</a> page.', 'fromscratch'),
+                esc_url(admin_url('options-general.php?page=fs-theme-settings'))
+              ),
+              ['a' => ['href' => true]]
+            ) ?></p>
       </div>
 
       <p>
         <a
+          href="<?php echo esc_url(admin_url('options-general.php?page=fs-theme-settings')); ?>"
+          class="button button-primary"><?= esc_html__('Edit theme settings', 'fromscratch') ?></a>
+        <a
           href="<?php echo esc_url(admin_url()); ?>"
-          class="button button-primary"><?= esc_html__('Go to dashboard', 'fromscratch') ?></a>
+          class="button button-secondary"><?= esc_html__('Go to dashboard', 'fromscratch') ?></a>
       </p>
 
     <?php } else { ?>
@@ -172,13 +183,13 @@ function fs_render_installer(): void
         echo '</ul></div>';
       }
       if (!$has_install_errors) {
-        ?>
-      <div class="notice notice-info" style="margin: 1em 0;">
-        <p style="margin: 0.5em 0;">
-          <?= esc_html__('This theme requires a one-time initialization to activate core functionality and ensure a clean development foundation.', 'fromscratch') ?>
-        </p>
-      </div>
-        <?php
+      ?>
+        <div class="notice notice-info" style="margin: 1em 0;">
+          <p style="margin: 0.5em 0;">
+            <?= esc_html__('This theme requires a one-time initialization to activate core functionality and ensure a clean development foundation.', 'fromscratch') ?>
+          </p>
+        </div>
+      <?php
       }
       $install_submitted = get_transient('fromscratch_install_submitted');
       if (!is_array($install_submitted)) {

@@ -1,10 +1,13 @@
-# fromscratch
+# FromScratch
 
-A minimalistic wordpress theme to start building from scratch.
+A structured WordPress foundation theme designed for developers who prefer full control.
 
 ## Author
 
-Stephan Wagner, [stephanwagner.me@gmail.com](stephanwagner.me@gmail.com)
+Stephan Wagner \
+Co-Founder & Lead Developer \
+bytes and stripes GbR \
+https://bytesandstripes.com
 
 ## Assets
 

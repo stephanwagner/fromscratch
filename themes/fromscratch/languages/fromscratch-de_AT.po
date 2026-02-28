@@ -30,6 +30,12 @@ msgstr "FromScratch installieren"
 msgid "FromScratch is installed."
 msgstr "FromScratch ist installiert."
 
+msgid "You can change more settings in the <a href=\"%s\">Theme settings</a> page."
+msgstr "Weitere Einstellungen kannst du auf der Seite <a href=\"%s\">Theme Einstellungen</a> ändern."
+
+msgid "Edit theme settings"
+msgstr "Theme Einstellungen bearbeiten"
+
 msgid "Go to dashboard"
 msgstr "Zum Dashboard"
 
@@ -238,7 +244,7 @@ msgid "Enable blogs"
 msgstr "Blogs aktivieren"
 
 msgid "Shows the Posts menu in the admin and allows creating and editing blog posts. You can change this later in Theme settings."
-msgstr "Zeigt das Menü „Beiträge“ im Admin und erlaubt das Anlegen und Bearbeiten von Blog-Beiträgen. Später unter Theme-Einstellungen änderbar."
+msgstr "Zeigt das Menü „Beiträge“ im Admin und erlaubt das Anlegen und Bearbeiten von Blog-Beiträgen. Später unter Theme Einstellungen änderbar."
 
 msgid "Users"
 msgstr "Benutzer"
