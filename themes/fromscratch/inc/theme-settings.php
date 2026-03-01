@@ -324,7 +324,8 @@ function theme_settings_page(): void
 					<th scope="row"><?= esc_html__('Blogs', 'fromscratch') ?></th>
 					<td>
 						<input type="hidden" name="fromscratch_features[enable_blogs]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_blogs]" value="1" <?= checked($feat('enable_blogs'), 1, false) ?>> <?= esc_html__('Enable the Posts menu and blog/post editing.', 'fromscratch') ?></label>
+						<label><input type="checkbox" name="fromscratch_features[enable_blogs]" value="1" <?= checked($feat('enable_blogs'), 1, false) ?>> <?= esc_html__('Allow posts', 'fromscratch') ?></label>
+						<p class="description fs-description-adjust-checkbox"><?= esc_html__('Shows the Posts menu in the admin and allows creating and editing blog posts.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 				<tr>
@@ -347,7 +348,8 @@ function theme_settings_page(): void
 					<th scope="row"><?= esc_html__('SEO', 'fromscratch') ?></th>
 					<td>
 						<input type="hidden" name="fromscratch_features[enable_seo]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_seo]" value="1" <?= checked($feat('enable_seo'), 1, false) ?>> <?= esc_html__('SEO panel (title, description, OG image, noindex) for posts and pages.', 'fromscratch') ?></label>
+						<label><input type="checkbox" name="fromscratch_features[enable_seo]" value="1" <?= checked($feat('enable_seo'), 1, false) ?>> <?= esc_html__('SEO panel', 'fromscratch') ?></label>
+						<p class="description fs-description-adjust-checkbox"><?= esc_html__('Adds a section to pages, posts and custom post types to enter SEO info (title, description, OG image, noindex).', 'fromscratch') ?></p>
 					</td>
 				</tr>
 			</table>

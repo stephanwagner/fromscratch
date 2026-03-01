@@ -238,7 +238,7 @@ msgid "Adds the pages to the configured menu locations."
 msgstr "Fügt die Seiten den konfigurierten Menü-Positionen hinzu."
 
 msgid "Blogs"
-msgstr "Blogs"
+msgstr "Beiträge"
 
 msgid "Enable blogs"
 msgstr "Blogs aktivieren"
@@ -392,8 +392,11 @@ msgstr "Plugins"
 msgid "More developer tools (e.g. sitemap generator, post expirator) can be added here in future updates."
 msgstr "Weitere Entwickler-Werkzeuge (z. B. Sitemap-Generator, Beitragsablauf) können hier in künftigen Updates ergänzt werden."
 
-msgid "Enable the Posts menu and blog/post editing."
-msgstr "Menü „Beiträge“ aktivieren und Blog-/Beitragsbearbeitung erlauben."
+msgid "Allow posts"
+msgstr "Beiträge erlauben"
+
+msgid "Shows the Posts menu in the admin and allows creating and editing blog posts."
+msgstr "Zeigt im Admin das Menü „Beiträge“ und erlaubt das Erstellen und Bearbeiten von Blogbeiträgen."
 
 msgid "SVG support"
 msgstr "SVG-Unterstützung"
@@ -416,8 +419,11 @@ msgstr "Zeigt eine Zeilenaktion „Duplizieren“ für Beiträge, Seiten und ben
 msgid "SEO"
 msgstr "SEO"
 
-msgid "SEO panel (title, description, OG image, noindex) for posts and pages."
-msgstr "SEO-Bereich (Titel, Beschreibung, OG-Bild, noindex) für Beiträge und Seiten."
+msgid "SEO panel"
+msgstr "SEO-Bereich"
+
+msgid "Adds a section to pages, posts and custom post types to enter SEO info (title, description, OG image, noindex)."
+msgstr "Fügt Seiten, Beiträgen und eigenen Beitragstypen einen Bereich zum Eintragen von SEO-Infos hinzu (Titel, Beschreibung, OG-Bild, noindex)."
 
 msgid "No password set. Set a password below to activate protection."
 msgstr "Kein Passwort gesetzt. Setze unten ein Passwort, um den Schutz zu aktivieren."
