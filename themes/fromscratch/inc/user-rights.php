@@ -153,7 +153,7 @@ function fs_developer_user_profile_update(int $user_id): void
 }
 
 /**
- * Default admin access: who can see which admin pages. Keys match Settings → Theme → Developer → Admin access.
+ * Default admin access: who can see which admin pages. Keys match Settings → Theme → Developer → User rights.
  *
  * @return array<string, array{admin: int, developer: int}>
  */
@@ -169,6 +169,7 @@ function fs_admin_access_defaults(): array
     'options_privacy' => ['admin' => 1, 'developer' => 1],
     'tools' => ['admin' => 0, 'developer' => 1],
     'themes' => ['admin' => 0, 'developer' => 1],
+    'theme_settings_general' => ['admin' => 1, 'developer' => 1],
     'theme_settings_security' => ['admin' => 1, 'developer' => 1],
     'theme_settings_texts' => ['admin' => 1, 'developer' => 1],
     'theme_settings_design' => ['admin' => 1, 'developer' => 1],

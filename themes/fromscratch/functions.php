@@ -26,6 +26,7 @@ if (is_admin()) {
 	}
 	require_once 'inc/user-rights.php';
 	require_once 'inc/theme-settings.php';
+	require_once 'inc/developer-settings.php';
 	require_once 'inc/dashboard.php';
 	require_once 'inc/media-sizes.php';
 }

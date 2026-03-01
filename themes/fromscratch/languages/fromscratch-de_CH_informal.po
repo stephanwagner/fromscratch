@@ -341,11 +341,8 @@ msgstr "Erhöhen, wenn statische Theme-Dateien geändert wurden, damit der Cache
 msgid "Bump version"
 msgstr "Version erhöhen"
 
-msgid "Theme features"
-msgstr "Theme-Funktionen"
-
-msgid "Cache & assets"
-msgstr "Cache & Assets"
+msgid "Features"
+msgstr "Features"
 
 msgid "Clear all overrides"
 msgstr "Alle Overrides zurücksetzen"
@@ -353,8 +350,8 @@ msgstr "Alle Overrides zurücksetzen"
 msgid "Tools"
 msgstr "Werkzeuge"
 
-msgid "Admin access"
-msgstr "Zugriff für Admins"
+msgid "User rights"
+msgstr "Benutzerrechte"
 
 msgid "Control which admin pages and Settings sections are visible to Administrators (Admin) and users with developer rights (Developer). Uncheck to hide from that role."
 msgstr "Lege fest, welche Admin-Seiten und Einstellungsbereiche für Administratoren (Admin) und Nutzer mit Entwicklerrechten (Entwickler) sichtbar sind. Abwählen blendet für diese Rolle aus."
@@ -385,6 +382,9 @@ msgstr "Einstellungen: Datenschutz"
 
 msgid "Appearance (Themes)"
 msgstr "Design (Themes)"
+
+msgid "Theme settings: General"
+msgstr "Theme-Einstellungen: Allgemein"
 
 msgid "Theme settings: Security"
 msgstr "Theme-Einstellungen: Sicherheit"
