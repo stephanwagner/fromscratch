@@ -17,6 +17,7 @@ require_once 'inc/head.php';
 require_once 'inc/theme-setup.php';
 require_once 'inc/menu.php';
 require_once 'inc/design.php';
+require_once 'inc/redirects.php';
 
 // ─── Admin ───────────────────────────────────────────────────────────────────
 if (is_admin()) {

@@ -350,6 +350,15 @@ msgstr "Alle Overrides zurücksetzen"
 msgid "Tools"
 msgstr "Werkzeuge"
 
+msgid "Redirect cache flushed."
+msgstr "Redirect-Cache geleert."
+
+msgid "Flush redirect cache"
+msgstr "Redirect-Cache leeren"
+
+msgid "Flushes WordPress rewrite rules so that redirect and permalink changes take effect immediately. Use this after changing redirects or permalink structure."
+msgstr "Leert die WordPress-Weiterleitungsregeln, damit Änderungen an Redirects oder Permalink-Struktur sofort wirksam werden. Nach Änderungen an Redirects oder Permalinks ausführen."
+
 msgid "User rights"
 msgstr "Benutzerrechte"
 
@@ -397,6 +406,54 @@ msgstr "Theme-Einstellungen: Design"
 
 msgid "Theme settings: CSS"
 msgstr "Theme-Einstellungen: CSS"
+
+msgid "Theme settings: Redirects"
+msgstr "Theme-Einstellungen: Weiterleitungen"
+
+msgid "Redirects"
+msgstr "Weiterleitungen"
+
+msgid "Method"
+msgstr "Methode"
+
+msgid "WordPress (template_redirect)"
+msgstr "WordPress (template_redirect)"
+
+msgid ".htaccess"
+msgstr ".htaccess"
+
+msgid "WordPress runs redirects in PHP. .htaccess writes rules to your server config (Apache); the file must be writable."
+msgstr "WordPress führt Redirects per PHP aus. .htaccess schreibt Regeln in die Server-Konfiguration (Apache); die Datei muss beschreibbar sein."
+
+msgid "Enter paths without the domain (e.g. /old-page). From URL is the requested path; To URL can be a path or full URL."
+msgstr "Pfade ohne Domain eingeben (z. B. /alte-seite). Von-URL ist der angeforderte Pfad; Ziel-URL kann ein Pfad oder eine vollständige URL sein."
+
+msgid "From URL"
+msgstr "Von URL"
+
+msgid "To URL"
+msgstr "Ziel-URL"
+
+msgid "Code"
+msgstr "Code"
+
+msgid "Delete"
+msgstr "Löschen"
+
+msgid "/old-path"
+msgstr "/alter-pfad"
+
+msgid "/new-path"
+msgstr "/neuer-pfad"
+
+msgid "301 (Permanent)"
+msgstr "301 (Dauerhaft)"
+
+msgid "302 (Temporary)"
+msgstr "302 (Temporär)"
+
+msgid "Add redirect"
+msgstr "Redirect hinzufügen"
 
 msgid "Custom CSS"
 msgstr "Eigenes CSS"

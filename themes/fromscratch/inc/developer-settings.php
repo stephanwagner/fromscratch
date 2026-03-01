@@ -68,6 +68,23 @@ add_action('load-settings_page_fs-developer-settings', function () {
 	exit;
 }, 1);
 
+// Flush redirect cache (Tools tab)
+add_action('load-settings_page_fs-developer-settings', function () {
+	if (!current_user_can('manage_options') || $_SERVER['REQUEST_METHOD'] !== 'POST') {
+		return;
+	}
+	if (!function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
+		return;
+	}
+	if (empty($_POST['fromscratch_flush_redirect_cache']) || empty($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_flush_redirect_cache')) {
+		return;
+	}
+	flush_rewrite_rules();
+	set_transient('fromscratch_flush_redirect_cache_notice', '1', 30);
+	wp_safe_redirect(admin_url('options-general.php?page=fs-developer-settings&tab=tools'));
+	exit;
+}, 5);
+
 function fs_render_developer_settings_page(): void
 {
 	if (!current_user_can('manage_options')) {
@@ -110,7 +127,7 @@ function fs_render_developer_settings_page(): void
 		</table>
 		<h2 class="title" style="margin-top: 24px;"><?= esc_html__('Administrator email', 'fromscratch') ?></h2>
 		<form method="post" action="options.php" class="page-settings-form">
-			<?php settings_fields(FS_THEME_OPTION_GROUP_DEVELOPER); ?>
+			<?php settings_fields(FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL); ?>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row">
@@ -193,6 +210,7 @@ function fs_render_developer_settings_page(): void
 				'theme_settings_texts' => __('Theme settings: Texts', 'fromscratch'),
 				'theme_settings_design' => __('Theme settings: Design', 'fromscratch'),
 				'theme_settings_css' => __('Theme settings: CSS', 'fromscratch'),
+				'theme_settings_redirects' => __('Theme settings: Redirect manager', 'fromscratch'),
 			];
 		?>
 		<h2 class="title"><?= esc_html__('User rights', 'fromscratch') ?></h2>
@@ -230,6 +248,23 @@ function fs_render_developer_settings_page(): void
 			<p class="submit"><?php submit_button(); ?></p>
 		</form>
 
+		<?php elseif ($tab === 'tools') : ?>
+		<?php
+			$flush_notice = get_transient('fromscratch_flush_redirect_cache_notice');
+			if ($flush_notice !== false) {
+				delete_transient('fromscratch_flush_redirect_cache_notice');
+			}
+		?>
+		<?php if ($flush_notice !== false) : ?>
+		<div class="notice notice-success is-dismissible"><p><strong><?= esc_html__('Redirect cache flushed.', 'fromscratch') ?></strong></p></div>
+		<?php endif; ?>
+		<h2 class="title"><?= esc_html__('Flush redirect cache', 'fromscratch') ?></h2>
+		<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Flushes WordPress rewrite rules so that redirect and permalink changes take effect immediately. Use this after changing redirects or permalink structure.', 'fromscratch') ?></p>
+		<form method="post" action="">
+			<?php wp_nonce_field('fromscratch_flush_redirect_cache'); ?>
+			<input type="hidden" name="fromscratch_flush_redirect_cache" value="1">
+			<p><button type="submit" class="button button-primary"><?= esc_html__('Flush redirect cache', 'fromscratch') ?></button></p>
+		</form>
 		<?php else : ?>
 		<h2 class="title"><?= esc_html__('Tools', 'fromscratch') ?></h2>
 		<p class="description"><?= esc_html__('More developer tools (e.g. sitemap generator, post expirator) can be added here in future updates.', 'fromscratch') ?></p>
