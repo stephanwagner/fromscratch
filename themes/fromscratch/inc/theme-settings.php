@@ -390,7 +390,7 @@ function fs_sanitize_features($value): array
 		$out[$key] = (!empty($value[$key])) ? 1 : 0;
 	}
 	if (empty($out['enable_post_expirator'])) {
-		wp_clear_scheduled_hook('fs_post_expirator_run');
+		wp_clear_scheduled_hook('fs_expire_post');
 	}
 	return $out;
 }
