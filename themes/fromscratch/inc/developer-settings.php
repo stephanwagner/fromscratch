@@ -192,6 +192,7 @@ function fs_render_developer_settings_page(): void
 				'theme_settings_security' => __('Theme settings: Security', 'fromscratch'),
 				'theme_settings_texts' => __('Theme settings: Texts', 'fromscratch'),
 				'theme_settings_design' => __('Theme settings: Design', 'fromscratch'),
+				'theme_settings_css' => __('Theme settings: CSS', 'fromscratch'),
 			];
 		?>
 		<h2 class="title"><?= esc_html__('User rights', 'fromscratch') ?></h2>

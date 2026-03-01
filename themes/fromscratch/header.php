@@ -4,6 +4,7 @@
 <head>
 	<?php wp_head(); ?>
 	<?php fs_output_design_css(); ?>
+	<?php fs_output_custom_css(); ?>
 </head>
 
 <body <?php body_class(); ?>>

@@ -270,3 +270,21 @@ function fs_output_design_css(): void
 	}
 	echo "\n<style id=\"fromscratch-design-vars\">\n:root {\n" . implode("\n", $lines) . "\n}\n</style>\n";
 }
+
+/**
+ * Output custom CSS from Settings → Theme → CSS. Printed after design variables so custom CSS can override or use var(--*).
+ */
+function fs_output_custom_css(): void
+{
+	$css = get_option('fromscratch_custom_css', '');
+	if ($css === '') {
+		return;
+	}
+	$css = wp_strip_all_tags($css);
+	$css = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $css);
+	$css = str_ireplace('</style>', '', $css);
+	if ($css === '') {
+		return;
+	}
+	echo "\n<style id=\"fromscratch-custom-css\">\n" . $css . "\n</style>\n";
+}

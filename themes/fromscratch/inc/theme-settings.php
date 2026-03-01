@@ -13,6 +13,7 @@ const FS_THEME_SETTINGS_TABS = [
 	'general'  => ['label' => 'General', 'developer_only' => false],
 	'texts'    => ['label' => 'Texts', 'developer_only' => false],
 	'design'   => ['label' => 'Design', 'developer_only' => false],
+	'css'      => ['label' => 'CSS', 'developer_only' => false],
 	'security' => ['label' => 'Security', 'developer_only' => false],
 ];
 
@@ -34,6 +35,8 @@ function fs_theme_settings_available_tabs(): array
 				$access_key = 'theme_settings_texts';
 			} elseif ($slug === 'design') {
 				$access_key = 'theme_settings_design';
+			} elseif ($slug === 'css') {
+				$access_key = 'theme_settings_css';
 			}
 			if ($access_key !== null && !fs_admin_can_access($access_key)) {
 				continue;
@@ -68,6 +71,28 @@ add_action('load-settings_page_fs-theme-settings', function () {
 	exit;
 });
 
+// Enqueue WordPress code editor (syntax highlight, lint) for CSS tab
+add_action('admin_enqueue_scripts', function ($hook_suffix) {
+	if ($hook_suffix !== 'settings_page_fs-theme-settings') {
+		return;
+	}
+	$tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
+	if ($tab !== 'css') {
+		return;
+	}
+	if (!current_user_can('manage_options') || (function_exists('fs_admin_can_access') && !fs_admin_can_access('theme_settings_css'))) {
+		return;
+	}
+	$settings = wp_enqueue_code_editor(['type' => 'text/css']);
+	if ($settings === false) {
+		return;
+	}
+	wp_add_inline_script('code-editor', sprintf(
+		'jQuery(function() { if (wp.codeEditor && document.getElementById("fromscratch_custom_css")) { wp.codeEditor.initialize("fromscratch_custom_css", %s); } });',
+		wp_json_encode($settings)
+	));
+}, 10);
+
 // Redirect when access to requested tab is denied
 add_action('load-settings_page_fs-theme-settings', function () {
 	if (!current_user_can('manage_options')) {
@@ -94,6 +119,8 @@ add_action('load-settings_page_fs-theme-settings', function () {
 		$access_key = 'theme_settings_texts';
 	} elseif ($requested === 'design') {
 		$access_key = 'theme_settings_design';
+	} elseif ($requested === 'css') {
+		$access_key = 'theme_settings_css';
 	}
 	if ($access_key !== null && !fs_admin_can_access($access_key)) {
 		wp_safe_redirect(admin_url('options-general.php?page=fs-theme-settings&tab=general'));
@@ -105,6 +132,7 @@ const FS_THEME_OPTION_GROUP_GENERAL = 'fs_theme_general';
 const FS_THEME_OPTION_GROUP_FEATURES = 'fs_theme_features';
 const FS_THEME_OPTION_GROUP_TEXTE = 'fs_theme_texte';
 const FS_THEME_OPTION_GROUP_DESIGN = 'fs_theme_design';
+const FS_THEME_OPTION_GROUP_CSS = 'fs_theme_css';
 const FS_THEME_OPTION_GROUP_SECURITY = 'fs_theme_security';
 const FS_THEME_OPTION_GROUP_DEVELOPER = 'fs_theme_developer';
 
@@ -150,6 +178,13 @@ add_action('admin_init', function () {
 }, 5);
 
 add_action('admin_init', function () {
+	register_setting(FS_THEME_OPTION_GROUP_CSS, 'fromscratch_custom_css', [
+		'type' => 'string',
+		'sanitize_callback' => 'fs_sanitize_custom_css',
+	]);
+}, 5);
+
+add_action('admin_init', function () {
 	register_setting(FS_THEME_OPTION_GROUP_SECURITY, 'fromscratch_site_password_protection', [
 		'type' => 'string',
 		'sanitize_callback' => 'fs_sanitize_site_password_protection',
@@ -177,6 +212,17 @@ function fs_sanitize_excerpt_length($value): string
 	}
 	$n = absint($value);
 	return (string) ($n > 0 ? $n : '');
+}
+
+/**
+ * Sanitize custom CSS: strip HTML, limit length. Output is escaped when printed.
+ */
+function fs_sanitize_custom_css($value): string
+{
+	$value = is_string($value) ? $value : '';
+	$value = wp_strip_all_tags($value);
+	$value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $value);
+	return substr($value, 0, 256 * 1024);
 }
 
 function fs_sanitize_features($value): array
@@ -361,6 +407,20 @@ function theme_settings_page(): void
 			});
 		});
 		</script>
+		<?php elseif ($tab === 'css') : ?>
+		<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Custom CSS is output after the design variables (:root). You can use design variables, e.g. var(--primary).', 'fromscratch') ?></p>
+		<form method="post" action="options.php" class="page-settings-form">
+			<?php settings_fields(FS_THEME_OPTION_GROUP_CSS); ?>
+			<table class="form-table" role="presentation">
+				<tr>
+					<td colspan="2" style="padding: 0;">
+						<label for="fromscratch_custom_css" class="screen-reader-text"><?= esc_html__('Custom CSS', 'fromscratch') ?></label>
+						<textarea name="fromscratch_custom_css" id="fromscratch_custom_css" rows="16" class="large-text code" style="width: 100%; font-family: Consolas, Monaco, monospace;"><?= esc_textarea(get_option('fromscratch_custom_css', '')) ?></textarea>
+					</td>
+				</tr>
+			</table>
+			<p class="submit"><?php submit_button(); ?></p>
+		</form>
 		<?php else : ?>
 		<p class="description" style="margin-bottom: 8px;"><?= esc_html__('Override SCSS design variables. Values are output as CSS custom properties (:root). Add new variables in config/theme.php under design.sections.', 'fromscratch') ?></p>
 		<?php if (function_exists('fs_is_developer_user') && fs_is_developer_user((int) get_current_user_id())) : ?>
@@ -476,7 +536,7 @@ function fs_theme_settings_has_any_access(): bool
 	if (!function_exists('fs_admin_can_access')) {
 		return true;
 	}
-	$keys = ['theme_settings_general', 'theme_settings_texts', 'theme_settings_design', 'theme_settings_security'];
+	$keys = ['theme_settings_general', 'theme_settings_texts', 'theme_settings_design', 'theme_settings_css', 'theme_settings_security'];
 	foreach ($keys as $key) {
 		if (fs_admin_can_access($key)) {
 			return true;

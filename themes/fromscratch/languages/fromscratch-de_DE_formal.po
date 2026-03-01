@@ -395,6 +395,15 @@ msgstr "Theme-Einstellungen: Texte"
 msgid "Theme settings: Design"
 msgstr "Theme-Einstellungen: Design"
 
+msgid "Theme settings: CSS"
+msgstr "Theme-Einstellungen: CSS"
+
+msgid "Custom CSS"
+msgstr "Eigenes CSS"
+
+msgid "Custom CSS is output after the design variables (:root). You can use design variables, e.g. var(--primary)."
+msgstr "Eigenes CSS wird nach den Design-Variablen (:root) ausgegeben. Du kannst Design-Variablen nutzen, z. B. var(--primary)."
+
 msgid "Plugins"
 msgstr "Plugins"
 
