@@ -82,7 +82,8 @@ add_action('admin_init', function () {
 }, 1);
 
 /**
- * Add FromScratch installer to admin menu (when setup not completed).
+ * Add FromScratch installer to admin menu (when setup not completed or viewing success page).
+ * After setup, the page stays accessible for the success message but the menu link is hidden.
  */
 add_action('admin_menu', function () {
   if (fs_setup_completed() && !isset($_GET['fromscratch_success'])) {
@@ -96,7 +97,14 @@ add_action('admin_menu', function () {
     'fs_render_installer',
     1
   );
-});
+}, 10);
+
+add_action('admin_menu', function () {
+  if (!fs_setup_completed()) {
+    return;
+  }
+  remove_submenu_page('themes.php', 'fromscratch-install');
+}, 999);
 
 /**
  * Show FromScratch installer notice (when not on the install page; redirect usually sends users there).
