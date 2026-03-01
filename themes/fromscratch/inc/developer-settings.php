@@ -188,6 +188,14 @@ function fs_render_developer_settings_page(): void
 						<p class="description fs-description-adjust-checkbox"><?= esc_html__('Adds a section to pages, posts and custom post types to enter SEO info (title, description, OG image, noindex).', 'fromscratch') ?></p>
 					</td>
 				</tr>
+				<tr>
+					<th scope="row"><?= esc_html__('Post expirator', 'fromscratch') ?></th>
+					<td>
+						<input type="hidden" name="fromscratch_features[enable_post_expirator]" value="0">
+						<label><input type="checkbox" name="fromscratch_features[enable_post_expirator]" value="1" <?= checked($feat('enable_post_expirator'), 1, false) ?>> <?= esc_html__('Enable post expirator', 'fromscratch') ?></label>
+						<p class="description fs-description-adjust-checkbox"><?= esc_html__('Adds an expiration date/time to posts, pages and theme CPTs. When reached, the post is set to draft.', 'fromscratch') ?></p>
+					</td>
+				</tr>
 			</table>
 			<p class="submit"><?php submit_button(); ?></p>
 		</form>

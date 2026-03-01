@@ -48,3 +48,6 @@ if (fs_theme_feature_enabled('duplicate_post')) {
 if (fs_theme_feature_enabled('seo')) {
 	require_once 'inc/seo.php';
 }
+if (fs_theme_feature_enabled('post_expirator')) {
+	require_once 'inc/post-expirator.php';
+}

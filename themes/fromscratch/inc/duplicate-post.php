@@ -11,6 +11,9 @@ function fs_add_duplicate_row_action(array $actions, WP_Post $post): array {
 	if ($post->post_type === 'attachment') {
 		return $actions;
 	}
+	if (!in_array($post->post_type, fs_theme_post_types(), true)) {
+		return $actions;
+	}
 	if (!current_user_can('edit_post', $post->ID)) {
 		return $actions;
 	}
@@ -34,7 +37,7 @@ add_action('admin_action_fs_duplicate_post', function (): void {
 	check_admin_referer('fs_duplicate_post_' . $post_id);
 
 	$post = get_post($post_id);
-	if (!$post || $post->post_type === 'attachment') {
+	if (!$post || $post->post_type === 'attachment' || !in_array($post->post_type, fs_theme_post_types(), true)) {
 		wp_die(esc_html__('Post not found.', 'fromscratch'));
 	}
 

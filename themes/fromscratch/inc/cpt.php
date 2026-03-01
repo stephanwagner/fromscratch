@@ -4,7 +4,7 @@ defined('ABSPATH') || exit;
 
 /**
  * Register custom post types from config/cpt.php.
- * Registered CPTs are picked up by the SEO panel (fs_seo_post_types) when they support the editor.
+ * Registered CPTs are included in fs_theme_post_types() (theme-setup.php) and thus in SEO, post expirator, duplicate, etc.
  */
 
 /**

@@ -179,6 +179,7 @@ function fs_editor_scripts(): void
 	);
 	wp_localize_script('fromscratch-editor', 'fromscratchFeatures', [
 		'seo' => function_exists('fs_theme_feature_enabled') && fs_theme_feature_enabled('seo'),
+		'post_expirator' => function_exists('fs_theme_feature_enabled') && fs_theme_feature_enabled('post_expirator'),
 	]);
 }
 add_action('enqueue_block_editor_assets', 'fs_editor_scripts');

@@ -3,6 +3,22 @@
 defined('ABSPATH') || exit;
 
 /**
+ * Post types used by theme features: post, page, and CPTs from config/cpt.php.
+ * Used by SEO panel, post expirator, duplicate row action, and similar.
+ *
+ * @return string[]
+ */
+function fs_theme_post_types(): array
+{
+	$types = ['post', 'page'];
+	$cpts = fs_config_cpt('cpts');
+	if (is_array($cpts) && $cpts !== []) {
+		$types = array_merge($types, array_keys($cpts));
+	}
+	return array_unique($types);
+}
+
+/**
  * Register theme menus from config.
  * Runs on init so the text domain is loaded before translating labels (WordPress 6.7+).
  *

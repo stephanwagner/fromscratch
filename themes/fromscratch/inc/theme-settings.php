@@ -384,10 +384,13 @@ function fs_sanitize_features($value): array
 	if (!is_array($value)) {
 		return [];
 	}
-	$keys = ['enable_blogs', 'enable_svg', 'enable_duplicate_post', 'enable_seo'];
+	$keys = ['enable_blogs', 'enable_svg', 'enable_duplicate_post', 'enable_seo', 'enable_post_expirator'];
 	$out = [];
 	foreach ($keys as $key) {
 		$out[$key] = (!empty($value[$key])) ? 1 : 0;
+	}
+	if (empty($out['enable_post_expirator'])) {
+		wp_clear_scheduled_hook('fs_post_expirator_run');
 	}
 	return $out;
 }

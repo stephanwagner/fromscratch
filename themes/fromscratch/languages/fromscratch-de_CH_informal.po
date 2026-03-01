@@ -452,6 +452,24 @@ msgstr "301 (Dauerhaft)"
 msgid "302 (Temporary)"
 msgstr "302 (Temporär)"
 
+msgid "Expiration"
+msgstr "Ablauf"
+
+msgid "Expiration date and time"
+msgstr "Ablaufdatum und -uhrzeit"
+
+msgid "When this date and time is reached, the post will be set to draft. Leave empty for no expiration."
+msgstr "Wenn dieses Datum und diese Uhrzeit erreicht sind, wird der Beitrag in einen Entwurf gesetzt. Leer lassen für keinen Ablauf."
+
+msgid "Post expirator"
+msgstr "Beitrags-Ablauf"
+
+msgid "Enable post expirator"
+msgstr "Beitrags-Ablauf aktivieren"
+
+msgid "Adds an expiration date/time to posts, pages and theme CPTs. When reached, the post is set to draft."
+msgstr "Fügt Beiträgen, Seiten und Theme-CPTs ein Ablaufdatum/-uhrzeit hinzu. Nach Ablauf wird der Beitrag als Entwurf gesetzt."
+
 msgid "Add redirect"
 msgstr "Redirect hinzufügen"
 

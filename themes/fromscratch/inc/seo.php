@@ -36,27 +36,21 @@ function fs_seo_trim_description(string $text, int $max = FS_SEO_DESCRIPTION_MAX
 }
 
 /**
- * Post types that support the SEO panel and SEO meta (post, page, and any CPTs you add).
- * Configure in config.php under seo_post_types, or filter fs_seo_post_types.
+ * Post types that support the SEO panel and SEO meta.
+ * Uses fs_theme_post_types() (post, page, theme CPTs); only includes types that support the editor.
+ * Filter fs_seo_post_types to modify.
  *
  * @return array<string>
  */
 function fs_seo_post_types(): array
 {
-	$types = get_post_types([
-		'public'  => true,
-		'show_ui' => true,
-	], 'objects');
-
+	$types = fs_theme_post_types();
 	$result = [];
-
-	foreach ($types as $type) {
-		// Only if post type supports editor (real content)
-		if (post_type_supports($type->name, 'editor')) {
-			$result[] = $type->name;
+	foreach ($types as $name) {
+		if (post_type_supports($name, 'editor')) {
+			$result[] = $name;
 		}
 	}
-
 	return apply_filters('fs_seo_post_types', $result);
 }
 
