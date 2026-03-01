@@ -186,6 +186,9 @@ function fs_seo_head_meta(): void
 	if ($og_image_id <= 0) {
 		$og_image_id = (int) get_post_thumbnail_id($post_id);
 	}
+	if ($og_image_id <= 0) {
+		$og_image_id = (int) get_option('fromscratch_og_image_fallback', 0);
+	}
 	$og_image_url = '';
 	$og_image_width = 0;
 	$og_image_height = 0;

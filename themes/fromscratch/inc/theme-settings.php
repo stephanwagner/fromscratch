@@ -71,6 +71,32 @@ add_action('load-settings_page_fs-theme-settings', function () {
 	exit;
 });
 
+// Enqueue media picker for General tab (fallback OG image)
+add_action('admin_enqueue_scripts', function ($hook_suffix) {
+	if ($hook_suffix !== 'settings_page_fs-theme-settings') {
+		return;
+	}
+	$requested_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
+	$is_general = ($requested_tab === 'general' || $requested_tab === '');
+	if (!$is_general) {
+		return;
+	}
+	if (!current_user_can('manage_options') || (function_exists('fs_admin_can_access') && !fs_admin_can_access('theme_settings_general'))) {
+		return;
+	}
+	wp_enqueue_media();
+	$script_path = get_theme_file_path('src/js/admin/og-fallback-picker.js');
+	$script_url = get_theme_file_uri('src/js/admin/og-fallback-picker.js');
+	$version = file_exists($script_path) ? (string) filemtime($script_path) : '1';
+	wp_enqueue_script(
+		'fs-og-fallback-picker',
+		$script_url,
+		['jquery', 'media-editor'],
+		$version,
+		true
+	);
+}, 10);
+
 // Enqueue WordPress code editor (syntax highlight, lint) for CSS tab
 add_action('admin_enqueue_scripts', function ($hook_suffix) {
 	if ($hook_suffix !== 'settings_page_fs-theme-settings') {
@@ -172,6 +198,10 @@ add_action('admin_init', function () {
 		'type' => 'string',
 		'sanitize_callback' => 'sanitize_text_field',
 	]);
+	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_og_image_fallback', [
+		'type' => 'integer',
+		'sanitize_callback' => 'fs_sanitize_og_image_fallback',
+	]);
 }, 5);
 
 add_action('admin_init', function () {
@@ -246,6 +276,15 @@ function fs_sanitize_excerpt_length($value): string
 	}
 	$n = absint($value);
 	return (string) ($n > 0 ? $n : '');
+}
+
+function fs_sanitize_og_image_fallback($value): int
+{
+	$id = absint($value);
+	if ($id <= 0) {
+		return 0;
+	}
+	return wp_attachment_is_image($id) ? $id : 0;
 }
 
 /**
@@ -487,9 +526,32 @@ function theme_settings_page(): void
 		<?php endif; ?>
 
 		<?php if ($tab === 'general') : ?>
+		<?php
+			$og_fallback_id = (int) get_option('fromscratch_og_image_fallback', 0);
+			$og_fallback_url = $og_fallback_id > 0 ? wp_get_attachment_image_url($og_fallback_id, 'medium') : '';
+		?>
 		<form method="post" action="options.php" class="page-settings-form">
 			<?php settings_fields(FS_THEME_OPTION_GROUP_GENERAL); ?>
-			<h2 class="title"><?= esc_html__('Excerpt', 'fromscratch') ?></h2>
+			<h2 class="title"><?= esc_html__('Fallback OG image', 'fromscratch') ?></h2>
+			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Used as the social preview image (og:image) when a page or post has no SEO image and no featured image. Best size: 1200 × 630 px.', 'fromscratch') ?></p>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?= esc_html__('Image', 'fromscratch') ?></th>
+					<td>
+						<input type="hidden" name="fromscratch_og_image_fallback" id="fromscratch_og_image_fallback" value="<?= esc_attr($og_fallback_id) ?>">
+						<div id="fs_og_fallback_preview" class="fs-og-fallback-preview" style="margin-bottom: 8px;">
+							<?php if ($og_fallback_url) : ?>
+								<img src="<?= esc_url($og_fallback_url) ?>" alt="" style="max-width: 300px; height: auto; display: block;">
+							<?php endif; ?>
+						</div>
+						<p>
+							<button type="button" class="button" id="fs_og_fallback_select"><?= esc_html__('Select image', 'fromscratch') ?></button>
+							<button type="button" class="button" id="fs_og_fallback_remove" <?= $og_fallback_id <= 0 ? ' style="display:none;"' : '' ?>><?= esc_html__('Remove image', 'fromscratch') ?></button>
+						</p>
+					</td>
+				</tr>
+			</table>
+			<h2 class="title" style="margin-top: 28px;"><?= esc_html__('Excerpt', 'fromscratch') ?></h2>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row">
