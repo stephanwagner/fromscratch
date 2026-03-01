@@ -85,6 +85,54 @@ add_action('load-settings_page_fs-developer-settings', function () {
 	exit;
 }, 5);
 
+// Revision cleaner (Tools tab)
+add_action('load-settings_page_fs-developer-settings', function () {
+	if (!current_user_can('manage_options') || $_SERVER['REQUEST_METHOD'] !== 'POST') {
+		return;
+	}
+	if (!function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
+		return;
+	}
+	if (empty($_POST['fromscratch_clean_revisions']) || empty($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_clean_revisions')) {
+		return;
+	}
+	$keep = isset($_POST['fromscratch_revisions_keep']) ? (int) $_POST['fromscratch_revisions_keep'] : 5;
+	$keep = max(0, $keep);
+	$deleted = fs_clean_revisions($keep);
+	set_transient('fromscratch_clean_revisions_notice', $deleted, 30);
+	wp_safe_redirect(admin_url('options-general.php?page=fs-developer-settings&tab=tools'));
+	exit;
+}, 5);
+
+/**
+ * Delete revisions, keeping the N most recent per post.
+ *
+ * @param int $keep Number of revisions to keep per post (0 = delete all).
+ * @return int Number of revisions deleted.
+ */
+function fs_clean_revisions(int $keep): int
+{
+	global $wpdb;
+	$deleted = 0;
+	$parent_ids = $wpdb->get_col("SELECT DISTINCT post_parent FROM {$wpdb->posts} WHERE post_type = 'revision' AND post_parent > 0");
+	if (empty($parent_ids)) {
+		return 0;
+	}
+	foreach ($parent_ids as $parent_id) {
+		$revisions = wp_get_post_revisions((int) $parent_id, ['orderby' => 'date', 'order' => 'DESC']);
+		if (empty($revisions)) {
+			continue;
+		}
+		$to_delete = $keep === 0 ? $revisions : array_slice($revisions, $keep);
+		foreach ($to_delete as $revision) {
+			if (wp_delete_post_revision($revision->ID)) {
+				$deleted++;
+			}
+		}
+	}
+	return $deleted;
+}
+
 function fs_render_developer_settings_page(): void
 {
 	if (!current_user_can('manage_options')) {
@@ -262,9 +310,16 @@ function fs_render_developer_settings_page(): void
 			if ($flush_notice !== false) {
 				delete_transient('fromscratch_flush_redirect_cache_notice');
 			}
+			$revisions_notice = get_transient('fromscratch_clean_revisions_notice');
+			if ($revisions_notice !== false) {
+				delete_transient('fromscratch_clean_revisions_notice');
+			}
 		?>
 		<?php if ($flush_notice !== false) : ?>
 		<div class="notice notice-success is-dismissible"><p><strong><?= esc_html__('Redirect cache flushed.', 'fromscratch') ?></strong></p></div>
+		<?php endif; ?>
+		<?php if ($revisions_notice !== false && is_numeric($revisions_notice)) : ?>
+		<div class="notice notice-success is-dismissible"><p><strong><?= esc_html(sprintf(_n('%s revision deleted.', '%s revisions deleted.', (int) $revisions_notice, 'fromscratch'), number_format_i18n((int) $revisions_notice))) ?></strong></p></div>
 		<?php endif; ?>
 		<h2 class="title"><?= esc_html__('Flush redirect cache', 'fromscratch') ?></h2>
 		<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Flushes WordPress rewrite rules so that redirect and permalink changes take effect immediately. Use this after changing redirects or permalink structure.', 'fromscratch') ?></p>
@@ -273,9 +328,19 @@ function fs_render_developer_settings_page(): void
 			<input type="hidden" name="fromscratch_flush_redirect_cache" value="1">
 			<p><button type="submit" class="button button-primary"><?= esc_html__('Flush redirect cache', 'fromscratch') ?></button></p>
 		</form>
-		<?php else : ?>
-		<h2 class="title"><?= esc_html__('Tools', 'fromscratch') ?></h2>
-		<p class="description"><?= esc_html__('More developer tools (e.g. sitemap generator, post expirator) can be added here in future updates.', 'fromscratch') ?></p>
+
+		<h2 class="title" style="margin-top: 28px;"><?= esc_html__('Revision cleaner', 'fromscratch') ?></h2>
+		<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Delete old revisions for all posts and pages. Set how many of the most recent revisions to keep per post; older ones will be removed.', 'fromscratch') ?></p>
+		<form method="post" action="">
+			<?php wp_nonce_field('fromscratch_clean_revisions'); ?>
+			<input type="hidden" name="fromscratch_clean_revisions" value="1">
+			<p>
+				<label for="fromscratch_revisions_keep"><?= esc_html__('Keep per post', 'fromscratch') ?></label>
+				<input type="number" name="fromscratch_revisions_keep" id="fromscratch_revisions_keep" value="5" min="0" max="99" step="1" class="small-text" style="margin-left: 6px; margin-right: 8px;">
+				<?= esc_html__('revisions (0 = delete all)', 'fromscratch') ?>
+			</p>
+			<p><button type="submit" class="button button-primary"><?= esc_html__('Clean revisions', 'fromscratch') ?></button></p>
+		</form>
 		<?php endif; ?>
 	</div>
 <?php

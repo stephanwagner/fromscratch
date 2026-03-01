@@ -359,6 +359,26 @@ msgstr "Redirect-Cache leeren"
 msgid "Flushes WordPress rewrite rules so that redirect and permalink changes take effect immediately. Use this after changing redirects or permalink structure."
 msgstr "Leert die WordPress-Weiterleitungsregeln, damit Änderungen an Redirects oder Permalink-Struktur sofort wirksam werden. Nach Änderungen an Redirects oder Permalinks ausführen."
 
+msgid "Revision cleaner"
+msgstr "Revisionen bereinigen"
+
+msgid "Delete old revisions for all posts and pages. Set how many of the most recent revisions to keep per post; older ones will be removed."
+msgstr "Entfernt alte Revisionen von allen Beiträgen und Seiten. Gib an, wie viele der neuesten Revisionen pro Beitrag behalten werden; ältere werden gelöscht."
+
+msgid "Keep per post"
+msgstr "Pro Beitrag behalten"
+
+msgid "revisions (0 = delete all)"
+msgstr "Revisionen (0 = alle löschen)"
+
+msgid "Clean revisions"
+msgstr "Revisionen bereinigen"
+
+msgid "%s revision deleted."
+msgid_plural "%s revisions deleted."
+msgstr[0] "%s Revision gelöscht."
+msgstr[1] "%s Revisionen gelöscht."
+
 msgid "User rights"
 msgstr "Benutzerrechte"
 
