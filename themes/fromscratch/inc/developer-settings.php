@@ -11,6 +11,7 @@ const FS_DEVELOPER_TABS = [
 	'general'  => ['label' => 'General'],
 	'features' => ['label' => 'Features'],
 	'access'   => ['label' => 'User rights'],
+	'security' => ['label' => 'Security'],
 	'tools'    => ['label' => 'Tools'],
 ];
 
@@ -155,7 +156,7 @@ function fs_render_developer_settings_page(): void
 
 		<nav class="nav-tab-wrapper wp-clearfix" aria-label="Secondary menu">
 			<?php foreach (FS_DEVELOPER_TABS as $slug => $def) : ?>
-				<a href="<?= esc_url(add_query_arg('tab', $slug, $base_url)) ?>" class="nav-tab <?= $tab === $slug ? 'nav-tab-active' : '' ?>"><?= esc_html(__($def['label'], 'fromscratch')) ?></a>
+				<a href="<?= esc_url(add_query_arg('tab', $slug, $base_url)) ?>" class="nav-tab <?= $tab === $slug ? 'nav-tab-active' : '' ?>"><?= esc_html(__($def['label'], 'fromscratch')) ?><?php if ($slug === 'security' && get_option('fromscratch_site_password_protection') === '1' && get_option('fromscratch_site_password_hash', '') !== '') : ?> <span class="dashicons dashicons-lock" style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle; margin-left: 2px;" aria-hidden="true"></span><?php endif; ?></a>
 			<?php endforeach; ?>
 		</nav>
 
@@ -262,7 +263,6 @@ function fs_render_developer_settings_page(): void
 				'tools' => __('Tools', 'fromscratch'),
 				'themes' => __('Appearance (Themes)', 'fromscratch'),
 				'theme_settings_general' => __('Theme settings: General', 'fromscratch'),
-				'theme_settings_security' => __('Theme settings: Security', 'fromscratch'),
 				'theme_settings_texts' => __('Theme settings: Texts', 'fromscratch'),
 				'theme_settings_design' => __('Theme settings: Design', 'fromscratch'),
 				'theme_settings_css' => __('Theme settings: CSS', 'fromscratch'),
@@ -303,6 +303,65 @@ function fs_render_developer_settings_page(): void
 			</table>
 			<p class="submit"><?php submit_button(); ?></p>
 		</form>
+
+		<?php elseif ($tab === 'security') : ?>
+		<?php
+			$site_password_on = get_option('fromscratch_site_password_protection') === '1';
+			$site_password_hash = get_option('fromscratch_site_password_hash', '');
+		?>
+		<?php if ($site_password_on && $site_password_hash === '') : ?>
+		<div class="notice notice-warning inline" style="margin: 0 0 16px 0;"><p><?= esc_html__('No password set. Set a password below to activate protection.', 'fromscratch') ?></p></div>
+		<?php endif; ?>
+		<form method="post" action="options.php" class="page-settings-form">
+			<?php settings_fields(FS_THEME_OPTION_GROUP_SECURITY); ?>
+			<h2 class="title"><?= esc_html__('Site password protection', 'fromscratch') ?></h2>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?= esc_html__('Activate', 'fromscratch') ?></th>
+					<td>
+						<label>
+							<input type="hidden" name="fromscratch_site_password_protection" value="0">
+							<input type="checkbox" name="fromscratch_site_password_protection" value="1" <?= checked(get_option('fromscratch_site_password_protection'), '1', false) ?>>
+							<?= esc_html__('Activate password protection', 'fromscratch') ?>
+						</label>
+						<p class="description"><?= wp_kses(__('When enabled, visitors must enter a password before viewing any part of the site.<br>Logged-in administrators and editors skip the prompt.', 'fromscratch'), ['br' => []]) ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="fromscratch_site_password_new"><?= esc_html__('Password', 'fromscratch') ?></label></th>
+					<td>
+						<input type="password" name="fromscratch_site_password_new" id="fromscratch_site_password_new" class="small-text" style="width: 220px;" value="<?= esc_attr(get_option('fromscratch_site_password_plain', '')) ?>" autocomplete="new-password">
+						<button type="button" class="button" id="fromscratch_site_password_copy" data-copy="<?= esc_attr__('Copy', 'fromscratch') ?>" data-copied="<?= esc_attr__('Copied!', 'fromscratch') ?>"><?= esc_html__('Copy', 'fromscratch') ?></button>
+						<p class="description">
+							<?= esc_html__('Set or change the password. Leave blank and save to clear or reset the password.', 'fromscratch') ?>
+							<a class="fs-description-link -gray -has-icon" href="https://passwordcopy.app" target="_blank">
+								<span class="fs-description-link-icon">
+									<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+										<path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h240q17 0 28.5 11.5T480-800q0 17-11.5 28.5T440-760H200v560h560v-240q0-17 11.5-28.5T800-480q17 0 28.5 11.5T840-440v240q0 33-23.5 56.5T760-120H200Zm560-584L416-360q-11 11-28 11t-28-11q-11-11-11-28t11-28l344-344H600q-17 0-28.5-11.5T560-800q0-17 11.5-28.5T600-840h200q17 0 28.5 11.5T840-800v200q0 17-11.5 28.5T800-560q-17 0-28.5-11.5T760-600v-104Z" />
+									</svg>
+								</span>
+								<span>passwordcopy.app</span>
+							</a>
+						</p>
+					</td>
+				</tr>
+			</table>
+			<p class="submit"><?php submit_button(); ?></p>
+		</form>
+		<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			var copyBtn = document.getElementById('fromscratch_site_password_copy');
+			if (!copyBtn) return;
+			copyBtn.addEventListener('click', function() {
+				var input = document.getElementById('fromscratch_site_password_new');
+				if (!input || !input.value) return;
+				navigator.clipboard.writeText(input.value).then(function() {
+					copyBtn.textContent = copyBtn.getAttribute('data-copied');
+					setTimeout(function() { copyBtn.textContent = copyBtn.getAttribute('data-copy'); }, 1500);
+				});
+			});
+		});
+		</script>
 
 		<?php elseif ($tab === 'tools') : ?>
 		<?php

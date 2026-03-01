@@ -170,7 +170,6 @@ function fs_admin_access_defaults(): array
     'tools' => ['admin' => 0, 'developer' => 1],
     'themes' => ['admin' => 0, 'developer' => 1],
     'theme_settings_general' => ['admin' => 1, 'developer' => 1],
-    'theme_settings_security' => ['admin' => 1, 'developer' => 1],
     'theme_settings_texts' => ['admin' => 1, 'developer' => 1],
     'theme_settings_design' => ['admin' => 1, 'developer' => 1],
     'theme_settings_css' => ['admin' => 1, 'developer' => 1],

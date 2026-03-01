@@ -4,7 +4,7 @@ defined('ABSPATH') || exit;
 
 /**
  * Site password protection: frontend and admin behind one shared password.
- * Logged-in administrators and editors bypass the gate. Options in Settings → Theme → Security.
+ * Logged-in administrators and editors bypass the gate. Options in Settings → Developer → Security.
  */
 
 /**

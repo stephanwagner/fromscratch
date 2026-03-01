@@ -14,7 +14,6 @@ const FS_THEME_SETTINGS_TABS = [
 	'texts'     => ['label' => 'Texts', 'developer_only' => false],
 	'design'    => ['label' => 'Design', 'developer_only' => false],
 	'css'       => ['label' => 'CSS', 'developer_only' => false],
-	'security'  => ['label' => 'Security', 'developer_only' => false],
 	'redirects' => ['label' => 'Redirects', 'developer_only' => false],
 ];
 
@@ -30,8 +29,6 @@ function fs_theme_settings_available_tabs(): array
 			$access_key = null;
 			if ($slug === 'general') {
 				$access_key = 'theme_settings_general';
-			} elseif ($slug === 'security') {
-				$access_key = 'theme_settings_security';
 			} elseif ($slug === 'texts') {
 				$access_key = 'theme_settings_texts';
 			} elseif ($slug === 'design') {
@@ -122,9 +119,7 @@ add_action('load-settings_page_fs-theme-settings', function () {
 		return;
 	}
 	$access_key = null;
-	if ($requested === 'security') {
-		$access_key = 'theme_settings_security';
-	} elseif ($requested === 'texts') {
+	if ($requested === 'texts') {
 		$access_key = 'theme_settings_texts';
 	} elseif ($requested === 'design') {
 		$access_key = 'theme_settings_design';
@@ -457,7 +452,7 @@ function theme_settings_page(): void
 		<?php if (count($available_tabs) > 1) : ?>
 		<nav class="nav-tab-wrapper wp-clearfix" aria-label="Secondary menu">
 			<?php foreach ($available_tabs as $slug => $label) : ?>
-				<a href="<?= esc_url(add_query_arg('tab', $slug, $base_url)) ?>" class="nav-tab <?= $tab === $slug ? 'nav-tab-active' : '' ?>"><?= esc_html(__($label, 'fromscratch')) ?><?php if ($slug === 'security' && get_option('fromscratch_site_password_protection') === '1' && get_option('fromscratch_site_password_hash', '') !== '') : ?> <span class="dashicons dashicons-lock" style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle; margin-left: 2px;" aria-hidden="true"></span><?php endif; ?></a>
+				<a href="<?= esc_url(add_query_arg('tab', $slug, $base_url)) ?>" class="nav-tab <?= $tab === $slug ? 'nav-tab-active' : '' ?>"><?= esc_html(__($label, 'fromscratch')) ?></a>
 			<?php endforeach; ?>
 		</nav>
 		<?php endif; ?>
@@ -506,64 +501,6 @@ function theme_settings_page(): void
 			?>
 			<p class="submit"><?php submit_button(); ?></p>
 		</form>
-		<?php elseif ($tab === 'security') : ?>
-		<?php
-			$site_password_on = get_option('fromscratch_site_password_protection') === '1';
-			$site_password_hash = get_option('fromscratch_site_password_hash', '');
-		?>
-		<?php if ($site_password_on && $site_password_hash === '') : ?>
-		<div class="notice notice-warning inline" style="margin: 0 0 16px 0;"><p><?= esc_html__('No password set. Set a password below to activate protection.', 'fromscratch') ?></p></div>
-		<?php endif; ?>
-		<form method="post" action="options.php" class="page-settings-form">
-			<?php settings_fields(FS_THEME_OPTION_GROUP_SECURITY); ?>
-			<h2 class="title"><?= esc_html__('Site password protection', 'fromscratch') ?></h2>
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><?= esc_html__('Activate', 'fromscratch') ?></th>
-					<td>
-						<label>
-							<input type="hidden" name="fromscratch_site_password_protection" value="0">
-							<input type="checkbox" name="fromscratch_site_password_protection" value="1" <?= checked(get_option('fromscratch_site_password_protection'), '1', false) ?>>
-							<?= esc_html__('Activate password protection', 'fromscratch') ?>
-						</label>
-						<p class="description"><?= wp_kses(__('When enabled, visitors must enter a password before viewing any part of the site.<br>Logged-in administrators and editors skip the prompt.', 'fromscratch'), ['br' => []]) ?></p>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><label for="fromscratch_site_password_new"><?= esc_html__('Password', 'fromscratch') ?></label></th>
-					<td>
-						<input type="password" name="fromscratch_site_password_new" id="fromscratch_site_password_new" class="small-text" style="width: 220px;" value="<?= esc_attr(get_option('fromscratch_site_password_plain', '')) ?>" autocomplete="new-password">
-						<button type="button" class="button" id="fromscratch_site_password_copy" data-copy="<?= esc_attr__('Copy', 'fromscratch') ?>" data-copied="<?= esc_attr__('Copied!', 'fromscratch') ?>"><?= esc_html__('Copy', 'fromscratch') ?></button>
-						<p class="description">
-							<?= esc_html__('Set or change the password. Leave blank and save to clear or reset the password.', 'fromscratch') ?>
-							<a class="fs-description-link -gray -has-icon" href="https://passwordcopy.app" target="_blank">
-								<span class="fs-description-link-icon">
-									<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
-										<path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h240q17 0 28.5 11.5T480-800q0 17-11.5 28.5T440-760H200v560h560v-240q0-17 11.5-28.5T800-480q17 0 28.5 11.5T840-440v240q0 33-23.5 56.5T760-120H200Zm560-584L416-360q-11 11-28 11t-28-11q-11-11-11-28t11-28l344-344H600q-17 0-28.5-11.5T560-800q0-17 11.5-28.5T600-840h200q17 0 28.5 11.5T840-800v200q0 17-11.5 28.5T800-560q-17 0-28.5-11.5T760-600v-104Z" />
-									</svg>
-								</span>
-								<span>passwordcopy.app</span>
-							</a>
-						</p>
-					</td>
-				</tr>
-			</table>
-			<p class="submit"><?php submit_button(); ?></p>
-		</form>
-		<script>
-		document.addEventListener('DOMContentLoaded', function() {
-			var copyBtn = document.getElementById('fromscratch_site_password_copy');
-			if (!copyBtn) return;
-			copyBtn.addEventListener('click', function() {
-				var input = document.getElementById('fromscratch_site_password_new');
-				if (!input || !input.value) return;
-				navigator.clipboard.writeText(input.value).then(function() {
-					copyBtn.textContent = copyBtn.getAttribute('data-copied');
-					setTimeout(function() { copyBtn.textContent = copyBtn.getAttribute('data-copy'); }, 1500);
-				});
-			});
-		});
-		</script>
 		<?php elseif ($tab === 'redirects') : ?>
 		<?php
 			$redirect_method = get_option('fs_redirect_method', 'wordpress');
@@ -786,7 +723,7 @@ function fs_theme_settings_has_any_access(): bool
 	if (!function_exists('fs_admin_can_access')) {
 		return true;
 	}
-	$keys = ['theme_settings_general', 'theme_settings_texts', 'theme_settings_design', 'theme_settings_css', 'theme_settings_security', 'theme_settings_redirects'];
+	$keys = ['theme_settings_general', 'theme_settings_texts', 'theme_settings_design', 'theme_settings_css', 'theme_settings_redirects'];
 	foreach ($keys as $key) {
 		if (fs_admin_can_access($key)) {
 			return true;
