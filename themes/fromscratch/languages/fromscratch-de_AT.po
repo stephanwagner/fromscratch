@@ -321,10 +321,10 @@ msgid "Security"
 msgstr "Sicherheit"
 
 msgid "Administrator email"
-msgstr "Administrator E-Mail"
+msgstr "Administrator-E-Mail"
 
-msgid "Used for account recovery and notifications."
-msgstr "Wird für Kontowiederherstellung und Benachrichtigungen verwendet."
+msgid "Changes the Administrator email instantly without notifying."
+msgstr "Ändert die Administrator-E-Mail sofort ohne Benachrichtigung."
 
 msgid "Use fs_asset_url( '/path/to/file.css' ) in templates to output the asset URL with ?ver= so the browser cache updates when you bump the version below."
 msgstr "Verwende fs_asset_url( '/pfad/zur/datei.css' ) in Templates, um die Asset-URL mit ?ver= auszugeben, damit der Browsercache bei einem Versionsbump aktualisiert wird."
@@ -343,6 +343,18 @@ msgstr "Version erhöhen"
 
 msgid "Theme features"
 msgstr "Theme-Funktionen"
+
+msgid "Cache & assets"
+msgstr "Cache & Assets"
+
+msgid "Clear all overrides"
+msgstr "Alle Overrides zurücksetzen"
+
+msgid "Tools"
+msgstr "Werkzeuge"
+
+msgid "More developer tools (e.g. sitemap generator, post expirator) can be added here in future updates."
+msgstr "Weitere Entwickler-Werkzeuge (z. B. Sitemap-Generator, Beitragsablauf) können hier in künftigen Updates ergänzt werden."
 
 msgid "Enable the Posts menu and blog/post editing."
 msgstr "Menü „Beiträge“ aktivieren und Blog-/Beitragsbearbeitung erlauben."
@@ -413,8 +425,8 @@ msgstr "Minuten"
 msgid "How long to block login after the limit is reached.<br>Allowed range: %d - %d."
 msgstr "Wie lange die Anmeldung nach Erreichen des Limits blockiert wird.<br>Erlaubter Bereich: %d - %d."
 
-msgid "Override SCSS design variables. Values are output as CSS custom properties (:root). Add new variables in config.php under design.sections."
-msgstr "SCSS-Designvariablen überschreiben. Werte werden als CSS-Custom-Properties (:root) ausgegeben. Neue Variablen in config.php unter design.sections hinzufügen."
+msgid "Override SCSS design variables. Values are output as CSS custom properties (:root). Add new variables in config/theme.php under design.sections."
+msgstr "SCSS-Designvariablen überschreiben. Werte werden als CSS-Custom-Properties (:root) ausgegeben. Neue Variablen in config/theme.php unter design.sections hinzufügen."
 
 msgid "Reset all design overrides to defaults?"
 msgstr "Alle Design-Überschreibungen auf Standard zurücksetzen?"

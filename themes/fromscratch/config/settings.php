@@ -5,8 +5,8 @@
  * Used by Settings → Theme. Edit to add new text sections or languages.
  */
 return [
-	'title_page' => __('Theme settings', 'fromscratch'),
-	'title_menu' => __('Theme', 'fromscratch'),
+	'title_page' => 'Theme settings',
+	'title_menu' => 'Theme',
 
 	'languages' => [
 		['id' => 'en', 'nameEnglish' => 'English', 'nameOriginalLanguage' => 'English'],

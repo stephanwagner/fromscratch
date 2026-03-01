@@ -16,8 +16,8 @@ return [
 	 * Menus: Registered navigation menus.
 	 */
 	'menus' => [
-		'main_menu' => __('Main menu', 'fromscratch'),
-		'footer_menu' => __('Footer menu', 'fromscratch'),
+		'main_menu' => 'Main menu',
+		'footer_menu' => 'Footer menu',
 	],
 
 	/**
@@ -155,7 +155,7 @@ return [
 	 * Width and height can be overridden in Settings → Media.
 	 */
 	'image_sizes_extra' => [
-		['slug' => 'small', 'name' => _x('Small', 'Image size', 'fromscratch'), 'width' => 600, 'height' => 600],
+		['slug' => 'small', 'name' => 'Small', 'width' => 600, 'height' => 600],
 	],
 
 	/**

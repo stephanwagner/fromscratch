@@ -16,7 +16,8 @@ add_action('admin_init', function () {
 		if ($slug === '' || !preg_match('/^[a-z0-9_]+$/', $slug)) {
 			continue;
 		}
-		$name = isset($size['name']) ? $size['name'] : $slug;
+		$name_raw = isset($size['name']) ? $size['name'] : $slug;
+		$name = _x($name_raw, 'Image size', 'fromscratch');
 		$default_w = isset($size['width']) ? (int) $size['width'] : 0;
 		$default_h = isset($size['height']) ? (int) $size['height'] : 0;
 

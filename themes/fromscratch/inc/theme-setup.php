@@ -4,15 +4,24 @@ defined('ABSPATH') || exit;
 
 /**
  * Register theme menus from config.
+ * Runs on init so the text domain is loaded before translating labels (WordPress 6.7+).
  *
  * @return void
  */
 function fs_menus(): void
 {
 	add_theme_support('menus');
-	register_nav_menus(fs_config('menus'));
+	$menus = fs_config('menus');
+	if (!is_array($menus)) {
+		return;
+	}
+	$translated = [];
+	foreach ($menus as $slug => $label) {
+		$translated[$slug] = __($label, 'fromscratch');
+	}
+	register_nav_menus($translated);
 }
-add_action('after_setup_theme', 'fs_menus');
+add_action('init', 'fs_menus', 10);
 
 /**
  * Support alignwide and alignfull for block editor.

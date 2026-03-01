@@ -3,37 +3,88 @@
 defined('ABSPATH') || exit;
 
 /**
- * Theme settings page: Settings → Theme. General, Texts, Design, Security tabs.
- * Requires inc/design.php for Design tab and sanitization.
+ * Theme settings page: Settings → Theme.
+ * Developer-first: some tabs/sections are only visible to users with developer rights.
+ * Requires inc/design.php for Design tab.
  */
 
+/** Tab definitions: slug => [ 'label' => string, 'developer_only' => bool ] */
+const FS_THEME_SETTINGS_TABS = [
+	'general'  => ['label' => 'General', 'developer_only' => false],
+	'texts'    => ['label' => 'Texts', 'developer_only' => false],
+	'design'   => ['label' => 'Design', 'developer_only' => false],
+	'security' => ['label' => 'Security', 'developer_only' => false],
+	'developer' => ['label' => 'Developer', 'developer_only' => true],
+];
+
+function fs_theme_settings_available_tabs(): array
+{
+	$is_dev = function_exists('fs_is_developer_user') && fs_is_developer_user((int) get_current_user_id());
+	$tabs = [];
+	foreach (FS_THEME_SETTINGS_TABS as $slug => $def) {
+		if ($def['developer_only'] && !$is_dev) {
+			continue;
+		}
+		$tabs[$slug] = $def['label'];
+	}
+	return $tabs;
+}
+
+function fs_theme_settings_current_tab(): string
+{
+	$available = array_keys(fs_theme_settings_available_tabs());
+	$requested = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
+	if ($requested !== '' && in_array($requested, $available, true)) {
+		return $requested;
+	}
+	return $available[0] ?? 'general';
+}
+
+// Bump asset version (developer only)
 add_action('load-settings_page_fs-theme-settings', function () {
-	if (!current_user_can('manage_options')) {
+	if (!current_user_can('manage_options') || empty($_GET['fromscratch_bump']) || empty($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'fromscratch_bump_asset_version')) {
 		return;
 	}
-	if (empty($_GET['fromscratch_bump']) || empty($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'fromscratch_bump_asset_version')) {
+	if (!function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
 		return;
 	}
 	$current = get_option('fromscratch_asset_version', '1');
 	$next = is_numeric($current) ? (string) ((int) $current + 1) : '2';
 	update_option('fromscratch_asset_version', $next);
 	set_transient('fromscratch_bump_notice', $next, 30);
-	wp_safe_redirect(admin_url('options-general.php?page=fs-theme-settings'));
+	wp_safe_redirect(admin_url('options-general.php?page=fs-theme-settings&tab=developer'));
 	exit;
 });
 
+// Clear design overrides (developer only)
 add_action('load-settings_page_fs-theme-settings', function () {
-	if (!current_user_can('manage_options')) {
+	if (!current_user_can('manage_options') || empty($_GET['fromscratch_clear_design']) || empty($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'fromscratch_clear_design')) {
 		return;
 	}
-	if (empty($_GET['fromscratch_clear_design']) || empty($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'fromscratch_clear_design')) {
+	if (!function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
 		return;
 	}
 	delete_option('fromscratch_design');
 	set_transient('fromscratch_clear_design_notice', '1', 30);
-	wp_safe_redirect(admin_url('options-general.php?page=fs-theme-settings&tab=design'));
+	wp_safe_redirect(admin_url('options-general.php?page=fs-theme-settings&tab=developer'));
 	exit;
 });
+
+// Redirect non-developers away from developer tab
+add_action('load-settings_page_fs-theme-settings', function () {
+	if (!current_user_can('manage_options')) {
+		return;
+	}
+	$requested = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
+	if ($requested !== 'developer') {
+		return;
+	}
+	if (function_exists('fs_is_developer_user') && fs_is_developer_user((int) get_current_user_id())) {
+		return;
+	}
+	wp_safe_redirect(admin_url('options-general.php?page=fs-theme-settings&tab=general'));
+	exit;
+}, 1);
 
 const FS_THEME_OPTION_GROUP_GENERAL = 'fs_theme_general';
 const FS_THEME_OPTION_GROUP_TEXTE = 'fs_theme_texte';
@@ -102,8 +153,8 @@ function theme_settings_page(): void
 	if (!current_user_can('manage_options')) {
 		wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'fromscratch'));
 	}
-	$tabs = ['general', 'texte', 'design', 'security'];
-	$tab = isset($_GET['tab']) && in_array($_GET['tab'], $tabs, true) ? $_GET['tab'] : 'general';
+	$tab = fs_theme_settings_current_tab();
+	$available_tabs = fs_theme_settings_available_tabs();
 	$base_url = admin_url('options-general.php?page=fs-theme-settings');
 
 	$bump_notice = get_transient('fromscratch_bump_notice');
@@ -114,35 +165,25 @@ function theme_settings_page(): void
 	if ($clear_design_notice !== false) {
 		delete_transient('fromscratch_clear_design_notice');
 	}
-	$bump_url = wp_nonce_url(add_query_arg('fromscratch_bump', '1', $base_url), 'fromscratch_bump_asset_version');
-	$clear_design_url = wp_nonce_url(add_query_arg(['fromscratch_clear_design' => '1', 'tab' => 'design'], $base_url), 'fromscratch_clear_design');
+	$bump_url = wp_nonce_url(add_query_arg('fromscratch_bump', '1', add_query_arg('tab', 'developer', $base_url)), 'fromscratch_bump_asset_version');
+	$clear_design_url = wp_nonce_url(add_query_arg(['fromscratch_clear_design' => '1', 'tab' => 'developer'], $base_url), 'fromscratch_clear_design');
 ?>
 	<div class="wrap">
-		<h1><?= esc_html(fs_config_settings('title_page')) ?></h1>
-		<?php if ($bump_notice !== false && $tab === 'general') : ?>
+		<h1><?= esc_html(__(fs_config_settings('title_page'), 'fromscratch')) ?></h1>
+		<?php if ($bump_notice !== false && $tab === 'developer') : ?>
 			<div class="notice notice-success is-dismissible"><p><strong><?= esc_html(sprintf(__('Asset version increased to %s.', 'fromscratch'), $bump_notice)) ?></strong></p></div>
 		<?php endif; ?>
-		<?php if ($clear_design_notice !== false && $tab === 'design') : ?>
+		<?php if ($clear_design_notice !== false && $tab === 'developer') : ?>
 			<div class="notice notice-success is-dismissible"><p><strong><?= esc_html__('Design overrides cleared. All values reset to defaults.', 'fromscratch') ?></strong></p></div>
 		<?php endif; ?>
 
 		<nav class="nav-tab-wrapper wp-clearfix" aria-label="Secondary menu">
-			<a href="<?= esc_url($base_url . '&tab=general') ?>" class="nav-tab <?= $tab === 'general' ? 'nav-tab-active' : '' ?>"><?= esc_html__('General', 'fromscratch') ?></a>
-			<a href="<?= esc_url($base_url . '&tab=texte') ?>" class="nav-tab <?= $tab === 'texte' ? 'nav-tab-active' : '' ?>"><?= esc_html__('Texts', 'fromscratch') ?></a>
-			<a href="<?= esc_url($base_url . '&tab=design') ?>" class="nav-tab <?= $tab === 'design' ? 'nav-tab-active' : '' ?>"><?= esc_html__('Design', 'fromscratch') ?></a>
-			<a href="<?= esc_url($base_url . '&tab=security') ?>" class="nav-tab <?= $tab === 'security' ? 'nav-tab-active' : '' ?>"><?= esc_html__('Security', 'fromscratch') ?><?php if (get_option('fromscratch_site_password_protection') === '1' && get_option('fromscratch_site_password_hash', '') !== '') : ?> <span class="dashicons dashicons-lock" style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle; margin-left: 2px;" aria-hidden="true"></span><?php endif; ?></a>
+			<?php foreach ($available_tabs as $slug => $label) : ?>
+				<a href="<?= esc_url(add_query_arg('tab', $slug, $base_url)) ?>" class="nav-tab <?= $tab === $slug ? 'nav-tab-active' : '' ?>"><?= esc_html(__($label, 'fromscratch')) ?><?php if ($slug === 'security' && get_option('fromscratch_site_password_protection') === '1' && get_option('fromscratch_site_password_hash', '') !== '') : ?> <span class="dashicons dashicons-lock" style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle; margin-left: 2px;" aria-hidden="true"></span><?php endif; ?></a>
+			<?php endforeach; ?>
 		</nav>
 
 		<?php if ($tab === 'general') : ?>
-		<?php
-			$features = get_option('fromscratch_features', []);
-			if (!is_array($features)) {
-				$features = [];
-			}
-			$feat = function ($key) use ($features) {
-				return isset($features[$key]) ? (int) $features[$key] : 1;
-			};
-		?>
 		<form method="post" action="options.php" class="page-settings-form">
 			<?php settings_fields(FS_THEME_OPTION_GROUP_GENERAL); ?>
 			<h2 class="title"><?= esc_html__('Site', 'fromscratch') ?></h2>
@@ -153,62 +194,13 @@ function theme_settings_page(): void
 					</th>
 					<td>
 						<input type="email" name="admin_email" id="admin_email" value="<?= esc_attr(get_option('admin_email')) ?>" class="regular-text">
-						<p class="description"><?= esc_html__('Used for account recovery and notifications.', 'fromscratch') ?></p>
-					</td>
-				</tr>
-			</table>
-			<hr>
-			<h2 class="title"><?= esc_html__('Cache', 'fromscratch') ?></h2>
-			<p class="description" style="margin-bottom: 8px;"><?= esc_html__('Use fs_asset_url( \'/path/to/file.css\' ) in templates to output the asset URL with ?ver= so the browser cache updates when you bump the version below.', 'fromscratch') ?></p>
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row">
-						<label for="fromscratch_asset_version"><?= esc_html__('Cache version', 'fromscratch') ?></label>
-					</th>
-					<td>
-						<input type="text" name="fromscratch_asset_version" id="fromscratch_asset_version" value="<?= esc_attr(get_option('fromscratch_asset_version', '1')) ?>" class="small-text" style="width: 64px;">
-						<a href="<?= esc_url($bump_url) ?>" class="button" style="margin-left: 8px;"><?= esc_html__('Bump version', 'fromscratch') ?></a>
-						<p class="description"><?= esc_html__('Bump when static theme files have been changed so the cache of the files is updated.', 'fromscratch') ?></p>
-					</td>
-				</tr>
-			</table>
-			<hr>
-			<h2 class="title"><?= esc_html__('Theme features', 'fromscratch') ?></h2>
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><?= esc_html__('Blogs', 'fromscratch') ?></th>
-					<td>
-						<input type="hidden" name="fromscratch_features[enable_blogs]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_blogs]" value="1" <?= checked($feat('enable_blogs'), 1, false) ?>> <?= esc_html__('Enable the Posts menu and blog/post editing.', 'fromscratch') ?></label>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><?= esc_html__('SVG support', 'fromscratch') ?></th>
-					<td>
-						<input type="hidden" name="fromscratch_features[enable_svg]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_svg]" value="1" <?= checked($feat('enable_svg'), 1, false) ?>> <?= esc_html__('Allow SVG uploads', 'fromscratch') ?></label>
-						<p class="description fs-description-adjust-checkbox"><?= esc_html__('SVGs are sanitized on upload.', 'fromscratch') ?></p>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><?= esc_html__('Duplicate', 'fromscratch') ?></th>
-					<td>
-						<input type="hidden" name="fromscratch_features[enable_duplicate_post]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_duplicate_post]" value="1" <?= checked($feat('enable_duplicate_post'), 1, false) ?>> <?= esc_html__('Allow duplication', 'fromscratch') ?></label>
-						<p class="description fs-description-adjust-checkbox"><?= esc_html__('Shows a "Duplicate" row action for posts, pages, and custom post types.', 'fromscratch') ?></p>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><?= esc_html__('SEO', 'fromscratch') ?></th>
-					<td>
-						<input type="hidden" name="fromscratch_features[enable_seo]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_seo]" value="1" <?= checked($feat('enable_seo'), 1, false) ?>> <?= esc_html__('SEO panel (title, description, OG image, noindex) for posts and pages.', 'fromscratch') ?></label>
+						<p class="description"><?= esc_html__('Changes the Administrator email instantly without notifying.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 			</table>
 			<p class="submit"><?php submit_button(); ?></p>
 		</form>
-		<?php elseif ($tab === 'texte') : ?>
+		<?php elseif ($tab === 'texts') : ?>
 		<form method="post" action="options.php" class="page-settings-form">
 			<?php settings_fields(FS_THEME_OPTION_GROUP_TEXTE); ?>
 			<?php
@@ -276,11 +268,78 @@ function theme_settings_page(): void
 			});
 		});
 		</script>
+		<?php elseif ($tab === 'developer') : ?>
+		<?php
+			$asset_version = get_option('fromscratch_asset_version', '1');
+			$features = get_option('fromscratch_features', []);
+			if (!is_array($features)) {
+				$features = [];
+			}
+			$feat = function ($key) use ($features) {
+				return isset($features[$key]) ? (int) $features[$key] : 1;
+			};
+		?>
+		<h2 class="title"><?= esc_html__('Cache & assets', 'fromscratch') ?></h2>
+		<p class="description" style="margin-bottom: 8px;"><?= esc_html__('Use fs_asset_url( \'/path/to/file.css\' ) in templates to output the asset URL with ?ver= so the browser cache updates when you bump the version.', 'fromscratch') ?></p>
+		<table class="form-table" role="presentation">
+			<tr>
+				<th scope="row"><?= esc_html__('Cache version', 'fromscratch') ?></th>
+				<td>
+					<code style="font-size: 14px;"><?= esc_html($asset_version) ?></code>
+					<a href="<?= esc_url($bump_url) ?>" class="button" style="margin-left: 8px;"><?= esc_html__('Bump version', 'fromscratch') ?></a>
+					<p class="description"><?= esc_html__('Bump when static theme files have been changed so the cache of the files is updated.', 'fromscratch') ?></p>
+				</td>
+			</tr>
+		</table>
+		<hr>
+		<h2 class="title"><?= esc_html__('Theme features', 'fromscratch') ?></h2>
+		<form method="post" action="options.php" class="page-settings-form">
+			<?php settings_fields(FS_THEME_OPTION_GROUP_GENERAL); ?>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?= esc_html__('Blogs', 'fromscratch') ?></th>
+					<td>
+						<input type="hidden" name="fromscratch_features[enable_blogs]" value="0">
+						<label><input type="checkbox" name="fromscratch_features[enable_blogs]" value="1" <?= checked($feat('enable_blogs'), 1, false) ?>> <?= esc_html__('Enable the Posts menu and blog/post editing.', 'fromscratch') ?></label>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?= esc_html__('SVG support', 'fromscratch') ?></th>
+					<td>
+						<input type="hidden" name="fromscratch_features[enable_svg]" value="0">
+						<label><input type="checkbox" name="fromscratch_features[enable_svg]" value="1" <?= checked($feat('enable_svg'), 1, false) ?>> <?= esc_html__('Allow SVG uploads', 'fromscratch') ?></label>
+						<p class="description fs-description-adjust-checkbox"><?= esc_html__('SVGs are sanitized on upload.', 'fromscratch') ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?= esc_html__('Duplicate', 'fromscratch') ?></th>
+					<td>
+						<input type="hidden" name="fromscratch_features[enable_duplicate_post]" value="0">
+						<label><input type="checkbox" name="fromscratch_features[enable_duplicate_post]" value="1" <?= checked($feat('enable_duplicate_post'), 1, false) ?>> <?= esc_html__('Allow duplication', 'fromscratch') ?></label>
+						<p class="description fs-description-adjust-checkbox"><?= esc_html__('Shows a "Duplicate" row action for posts, pages, and custom post types.', 'fromscratch') ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?= esc_html__('SEO', 'fromscratch') ?></th>
+					<td>
+						<input type="hidden" name="fromscratch_features[enable_seo]" value="0">
+						<label><input type="checkbox" name="fromscratch_features[enable_seo]" value="1" <?= checked($feat('enable_seo'), 1, false) ?>> <?= esc_html__('SEO panel (title, description, OG image, noindex) for posts and pages.', 'fromscratch') ?></label>
+					</td>
+				</tr>
+			</table>
+			<p class="submit"><?php submit_button(); ?></p>
+		</form>
+		<hr>
+		<h2 class="title"><?= esc_html__('Design', 'fromscratch') ?></h2>
+		<p class="description" style="margin-bottom: 8px;"><?= esc_html__('Clear all design variable overrides and reset to theme defaults.', 'fromscratch') ?></p>
+		<p>
+			<a href="<?= esc_url($clear_design_url) ?>" class="button" onclick="return confirm('<?= esc_js(__('Reset all design overrides to defaults?', 'fromscratch')) ?>');"><?= esc_html__('Clear all overrides', 'fromscratch') ?></a>
+		</p>
+		<hr>
+		<h2 class="title"><?= esc_html__('Tools', 'fromscratch') ?></h2>
+		<p class="description"><?= esc_html__('More developer tools (e.g. sitemap generator, post expirator) can be added here in future updates.', 'fromscratch') ?></p>
 		<?php else : ?>
 		<p class="description" style="margin-bottom: 8px;"><?= esc_html__('Override SCSS design variables. Values are output as CSS custom properties (:root). Add new variables in config/theme.php under design.sections.', 'fromscratch') ?></p>
-		<p style="margin-bottom: 16px;">
-			<a href="<?= esc_url($clear_design_url) ?>" class="button" onclick="return confirm('<?= esc_js(__('Reset all design overrides to defaults?', 'fromscratch')) ?>');"><?= esc_html__('Clear all', 'fromscratch') ?></a>
-		</p>
 		<form method="post" action="options.php" class="page-settings-form">
 			<?php settings_fields(FS_THEME_OPTION_GROUP_DESIGN); ?>
 			<?php
@@ -380,10 +439,10 @@ add_action('admin_init', 'display_custom_info_fields');
 
 function add_theme_settings_menu_item(): void
 {
-	add_submenu_page(
+		add_submenu_page(
 		'options-general.php',
-		fs_config_settings('title_page'),
-		fs_config_settings('title_menu'),
+		__(fs_config_settings('title_page'), 'fromscratch'),
+		__(fs_config_settings('title_menu'), 'fromscratch'),
 		'manage_options',
 		'fs-theme-settings',
 		'theme_settings_page',
