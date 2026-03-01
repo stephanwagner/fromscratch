@@ -90,6 +90,14 @@ const FS_THEME_OPTION_GROUP_GENERAL = 'fs_theme_general';
 const FS_THEME_OPTION_GROUP_TEXTE = 'fs_theme_texte';
 const FS_THEME_OPTION_GROUP_DESIGN = 'fs_theme_design';
 const FS_THEME_OPTION_GROUP_SECURITY = 'fs_theme_security';
+const FS_THEME_OPTION_GROUP_DEVELOPER = 'fs_theme_developer';
+
+add_action('admin_init', function () {
+	register_setting(FS_THEME_OPTION_GROUP_DEVELOPER, 'fromscratch_admin_access', [
+		'type' => 'array',
+		'sanitize_callback' => 'fs_sanitize_admin_access',
+	]);
+}, 5);
 
 add_action('admin_init', function () {
 	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_asset_version', [
@@ -130,6 +138,22 @@ function fs_sanitize_features($value): array
 	$out = [];
 	foreach ($keys as $key) {
 		$out[$key] = (!empty($value[$key])) ? 1 : 0;
+	}
+	return $out;
+}
+
+function fs_sanitize_admin_access($value): array
+{
+	$defaults = function_exists('fs_admin_access_defaults') ? fs_admin_access_defaults() : [];
+	if (!is_array($value)) {
+		return $defaults;
+	}
+	$out = [];
+	foreach (array_keys($defaults) as $item) {
+		$out[$item] = [
+			'admin' => !empty($value[$item]['admin']) ? 1 : 0,
+			'developer' => !empty($value[$item]['developer']) ? 1 : 0,
+		];
 	}
 	return $out;
 }
@@ -326,6 +350,55 @@ function theme_settings_page(): void
 						<label><input type="checkbox" name="fromscratch_features[enable_seo]" value="1" <?= checked($feat('enable_seo'), 1, false) ?>> <?= esc_html__('SEO panel (title, description, OG image, noindex) for posts and pages.', 'fromscratch') ?></label>
 					</td>
 				</tr>
+			</table>
+			<p class="submit"><?php submit_button(); ?></p>
+		</form>
+		<hr>
+		<h2 class="title"><?= esc_html__('Admin access', 'fromscratch') ?></h2>
+		<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Control which admin pages and Settings sections are visible to Administrators (Admin) and users with developer rights (Developer). Uncheck to hide from that role.', 'fromscratch') ?></p>
+		<?php
+			$admin_access = get_option('fromscratch_admin_access', function_exists('fs_admin_access_defaults') ? fs_admin_access_defaults() : []);
+			$admin_access_labels = [
+				'plugins' => __('Plugins', 'fromscratch'),
+				'options_general' => __('Settings: General', 'fromscratch'),
+				'options_writing' => __('Settings: Writing', 'fromscratch'),
+				'options_reading' => __('Settings: Reading', 'fromscratch'),
+				'options_media' => __('Settings: Media', 'fromscratch'),
+				'options_permalink' => __('Settings: Permalinks', 'fromscratch'),
+				'options_privacy' => __('Settings: Privacy', 'fromscratch'),
+				'tools' => __('Tools', 'fromscratch'),
+				'themes' => __('Appearance (Themes)', 'fromscratch'),
+			];
+		?>
+		<form method="post" action="options.php" class="page-settings-form">
+			<?php settings_fields(FS_THEME_OPTION_GROUP_DEVELOPER); ?>
+			<table class="form-table" role="presentation">
+				<thead>
+					<tr>
+						<th scope="col" class="row-title"><?= esc_html__('Page / Section', 'fromscratch') ?></th>
+						<th scope="col"><?= esc_html__('Admin', 'fromscratch') ?></th>
+						<th scope="col"><?= esc_html__('Developer', 'fromscratch') ?></th>
+					</tr>
+				</thead>
+				<tbody>
+				<?php foreach ($admin_access_labels as $key => $label) :
+					$val = isset($admin_access[$key]) ? $admin_access[$key] : ['admin' => 0, 'developer' => 1];
+					$admin_checked = !empty($val['admin']);
+					$dev_checked = !empty($val['developer']);
+				?>
+					<tr>
+						<td class="row-title"><?= esc_html($label) ?></td>
+						<td>
+							<input type="hidden" name="fromscratch_admin_access[<?= esc_attr($key) ?>][admin]" value="0">
+							<label><input type="checkbox" name="fromscratch_admin_access[<?= esc_attr($key) ?>][admin]" value="1" <?= checked($admin_checked, true, false) ?>></label>
+						</td>
+						<td>
+							<input type="hidden" name="fromscratch_admin_access[<?= esc_attr($key) ?>][developer]" value="0">
+							<label><input type="checkbox" name="fromscratch_admin_access[<?= esc_attr($key) ?>][developer]" value="1" <?= checked($dev_checked, true, false) ?>></label>
+						</td>
+					</tr>
+				<?php endforeach; ?>
+				</tbody>
 			</table>
 			<p class="submit"><?php submit_button(); ?></p>
 		</form>

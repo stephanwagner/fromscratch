@@ -353,6 +353,42 @@ msgstr "Alle Overrides zurücksetzen"
 msgid "Tools"
 msgstr "Werkzeuge"
 
+msgid "Admin access"
+msgstr "Zugriff für Admins"
+
+msgid "Control which admin pages and Settings sections are visible to Administrators (Admin) and users with developer rights (Developer). Uncheck to hide from that role."
+msgstr "Lege fest, welche Admin-Seiten und Einstellungsbereiche für Administratoren (Admin) und Nutzer mit Entwicklerrechten (Entwickler) sichtbar sind. Abwählen blendet für diese Rolle aus."
+
+msgid "Page / Section"
+msgstr "Seite / Bereich"
+
+msgid "Admin"
+msgstr "Admin"
+
+msgid "Settings: General"
+msgstr "Einstellungen: Allgemein"
+
+msgid "Settings: Writing"
+msgstr "Einstellungen: Schreiben"
+
+msgid "Settings: Reading"
+msgstr "Einstellungen: Lesen"
+
+msgid "Settings: Media"
+msgstr "Einstellungen: Medien"
+
+msgid "Settings: Permalinks"
+msgstr "Einstellungen: Permalinks"
+
+msgid "Settings: Privacy"
+msgstr "Einstellungen: Datenschutz"
+
+msgid "Appearance (Themes)"
+msgstr "Design (Themes)"
+
+msgid "Plugins"
+msgstr "Plugins"
+
 msgid "More developer tools (e.g. sitemap generator, post expirator) can be added here in future updates."
 msgstr "Weitere Entwickler-Werkzeuge (z. B. Sitemap-Generator, Beitragsablauf) können hier in künftigen Updates ergänzt werden."
 

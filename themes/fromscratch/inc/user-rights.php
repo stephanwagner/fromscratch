@@ -153,8 +153,50 @@ function fs_developer_user_profile_update(int $user_id): void
 }
 
 /**
- * Restrict admin for non-developers: block Tools, Plugins, Design (Themes, Theme Editor, Site Editor).
- * Move Menus under Settings for everyone so non-developers can still edit menus.
+ * Default admin access: who can see which admin pages. Keys match Settings → Theme → Developer → Admin access.
+ *
+ * @return array<string, array{admin: int, developer: int}>
+ */
+function fs_admin_access_defaults(): array
+{
+  return [
+    'plugins' => ['admin' => 0, 'developer' => 1],
+    'options_general' => ['admin' => 1, 'developer' => 1],
+    'options_writing' => ['admin' => 0, 'developer' => 1],
+    'options_reading' => ['admin' => 0, 'developer' => 1],
+    'options_media' => ['admin' => 0, 'developer' => 1],
+    'options_permalink' => ['admin' => 0, 'developer' => 1],
+    'options_privacy' => ['admin' => 1, 'developer' => 1],
+    'tools' => ['admin' => 0, 'developer' => 1],
+    'themes' => ['admin' => 0, 'developer' => 1],
+  ];
+}
+
+/**
+ * Whether the current user (admin or developer) is allowed to access the given item.
+ *
+ * @param string $item Key from fs_admin_access_defaults(), e.g. 'plugins', 'options_reading'.
+ * @return bool
+ */
+function fs_admin_can_access(string $item): bool
+{
+  if (!function_exists('fs_setup_completed') || !fs_setup_completed()) {
+    return true;
+  }
+  $access = get_option('fromscratch_admin_access', fs_admin_access_defaults());
+  if (!is_array($access) || !isset($access[$item]) || !is_array($access[$item])) {
+    $defaults = fs_admin_access_defaults();
+    $access = isset($defaults[$item]) ? $defaults[$item] : ['admin' => 0, 'developer' => 1];
+  } else {
+    $access = $access[$item];
+  }
+  $is_dev = fs_is_developer_user((int) get_current_user_id());
+  $key = $is_dev ? 'developer' : 'admin';
+  return !empty($access[$key]);
+}
+
+/**
+ * Restrict admin by developer-toggled access. Block direct load when access is disabled.
  */
 add_action('admin_init', function () {
   if (!is_user_logged_in() || !function_exists('fs_setup_completed') || !fs_setup_completed()) {
@@ -163,12 +205,28 @@ add_action('admin_init', function () {
   if (defined('DOING_AJAX') && DOING_AJAX) {
     return;
   }
-  if (fs_is_developer_user((int) get_current_user_id())) {
-    return;
-  }
   global $pagenow;
-  $blocked = ['tools.php', 'plugins.php', 'themes.php', 'site-editor.php', 'theme-editor.php', 'options-media.php', 'options-permalink.php', 'options-writing.php', 'options-reading.php'];
-  if (in_array($pagenow, $blocked, true)) {
+  $item = null;
+  if ($pagenow === 'plugins.php') {
+    $item = 'plugins';
+  } elseif ($pagenow === 'tools.php') {
+    $item = 'tools';
+  } elseif (in_array($pagenow, ['themes.php', 'site-editor.php', 'theme-editor.php'], true)) {
+    $item = 'themes';
+  } elseif ($pagenow === 'options-general.php') {
+    $page = isset($_GET['page']) ? sanitize_text_field(wp_unslash($_GET['page'])) : '';
+    $map = [
+      '' => 'options_general',
+      'options-general.php' => 'options_general',
+      'options-writing.php' => 'options_writing',
+      'options-reading.php' => 'options_reading',
+      'options-media.php' => 'options_media',
+      'options-permalink.php' => 'options_permalink',
+      'options-privacy.php' => 'options_privacy',
+    ];
+    $item = isset($map[$page]) ? $map[$page] : 'options_general';
+  }
+  if ($item !== null && !fs_admin_can_access($item)) {
     wp_safe_redirect(admin_url());
     exit;
   }
@@ -201,15 +259,35 @@ add_action('admin_menu', function () {
     $settings[] = $menus_item;
   }
 
-  // Non-developers: hide Tools, Plugins, Appearance, Reading, Writing, and Media settings.
-  if (!is_user_logged_in() || !fs_is_developer_user((int) get_current_user_id())) {
+  if (!is_user_logged_in()) {
+    return;
+  }
+  if (!fs_admin_can_access('tools')) {
     remove_menu_page('tools.php');
+  }
+  if (!fs_admin_can_access('plugins')) {
     remove_menu_page('plugins.php');
+  }
+  if (!fs_admin_can_access('themes')) {
     remove_menu_page('themes.php');
+  }
+  if (!fs_admin_can_access('options_general')) {
+    remove_submenu_page('options-general.php', 'options-general.php');
+  }
+  if (!fs_admin_can_access('options_reading')) {
     remove_submenu_page('options-general.php', 'options-reading.php');
+  }
+  if (!fs_admin_can_access('options_writing')) {
     remove_submenu_page('options-general.php', 'options-writing.php');
+  }
+  if (!fs_admin_can_access('options_media')) {
     remove_submenu_page('options-general.php', 'options-media.php');
+  }
+  if (!fs_admin_can_access('options_permalink')) {
     remove_submenu_page('options-general.php', 'options-permalink.php');
+  }
+  if (!fs_admin_can_access('options_privacy')) {
+    remove_submenu_page('options-general.php', 'options-privacy.php');
   }
 }, 999);
 

@@ -35,10 +35,13 @@ function fs_favicon_fallback(): void
 	if (has_site_icon()) {
 		return;
 	}
-	$favicon = fs_asset_url('/img/favicon.png');
-	$favicon_192 = fs_asset_url('/img/favicon-192.png');
-	echo '<link rel="icon" href="' . esc_url($favicon) . '" sizes="any">' . "\n";
-	echo '<link rel="icon" href="' . esc_url($favicon_192) . '" sizes="192x192">' . "\n";
+	$dir = get_template_directory() . '/assets/img';
+	if (file_exists($dir . '/favicon.png')) {
+		echo '<link rel="icon" href="' . esc_url(fs_asset_url('/img/favicon.png')) . '" sizes="any">' . "\n";
+	}
+	if (file_exists($dir . '/favicon-192.png')) {
+		echo '<link rel="icon" href="' . esc_url(fs_asset_url('/img/favicon-192.png')) . '" sizes="192x192">' . "\n";
+	}
 }
 add_action('wp_head', 'fs_favicon_fallback', 100);
 
