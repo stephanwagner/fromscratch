@@ -83,10 +83,16 @@ add_action('admin_enqueue_scripts', function ($hook_suffix) {
 	if (!current_user_can('manage_options') || (function_exists('fs_admin_can_access') && !fs_admin_can_access('theme_settings_css'))) {
 		return;
 	}
-	$settings = wp_enqueue_code_editor(['type' => 'text/css']);
+	$settings = wp_enqueue_code_editor([
+		'type' => 'text/css',
+	]);
 	if ($settings === false) {
 		return;
 	}
+	wp_add_inline_style('code-editor', '
+		.fs-custom-css-editor-wrap { resize: vertical; overflow: auto; display: block; }
+		.fs-custom-css-editor-wrap .CodeMirror { min-height: 100% !important; }
+	');
 	wp_add_inline_script('code-editor', sprintf(
 		'jQuery(function() { if (wp.codeEditor && document.getElementById("fromscratch_custom_css")) { wp.codeEditor.initialize("fromscratch_custom_css", %s); } });',
 		wp_json_encode($settings)
@@ -414,8 +420,10 @@ function theme_settings_page(): void
 			<table class="form-table" role="presentation">
 				<tr>
 					<td colspan="2" style="padding: 0;">
-						<label for="fromscratch_custom_css" class="screen-reader-text"><?= esc_html__('Custom CSS', 'fromscratch') ?></label>
-						<textarea name="fromscratch_custom_css" id="fromscratch_custom_css" rows="16" class="large-text code" style="width: 100%; font-family: Consolas, Monaco, monospace;"><?= esc_textarea(get_option('fromscratch_custom_css', '')) ?></textarea>
+						<div class="fs-custom-css-editor-wrap">
+							<label for="fromscratch_custom_css" class="screen-reader-text"><?= esc_html__('Custom CSS', 'fromscratch') ?></label>
+							<textarea name="fromscratch_custom_css" id="fromscratch_custom_css" rows="16" class="large-text code" style="width: 100%; font-family: Consolas, Monaco, monospace;"><?= esc_textarea(get_option('fromscratch_custom_css', '')) ?></textarea>
+						</div>
 					</td>
 				</tr>
 			</table>
