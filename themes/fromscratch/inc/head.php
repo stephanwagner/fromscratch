@@ -25,6 +25,24 @@ function fs_add_manifest(): void
 add_action('wp_head', 'fs_add_manifest');
 
 /**
+ * Favicon fallback when no site icon is set in Customizer.
+ * Uses theme assets/img/favicon.png and favicon-192.png (after wp_site_icon at priority 99).
+ *
+ * @return void
+ */
+function fs_favicon_fallback(): void
+{
+	if (has_site_icon()) {
+		return;
+	}
+	$favicon = fs_asset_url('/img/favicon.png');
+	$favicon_192 = fs_asset_url('/img/favicon-192.png');
+	echo '<link rel="icon" href="' . esc_url($favicon) . '" sizes="any">' . "\n";
+	echo '<link rel="icon" href="' . esc_url($favicon_192) . '" sizes="192x192">' . "\n";
+}
+add_action('wp_head', 'fs_favicon_fallback', 100);
+
+/**
  * Output meta charset and config meta tags in head.
  *
  * @return void
