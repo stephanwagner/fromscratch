@@ -25,6 +25,19 @@ function fs_theme_settings_available_tabs(): array
 		if ($def['developer_only'] && !$is_dev) {
 			continue;
 		}
+		if (function_exists('fs_admin_can_access')) {
+			$access_key = null;
+			if ($slug === 'security') {
+				$access_key = 'theme_settings_security';
+			} elseif ($slug === 'texts') {
+				$access_key = 'theme_settings_texts';
+			} elseif ($slug === 'design') {
+				$access_key = 'theme_settings_design';
+			}
+			if ($access_key !== null && !fs_admin_can_access($access_key)) {
+				continue;
+			}
+		}
 		$tabs[$slug] = $def['label'];
 	}
 	return $tabs;
@@ -70,23 +83,41 @@ add_action('load-settings_page_fs-theme-settings', function () {
 	exit;
 });
 
-// Redirect non-developers away from developer tab
+// Redirect when access to requested tab is denied
 add_action('load-settings_page_fs-theme-settings', function () {
 	if (!current_user_can('manage_options')) {
 		return;
 	}
 	$requested = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
-	if ($requested !== 'developer') {
+	if ($requested === 'developer') {
+		if (function_exists('fs_is_developer_user') && fs_is_developer_user((int) get_current_user_id())) {
+			return;
+		}
+		wp_safe_redirect(admin_url('options-general.php?page=fs-theme-settings&tab=general'));
+		exit;
+	}
+	if ($requested === '' || $requested === 'general') {
 		return;
 	}
-	if (function_exists('fs_is_developer_user') && fs_is_developer_user((int) get_current_user_id())) {
+	if (!function_exists('fs_admin_can_access')) {
 		return;
 	}
-	wp_safe_redirect(admin_url('options-general.php?page=fs-theme-settings&tab=general'));
-	exit;
+	$access_key = null;
+	if ($requested === 'security') {
+		$access_key = 'theme_settings_security';
+	} elseif ($requested === 'texts') {
+		$access_key = 'theme_settings_texts';
+	} elseif ($requested === 'design') {
+		$access_key = 'theme_settings_design';
+	}
+	if ($access_key !== null && !fs_admin_can_access($access_key)) {
+		wp_safe_redirect(admin_url('options-general.php?page=fs-theme-settings&tab=general'));
+		exit;
+	}
 }, 1);
 
 const FS_THEME_OPTION_GROUP_GENERAL = 'fs_theme_general';
+const FS_THEME_OPTION_GROUP_FEATURES = 'fs_theme_features';
 const FS_THEME_OPTION_GROUP_TEXTE = 'fs_theme_texte';
 const FS_THEME_OPTION_GROUP_DESIGN = 'fs_theme_design';
 const FS_THEME_OPTION_GROUP_SECURITY = 'fs_theme_security';
@@ -103,15 +134,18 @@ add_action('admin_init', function () {
 	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_asset_version', [
 		'type' => 'string',
 		'default' => '1',
-		'sanitize_callback' => 'sanitize_text_field',
-	]);
-	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_features', [
-		'type' => 'array',
-		'sanitize_callback' => 'fs_sanitize_features',
+		'sanitize_callback' => 'fs_sanitize_asset_version',
 	]);
 	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'admin_email', [
 		'type' => 'string',
 		'sanitize_callback' => 'sanitize_email',
+	]);
+}, 5);
+
+add_action('admin_init', function () {
+	register_setting(FS_THEME_OPTION_GROUP_FEATURES, 'fromscratch_features', [
+		'type' => 'array',
+		'sanitize_callback' => 'fs_sanitize_features',
 	]);
 }, 5);
 
@@ -128,6 +162,19 @@ add_action('admin_init', function () {
 		'sanitize_callback' => 'fs_sanitize_site_password_protection',
 	]);
 }, 5);
+
+/**
+ * Preserve existing asset version when the option is not in the form (e.g. saving Theme features only).
+ * Prevents cache version from being reset when saving other General-group forms.
+ */
+function fs_sanitize_asset_version($value): string
+{
+	$value = is_string($value) ? trim($value) : '';
+	if ($value === '') {
+		return (string) get_option('fromscratch_asset_version', '1');
+	}
+	return sanitize_text_field($value);
+}
 
 function fs_sanitize_features($value): array
 {
@@ -201,11 +248,13 @@ function theme_settings_page(): void
 			<div class="notice notice-success is-dismissible"><p><strong><?= esc_html__('Design overrides cleared. All values reset to defaults.', 'fromscratch') ?></strong></p></div>
 		<?php endif; ?>
 
+		<?php if (count($available_tabs) > 1) : ?>
 		<nav class="nav-tab-wrapper wp-clearfix" aria-label="Secondary menu">
 			<?php foreach ($available_tabs as $slug => $label) : ?>
 				<a href="<?= esc_url(add_query_arg('tab', $slug, $base_url)) ?>" class="nav-tab <?= $tab === $slug ? 'nav-tab-active' : '' ?>"><?= esc_html(__($label, 'fromscratch')) ?><?php if ($slug === 'security' && get_option('fromscratch_site_password_protection') === '1' && get_option('fromscratch_site_password_hash', '') !== '') : ?> <span class="dashicons dashicons-lock" style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle; margin-left: 2px;" aria-hidden="true"></span><?php endif; ?></a>
 			<?php endforeach; ?>
 		</nav>
+		<?php endif; ?>
 
 		<?php if ($tab === 'general') : ?>
 		<form method="post" action="options.php" class="page-settings-form">
@@ -318,7 +367,7 @@ function theme_settings_page(): void
 		<hr>
 		<h2 class="title"><?= esc_html__('Theme features', 'fromscratch') ?></h2>
 		<form method="post" action="options.php" class="page-settings-form">
-			<?php settings_fields(FS_THEME_OPTION_GROUP_GENERAL); ?>
+			<?php settings_fields(FS_THEME_OPTION_GROUP_FEATURES); ?>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row"><?= esc_html__('Blogs', 'fromscratch') ?></th>
@@ -370,6 +419,9 @@ function theme_settings_page(): void
 				'options_privacy' => __('Settings: Privacy', 'fromscratch'),
 				'tools' => __('Tools', 'fromscratch'),
 				'themes' => __('Appearance (Themes)', 'fromscratch'),
+				'theme_settings_security' => __('Theme settings: Security', 'fromscratch'),
+				'theme_settings_texts' => __('Theme settings: Texts', 'fromscratch'),
+				'theme_settings_design' => __('Theme settings: Design', 'fromscratch'),
 			];
 		?>
 		<form method="post" action="options.php" class="page-settings-form">

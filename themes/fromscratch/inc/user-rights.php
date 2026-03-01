@@ -169,6 +169,9 @@ function fs_admin_access_defaults(): array
     'options_privacy' => ['admin' => 1, 'developer' => 1],
     'tools' => ['admin' => 0, 'developer' => 1],
     'themes' => ['admin' => 0, 'developer' => 1],
+    'theme_settings_security' => ['admin' => 1, 'developer' => 1],
+    'theme_settings_texts' => ['admin' => 1, 'developer' => 1],
+    'theme_settings_design' => ['admin' => 1, 'developer' => 1],
   ];
 }
 

@@ -386,6 +386,15 @@ msgstr "Einstellungen: Datenschutz"
 msgid "Appearance (Themes)"
 msgstr "Design (Themes)"
 
+msgid "Theme settings: Security"
+msgstr "Theme-Einstellungen: Sicherheit"
+
+msgid "Theme settings: Texts"
+msgstr "Theme-Einstellungen: Texte"
+
+msgid "Theme settings: Design"
+msgstr "Theme-Einstellungen: Design"
+
 msgid "Plugins"
 msgstr "Plugins"
 
