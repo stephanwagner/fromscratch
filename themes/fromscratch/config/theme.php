@@ -1,23 +1,35 @@
 <?php
+
+/**
+ * Theme config: menus, meta, colors, design, image sizes, security, headers.
+ * Edit this file to customize the theme. Design overrides can also be set in Settings → Theme → Design.
+ */
 return [
-	// Meta tags
+	/**
+	 * Meta tags: Added to the head section of the HTML document.
+	 */
 	'meta' => [
 		'viewport' => 'width=device-width, initial-scale=1',
 	],
 
-	// Menus
+	/**
+	 * Menus: Registered navigation menus.
+	 */
 	'menus' => [
 		'main_menu' => __('Main menu', 'fromscratch'),
 		'footer_menu' => __('Footer menu', 'fromscratch'),
 	],
 
-	// The length of excerpts
-	'excerpt_length' => 60,
+	/**
+	 * Excerpt: used for excerpt length and more text in Settings → Theme → Design.
+	 */
+	// TODO compleately more to config in admin
+	'excerpt_length' => 60, // The length of excerpts
+	'excerpt_more' => '…', // The text to show after the excerpt if it was truncated
 
-	// The text to show after the excerpt if it was truncated
-	'excerpt_more' => '…',
-
-	// Colors
+	/**
+	 * Colors: used for colors in Settings → Theme → Design.
+	 */
 	'theme_colors' => [
 		// Primary colors
 		['slug' => 'primary', 'color' => '#00aaff', 'name' => 'Primärfarbe'],
@@ -35,7 +47,9 @@ return [
 		['slug' => 'white', 'color' => '#fff', 'name' => 'Weiß'],
 	],
 
-	// Gradients
+	/**
+	 * Gradients: used for gradients in Settings → Theme → Design.
+	 */
 	'theme_gradients' => [
 		[
 			'slug' => 'primary',
@@ -44,38 +58,20 @@ return [
 		],
 	],
 
-	// Font sizes
+	/**
+	 * Font sizes: used for typography in Settings → Theme → Design.
+	 */
 	'theme_font_sizes' => [
-		[
-			'name' => 'Klein',
-			'shortName' => 'S',
-			'size' => 14,
-			'slug' => 's',
-		],
-		[
-			'name' => 'Normal',
-			'shortName' => 'M',
-			'size' => 16,
-			'slug' => 'm',
-		],
-		[
-			'name' => 'Groß',
-			'shortName' => 'L',
-			'size' => 18,
-			'slug' => 'l',
-		],
-		[
-			'name' => 'Extra groß',
-			'shortName' => 'XL',
-			'size' => 22,
-			'slug' => 'xl',
-		],
+		['name' => 'Klein', 'shortName' => 'S', 'size' => 14, 'slug' => 's'],
+		['name' => 'Normal', 'shortName' => 'M', 'size' => 16, 'slug' => 'm'],
+		['name' => 'Groß', 'shortName' => 'L', 'size' => 18, 'slug' => 'l'],
+		['name' => 'Extra groß', 'shortName' => 'XL', 'size' => 22, 'slug' => 'xl'],
 	],
 
 	/**
-	 * Design variables: overridable in Settings → Theme Einstellungen → Design.
-	 * IDs become CSS custom properties (e.g. id "color-primary" → --color-primary).
-	 * Sections "colors", "gradients", "font_sizes" are derived from theme_colors, theme_gradients, theme_font_sizes above.
+	 * Design variables: overridable in Settings → Theme → Design.
+	 * IDs become CSS custom properties (e.g. "color-primary" → --color-primary).
+	 * Sections with 'from' => 'theme_colors' etc. are derived from the arrays above.
 	 */
 	'design' => [
 		'sections' => [
@@ -88,14 +84,8 @@ return [
 					['id' => 'color-success', 'title' => 'Erfolg', 'default' => '#5d5', 'type' => 'color'],
 				],
 			],
-			'gradients' => [
-				'title' => 'Verläufe',
-				'from' => 'theme_gradients',
-			],
-			'font_sizes' => [
-				'title' => 'Schriftgrößen',
-				'from' => 'theme_font_sizes',
-			],
+			'gradients' => ['title' => 'Verläufe', 'from' => 'theme_gradients'],
+			'font_sizes' => ['title' => 'Schriftgrößen', 'from' => 'theme_font_sizes'],
 			'typography' => [
 				'title' => 'Typografie',
 				'variables' => [
@@ -161,31 +151,33 @@ return [
 	],
 
 	/**
-	 * Extra image sizes: each is added to Settings → Media and registered with add_image_size().
-	 * width/height are fallbacks when the user hasn't changed them on Settings → Media. Set during theme install too.
+	 * Extra image sizes: added to Settings → Media and registered with add_image_size().
+	 * Width and height can be overridden in Settings → Media.
 	 */
 	'image_sizes_extra' => [
 		['slug' => 'small', 'name' => _x('Small', 'Image size', 'fromscratch'), 'width' => 600, 'height' => 600],
 	],
 
-	// SVG support: Max size in MB
-	// This is to prevent memory exhaustion and security issues
+	/**
+	 * SVG support: max file size in MB
+	 * SVGs are sanitized on upload, large filesizes can cause memory issues.
+	 */
 	'svg_max_size' => 2,
 
-	// Login limit: allowed failed attempts per minute per IP, lockout duration
-	'login_limit_attempts_min' => 3,
-	'login_limit_attempts_max' => 10,
-	'login_limit_attempts_default' => 5,
-	'login_limit_lockout_min' => 1,
-	'login_limit_lockout_max' => 10,
-	'login_limit_lockout_default' => 3,
-
-	// Site password protection: cookie duration in days (access token validity)
-	'site_password_cookie_days' => 14, // 2 weeks
+	/**
+	 * Login limit: failed attempts per minute per IP, lockout duration (from config only).
+	 */
+	'login_limit' => true, // Enable login limit
+	'login_limit_attempts' => 5, // failed attempts per minute per IP
+	'login_limit_lockout' => 3, // lockout duration in minutes
 
 	/**
-	 * HTTP response headers sent on the front-end (not admin/AJAX/REST).
-	 * Header name => value. Empty value skips the header.
+	 * Site password: cookie duration in days.
+	 */
+	'site_password_cookie_days' => 14,
+
+	/**
+	 * HTTP response headers (front-end only).
 	 */
 	'headers' => [
 		'Cache-Control' => 'no-cache, must-revalidate, max-age=0',
@@ -194,5 +186,4 @@ return [
 		'Referrer-Policy' => 'strict-origin-when-cross-origin',
 		'X-Permitted-Cross-Domain-Policies' => 'none',
 	],
-
 ];

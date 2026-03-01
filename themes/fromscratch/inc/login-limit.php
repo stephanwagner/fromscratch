@@ -4,29 +4,19 @@ defined('ABSPATH') || exit;
 
 /**
  * Limit login attempts by IP: after N failed attempts per minute, block and show wait message.
- * Values from config (login_limit_attempts_default, login_limit_lockout_default, etc.).
+ * Config: login_limit (bool), login_limit_attempts (int), login_limit_lockout (minutes).
  */
 
-/**
- * Get client IP for login limit (same as used elsewhere).
- *
- * @return string
- */
 function fs_login_limit_client_ip(): string
 {
 	return isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '';
 }
 
-/**
- * Check if IP is currently locked out; if so, return WP_Error with wait message.
- *
- * @param WP_User|WP_Error|null $user     User or error from previous filter.
- * @param string                $username Username.
- * @param string                $password Password.
- * @return WP_User|WP_Error|null
- */
 function fs_login_limit_authenticate($user, $username, $password)
 {
+	if (!function_exists('fs_config') || !fs_config('login_limit')) {
+		return $user;
+	}
 	$ip = fs_login_limit_client_ip();
 	if ($ip === '') {
 		return $user;
@@ -52,19 +42,15 @@ function fs_login_limit_authenticate($user, $username, $password)
  */
 function fs_login_limit_on_failed(string $username): void
 {
+	if (!function_exists('fs_config') || !fs_config('login_limit')) {
+		return;
+	}
 	$ip = fs_login_limit_client_ip();
 	if ($ip === '') {
 		return;
 	}
-	$attempts_default = (int) (function_exists('fs_config') ? fs_config('login_limit_attempts_default') : 5);
-	$attempts_min = (int) (function_exists('fs_config') ? fs_config('login_limit_attempts_min') : 3);
-	$attempts_max = (int) (function_exists('fs_config') ? fs_config('login_limit_attempts_max') : 10);
-	$limit = max($attempts_min, min($attempts_max, $attempts_default));
-
-	$lockout_default = (int) (function_exists('fs_config') ? fs_config('login_limit_lockout_default') : 15);
-	$lockout_min = (int) (function_exists('fs_config') ? fs_config('login_limit_lockout_min') : 1);
-	$lockout_max = (int) (function_exists('fs_config') ? fs_config('login_limit_lockout_max') : 120);
-	$lockout_minutes = max($lockout_min, min($lockout_max, $lockout_default));
+	$limit = (int) (fs_config('login_limit_attempts') ?? 5);
+	$lockout_minutes = (int) (fs_config('login_limit_lockout') ?? 3);
 
 	$key_attempts = 'fromscratch_lla_' . md5($ip);
 	$key_lockout = 'fromscratch_lla_lockout_' . md5($ip);
@@ -107,6 +93,8 @@ function fs_login_limit_on_success(string $username, WP_User $user): void
 	delete_transient('fromscratch_lla_' . md5($ip));
 }
 
-add_filter('authenticate', 'fs_login_limit_authenticate', 5, 3);
-add_action('wp_login_failed', 'fs_login_limit_on_failed', 10, 1);
-add_action('wp_login', 'fs_login_limit_on_success', 10, 2);
+if (function_exists('fs_config') && fs_config('login_limit')) {
+	add_filter('authenticate', 'fs_login_limit_authenticate', 5, 3);
+	add_action('wp_login_failed', 'fs_login_limit_on_failed', 10, 1);
+	add_action('wp_login', 'fs_login_limit_on_success', 10, 2);
+}

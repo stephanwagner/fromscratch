@@ -3,8 +3,10 @@
 defined('ABSPATH') || exit;
 
 /**
- * Theme settings: handle "Bump" asset version
+ * Theme settings page: Settings → Theme. General, Texts, Design, Security tabs.
+ * Requires inc/design.php for Design tab and sanitization.
  */
+
 add_action('load-settings_page_fs-theme-settings', function () {
 	if (!current_user_can('manage_options')) {
 		return;
@@ -20,9 +22,6 @@ add_action('load-settings_page_fs-theme-settings', function () {
 	exit;
 });
 
-/**
- * Theme settings: handle "Clear all" design overrides
- */
 add_action('load-settings_page_fs-theme-settings', function () {
 	if (!current_user_can('manage_options')) {
 		return;
@@ -36,15 +35,11 @@ add_action('load-settings_page_fs-theme-settings', function () {
 	exit;
 });
 
-/** Option group per tab so saving one tab does not affect others. */
 const FS_THEME_OPTION_GROUP_GENERAL = 'fs_theme_general';
 const FS_THEME_OPTION_GROUP_TEXTE = 'fs_theme_texte';
 const FS_THEME_OPTION_GROUP_DESIGN = 'fs_theme_design';
 const FS_THEME_OPTION_GROUP_SECURITY = 'fs_theme_security';
 
-/**
- * Register General tab options.
- */
 add_action('admin_init', function () {
 	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_asset_version', [
 		'type' => 'string',
@@ -61,9 +56,6 @@ add_action('admin_init', function () {
 	]);
 }, 5);
 
-/**
- * Register Design tab options.
- */
 add_action('admin_init', function () {
 	register_setting(FS_THEME_OPTION_GROUP_DESIGN, 'fromscratch_design', [
 		'type' => 'array',
@@ -71,9 +63,6 @@ add_action('admin_init', function () {
 	]);
 }, 5);
 
-/**
- * Register Security tab options.
- */
 add_action('admin_init', function () {
 	register_setting(FS_THEME_OPTION_GROUP_SECURITY, 'fromscratch_site_password_protection', [
 		'type' => 'string',
@@ -81,12 +70,6 @@ add_action('admin_init', function () {
 	]);
 }, 5);
 
-/**
- * Sanitize theme features option (checkboxes: enable_svg, enable_duplicate_post, enable_seo).
- *
- * @param array<string, int>|mixed $value Raw POST value.
- * @return array<string, int>
- */
 function fs_sanitize_features($value): array
 {
 	if (!is_array($value)) {
@@ -100,13 +83,6 @@ function fs_sanitize_features($value): array
 	return $out;
 }
 
-/**
- * Sanitize site password protection checkbox and update stored password from field.
- * Non-empty field: set new password. Empty field and save: clear password (reset).
- *
- * @param mixed $value Raw POST value for the checkbox.
- * @return string '1' or ''
- */
 function fs_sanitize_site_password_protection($value): string
 {
 	$enabled = !empty($value) ? '1' : '';
@@ -121,284 +97,6 @@ function fs_sanitize_site_password_protection($value): string
 	return $enabled;
 }
 
-/**
- * Check whether a theme feature is enabled (Settings → Theme → General).
- * When the option was never saved, all features are considered enabled.
- *
- * @param string $feature One of: blogs, svg, duplicate_post, seo.
- * @return bool
- */
-function fs_theme_feature_enabled(string $feature): bool
-{
-	$map = [
-		'blogs' => 'enable_blogs',
-		'svg' => 'enable_svg',
-		'duplicate_post' => 'enable_duplicate_post',
-		'seo' => 'enable_seo',
-	];
-	$key = $map[$feature] ?? '';
-	if ($key === '') {
-		return false;
-	}
-	$options = get_option('fromscratch_features', []);
-	if (!is_array($options) || !array_key_exists($key, $options)) {
-		return true;
-	}
-	return (int) $options[$key] === 1;
-}
-
-/**
- * Sanitize a string for use as CSS custom property value (prevent breaking out of :root block).
- *
- * @param string $value Raw value.
- * @return string Safe value (allowed: alphanumeric, space, #.,()%-_/:;"' and common units).
- */
-function fs_sanitize_css_custom_property_value(string $value): string
-{
-	$value = preg_replace('/[^\w\s#.,()%\-\/_\\:;"\']/', '', $value);
-	$value = str_replace(["\r", "\n", "\t", '<', '>'], '', $value);
-	return substr($value, 0, 500);
-}
-
-/**
- * Get all design variables as a flat list from config (id, title, default, type).
- * Sections with 'from' => 'theme_colors' are built from config theme_colors (single source for WP panel + Design tab).
- *
- * @return array<int, array{id: string, title: string, default: string, type: string}>
- */
-function fs_get_design_variables_list(): array
-{
-	$sections = fs_config('design.sections');
-	if (!is_array($sections)) {
-		return [];
-	}
-	$list = [];
-	foreach ($sections as $section) {
-		$variables = [];
-
-		if (!empty($section['from']) && $section['from'] === 'theme_colors') {
-			$theme_colors = fs_config('theme_colors');
-			if (is_array($theme_colors)) {
-				foreach ($theme_colors as $tc) {
-					if (!empty($tc['slug']) && isset($tc['color'])) {
-						$variables[] = [
-							'id' => 'color-' . (string) $tc['slug'],
-							'title' => isset($tc['name']) ? (string) $tc['name'] : (string) $tc['slug'],
-							'default' => (string) $tc['color'],
-							'type' => 'color',
-						];
-					}
-				}
-			}
-		}
-
-		if (!empty($section['from']) && $section['from'] === 'theme_gradients') {
-			$theme_gradients = fs_config('theme_gradients');
-			if (is_array($theme_gradients)) {
-				foreach ($theme_gradients as $tg) {
-					if (!empty($tg['slug']) && isset($tg['gradient'])) {
-						$variables[] = [
-							'id' => 'gradient-' . (string) $tg['slug'],
-							'title' => isset($tg['name']) ? (string) $tg['name'] : (string) $tg['slug'],
-							'default' => (string) $tg['gradient'],
-							'type' => 'text',
-						];
-					}
-				}
-			}
-		}
-
-		if (!empty($section['from']) && $section['from'] === 'theme_font_sizes') {
-			$theme_font_sizes = fs_config('theme_font_sizes');
-			if (is_array($theme_font_sizes)) {
-				foreach ($theme_font_sizes as $tfs) {
-					if (!empty($tfs['slug']) && isset($tfs['size'])) {
-						$variables[] = [
-							'id' => 'font-size-' . (string) $tfs['slug'],
-							'title' => isset($tfs['name']) ? (string) $tfs['name'] : (string) $tfs['slug'],
-							'default' => (string) $tfs['size'] . 'px',
-							'type' => 'text',
-						];
-					}
-				}
-			}
-		}
-
-		if (!empty($section['variables']) && is_array($section['variables'])) {
-			foreach ($section['variables'] as $v) {
-				if (!empty($v['id']) && isset($v['default'])) {
-					$variables[] = [
-						'id' => (string) $v['id'],
-						'title' => isset($v['title']) ? (string) $v['title'] : $v['id'],
-						'default' => (string) $v['default'],
-						'type' => isset($v['type']) && in_array($v['type'], ['color', 'text'], true) ? $v['type'] : 'text',
-					];
-				}
-			}
-		}
-
-		foreach ($variables as $v) {
-			$list[] = $v;
-		}
-	}
-	return $list;
-}
-
-/**
- * Get design sections with variables resolved (theme_colors, theme_gradients, theme_font_sizes expanded).
- * Use this for the Design tab UI so each section has a full 'variables' array.
- *
- * @return array<string, array{title: string, variables: array<int, array{id: string, title: string, default: string, type: string}>}>
- */
-function fs_get_design_sections_resolved(): array
-{
-	$sections = fs_config('design.sections');
-	if (!is_array($sections)) {
-		return [];
-	}
-	$resolved = [];
-	foreach ($sections as $section_id => $section) {
-		$variables = [];
-
-		if (!empty($section['from']) && $section['from'] === 'theme_colors') {
-			$theme_colors = fs_config('theme_colors');
-			if (is_array($theme_colors)) {
-				foreach ($theme_colors as $tc) {
-					if (!empty($tc['slug']) && isset($tc['color'])) {
-						$variables[] = [
-							'id' => 'color-' . (string) $tc['slug'],
-							'title' => isset($tc['name']) ? (string) $tc['name'] : (string) $tc['slug'],
-							'default' => (string) $tc['color'],
-							'type' => 'color',
-						];
-					}
-				}
-			}
-		}
-
-		if (!empty($section['from']) && $section['from'] === 'theme_gradients') {
-			$theme_gradients = fs_config('theme_gradients');
-			if (is_array($theme_gradients)) {
-				foreach ($theme_gradients as $tg) {
-					if (!empty($tg['slug']) && isset($tg['gradient'])) {
-						$variables[] = [
-							'id' => 'gradient-' . (string) $tg['slug'],
-							'title' => isset($tg['name']) ? (string) $tg['name'] : (string) $tg['slug'],
-							'default' => (string) $tg['gradient'],
-							'type' => 'text',
-						];
-					}
-				}
-			}
-		}
-
-		if (!empty($section['from']) && $section['from'] === 'theme_font_sizes') {
-			$theme_font_sizes = fs_config('theme_font_sizes');
-			if (is_array($theme_font_sizes)) {
-				foreach ($theme_font_sizes as $tfs) {
-					if (!empty($tfs['slug']) && isset($tfs['size'])) {
-						$variables[] = [
-							'id' => 'font-size-' . (string) $tfs['slug'],
-							'title' => isset($tfs['name']) ? (string) $tfs['name'] : (string) $tfs['slug'],
-							'default' => (string) $tfs['size'] . 'px',
-							'type' => 'text',
-						];
-					}
-				}
-			}
-		}
-
-		if (!empty($section['variables']) && is_array($section['variables'])) {
-			foreach ($section['variables'] as $v) {
-				if (!empty($v['id']) && isset($v['default'])) {
-					$variables[] = [
-						'id' => (string) $v['id'],
-						'title' => isset($v['title']) ? (string) $v['title'] : $v['id'],
-						'default' => (string) $v['default'],
-						'type' => isset($v['type']) && in_array($v['type'], ['color', 'text'], true) ? $v['type'] : 'text',
-					];
-				}
-			}
-		}
-
-		if ($variables !== []) {
-			$resolved[$section_id] = [
-				'title' => isset($section['title']) ? (string) $section['title'] : $section_id,
-				'variables' => $variables,
-			];
-		}
-	}
-	return $resolved;
-}
-
-/**
- * Get the override value for a design variable (saved custom value only). Empty string when using default.
- * Use for the form input value: show override if set, else empty so placeholder (default) is visible.
- *
- * @param string $id Variable id (e.g. "color-primary").
- * @return string Override value or '' when using default.
- */
-function fs_design_variable_override(string $id): string
-{
-	$saved = get_option('fromscratch_design', []);
-	if (is_array($saved) && array_key_exists($id, $saved) && $saved[$id] !== '') {
-		return (string) $saved[$id];
-	}
-	return '';
-}
-
-/**
- * Get effective value for a design variable (override if set, otherwise default from config).
- * Use for CSS output and anywhere the final value is needed.
- *
- * @param string $id Variable id (e.g. "color-primary").
- * @return string
- */
-function fs_design_variable_value(string $id): string
-{
-	$override = fs_design_variable_override($id);
-	if ($override !== '') {
-		return $override;
-	}
-	foreach (fs_get_design_variables_list() as $v) {
-		if ($v['id'] === $id) {
-			return $v['default'];
-		}
-	}
-	return '';
-}
-
-/**
- * Sanitize design variables on save: only persist non-empty overrides. Empty field = use default (do not store).
- *
- * @param array<string, string>|mixed $input Posted values.
- * @return array<string, string>
- */
-function fs_sanitize_design_variables($input): array
-{
-	$vars = fs_get_design_variables_list();
-	$by_id = [];
-	foreach ($vars as $v) {
-		$by_id[$v['id']] = $v;
-	}
-	$result = [];
-	$input = is_array($input) ? $input : [];
-	foreach ($by_id as $id => $def) {
-		$val = isset($input[$id]) ? $input[$id] : '';
-		$val = is_string($val) ? trim($val) : '';
-		if ($val === '') {
-			continue;
-		}
-		$result[$id] = sanitize_text_field($val);
-	}
-	return $result;
-}
-
-/**
- * Theme settings: one menu page with three tab-URLs (?tab=general|texte|design). Tabs are links to different URLs.
- *
- * @return void
- */
 function theme_settings_page(): void
 {
 	if (!current_user_can('manage_options')) {
@@ -420,7 +118,7 @@ function theme_settings_page(): void
 	$clear_design_url = wp_nonce_url(add_query_arg(['fromscratch_clear_design' => '1', 'tab' => 'design'], $base_url), 'fromscratch_clear_design');
 ?>
 	<div class="wrap">
-		<h1><?= esc_html(fs_config_variables('title_page')) ?></h1>
+		<h1><?= esc_html(fs_config_settings('title_page')) ?></h1>
 		<?php if ($bump_notice !== false && $tab === 'general') : ?>
 			<div class="notice notice-success is-dismissible"><p><strong><?= esc_html(sprintf(__('Asset version increased to %s.', 'fromscratch'), $bump_notice)) ?></strong></p></div>
 		<?php endif; ?>
@@ -514,7 +212,7 @@ function theme_settings_page(): void
 		<form method="post" action="options.php" class="page-settings-form">
 			<?php settings_fields(FS_THEME_OPTION_GROUP_TEXTE); ?>
 			<?php
-			foreach (fs_config_variables('variables.sections') as $section) {
+			foreach (fs_config_settings('variables.sections') as $section) {
 				do_settings_sections('theme_variables_' . $section['id']);
 			}
 			?>
@@ -579,7 +277,7 @@ function theme_settings_page(): void
 		});
 		</script>
 		<?php else : ?>
-		<p class="description" style="margin-bottom: 8px;"><?= esc_html__('Override SCSS design variables. Values are output as CSS custom properties (:root). Add new variables in config.php under design.sections.', 'fromscratch') ?></p>
+		<p class="description" style="margin-bottom: 8px;"><?= esc_html__('Override SCSS design variables. Values are output as CSS custom properties (:root). Add new variables in config/theme.php under design.sections.', 'fromscratch') ?></p>
 		<p style="margin-bottom: 16px;">
 			<a href="<?= esc_url($clear_design_url) ?>" class="button" onclick="return confirm('<?= esc_js(__('Reset all design overrides to defaults?', 'fromscratch')) ?>');"><?= esc_html__('Clear all', 'fromscratch') ?></a>
 		</p>
@@ -628,55 +326,41 @@ function theme_settings_page(): void
 <?php
 }
 
-/**
- * Output a single template variable field (text or textarea) for the theme settings page.
- *
- * @param array<string,mixed> $variable   Variable config (type, width, rows, description, etc.).
- * @param string              $variableId Option name / field name.
- * @param string|null         $languageId Optional language code for translatable fields.
- * @return void
- */
 function display_custom_info_field($variable, $variableId, $languageId = null): void
 {
 	if ($languageId) {
 		echo '<div class="page-settings-language-container page-settings-language-container-' . $languageId . '">';
 	}
-
 	switch ($variable['type']) {
 		case 'textfield':
-			echo '<input class="settings-page-textfield" type="text" name="' . $variableId . '" value="' . get_option($variableId) . '" style="width: ' . $variable['width'] . 'px">';
-			echo '<div style="color: #999; font-size: 12px; margin: 4px 0 0 4px; font-family: monospace;">' . $variableId . '</div>';
+			echo '<input class="settings-page-textfield" type="text" name="' . esc_attr($variableId) . '" value="' . esc_attr(get_option($variableId, '')) . '" style="width: ' . (int) ($variable['width'] ?? 400) . 'px">';
+			echo '<div style="color: #999; font-size: 12px; margin: 4px 0 0 4px; font-family: monospace;">' . esc_html($variableId) . '</div>';
 			break;
 		case 'textarea':
-			echo '<textarea class="settings-page-textfield" name="' . $variableId . '" rows="' . $variable['rows'] . '" style="width: ' . $variable['width'] . 'px">' . get_option($variableId) . '</textarea>';
-			echo '<div style="color: #999; font-size: 12px; margin: 4px 0 0 4px; font-family: monospace;">' . $variableId . '</div>';
+			echo '<textarea class="settings-page-textfield" name="' . esc_attr($variableId) . '" rows="' . (int) ($variable['rows'] ?? 4) . '" style="width: ' . (int) ($variable['width'] ?? 400) . 'px">' . esc_textarea(get_option($variableId, '')) . '</textarea>';
+			echo '<div style="color: #999; font-size: 12px; margin: 4px 0 0 4px; font-family: monospace;">' . esc_html($variableId) . '</div>';
 			break;
 	}
-
 	if (!empty($variable['description'])) {
-		echo '<div class="page-settings-description">' . $variable['description'] . '</div>';
+		echo '<div class="page-settings-description">' . esc_html($variable['description']) . '</div>';
 	}
-
 	if ($languageId) {
 		echo '</div>';
 	}
 }
 
-/**
- * Register settings sections and fields for theme variables (Texte tab).
- *
- * @return void
- */
 function display_custom_info_fields(): void
 {
-	foreach (fs_config_variables('variables.sections') as $section) {
+	$sections = fs_config_settings('variables.sections');
+	if (!is_array($sections)) {
+		return;
+	}
+	foreach ($sections as $section) {
 		add_settings_section('section', $section['title'], null, 'theme_variables_' . $section['id']);
-
 		foreach ($section['variables'] as $variable) {
 			$variableId = 'theme_variables_' . $section['id'] . '_' . $variable['id'];
-
 			if (!empty($variable['translate'])) {
-				foreach (fs_config_variables('languages') as $language) {
+				foreach (fs_config_settings('languages') as $language) {
 					$variableIdLang = $variableId . '_' . $language['id'];
 					add_settings_field($variableIdLang, $variable['title'], function () use ($variable, $variableIdLang, $language) {
 						display_custom_info_field($variable, $variableIdLang, $language['id']);
@@ -694,24 +378,19 @@ function display_custom_info_fields(): void
 }
 add_action('admin_init', 'display_custom_info_fields');
 
-/**
- * Add theme settings (one menu item) under Settings. Tabs are separate URLs: ?page=fs-theme-settings&tab=general|texte|design.
- *
- * @return void
- */
-function add_custom_info_menu_item(): void
+function add_theme_settings_menu_item(): void
 {
 	add_submenu_page(
 		'options-general.php',
-		fs_config_variables('title_page'),
-		fs_config_variables('title_menu'),
+		fs_config_settings('title_page'),
+		fs_config_settings('title_menu'),
 		'manage_options',
 		'fs-theme-settings',
 		'theme_settings_page',
 		0
 	);
 }
-add_action('admin_menu', 'add_custom_info_menu_item', 1);
+add_action('admin_menu', 'add_theme_settings_menu_item', 1);
 
 add_filter('submenu_file', function ($submenu_file, $parent_file) {
 	if ($parent_file === 'options-general.php' && isset($_GET['page']) && $_GET['page'] === 'fs-theme-settings') {
@@ -719,26 +398,3 @@ add_filter('submenu_file', function ($submenu_file, $parent_file) {
 	}
 	return $submenu_file;
 }, 10, 2);
-
-/**
- * Output :root { --var: value; } for design variables so SCSS var() picks them up.
- *
- * @return void
- */
-function fs_output_design_css(): void
-{
-	$vars = fs_get_design_variables_list();
-	if ($vars === []) {
-		return;
-	}
-	$lines = [];
-	foreach ($vars as $v) {
-		$value = fs_design_variable_value($v['id']);
-		$value = fs_sanitize_css_custom_property_value($value);
-		$lines[] = '  --' . $v['id'] . ': ' . $value . ';';
-	}
-	if ($lines === []) {
-		return;
-	}
-	echo "\n<style id=\"fromscratch-design-vars\">\n:root {\n" . implode("\n", $lines) . "\n}\n</style>\n";
-}

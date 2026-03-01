@@ -413,8 +413,8 @@ msgstr "Minuten"
 msgid "How long to block login after the limit is reached.<br>Allowed range: %d - %d."
 msgstr "Wie lange die Anmeldung nach Erreichen des Limits blockiert wird.<br>Erlaubter Bereich: %d - %d."
 
-msgid "Override SCSS design variables. Values are output as CSS custom properties (:root). Add new variables in config.php under design.sections."
-msgstr "SCSS-Designvariablen überschreiben. Werte werden als CSS-Custom-Properties (:root) ausgegeben. Neue Variablen in config.php unter design.sections hinzufügen."
+msgid "Override SCSS design variables. Values are output as CSS custom properties (:root). Add new variables in config/theme.php under design.sections."
+msgstr "SCSS-Designvariablen überschreiben. Werte werden als CSS-Custom-Properties (:root) ausgegeben. Neue Variablen in config/theme.php unter design.sections hinzufügen."
 
 msgid "Reset all design overrides to defaults?"
 msgstr "Alle Design-Überschreibungen auf Standard zurücksetzen?"

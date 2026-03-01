@@ -3,12 +3,12 @@
 defined('ABSPATH') || exit;
 
 /**
- * Register custom post types from config-cpt.php.
+ * Register custom post types from config/cpt.php.
  * Registered CPTs are picked up by the SEO panel (fs_seo_post_types) when they support the editor.
  */
 
 /**
- * Register all CPTs defined in config-cpt.php.
+ * Register all CPTs defined in config/cpt.php.
  *
  * @return void
  */
