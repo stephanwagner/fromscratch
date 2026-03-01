@@ -156,7 +156,7 @@ function fs_render_developer_settings_page(): void
 
 		<nav class="nav-tab-wrapper wp-clearfix" aria-label="Secondary menu">
 			<?php foreach (FS_DEVELOPER_TABS as $slug => $def) : ?>
-				<a href="<?= esc_url(add_query_arg('tab', $slug, $base_url)) ?>" class="nav-tab <?= $tab === $slug ? 'nav-tab-active' : '' ?>"><?= esc_html(__($def['label'], 'fromscratch')) ?><?php if ($slug === 'security' && get_option('fromscratch_site_password_protection') === '1' && get_option('fromscratch_site_password_hash', '') !== '') : ?> <span class="dashicons dashicons-lock" style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle; margin-left: 2px;" aria-hidden="true"></span><?php endif; ?></a>
+				<a href="<?= esc_url(add_query_arg('tab', $slug, $base_url)) ?>" class="nav-tab <?= $tab === $slug ? 'nav-tab-active' : '' ?>"><?= esc_html(__($def['label'], 'fromscratch')) ?><?php if ($slug === 'security') : ?><?php if (get_option('fromscratch_site_password_protection') === '1' && get_option('fromscratch_site_password_hash', '') !== '') : ?> <span class="dashicons dashicons-lock" style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle; margin-left: 2px;" aria-hidden="true"></span><?php endif; ?><?php if (get_option('fromscratch_maintenance_mode') === '1') : ?> <span class="dashicons dashicons-admin-tools" style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle; margin-left: 2px;" aria-hidden="true"></span><?php endif; ?><?php endif; ?></a>
 			<?php endforeach; ?>
 		</nav>
 
@@ -308,7 +308,11 @@ function fs_render_developer_settings_page(): void
 		<?php
 			$site_password_on = get_option('fromscratch_site_password_protection') === '1';
 			$site_password_hash = get_option('fromscratch_site_password_hash', '');
+			$maintenance_on = get_option('fromscratch_maintenance_mode') === '1';
 		?>
+		<?php if (($site_password_on || $maintenance_on) && is_user_logged_in() && (current_user_can('edit_posts') || current_user_can('manage_options'))) : ?>
+		<div class="notice notice-info inline" style="margin: 0 0 16px 0;"><p><?= esc_html__('Because you are logged in as an administrator or editor, you can still access the frontend. Open the site in a private or incognito window (or log out) to see the maintenance or password page.', 'fromscratch') ?></p></div>
+		<?php endif; ?>
 		<?php if ($site_password_on && $site_password_hash === '') : ?>
 		<div class="notice notice-warning inline" style="margin: 0 0 16px 0;"><p><?= esc_html__('No password set. Set a password below to activate protection.', 'fromscratch') ?></p></div>
 		<?php endif; ?>
@@ -343,6 +347,34 @@ function fs_render_developer_settings_page(): void
 								<span>passwordcopy.app</span>
 							</a>
 						</p>
+					</td>
+				</tr>
+			</table>
+			<h2 class="title" style="margin-top: 28px;"><?= esc_html__('Maintenance mode', 'fromscratch') ?></h2>
+			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('When enabled, the entire frontend is blocked with HTTP 503. Logged-in administrators and editors can still view the site.', 'fromscratch') ?></p>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?= esc_html__('Activate', 'fromscratch') ?></th>
+					<td>
+						<label>
+							<input type="hidden" name="fromscratch_maintenance_mode" value="0">
+							<input type="checkbox" name="fromscratch_maintenance_mode" value="1" <?= checked(get_option('fromscratch_maintenance_mode'), '1', false) ?>>
+							<?= esc_html__('Enable maintenance mode', 'fromscratch') ?>
+						</label>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="fromscratch_maintenance_title"><?= esc_html__('Title', 'fromscratch') ?></label></th>
+					<td>
+						<input type="text" name="fromscratch_maintenance_title" id="fromscratch_maintenance_title" value="<?= esc_attr(get_option('fromscratch_maintenance_title', '')) ?>" class="regular-text" placeholder="<?= esc_attr__('Maintenance', 'fromscratch') ?>">
+						<p class="description"><?= esc_html__('Heading shown on the maintenance page. Leave blank for default.', 'fromscratch') ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="fromscratch_maintenance_description"><?= esc_html__('Description', 'fromscratch') ?></label></th>
+					<td>
+						<textarea name="fromscratch_maintenance_description" id="fromscratch_maintenance_description" rows="3" class="large-text"><?= esc_textarea(get_option('fromscratch_maintenance_description', '')) ?></textarea>
+						<p class="description"><?= esc_html__('Short message shown below the title. Leave blank for default.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 			</table>

@@ -200,6 +200,18 @@ add_action('admin_init', function () {
 		'type' => 'string',
 		'sanitize_callback' => 'fs_sanitize_site_password_protection',
 	]);
+	register_setting(FS_THEME_OPTION_GROUP_SECURITY, 'fromscratch_maintenance_mode', [
+		'type' => 'string',
+		'sanitize_callback' => 'fs_sanitize_maintenance_mode',
+	]);
+	register_setting(FS_THEME_OPTION_GROUP_SECURITY, 'fromscratch_maintenance_title', [
+		'type' => 'string',
+		'sanitize_callback' => 'fs_sanitize_maintenance_title',
+	]);
+	register_setting(FS_THEME_OPTION_GROUP_SECURITY, 'fromscratch_maintenance_description', [
+		'type' => 'string',
+		'sanitize_callback' => 'fs_sanitize_maintenance_description',
+	]);
 }, 5);
 
 add_action('admin_init', function () {
@@ -418,6 +430,23 @@ function fs_sanitize_site_password_protection($value): string
 		update_option('fromscratch_site_password_plain', '', true);
 	}
 	return $enabled;
+}
+
+function fs_sanitize_maintenance_mode($value): string
+{
+	return !empty($value) ? '1' : '';
+}
+
+function fs_sanitize_maintenance_title($value): string
+{
+	$value = is_string($value) ? trim($value) : '';
+	return sanitize_text_field($value);
+}
+
+function fs_sanitize_maintenance_description($value): string
+{
+	$value = is_string($value) ? trim($value) : '';
+	return sanitize_textarea_field($value);
 }
 
 function theme_settings_page(): void
