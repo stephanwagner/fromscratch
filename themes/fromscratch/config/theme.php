@@ -21,13 +21,6 @@ return [
 	],
 
 	/**
-	 * Excerpt: used for excerpt length and more text in Settings → Theme → Design.
-	 */
-	// TODO compleately more to config in admin
-	'excerpt_length' => 60, // The length of excerpts
-	'excerpt_more' => '…', // The text to show after the excerpt if it was truncated
-
-	/**
 	 * Colors: used for colors in Settings → Theme → Design.
 	 */
 	'theme_colors' => [

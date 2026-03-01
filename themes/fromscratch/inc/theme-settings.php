@@ -121,9 +121,17 @@ add_action('admin_init', function () {
 		'default' => '1',
 		'sanitize_callback' => 'fs_sanitize_asset_version',
 	]);
-	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'admin_email', [
+	register_setting(FS_THEME_OPTION_GROUP_DEVELOPER, 'admin_email', [
 		'type' => 'string',
 		'sanitize_callback' => 'sanitize_email',
+	]);
+	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_excerpt_length', [
+		'type' => 'string',
+		'sanitize_callback' => 'fs_sanitize_excerpt_length',
+	]);
+	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_excerpt_more', [
+		'type' => 'string',
+		'sanitize_callback' => 'sanitize_text_field',
 	]);
 }, 5);
 
@@ -159,6 +167,16 @@ function fs_sanitize_asset_version($value): string
 		return (string) get_option('fromscratch_asset_version', '1');
 	}
 	return sanitize_text_field($value);
+}
+
+function fs_sanitize_excerpt_length($value): string
+{
+	$value = is_string($value) ? trim($value) : '';
+	if ($value === '') {
+		return '';
+	}
+	$n = absint($value);
+	return (string) ($n > 0 ? $n : '');
 }
 
 function fs_sanitize_features($value): array
@@ -244,15 +262,32 @@ function theme_settings_page(): void
 		<?php if ($tab === 'general') : ?>
 		<form method="post" action="options.php" class="page-settings-form">
 			<?php settings_fields(FS_THEME_OPTION_GROUP_GENERAL); ?>
-			<h2 class="title"><?= esc_html__('Site', 'fromscratch') ?></h2>
+			<h2 class="title"><?= esc_html__('Excerpt', 'fromscratch') ?></h2>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row">
-						<label for="admin_email"><?= esc_html__('Administrator email', 'fromscratch') ?></label>
+						<label for="fromscratch_excerpt_length"><?= esc_html__('Excerpt length', 'fromscratch') ?></label>
 					</th>
 					<td>
-						<input type="email" name="admin_email" id="admin_email" value="<?= esc_attr(get_option('admin_email')) ?>" class="regular-text">
-						<p class="description"><?= esc_html__('Changes the Administrator email instantly without notifying.', 'fromscratch') ?></p>
+						<?php
+						$excerpt_length_opt = get_option('fromscratch_excerpt_length', '');
+						$excerpt_length_val = $excerpt_length_opt !== '' ? $excerpt_length_opt : '60';
+						?>
+						<input type="number" name="fromscratch_excerpt_length" id="fromscratch_excerpt_length" value="<?= esc_attr($excerpt_length_val) ?>" min="1" max="999" step="1" class="small-text">
+						<p class="description"><?= esc_html__('Number of words used when trimming excerpts.', 'fromscratch') ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">
+						<label for="fromscratch_excerpt_more"><?= esc_html__('Excerpt "more" text', 'fromscratch') ?></label>
+					</th>
+					<td>
+						<?php
+						$excerpt_more_opt = get_option('fromscratch_excerpt_more');
+						$excerpt_more_val = $excerpt_more_opt !== false ? $excerpt_more_opt : '…';
+						?>
+						<input type="text" name="fromscratch_excerpt_more" id="fromscratch_excerpt_more" value="<?= esc_attr($excerpt_more_val) ?>" class="small-text" maxlength="20">
+						<p class="description"><?= esc_html__('Text shown after the excerpt when it is truncated (e.g. …). Leave blank for none.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 			</table>

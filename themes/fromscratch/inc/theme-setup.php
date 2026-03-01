@@ -105,24 +105,32 @@ add_action('after_setup_theme', function () {
 }, 20);
 
 /**
- * Filter excerpt length from config.
+ * Filter excerpt length from Theme settings (Settings → Theme → General).
  *
  * @return int Length used when trimming excerpts.
  */
 function fs_excerpt_length(): int
 {
-	return (int) fs_config('excerpt_length');
+	$opt = get_option('fromscratch_excerpt_length', '');
+	if ($opt !== '') {
+		return (int) $opt;
+	}
+	return 60;
 }
 add_filter('excerpt_length', 'fs_excerpt_length');
 
 /**
- * Filter excerpt "more" string from config.
+ * Filter excerpt "more" string from Theme settings (Settings → Theme → General).
  *
  * @return string Text shown after truncated excerpt (e.g. "…").
  */
 function fs_excerpt_more(): string
 {
-	return (string) fs_config('excerpt_more');
+	$opt = get_option('fromscratch_excerpt_more');
+	if ($opt !== false) {
+		return (string) $opt;
+	}
+	return '…';
 }
 add_filter('excerpt_more', 'fs_excerpt_more');
 

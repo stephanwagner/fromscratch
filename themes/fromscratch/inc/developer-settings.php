@@ -3,12 +3,12 @@
 defined('ABSPATH') || exit;
 
 /**
- * Settings → Developer. Developer-only page with tabs: Cache, Features, Access, Tools.
+ * Settings → Developer. Developer-only page with tabs: General, Features, Access, Tools.
  * Requires theme-settings.php for option group constants.
  */
 
 const FS_DEVELOPER_TABS = [
-	'cache'    => ['label' => 'Cache'],
+	'general'  => ['label' => 'General'],
 	'features' => ['label' => 'Features'],
 	'access'   => ['label' => 'User rights'],
 	'tools'    => ['label' => 'Tools'],
@@ -36,7 +36,7 @@ add_action('load-settings_page_fs-developer-settings', function () {
 	$next = is_numeric($current) ? (string) ((int) $current + 1) : '2';
 	update_option('fromscratch_asset_version', $next);
 	set_transient('fromscratch_bump_notice', $next, 30);
-	wp_safe_redirect(admin_url('options-general.php?page=fs-developer-settings&tab=cache'));
+	wp_safe_redirect(admin_url('options-general.php?page=fs-developer-settings&tab=general'));
 	exit;
 });
 
@@ -80,11 +80,11 @@ function fs_render_developer_settings_page(): void
 	if ($bump_notice !== false) {
 		delete_transient('fromscratch_bump_notice');
 	}
-	$bump_url = wp_nonce_url(add_query_arg(['fromscratch_bump' => '1', 'tab' => 'cache'], $base_url), 'fromscratch_bump_asset_version');
+	$bump_url = wp_nonce_url(add_query_arg(['fromscratch_bump' => '1', 'tab' => 'general'], $base_url), 'fromscratch_bump_asset_version');
 ?>
 	<div class="wrap">
 		<h1><?= esc_html(__('Developer', 'fromscratch')) ?></h1>
-		<?php if ($bump_notice !== false && $tab === 'cache') : ?>
+		<?php if ($bump_notice !== false && $tab === 'general') : ?>
 			<div class="notice notice-success is-dismissible"><p><strong><?= esc_html(sprintf(__('Asset version increased to %s.', 'fromscratch'), $bump_notice)) ?></strong></p></div>
 		<?php endif; ?>
 
@@ -94,7 +94,7 @@ function fs_render_developer_settings_page(): void
 			<?php endforeach; ?>
 		</nav>
 
-		<?php if ($tab === 'cache') : ?>
+		<?php if ($tab === 'general') : ?>
 		<?php $asset_version = get_option('fromscratch_asset_version', '1'); ?>
 		<h2 class="title"><?= esc_html__('Cache', 'fromscratch') ?></h2>
 		<p class="description" style="margin-bottom: 8px;"><?= esc_html__('Use fs_asset_url( \'/path/to/file.css\' ) in templates to output the asset URL with ?ver= so the browser cache updates when you bump the version.', 'fromscratch') ?></p>
@@ -108,6 +108,22 @@ function fs_render_developer_settings_page(): void
 				</td>
 			</tr>
 		</table>
+		<h2 class="title" style="margin-top: 24px;"><?= esc_html__('Administrator email', 'fromscratch') ?></h2>
+		<form method="post" action="options.php" class="page-settings-form">
+			<?php settings_fields(FS_THEME_OPTION_GROUP_DEVELOPER); ?>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row">
+						<label for="admin_email"><?= esc_html__('Administrator email', 'fromscratch') ?></label>
+					</th>
+					<td>
+						<input type="email" name="admin_email" id="admin_email" value="<?= esc_attr(get_option('admin_email')) ?>" class="regular-text">
+						<p class="description"><?= esc_html__('Changes the Administrator email instantly without notifying.', 'fromscratch') ?></p>
+					</td>
+				</tr>
+			</table>
+			<p class="submit"><?php submit_button(); ?></p>
+		</form>
 
 		<?php elseif ($tab === 'features') : ?>
 		<?php
