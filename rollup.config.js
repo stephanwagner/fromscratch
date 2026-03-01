@@ -19,7 +19,7 @@ export default [
   {
     input: `${base}/src/js/main/main.js`,
     output: {
-      file: `${base}/js/main${prod ? '.min' : ''}.js`,
+      file: `${base}/assets/js/main${prod ? '.min' : ''}.js`,
       format: 'iife',
       sourcemap: !prod,
     },
@@ -43,7 +43,7 @@ export default [
   {
     input: `${base}/src/js/admin/admin.js`,
     output: {
-      file: `${base}/js/admin${prod ? '.min' : ''}.js`,
+      file: `${base}/assets/js/admin${prod ? '.min' : ''}.js`,
       format: 'iife',
       sourcemap: !prod,
     },
@@ -68,7 +68,7 @@ export default [
     input: `${base}/src/js/editor/editor.js`,
     external: ['wp'],
     output: {
-      file: `${base}/js/editor${prod ? '.min' : ''}.js`,
+      file: `${base}/assets/js/editor${prod ? '.min' : ''}.js`,
       format: 'iife',
       globals: { wp: 'wp' },
       sourcemap: !prod,

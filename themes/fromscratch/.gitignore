@@ -1,5 +1,5 @@
 # assets
-/js/*
-!/js/.gitkeep
-/css/*
-!/css/.gitkeep
+/assets/js/*
+!/assets/js/.gitkeep
+/assets/css/*
+!/assets/css/.gitkeep

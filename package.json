@@ -7,12 +7,12 @@
   "scripts": {
     "watch": "concurrently \"npm run watch:js\" \"npm run watch:css\"",
     "watch:js": "MODE=dev rollup -c -w",
-    "watch:css": "sass themes/fromscratch/src/scss:themes/fromscratch/css --watch --source-map",
+    "watch:css": "sass themes/fromscratch/src/scss/main.scss:themes/fromscratch/assets/css/main.css themes/fromscratch/src/scss/admin.scss:themes/fromscratch/assets/css/admin.css --watch --source-map",
     "build": "npm run build:js && npm run build:css",
     "build:js": "MODE=dev rollup -c && MODE=prod rollup -c",
-    "build:css": "npm run build:css:dev && npm run build:css:prod && (test -d themes/fromscratch/css/min && rm -rf themes/fromscratch/css/min || true)",
-    "build:css:dev": "sass themes/fromscratch/src/scss:themes/fromscratch/css --style=expanded --source-map",
-    "build:css:prod": "sass themes/fromscratch/src/scss/min:themes/fromscratch/css --style=compressed --no-source-map"
+    "build:css": "npm run build:css:dev && npm run build:css:prod",
+    "build:css:dev": "sass themes/fromscratch/src/scss/main.scss:themes/fromscratch/assets/css/main.css themes/fromscratch/src/scss/admin.scss:themes/fromscratch/assets/css/admin.css --style=expanded --source-map",
+    "build:css:prod": "sass themes/fromscratch/src/scss/min:themes/fromscratch/assets/css --style=compressed --no-source-map"
   },
   "dependencies": {
     "countup.js": "^2.9.0",

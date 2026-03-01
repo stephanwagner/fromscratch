@@ -3,12 +3,12 @@
   "name": "fromscratch",
   "icons": [
     {
-      "src": "/wp-content/themes/fromscratch/img/favicon-192.png",
+      "src": "/wp-content/themes/fromscratch/assets/img/favicon-192.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "/wp-content/themes/fromscratch/img/favicon.png",
+      "src": "/wp-content/themes/fromscratch/assets/img/favicon.png",
       "type": "image/png",
       "sizes": "512x512"
     }
