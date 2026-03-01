@@ -121,7 +121,8 @@ add_action(FS_EXPIRE_POST_HOOK, function (int $post_id): void {
 });
 
 /**
- * On load, catch any past-due expirations (e.g. missed cron, or date set in the past).
+ * Catch-up for past-due expirations (missed cron or date set in the past).
+ * Runs at most once per hour via transient to avoid a DB query on every request.
  */
 add_action('init', function (): void {
 	if (wp_doing_cron() || wp_doing_ajax()) {
@@ -130,6 +131,11 @@ add_action('init', function (): void {
 	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('post_expirator')) {
 		return;
 	}
+	if (get_transient('fs_expirator_checked')) {
+		return;
+	}
+	set_transient('fs_expirator_checked', 1, HOUR_IN_SECONDS);
+
 	$types = fs_theme_post_types();
 	$now = current_time('Y-m-d H:i');
 	$query = new \WP_Query([
@@ -141,7 +147,7 @@ add_action('init', function (): void {
 				'key'     => FS_EXPIRATION_META_KEY,
 				'value'   => $now,
 				'compare' => '<=',
-				'type'    => 'DATETIME',
+				'type'    => 'CHAR',
 			],
 		],
 		'fields' => 'ids',

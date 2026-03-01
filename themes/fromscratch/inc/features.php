@@ -11,20 +11,31 @@ defined('ABSPATH') || exit;
  */
 function fs_theme_feature_enabled(string $feature): bool
 {
+	static $options = null;
+
+	if ($options === null) {
+		$options = get_option('fromscratch_features', []);
+		if (!is_array($options)) {
+			$options = [];
+		}
+	}
+
 	$map = [
-		'blogs' => 'enable_blogs',
-		'svg' => 'enable_svg',
-		'duplicate_post' => 'enable_duplicate_post',
-		'seo' => 'enable_seo',
-		'post_expirator' => 'enable_post_expirator',
+		'blogs'           => 'enable_blogs',
+		'svg'             => 'enable_svg',
+		'duplicate_post'  => 'enable_duplicate_post',
+		'seo'             => 'enable_seo',
+		'post_expirator'  => 'enable_post_expirator',
 	];
+
 	$key = $map[$feature] ?? '';
 	if ($key === '') {
 		return false;
 	}
-	$options = get_option('fromscratch_features', []);
-	if (!is_array($options) || !array_key_exists($key, $options)) {
+
+	if (!array_key_exists($key, $options)) {
 		return true;
 	}
+
 	return (int) $options[$key] === 1;
 }
