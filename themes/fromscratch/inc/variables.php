@@ -75,14 +75,6 @@ add_action('admin_init', function () {
  * Register Security tab options.
  */
 add_action('admin_init', function () {
-	register_setting(FS_THEME_OPTION_GROUP_SECURITY, 'fromscratch_login_limit_attempts', [
-		'type' => 'integer',
-		'sanitize_callback' => 'fs_sanitize_login_limit_attempts',
-	]);
-	register_setting(FS_THEME_OPTION_GROUP_SECURITY, 'fromscratch_login_limit_lockout_minutes', [
-		'type' => 'integer',
-		'sanitize_callback' => 'fs_sanitize_login_limit_lockout_minutes',
-	]);
 	register_setting(FS_THEME_OPTION_GROUP_SECURITY, 'fromscratch_site_password_protection', [
 		'type' => 'string',
 		'sanitize_callback' => 'fs_sanitize_site_password_protection',
@@ -106,36 +98,6 @@ function fs_sanitize_features($value): array
 		$out[$key] = (!empty($value[$key])) ? 1 : 0;
 	}
 	return $out;
-}
-
-/**
- * Sanitize login limit attempts (clamp to config min/max).
- *
- * @param mixed $value Raw POST value.
- * @return int
- */
-function fs_sanitize_login_limit_attempts($value): int
-{
-	$min = (int) (fs_config('login_limit_attempts_min') ?? 3);
-	$max = (int) (fs_config('login_limit_attempts_max') ?? 10);
-	$default = (int) (fs_config('login_limit_attempts_default') ?? 5);
-	$v = is_numeric($value) ? (int) $value : $default;
-	return max($min, min($max, $v));
-}
-
-/**
- * Sanitize login lockout minutes (clamp to config min/max).
- *
- * @param mixed $value Raw POST value.
- * @return int
- */
-function fs_sanitize_login_limit_lockout_minutes($value): int
-{
-	$min = (int) (fs_config('login_limit_lockout_min') ?? 1);
-	$max = (int) (fs_config('login_limit_lockout_max') ?? 120);
-	$default = (int) (fs_config('login_limit_lockout_default') ?? 15);
-	$v = is_numeric($value) ? (int) $value : $default;
-	return max($min, min($max, $v));
 }
 
 /**
@@ -460,17 +422,17 @@ function theme_settings_page(): void
 	<div class="wrap">
 		<h1><?= esc_html(fs_config_variables('title_page')) ?></h1>
 		<?php if ($bump_notice !== false && $tab === 'general') : ?>
-			<div class="notice notice-success is-dismissible"><p><strong><?= esc_html(sprintf(fs_t('SETTINGS_BUMP_SUCCESS'), $bump_notice)) ?></strong></p></div>
+			<div class="notice notice-success is-dismissible"><p><strong><?= esc_html(sprintf(__('Asset version increased to %s.', 'fromscratch'), $bump_notice)) ?></strong></p></div>
 		<?php endif; ?>
 		<?php if ($clear_design_notice !== false && $tab === 'design') : ?>
-			<div class="notice notice-success is-dismissible"><p><strong><?= esc_html(fs_t('SETTINGS_DESIGN_CLEAR_SUCCESS')) ?></strong></p></div>
+			<div class="notice notice-success is-dismissible"><p><strong><?= esc_html__('Design overrides cleared. All values reset to defaults.', 'fromscratch') ?></strong></p></div>
 		<?php endif; ?>
 
 		<nav class="nav-tab-wrapper wp-clearfix" aria-label="Secondary menu">
-			<a href="<?= esc_url($base_url . '&tab=general') ?>" class="nav-tab <?= $tab === 'general' ? 'nav-tab-active' : '' ?>"><?= esc_html(fs_t('SETTINGS_TAB_GENERAL')) ?></a>
-			<a href="<?= esc_url($base_url . '&tab=texte') ?>" class="nav-tab <?= $tab === 'texte' ? 'nav-tab-active' : '' ?>"><?= esc_html(fs_t('SETTINGS_TAB_TEXTE')) ?></a>
-			<a href="<?= esc_url($base_url . '&tab=design') ?>" class="nav-tab <?= $tab === 'design' ? 'nav-tab-active' : '' ?>"><?= esc_html(fs_t('SETTINGS_TAB_DESIGN')) ?></a>
-			<a href="<?= esc_url($base_url . '&tab=security') ?>" class="nav-tab <?= $tab === 'security' ? 'nav-tab-active' : '' ?>"><?= esc_html(fs_t('SETTINGS_TAB_SECURITY')) ?><?php if (get_option('fromscratch_site_password_protection') === '1' && get_option('fromscratch_site_password_hash', '') !== '') : ?> <span class="dashicons dashicons-lock" style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle; margin-left: 2px;" aria-hidden="true"></span><?php endif; ?></a>
+			<a href="<?= esc_url($base_url . '&tab=general') ?>" class="nav-tab <?= $tab === 'general' ? 'nav-tab-active' : '' ?>"><?= esc_html__('General', 'fromscratch') ?></a>
+			<a href="<?= esc_url($base_url . '&tab=texte') ?>" class="nav-tab <?= $tab === 'texte' ? 'nav-tab-active' : '' ?>"><?= esc_html__('Texts', 'fromscratch') ?></a>
+			<a href="<?= esc_url($base_url . '&tab=design') ?>" class="nav-tab <?= $tab === 'design' ? 'nav-tab-active' : '' ?>"><?= esc_html__('Design', 'fromscratch') ?></a>
+			<a href="<?= esc_url($base_url . '&tab=security') ?>" class="nav-tab <?= $tab === 'security' ? 'nav-tab-active' : '' ?>"><?= esc_html__('Security', 'fromscratch') ?><?php if (get_option('fromscratch_site_password_protection') === '1' && get_option('fromscratch_site_password_hash', '') !== '') : ?> <span class="dashicons dashicons-lock" style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle; margin-left: 2px;" aria-hidden="true"></span><?php endif; ?></a>
 		</nav>
 
 		<?php if ($tab === 'general') : ?>
@@ -485,64 +447,64 @@ function theme_settings_page(): void
 		?>
 		<form method="post" action="options.php" class="page-settings-form">
 			<?php settings_fields(FS_THEME_OPTION_GROUP_GENERAL); ?>
-			<h2 class="title"><?= esc_html(fs_t('SETTINGS_SITE_HEADING')) ?></h2>
+			<h2 class="title"><?= esc_html__('Site', 'fromscratch') ?></h2>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row">
-						<label for="admin_email"><?= esc_html(fs_t('SETTINGS_SITE_ADMIN_EMAIL')) ?></label>
+						<label for="admin_email"><?= esc_html__('Administrator email', 'fromscratch') ?></label>
 					</th>
 					<td>
 						<input type="email" name="admin_email" id="admin_email" value="<?= esc_attr(get_option('admin_email')) ?>" class="regular-text">
-						<p class="description"><?= esc_html(fs_t('SETTINGS_SITE_ADMIN_EMAIL_DESCRIPTION')) ?></p>
+						<p class="description"><?= esc_html__('Used for account recovery and notifications.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 			</table>
 			<hr>
-			<h2 class="title"><?= esc_html(fs_t('SETTINGS_ASSET_VERSION_HEADING')) ?></h2>
-			<p class="description" style="margin-bottom: 8px;"><?= esc_html(fs_t('SETTINGS_ASSET_VERSION_INTRO')) ?></p>
+			<h2 class="title"><?= esc_html__('Cache', 'fromscratch') ?></h2>
+			<p class="description" style="margin-bottom: 8px;"><?= esc_html__('Use fs_asset_url( \'/path/to/file.css\' ) in templates to output the asset URL with ?ver= so the browser cache updates when you bump the version below.', 'fromscratch') ?></p>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row">
-						<label for="fromscratch_asset_version"><?= esc_html(fs_t('SETTINGS_ASSET_VERSION')) ?></label>
+						<label for="fromscratch_asset_version"><?= esc_html__('Cache version', 'fromscratch') ?></label>
 					</th>
 					<td>
 						<input type="text" name="fromscratch_asset_version" id="fromscratch_asset_version" value="<?= esc_attr(get_option('fromscratch_asset_version', '1')) ?>" class="small-text" style="width: 64px;">
-						<a href="<?= esc_url($bump_url) ?>" class="button" style="margin-left: 8px;"><?= esc_html(fs_t('SETTINGS_BUMP_VERSION')) ?></a>
-						<p class="description"><?= esc_html(fs_t('SETTINGS_ASSET_VERSION_DESCRIPTION')) ?></p>
+						<a href="<?= esc_url($bump_url) ?>" class="button" style="margin-left: 8px;"><?= esc_html__('Bump version', 'fromscratch') ?></a>
+						<p class="description"><?= esc_html__('Bump when static theme files have been changed so the cache of the files is updated.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 			</table>
 			<hr>
-			<h2 class="title"><?= esc_html(fs_t('SETTINGS_FEATURES_HEADING')) ?></h2>
+			<h2 class="title"><?= esc_html__('Theme features', 'fromscratch') ?></h2>
 			<table class="form-table" role="presentation">
 				<tr>
-					<th scope="row"><?= esc_html(fs_t('SETTINGS_FEATURE_BLOGS')) ?></th>
+					<th scope="row"><?= esc_html__('Blogs', 'fromscratch') ?></th>
 					<td>
 						<input type="hidden" name="fromscratch_features[enable_blogs]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_blogs]" value="1" <?= checked($feat('enable_blogs'), 1, false) ?>> <?= esc_html(fs_t('SETTINGS_FEATURE_BLOGS_DESCRIPTION')) ?></label>
+						<label><input type="checkbox" name="fromscratch_features[enable_blogs]" value="1" <?= checked($feat('enable_blogs'), 1, false) ?>> <?= esc_html__('Enable the Posts menu and blog/post editing.', 'fromscratch') ?></label>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><?= esc_html(fs_t('SETTINGS_FEATURE_SVG')) ?></th>
+					<th scope="row"><?= esc_html__('SVG support', 'fromscratch') ?></th>
 					<td>
 						<input type="hidden" name="fromscratch_features[enable_svg]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_svg]" value="1" <?= checked($feat('enable_svg'), 1, false) ?>> <?= esc_html(fs_t('SETTINGS_FEATURE_SVG_DESCRIPTION')) ?></label>
-						<p class="description fs-description-adjust-checkbox"><?= esc_html(fs_t('SETTINGS_FEATURE_SVG_HELP')) ?></p>
+						<label><input type="checkbox" name="fromscratch_features[enable_svg]" value="1" <?= checked($feat('enable_svg'), 1, false) ?>> <?= esc_html__('Allow SVG uploads', 'fromscratch') ?></label>
+						<p class="description fs-description-adjust-checkbox"><?= esc_html__('SVGs are sanitized on upload.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><?= esc_html(fs_t('SETTINGS_FEATURE_DUPLICATE_POST')) ?></th>
+					<th scope="row"><?= esc_html__('Duplicate', 'fromscratch') ?></th>
 					<td>
 						<input type="hidden" name="fromscratch_features[enable_duplicate_post]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_duplicate_post]" value="1" <?= checked($feat('enable_duplicate_post'), 1, false) ?>> <?= esc_html(fs_t('SETTINGS_FEATURE_DUPLICATE_POST_DESCRIPTION')) ?></label>
-						<p class="description fs-description-adjust-checkbox"><?= esc_html(fs_t('SETTINGS_FEATURE_DUPLICATE_POST_HELP')) ?></p>
+						<label><input type="checkbox" name="fromscratch_features[enable_duplicate_post]" value="1" <?= checked($feat('enable_duplicate_post'), 1, false) ?>> <?= esc_html__('Allow duplication', 'fromscratch') ?></label>
+						<p class="description fs-description-adjust-checkbox"><?= esc_html__('Shows a "Duplicate" row action for posts, pages, and custom post types.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><?= esc_html(fs_t('SETTINGS_FEATURE_SEO')) ?></th>
+					<th scope="row"><?= esc_html__('SEO', 'fromscratch') ?></th>
 					<td>
 						<input type="hidden" name="fromscratch_features[enable_seo]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_seo]" value="1" <?= checked($feat('enable_seo'), 1, false) ?>> <?= esc_html(fs_t('SETTINGS_FEATURE_SEO_DESCRIPTION')) ?></label>
+						<label><input type="checkbox" name="fromscratch_features[enable_seo]" value="1" <?= checked($feat('enable_seo'), 1, false) ?>> <?= esc_html__('SEO panel (title, description, OG image, noindex) for posts and pages.', 'fromscratch') ?></label>
 					</td>
 				</tr>
 			</table>
@@ -562,42 +524,32 @@ function theme_settings_page(): void
 		<?php
 			$site_password_on = get_option('fromscratch_site_password_protection') === '1';
 			$site_password_hash = get_option('fromscratch_site_password_hash', '');
-			$attempts_min = (int) (fs_config('login_limit_attempts_min') ?? 3);
-			$attempts_max = (int) (fs_config('login_limit_attempts_max') ?? 10);
-			$attempts_default = (int) (fs_config('login_limit_attempts_default') ?? 5);
-			$lockout_min = (int) (fs_config('login_limit_lockout_min') ?? 1);
-			$lockout_max = (int) (fs_config('login_limit_lockout_max') ?? 120);
-			$lockout_default = (int) (fs_config('login_limit_lockout_default') ?? 15);
-			$attempts = (int) get_option('fromscratch_login_limit_attempts', $attempts_default);
-			$lockout = (int) get_option('fromscratch_login_limit_lockout_minutes', $lockout_default);
-			$attempts = max($attempts_min, min($attempts_max, $attempts));
-			$lockout = max($lockout_min, min($lockout_max, $lockout));
 		?>
 		<?php if ($site_password_on && $site_password_hash === '') : ?>
-		<div class="notice notice-warning inline" style="margin: 0 0 16px 0;"><p><?= esc_html(fs_t('SETTINGS_SITE_PASSWORD_NO_PASSWORD_SET')) ?></p></div>
+		<div class="notice notice-warning inline" style="margin: 0 0 16px 0;"><p><?= esc_html__('No password set. Set a password below to activate protection.', 'fromscratch') ?></p></div>
 		<?php endif; ?>
 		<form method="post" action="options.php" class="page-settings-form">
 			<?php settings_fields(FS_THEME_OPTION_GROUP_SECURITY); ?>
-			<h2 class="title"><?= esc_html(fs_t('SETTINGS_SECURITY_HEADING_PASSWORD')) ?></h2>
+			<h2 class="title"><?= esc_html__('Site password protection', 'fromscratch') ?></h2>
 			<table class="form-table" role="presentation">
 				<tr>
-					<th scope="row"><?= esc_html(fs_t('SETTINGS_SITE_PASSWORD_PROTECTION_LABEL')) ?></th>
+					<th scope="row"><?= esc_html__('Activate', 'fromscratch') ?></th>
 					<td>
 						<label>
 							<input type="hidden" name="fromscratch_site_password_protection" value="0">
 							<input type="checkbox" name="fromscratch_site_password_protection" value="1" <?= checked(get_option('fromscratch_site_password_protection'), '1', false) ?>>
-							<?= esc_html(fs_t('SETTINGS_SITE_PASSWORD_PROTECTION_CHECKBOX')) ?>
+							<?= esc_html__('Activate password protection', 'fromscratch') ?>
 						</label>
-						<p class="description"><?= wp_kses(fs_t('SETTINGS_SITE_PASSWORD_PROTECTION_DESCRIPTION'), ['br' => []]) ?></p>
+						<p class="description"><?= wp_kses(__('When enabled, visitors must enter a password before viewing any part of the site.<br>Logged-in administrators and editors skip the prompt.', 'fromscratch'), ['br' => []]) ?></p>
 					</td>
 				</tr>
 				<tr>
-					<th scope="row"><label for="fromscratch_site_password_new"><?= esc_html(fs_t('SETTINGS_SITE_PASSWORD_LABEL')) ?></label></th>
+					<th scope="row"><label for="fromscratch_site_password_new"><?= esc_html__('Password', 'fromscratch') ?></label></th>
 					<td>
 						<input type="password" name="fromscratch_site_password_new" id="fromscratch_site_password_new" class="small-text" style="width: 220px;" value="<?= esc_attr(get_option('fromscratch_site_password_plain', '')) ?>" autocomplete="new-password">
-						<button type="button" class="button" id="fromscratch_site_password_copy" data-copy="<?= esc_attr(fs_t('SETTINGS_SITE_PASSWORD_COPY_BUTTON')) ?>" data-copied="<?= esc_attr(fs_t('SETTINGS_SITE_PASSWORD_COPIED')) ?>"><?= esc_html(fs_t('SETTINGS_SITE_PASSWORD_COPY_BUTTON')) ?></button>
+						<button type="button" class="button" id="fromscratch_site_password_copy" data-copy="<?= esc_attr__('Copy', 'fromscratch') ?>" data-copied="<?= esc_attr__('Copied!', 'fromscratch') ?>"><?= esc_html__('Copy', 'fromscratch') ?></button>
 						<p class="description">
-							<?= esc_html(fs_t('SETTINGS_SITE_PASSWORD_DESCRIPTION')) ?>
+							<?= esc_html__('Set or change the password. Leave blank and save to clear or reset the password.', 'fromscratch') ?>
 							<a class="fs-description-link -gray -has-icon" href="https://passwordcopy.app" target="_blank">
 								<span class="fs-description-link-icon">
 									<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
@@ -607,24 +559,6 @@ function theme_settings_page(): void
 								<span>passwordcopy.app</span>
 							</a>
 						</p>
-					</td>
-				</tr>
-			</table>
-			<hr>
-			<h2 class="title"><?= esc_html(fs_t('SETTINGS_SECURITY_HEADING_LOGIN')) ?></h2>
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><label for="fromscratch_login_limit_attempts"><?= esc_html(fs_t('SETTINGS_LOGIN_LIMIT_ATTEMPTS_LABEL')) ?></label></th>
-					<td>
-						<input type="number" name="fromscratch_login_limit_attempts" id="fromscratch_login_limit_attempts" value="<?= esc_attr((string) $attempts) ?>" min="<?= $attempts_min ?>" max="<?= $attempts_max ?>" class="small-text" style="width: 64px;"> <?= esc_html(fs_t('SETTINGS_LOGIN_LIMIT_ATTEMPTS_UNIT')) ?>
-						<p class="description"><?= wp_kses(sprintf(fs_t('SETTINGS_LOGIN_LIMIT_ATTEMPTS_DESCRIPTION'), $attempts_min, $attempts_max), ['br' => []]) ?></p>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><label for="fromscratch_login_limit_lockout_minutes"><?= esc_html(fs_t('SETTINGS_LOGIN_LIMIT_LOCKOUT_LABEL')) ?></label></th>
-					<td>
-						<input type="number" name="fromscratch_login_limit_lockout_minutes" id="fromscratch_login_limit_lockout_minutes" value="<?= esc_attr((string) $lockout) ?>" min="<?= $lockout_min ?>" max="<?= $lockout_max ?>" class="small-text" style="width: 64px;"> <?= esc_html(fs_t('SETTINGS_LOGIN_LIMIT_LOCKOUT_UNIT')) ?>
-						<p class="description"><?= wp_kses(sprintf(fs_t('SETTINGS_LOGIN_LIMIT_LOCKOUT_DESCRIPTION'), $lockout_min, $lockout_max), ['br' => []]) ?></p>
 					</td>
 				</tr>
 			</table>
@@ -645,9 +579,9 @@ function theme_settings_page(): void
 		});
 		</script>
 		<?php else : ?>
-		<p class="description" style="margin-bottom: 8px;"><?= esc_html(fs_t('SETTINGS_DESIGN_DESCRIPTION')) ?></p>
+		<p class="description" style="margin-bottom: 8px;"><?= esc_html__('Override SCSS design variables. Values are output as CSS custom properties (:root). Add new variables in config.php under design.sections.', 'fromscratch') ?></p>
 		<p style="margin-bottom: 16px;">
-			<a href="<?= esc_url($clear_design_url) ?>" class="button" onclick="return confirm('<?= esc_js(fs_t('SETTINGS_DESIGN_CLEAR_CONFIRM')) ?>');"><?= esc_html(fs_t('SETTINGS_DESIGN_CLEAR_ALL')) ?></a>
+			<a href="<?= esc_url($clear_design_url) ?>" class="button" onclick="return confirm('<?= esc_js(__('Reset all design overrides to defaults?', 'fromscratch')) ?>');"><?= esc_html__('Clear all', 'fromscratch') ?></a>
 		</p>
 		<form method="post" action="options.php" class="page-settings-form">
 			<?php settings_fields(FS_THEME_OPTION_GROUP_DESIGN); ?>

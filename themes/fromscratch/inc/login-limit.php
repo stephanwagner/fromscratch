@@ -4,7 +4,7 @@ defined('ABSPATH') || exit;
 
 /**
  * Limit login attempts by IP: after N failed attempts per minute, block and show wait message.
- * Options from Settings → Theme → Security.
+ * Values from config (login_limit_attempts_default, login_limit_lockout_default, etc.).
  */
 
 /**
@@ -37,8 +37,8 @@ function fs_login_limit_authenticate($user, $username, $password)
 		$remaining_sec = (int) $lockout_until - time();
 		$minutes = max(1, (int) ceil($remaining_sec / 60));
 		$message = $minutes === 1
-			? '<strong>Error:</strong> ' . fs_t('LOGIN_LIMIT_ERROR_WAIT_ONE_MINUTE')
-			: '<strong>Error:</strong> ' . sprintf(fs_t('LOGIN_LIMIT_ERROR_WAIT_MINUTES'), $minutes);
+			? '<strong>Error:</strong> ' . esc_html__('Too many login attempts. Please try again in 1 minute.', 'fromscratch')
+			: '<strong>Error:</strong> ' . esc_html(sprintf(__('Too many login attempts. Please try again in %d minutes.', 'fromscratch'), $minutes));
 		return new WP_Error('login_limit_exceeded', $message);
 	}
 	return $user;
@@ -59,14 +59,12 @@ function fs_login_limit_on_failed(string $username): void
 	$attempts_default = (int) (function_exists('fs_config') ? fs_config('login_limit_attempts_default') : 5);
 	$attempts_min = (int) (function_exists('fs_config') ? fs_config('login_limit_attempts_min') : 3);
 	$attempts_max = (int) (function_exists('fs_config') ? fs_config('login_limit_attempts_max') : 10);
-	$limit = (int) get_option('fromscratch_login_limit_attempts', $attempts_default);
-	$limit = max($attempts_min, min($attempts_max, $limit));
+	$limit = max($attempts_min, min($attempts_max, $attempts_default));
 
 	$lockout_default = (int) (function_exists('fs_config') ? fs_config('login_limit_lockout_default') : 15);
 	$lockout_min = (int) (function_exists('fs_config') ? fs_config('login_limit_lockout_min') : 1);
 	$lockout_max = (int) (function_exists('fs_config') ? fs_config('login_limit_lockout_max') : 120);
-	$lockout_minutes = (int) get_option('fromscratch_login_limit_lockout_minutes', $lockout_default);
-	$lockout_minutes = max($lockout_min, min($lockout_max, $lockout_minutes));
+	$lockout_minutes = max($lockout_min, min($lockout_max, $lockout_default));
 
 	$key_attempts = 'fromscratch_lla_' . md5($ip);
 	$key_lockout = 'fromscratch_lla_lockout_' . md5($ip);

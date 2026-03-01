@@ -238,17 +238,17 @@ function fs_seo_editor_localize(): void
 {
 	wp_localize_script('fromscratch-editor', 'fromscratchSeo', [
 		'postTypes' => fs_seo_post_types(),
-		'panelTitle' => fs_t('SEO_PANEL_TITLE'),
-		'titleLabel' => fs_t('SEO_TITLE_LABEL'),
-		'titleHelp' => fs_t('SEO_TITLE_HELP'),
-		'descriptionLabel' => fs_t('SEO_DESCRIPTION_LABEL'),
-		'descriptionHelp' => fs_t('SEO_DESCRIPTION_HELP'),
-		'ogImageLabel' => fs_t('SEO_OG_IMAGE_LABEL'),
-		'ogImageHelp' => fs_t('SEO_OG_IMAGE_HELP'),
-		'ogImageButton' => fs_t('SEO_OG_IMAGE_BUTTON'),
-		'ogImageRemove' => fs_t('SEO_OG_IMAGE_REMOVE'),
-		'noindexLabel' => fs_t('SEO_NOINDEX_LABEL'),
-		'noindexHelp' => fs_t('SEO_NOINDEX_HELP'),
+		'panelTitle' => __('SEO', 'fromscratch'),
+		'titleLabel' => __('Title', 'fromscratch'),
+		'titleHelp' => __('Recommended length: up to 60 characters.', 'fromscratch'),
+		'descriptionLabel' => __('Description', 'fromscratch'),
+		'descriptionHelp' => __('Recommended length: up to 160 characters.', 'fromscratch'),
+		'ogImageLabel' => __('Social Media Preview Image', 'fromscratch'),
+		'ogImageHelp' => __('Best size: 1200 × 630 px. Fallback: featured image if set.', 'fromscratch'),
+		'ogImageButton' => __('Select image', 'fromscratch'),
+		'ogImageRemove' => __('Remove image', 'fromscratch'),
+		'noindexLabel' => __('No index', 'fromscratch'),
+		'noindexHelp' => __('Ask search engines not to index this page.', 'fromscratch'),
 	]);
 }
 add_action('enqueue_block_editor_assets', 'fs_seo_editor_localize', 11);

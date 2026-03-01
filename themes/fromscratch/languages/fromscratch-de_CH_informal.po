@@ -298,6 +298,205 @@ msgstr "Dieser Benutzer hat Entwicklerrechte"
 msgid "At least one user must have developer rights. Add another developer before removing yours."
 msgstr "Mindestens ein Benutzer muss Entwicklerrechte haben. Lege zuerst einen weiteren Entwickler an, bevor du deine entfernst."
 
+# Theme settings page
+msgid "Theme settings"
+msgstr "Theme Einstellungen"
+
+msgid "Asset version increased to %s."
+msgstr "Cache-Version auf %s erhöht."
+
+msgid "Design overrides cleared. All values reset to defaults."
+msgstr "Design-Überschreibungen gelöscht. Alle Werte auf Standard zurückgesetzt."
+
+msgid "General"
+msgstr "Allgemein"
+
+msgid "Texts"
+msgstr "Texte"
+
+msgid "Design"
+msgstr "Design"
+
+msgid "Security"
+msgstr "Sicherheit"
+
+msgid "Administrator email"
+msgstr "Administrator E-Mail"
+
+msgid "Used for account recovery and notifications."
+msgstr "Wird für Kontowiederherstellung und Benachrichtigungen verwendet."
+
+msgid "Use fs_asset_url( '/path/to/file.css' ) in templates to output the asset URL with ?ver= so the browser cache updates when you bump the version below."
+msgstr "Verwende fs_asset_url( '/pfad/zur/datei.css' ) in Templates, um die Asset-URL mit ?ver= auszugeben, damit der Browsercache bei einem Versionsbump aktualisiert wird."
+
+msgid "Cache"
+msgstr "Cache"
+
+msgid "Cache version"
+msgstr "Cache-Version"
+
+msgid "Bump when static theme files have been changed so the cache of the files is updated."
+msgstr "Erhöhen, wenn statische Theme-Dateien geändert wurden, damit der Cache der Dateien aktualisiert wird."
+
+msgid "Bump version"
+msgstr "Version erhöhen"
+
+msgid "Theme features"
+msgstr "Theme-Funktionen"
+
+msgid "Enable the Posts menu and blog/post editing."
+msgstr "Menü „Beiträge“ aktivieren und Blog-/Beitragsbearbeitung erlauben."
+
+msgid "SVG support"
+msgstr "SVG-Unterstützung"
+
+msgid "Allow SVG uploads"
+msgstr "SVG-Uploads erlauben"
+
+msgid "SVGs are sanitized on upload."
+msgstr "SVGs werden beim Upload bereinigt."
+
+msgid "Duplicate"
+msgstr "Duplizieren"
+
+msgid "Allow duplication"
+msgstr "Duplizierung erlauben"
+
+msgid "Shows a \"Duplicate\" row action for posts, pages, and custom post types."
+msgstr "Zeigt eine Zeilenaktion „Duplizieren“ für Beiträge, Seiten und benutzerdefinierte Beitragstypen."
+
+msgid "SEO"
+msgstr "SEO"
+
+msgid "SEO panel (title, description, OG image, noindex) for posts and pages."
+msgstr "SEO-Bereich (Titel, Beschreibung, OG-Bild, noindex) für Beiträge und Seiten."
+
+msgid "No password set. Set a password below to activate protection."
+msgstr "Kein Passwort gesetzt. Setze unten ein Passwort, um den Schutz zu aktivieren."
+
+msgid "Site password protection"
+msgstr "Passwortschutz der Website"
+
+msgid "Activate"
+msgstr "Aktivieren"
+
+msgid "Activate password protection"
+msgstr "Passwortschutz aktivieren"
+
+msgid "When enabled, visitors must enter a password before viewing any part of the site.<br>Logged-in administrators and editors skip the prompt."
+msgstr "Wenn aktiviert, müssen Besucher ein Passwort eingeben, bevor sie einen Teil der Website sehen können.<br>Eingeloggte Administratoren und Redakteure überspringen die Abfrage."
+
+msgid "Set or change the password. Leave blank and save to clear or reset the password."
+msgstr "Passwort setzen oder ändern. Leer lassen und speichern, um das Passwort zu löschen oder zurückzusetzen."
+
+msgid "Copied!"
+msgstr "Kopiert!"
+
+msgid "Login"
+msgstr "Anmeldung"
+
+msgid "Login attempts"
+msgstr "Anmeldeversuche"
+
+msgid "per minute"
+msgstr "pro Minute"
+
+msgid "After this many failed attempts per IP, login is blocked.<br>Allowed range: %d - %d."
+msgstr "Nach dieser Anzahl fehlgeschlagener Versuche pro IP wird die Anmeldung blockiert.<br>Erlaubter Bereich: %d - %d."
+
+msgid "Lockout duration"
+msgstr "Sperrdauer"
+
+msgid "minutes"
+msgstr "Minuten"
+
+msgid "How long to block login after the limit is reached.<br>Allowed range: %d - %d."
+msgstr "Wie lange die Anmeldung nach Erreichen des Limits blockiert wird.<br>Erlaubter Bereich: %d - %d."
+
+msgid "Override SCSS design variables. Values are output as CSS custom properties (:root). Add new variables in config.php under design.sections."
+msgstr "SCSS-Designvariablen überschreiben. Werte werden als CSS-Custom-Properties (:root) ausgegeben. Neue Variablen in config.php unter design.sections hinzufügen."
+
+msgid "Reset all design overrides to defaults?"
+msgstr "Alle Design-Überschreibungen auf Standard zurücksetzen?"
+
+msgid "Clear all"
+msgstr "Alle löschen"
+
+# Menus (config)
+msgid "Main menu"
+msgstr "Hauptmenü"
+
+msgid "Footer menu"
+msgstr "Footermenü"
+
+# Login limit (front-end message)
+msgid "Too many login attempts. Please try again in 1 minute."
+msgstr "Zu viele Anmeldeversuche. Bitte in 1 Minute erneut versuchen."
+
+msgid "Too many login attempts. Please try again in %d minutes."
+msgstr "Zu viele Anmeldeversuche. Bitte in %d Minuten erneut versuchen."
+
+# Duplicate post
+msgid "No post to duplicate."
+msgstr "Kein Beitrag zum Duplizieren."
+
+msgid "Post not found."
+msgstr "Beitrag nicht gefunden."
+
+msgid "You do not have permission to duplicate this item."
+msgstr "Du hast keine Berechtigung, dieses Element zu duplizieren."
+
+msgid "(Copy)"
+msgstr "(Kopie)"
+
+msgid "Failed to create duplicate."
+msgstr "Duplikat konnte nicht erstellt werden."
+
+# Site password form (front-end)
+msgid "This site is password protected. Enter the password to continue."
+msgstr "Diese Website ist passwortgeschützt. Gib das Passwort ein, um fortzufahren."
+
+msgid "Log in"
+msgstr "Anmelden"
+
+msgid "Incorrect password. Please try again."
+msgstr "Falsches Passwort. Bitte erneut versuchen."
+
+# SEO panel (editor)
+msgid "Recommended length: up to 60 characters."
+msgstr "Empfohlene Länge: bis zu 60 Zeichen."
+
+msgid "Recommended length: up to 160 characters."
+msgstr "Empfohlene Länge: bis zu 160 Zeichen."
+
+msgid "Social Media Preview Image"
+msgstr "Vorschaubild für soziale Medien"
+
+msgid "Best size: 1200 × 630 px. Fallback: featured image if set."
+msgstr "Ideale Größe: 1200 × 630 px. Fallback: Beitragsbild, falls gesetzt."
+
+msgid "Select image"
+msgstr "Bild auswählen"
+
+msgid "Remove image"
+msgstr "Bild entfernen"
+
+msgid "No index"
+msgstr "Nicht indexieren"
+
+msgid "Ask search engines not to index this page."
+msgstr "Suchmaschinen bitten, diese Seite nicht zu indexieren."
+
+# SVG upload
+msgid "SVG file must be under %1$s. You tried to upload a file of %2$s."
+msgstr "Die SVG-Datei muss unter %1$s liegen. Du hast eine Datei mit %2$s hochgeladen."
+
+msgid "SVG file not found."
+msgstr "SVG-Datei nicht gefunden."
+
+msgid "Invalid or unsafe SVG file."
+msgstr "Ungültige oder unsichere SVG-Datei."
+
 # Context: Image size (for "Small" in media sizes list)
 msgctxt "Image size"
 msgid "Small"

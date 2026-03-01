@@ -72,10 +72,10 @@ function fs_site_password_gate(): void
  */
 function fs_site_password_show_form(): void
 {
-	$title = fs_t('SITE_PASSWORD_FORM_TITLE');
-	$notice = fs_t('SITE_PASSWORD_FORM_NOTICE');
-	$label = fs_t('SITE_PASSWORD_FORM_LABEL');
-	$submit = fs_t('SITE_PASSWORD_FORM_SUBMIT');
+	$title = __('Login', 'fromscratch');
+	$notice = __('This site is password protected. Enter the password to continue.', 'fromscratch');
+	$label = __('Password', 'fromscratch');
+	$submit = __('Log in', 'fromscratch');
 	$current_url = (is_ssl() ? 'https://' : 'http://') . (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '') . (isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/');
 	$current_url = esc_url($current_url);
 	$lock_icon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="stroke-width:2" aria-hidden="true"><path d="M7 11V7a5 5 0 0 1 10 0v4"/><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/></svg>';
@@ -107,7 +107,7 @@ function fs_site_password_show_form(): void
 		<h1><?= esc_html($title) ?></h1>
 		<p class="notice"><?= $lock_icon ?><span><?= esc_html($notice) ?></span></p>
 		<?php if (isset($_POST['fromscratch_site_password'])) : ?>
-		<p class="error"><?= esc_html(fs_t('SITE_PASSWORD_FORM_ERROR')) ?></p>
+		<p class="error"><?= esc_html__('Incorrect password. Please try again.', 'fromscratch') ?></p>
 		<?php endif; ?>
 		<form method="post" action="<?= $current_url ?>">
 			<label for="fromscratch_site_password"><?= esc_html($label) ?></label>
@@ -127,5 +127,5 @@ add_action('init', 'fs_site_password_gate', 1);
  * Use "Login" as the document title on the WordPress login page.
  */
 add_filter('login_title', function ($title) {
-	return fs_t('SITE_PASSWORD_FORM_TITLE');
+	return __('Login', 'fromscratch');
 }, 10, 1);

@@ -7,8 +7,8 @@ return [
 
 	// Menus
 	'menus' => [
-		'main_menu' => fs_t('MENU_MAIN_MENU'),
-		'footer_menu' => fs_t('MENU_FOOTER_MENU'),
+		'main_menu' => __('Main menu', 'fromscratch'),
+		'footer_menu' => __('Footer menu', 'fromscratch'),
 	],
 
 	// The length of excerpts
@@ -165,7 +165,7 @@ return [
 	 * width/height are fallbacks when the user hasn't changed them on Settings → Media. Set during theme install too.
 	 */
 	'image_sizes_extra' => [
-		['slug' => 'small', 'name' => fs_t('IMAGE_SIZE_SMALL'), 'width' => 600, 'height' => 600],
+		['slug' => 'small', 'name' => _x('Small', 'Image size', 'fromscratch'), 'width' => 600, 'height' => 600],
 	],
 
 	// SVG support: Max size in MB

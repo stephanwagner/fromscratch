@@ -52,20 +52,24 @@ add_filter('wp_handle_upload_prefilter', function ($file) {
 	if ($size <= 0 || $size / 1024 / 1024 > $max_size) {
 		$max_size_formatted = $max_size . ' MB';
 		$size_formatted = number_format($size / 1024 / 1024, 2) . ' MB';
-		$file['error'] = fs_t('SVG_FILE_MUST_BE_UNDER_MAX_SIZE', ['MAX_SIZE' => $max_size_formatted, 'SIZE' => $size_formatted]);
+		$file['error'] = sprintf(
+			__('SVG file must be under %1$s. You tried to upload a file of %2$s.', 'fromscratch'),
+			$max_size_formatted,
+			$size_formatted
+		);
 		return $file;
 	}
 
 	$svg = file_get_contents($file['tmp_name']);
 	if (!$svg) {
-		$file['error'] = fs_t('SVG_FILE_NOT_FOUND');
+		$file['error'] = __('SVG file not found.', 'fromscratch');
 		return $file;
 	}
 
 	$sanitized = fs_svg_sanitize($svg);
 
 	if ($sanitized === '') {
-		$file['error'] = fs_t('SVG_INVALID_OR_UNSAFE');
+		$file['error'] = __('Invalid or unsafe SVG file.', 'fromscratch');
 		return $file;
 	}
 

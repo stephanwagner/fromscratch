@@ -1,8 +1,8 @@
 <?php
 return [
 	// Titles
-	'title_page' => fs_t('SETTINGS_TITLE_PAGE'),
-	'title_menu' => fs_t('SETTINGS_TITLE_MENU'),
+	'title_page' => __('Theme settings', 'fromscratch'),
+	'title_menu' => __('Theme', 'fromscratch'),
 
 	// Languages
 	'languages' => [

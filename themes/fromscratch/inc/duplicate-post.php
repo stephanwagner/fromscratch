@@ -18,7 +18,7 @@ function fs_add_duplicate_row_action(array $actions, WP_Post $post): array {
 		admin_url('admin.php?action=fs_duplicate_post&post=' . $post->ID),
 		'fs_duplicate_post_' . $post->ID
 	);
-	$actions['duplicate'] = '<a href="' . esc_url($url) . '">' . esc_html(fs_t('DUPLICATE_LINK')) . '</a>';
+	$actions['duplicate'] = '<a href="' . esc_url($url) . '">' . esc_html__('Duplicate', 'fromscratch') . '</a>';
 	return $actions;
 }
 
@@ -27,7 +27,7 @@ add_filter('page_row_actions', 'fs_add_duplicate_row_action', 10, 2);
 
 add_action('admin_action_fs_duplicate_post', function (): void {
 	if (!isset($_GET['post'])) {
-		wp_die(esc_html(fs_t('DUPLICATE_ERROR_NO_POST')));
+		wp_die(esc_html__('No post to duplicate.', 'fromscratch'));
 	}
 
 	$post_id = (int) $_GET['post'];
@@ -35,15 +35,15 @@ add_action('admin_action_fs_duplicate_post', function (): void {
 
 	$post = get_post($post_id);
 	if (!$post || $post->post_type === 'attachment') {
-		wp_die(esc_html(fs_t('DUPLICATE_ERROR_NOT_FOUND')));
+		wp_die(esc_html__('Post not found.', 'fromscratch'));
 	}
 
 	if (!current_user_can('edit_post', $post_id)) {
-		wp_die(esc_html(fs_t('DUPLICATE_ERROR_PERMISSION')));
+		wp_die(esc_html__('You do not have permission to duplicate this item.', 'fromscratch'));
 	}
 
 	$new_post = [
-		'post_title'     => $post->post_title . ' ' . fs_t('DUPLICATE_COPY_SUFFIX'),
+		'post_title'     => $post->post_title . ' ' . __('(Copy)', 'fromscratch'),
 		'post_content'  => $post->post_content,
 		'post_excerpt'   => $post->post_excerpt,
 		'post_status'    => 'draft',
@@ -58,7 +58,7 @@ add_action('admin_action_fs_duplicate_post', function (): void {
 
 	$new_post_id = wp_insert_post($new_post);
 	if (is_wp_error($new_post_id)) {
-		wp_die(esc_html(fs_t('DUPLICATE_ERROR_INSERT')));
+		wp_die(esc_html__('Failed to create duplicate.', 'fromscratch'));
 	}
 
 	// Copy meta (excluding internal keys that shouldn't be cloned)
