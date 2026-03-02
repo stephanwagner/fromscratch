@@ -586,8 +586,8 @@ msgstr "Fügt Seiten, Beiträgen und benutzerdefinierten Beitragstypen einen Ber
 msgid "No password set. Set a password below to activate protection."
 msgstr "Kein Passwort gesetzt. Setze unten ein Passwort, um den Schutz zu aktivieren."
 
-msgid "Site password protection"
-msgstr "Passwortschutz der Website"
+msgid "Password protection"
+msgstr "Passwortschutz"
 
 msgid "Activate"
 msgstr "Aktivieren"
@@ -598,14 +598,17 @@ msgstr "Passwortschutz aktivieren"
 msgid "When enabled, visitors must enter a password before viewing any part of the site.<br>Logged-in administrators and editors skip the prompt."
 msgstr "Wenn aktiviert, müssen Besucher ein Passwort eingeben, bevor sie einen Teil der Website sehen können.<br>Eingeloggte Administratoren und Redakteure überspringen die Abfrage."
 
+msgid "Because you are logged in as an administrator or editor, you can still access the frontend. Open the site in a private or incognito window (or log out) to see the maintenance or password page."
+msgstr "Da du als Administrator oder Redakteur angemeldet bist, kannst du die Website weiterhin aufrufen. Öffne die Website in einem privaten Fenster oder im Inkognito-Modus (oder melde dich ab), um die Wartungs- oder Passwortseite zu sehen."
+
 msgid "Set or change the password. Leave blank and save to clear or reset the password."
 msgstr "Passwort setzen oder ändern. Leer lassen und speichern, um das Passwort zu löschen oder zurückzusetzen."
 
 msgid "Copied!"
 msgstr "Kopiert!"
 
-msgid "Login"
-msgstr "Anmeldung"
+msgid "Protected Area"
+msgstr "Geschützter Bereich"
 
 msgid "Login attempts"
 msgstr "Anmeldeversuche"
@@ -666,13 +669,13 @@ msgstr "Duplikat konnte nicht erstellt werden."
 
 # Site password form (front-end)
 msgid "This site is password protected. Enter the password to continue."
-msgstr "Diese Website ist passwortgeschützt. Gib das Passwort ein, um fortzufahren."
+msgstr "Diese Seite ist passwortgeschützt. Gib das Passwort ein, um fortzufahren."
 
 msgid "Log in"
 msgstr "Anmelden"
 
-msgid "Incorrect password. Please try again."
-msgstr "Falsches Passwort. Bitte erneut versuchen."
+msgid "Incorrect password."
+msgstr "Falsches Passwort."
 
 msgid "Recommended length: up to 60 characters."
 msgstr "Empfohlene Länge: bis zu 60 Zeichen."

@@ -28,9 +28,10 @@ add_action('login_head', function () {
 	$url = esc_url($url);
 	echo '<style type="text/css">';
 	echo '#login h1 a {';
-	echo ' background: url(' . $url . ') no-repeat center top;';
-	echo ' background-size: contain;';
-	echo ' width: calc(100% - 48px);';
+	echo ' background: no-repeat center center / contain;';
+	echo ' background-image: url(' . $url . ');';
+	echo ' width: 100%;';
+	echo ' max-width: 240px;';
 	echo ' height: 80px;';
 	echo ' margin-bottom: 16px;';
 	echo '}';

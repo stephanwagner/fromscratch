@@ -325,14 +325,14 @@ function fs_render_developer_settings_page(): void
 			$maintenance_on = get_option('fromscratch_maintenance_mode') === '1';
 		?>
 		<?php if (($site_password_on || $maintenance_on) && is_user_logged_in() && (current_user_can('edit_posts') || current_user_can('manage_options'))) : ?>
-		<div class="notice notice-info inline" style="margin: 0 0 16px 0;"><p><?= esc_html__('Because you are logged in as an administrator or editor, you can still access the frontend. Open the site in a private or incognito window (or log out) to see the maintenance or password page.', 'fromscratch') ?></p></div>
+		<div class="notice notice-info inline" style="margin: 16px 0 0;"><p><?= esc_html__('Because you are logged in as an administrator or editor, you can still access the frontend. Open the site in a private or incognito window (or log out) to see the maintenance or password page.', 'fromscratch') ?></p></div>
 		<?php endif; ?>
 		<?php if ($site_password_on && $site_password_hash === '') : ?>
-		<div class="notice notice-warning inline" style="margin: 0 0 16px 0;"><p><?= esc_html__('No password set. Set a password below to activate protection.', 'fromscratch') ?></p></div>
+		<div class="notice notice-warning inline" style="margin: 16px 0 0;"><p><?= esc_html__('No password set. Set a password below to activate protection.', 'fromscratch') ?></p></div>
 		<?php endif; ?>
 		<form method="post" action="options.php" class="page-settings-form">
 			<?php settings_fields(FS_THEME_OPTION_GROUP_SECURITY); ?>
-			<h2 class="title"><?= esc_html__('Site password protection', 'fromscratch') ?></h2>
+			<h2 class="title"><?= esc_html__('Password protection', 'fromscratch') ?></h2>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row"><?= esc_html__('Activate', 'fromscratch') ?></th>
@@ -350,8 +350,7 @@ function fs_render_developer_settings_page(): void
 					<td>
 						<input type="password" name="fromscratch_site_password_new" id="fromscratch_site_password_new" class="small-text" style="width: 220px;" value="<?= esc_attr(get_option('fromscratch_site_password_plain', '')) ?>" autocomplete="new-password">
 						<button type="button" class="button" id="fromscratch_site_password_copy" data-copy="<?= esc_attr__('Copy', 'fromscratch') ?>" data-copied="<?= esc_attr__('Copied!', 'fromscratch') ?>"><?= esc_html__('Copy', 'fromscratch') ?></button>
-						<p class="description">
-							<?= esc_html__('Set or change the password. Leave blank and save to clear or reset the password.', 'fromscratch') ?>
+						<div style="margin-top: 8px;">
 							<a class="fs-description-link -gray -has-icon" href="https://passwordcopy.app" target="_blank">
 								<span class="fs-description-link-icon">
 									<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
@@ -360,11 +359,17 @@ function fs_render_developer_settings_page(): void
 								</span>
 								<span>passwordcopy.app</span>
 							</a>
+						</div>
+						<p class="description">
+							<?= esc_html__('Set or change the password. Leave blank and save to clear or reset the password.', 'fromscratch') ?>
 						</p>
 					</td>
 				</tr>
 			</table>
-			<h2 class="title" style="margin-top: 28px;"><?= esc_html__('Maintenance mode', 'fromscratch') ?></h2>
+
+			<hr>
+
+			<h2 class="title"><?= esc_html__('Maintenance mode', 'fromscratch') ?></h2>
 			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('When enabled, the entire frontend is blocked with HTTP 503. Logged-in administrators and editors can still view the site.', 'fromscratch') ?></p>
 			<table class="form-table" role="presentation">
 				<tr>
