@@ -121,6 +121,10 @@ add_action('enqueue_block_editor_assets', function () {
 	$d_pm = new \DateTime('today 12:00', $tz);
 	$am_label = date_i18n('a', $d_am->getTimestamp());
 	$pm_label = date_i18n('a', $d_pm->getTimestamp());
+	$month_names = [];
+	for ( $m = 1; $m <= 12; $m++ ) {
+		$month_names[] = date_i18n( 'M', gmmktime( 0, 0, 0, $m, 15, 2020 ) );
+	}
 	wp_localize_script('fromscratch-editor', 'fromscratchExpirator', [
 		'postTypes'   => fs_theme_post_types(),
 		'panelTitle' => __('Expiration', 'fromscratch'),
@@ -143,6 +147,8 @@ add_action('enqueue_block_editor_assets', function () {
 		'actionRedirect' => __('Redirect to', 'fromscratch'),
 		'redirectPlaceholder' => __('https://example.com', 'fromscratch'),
 		'redirectLabel' => __('Redirect URL', 'fromscratch'),
+		'previewEmptyLabel' => __('Set expiration date and time', 'fromscratch'),
+		'monthNames' => $month_names,
 	], 11);
 });
 

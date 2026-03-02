@@ -7,13 +7,14 @@
   }
 
   const el = wp.element.createElement;
+  const useState = wp.element?.useState;
+  const useStateSafe = useState || function (initial) { return [initial, function () {}]; };
   const { registerPlugin } = wp.plugins;
   const PluginDocumentSettingPanel = wp.editPost?.PluginDocumentSettingPanel;
   const { useSelect } = wp.data;
   const { useEntityProp } = wp.coreData;
   const PanelRow = wp.components?.PanelRow;
   const DateTimePicker = wp.components?.DateTimePicker;
-  const CheckboxControl = wp.components?.CheckboxControl;
   const SelectControl = wp.components?.SelectControl;
   const wpDate = wp.date;
 
@@ -97,6 +98,18 @@
     return formatForStorage(new Date());
   }
 
+  /** Format stored "Y-m-d H:i" for preview: "Mon D, YYYY, time" using monthNames. */
+  function formatStoredForDisplay(stored) {
+    const { date: datePart, time: timePart } = storedToParts(stored);
+    if (!datePart) return '';
+    const months = labels.monthNames && Array.isArray(labels.monthNames) ? labels.monthNames : [];
+    const [y, m, d] = datePart.split('-').map(Number);
+    const monthStr = m >= 1 && m <= 12 && months[m - 1] ? months[m - 1] : String(m);
+    const dateStr = monthStr + ' ' + d + ', ' + y;
+    const timeStr = timePart ? (is12Hour ? time24ToDisplay(timePart, amLabel, pmLabel) : timePart) : '';
+    return timeStr ? dateStr + ', ' + timeStr : dateStr;
+  }
+
   function parseStoredDate(value) {
     if (!value || typeof value !== 'string') return null;
     const trimmed = value.trim();
@@ -155,43 +168,39 @@
     const actionValue = meta[META_KEY_ACTION] || 'draft';
     const redirectValue = meta[META_KEY_REDIRECT] || '';
     const useWordPressPicker = Boolean(DateTimePicker && PanelRow);
+    const [isPickerOpen, setIsPickerOpen] = useStateSafe(false);
 
     function handleChange(newDate) {
       if (newDate === null || newDate === undefined) {
-        setMeta({ ...meta, [META_KEY_DATE]: '' });
+        setMeta({ ...meta, [META_KEY_ENABLED]: '', [META_KEY_DATE]: '' });
         return;
       }
       const dateObj = newDate instanceof Date ? newDate : new Date(newDate);
       const normalized = formatForStorage(dateObj);
-      setMeta({ ...meta, [META_KEY_DATE]: normalized });
+      setMeta({ ...meta, [META_KEY_ENABLED]: '1', [META_KEY_DATE]: normalized });
     }
 
     function handleNow() {
-      setMeta({ ...meta, [META_KEY_DATE]: getNowForStorage() });
+      setMeta({ ...meta, [META_KEY_ENABLED]: '1', [META_KEY_DATE]: getNowForStorage() });
     }
 
     function handleClear() {
       setMeta({ ...meta, [META_KEY_ENABLED]: '', [META_KEY_DATE]: '' });
-    }
-
-    function handleEnableChange(checked) {
-      setMeta({
-        ...meta,
-        [META_KEY_ENABLED]: checked ? '1' : '',
-        [META_KEY_DATE]: checked && !rawValue ? getNowForStorage() : rawValue
-      });
+      setIsPickerOpen(false);
     }
 
     function handleDateChange(e) {
       const dateVal = e.target && e.target.value;
       const { time } = storedToParts(rawValue);
-      setMeta({ ...meta, [META_KEY_DATE]: partsToStored(dateVal, time) });
+      const stored = partsToStored(dateVal, time);
+      setMeta({ ...meta, [META_KEY_ENABLED]: stored ? '1' : '', [META_KEY_DATE]: stored || '' });
     }
 
     function handleTimeBlur(e) {
       const timeVal = (e.target && e.target.value) || '';
       const { date } = storedToParts(rawValue);
-      setMeta({ ...meta, [META_KEY_DATE]: partsToStored(date, timeVal) });
+      const stored = partsToStored(date, timeVal);
+      setMeta({ ...meta, [META_KEY_ENABLED]: stored ? '1' : '', [META_KEY_DATE]: stored || '' });
     }
 
     function handleActionChange(value) {
@@ -205,8 +214,7 @@
     const dateLabel = labels.dateLabel || 'Expiration date and time';
     const nowLabel = labels.nowLabel || 'Now';
     const clearLabel = labels.clearLabel || 'Clear';
-    const enableLabel = labels.enableLabel || 'Activate expire';
-    const enableHelp = labels.enableHelp || 'Uncheck to disable expiration.';
+    const previewEmptyLabel = labels.previewEmptyLabel || 'Set expiration date and time';
     const actionLabel = labels.actionLabel || 'After expiration';
     const actionDraft = labels.actionDraft || 'Set to draft';
     const actionPrivate = labels.actionPrivate || 'Set to private';
@@ -216,25 +224,21 @@
 
     const { date: datePart, time: timePart } = storedToParts(rawValue);
     const timeDisplayValue = is12Hour ? time24ToDisplay(timePart, amLabel, pmLabel) : timePart;
+    const previewText = rawValue ? formatStoredForDisplay(rawValue) : previewEmptyLabel;
 
-    const checkboxEl = CheckboxControl
-      ? el(CheckboxControl, {
-          label: enableLabel,
-          checked: isEnabled,
-          onChange: handleEnableChange
-        })
-      : el(
-          'label',
-          { style: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' } },
-          el('input', {
-            type: 'checkbox',
-            checked: isEnabled,
-            onChange: function (e) { handleEnableChange(e.target.checked); }
-          }),
-          enableLabel
-        );
+    const previewTrigger = el(
+      'button',
+      {
+        type: 'button',
+        className: 'fromscratch-expirator-preview link-button',
+        onClick: function () { setIsPickerOpen(function (prev) { return !prev; }); },
+        'aria-expanded': isPickerOpen,
+        style: { padding: 0, border: 0, background: 'none', cursor: 'pointer', color: 'var(--wp-admin-theme-color, #0073aa)', textAlign: 'left', fontSize: 'inherit' }
+      },
+      previewText
+    );
 
-    const pickerContent = !isEnabled
+    const pickerContent = !isPickerOpen
       ? []
       : useWordPressPicker
         ? [
@@ -310,7 +314,7 @@
       { value: 'private', label: actionPrivate },
       { value: 'redirect', label: actionRedirect }
     ];
-    const actionSelectEl = isEnabled
+    const actionSelectEl = (isPickerOpen || isEnabled)
       ? (SelectControl
           ? el(SelectControl, {
               label: actionLabel,
@@ -331,7 +335,7 @@
               }, actionOptions.map(function (opt) { return el('option', { key: opt.value, value: opt.value }, opt.label); }))
             ))
       : null;
-    const redirectInputEl = isEnabled && actionValue === 'redirect'
+    const redirectInputEl = (isPickerOpen || isEnabled) && actionValue === 'redirect'
       ? el(
           'div',
           { style: { marginTop: '8px' } },
@@ -358,8 +362,7 @@
             el(
               'div',
               { className: 'fromscratch-expirator-field', style: { width: '100%' } },
-              checkboxEl,
-              isEnabled ? el('p', { className: 'description', style: { marginTop: '2px', marginBottom: '6px', fontSize: '12px' } }, enableHelp) : null,
+              previewTrigger,
               ...pickerContent,
               actionSelectEl,
               redirectInputEl
@@ -368,8 +371,7 @@
         : el(
             'div',
             { className: 'fromscratch-expirator-field' },
-            checkboxEl,
-            isEnabled ? el('p', { className: 'description', style: { marginTop: '2px', marginBottom: '6px', fontSize: '12px' } }, enableHelp) : null,
+            previewTrigger,
             ...pickerContent,
             actionSelectEl,
             redirectInputEl

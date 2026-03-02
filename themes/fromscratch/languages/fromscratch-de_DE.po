@@ -490,6 +490,9 @@ msgstr "Löschen"
 msgid "Activate expire"
 msgstr "Ablauf aktivieren"
 
+msgid "Set expiration date and time"
+msgstr "Ablaufdatum und -uhrzeit festlegen"
+
 msgid "Uncheck to disable expiration."
 msgstr "Abwählen, um den Ablauf zu deaktivieren."
 
