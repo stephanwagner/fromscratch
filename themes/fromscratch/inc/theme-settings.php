@@ -198,6 +198,10 @@ add_action('admin_init', function () {
 		'type' => 'string',
 		'sanitize_callback' => 'sanitize_text_field',
 	]);
+	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_client_logo', [
+		'type' => 'integer',
+		'sanitize_callback' => 'fs_sanitize_client_logo',
+	]);
 	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_og_image_fallback', [
 		'type' => 'integer',
 		'sanitize_callback' => 'fs_sanitize_og_image_fallback',
@@ -276,6 +280,15 @@ function fs_sanitize_excerpt_length($value): string
 	}
 	$n = absint($value);
 	return (string) ($n > 0 ? $n : '');
+}
+
+function fs_sanitize_client_logo($value): int
+{
+	$id = absint($value);
+	if ($id <= 0) {
+		return 0;
+	}
+	return wp_attachment_is_image($id) ? $id : 0;
 }
 
 function fs_sanitize_og_image_fallback($value): int
@@ -530,12 +543,36 @@ function theme_settings_page(): void
 
 		<?php if ($tab === 'general') : ?>
 		<?php
+			$client_logo_id = (int) get_option('fromscratch_client_logo', 0);
+			$client_logo_url = $client_logo_id > 0 ? wp_get_attachment_image_url($client_logo_id, 'medium') : '';
 			$og_fallback_id = (int) get_option('fromscratch_og_image_fallback', 0);
 			$og_fallback_url = $og_fallback_id > 0 ? wp_get_attachment_image_url($og_fallback_id, 'medium') : '';
 		?>
 		<form method="post" action="options.php" class="page-settings-form">
 			<?php settings_fields(FS_THEME_OPTION_GROUP_GENERAL); ?>
-			<h2 class="title"><?= esc_html__('Fallback OG image', 'fromscratch') ?></h2>
+			<h2 class="title"><?= esc_html__('Client logo', 'fromscratch') ?></h2>
+			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Used on the login page, the site password page and the maintenance page.', 'fromscratch') ?></p>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?= esc_html__('Image', 'fromscratch') ?></th>
+					<td>
+						<input type="hidden" name="fromscratch_client_logo" id="fromscratch_client_logo" value="<?= esc_attr($client_logo_id) ?>">
+						<div id="fs_client_logo_preview" class="fs-client-logo-preview" style="margin-bottom: 8px;">
+							<?php if ($client_logo_url) : ?>
+								<img src="<?= esc_url($client_logo_url) ?>" alt="" style="max-width: 300px; height: auto; display: block;">
+							<?php endif; ?>
+						</div>
+						<p>
+							<button type="button" class="button" id="fs_client_logo_select"><?= esc_html__('Select image', 'fromscratch') ?></button>
+							<button type="button" class="button" id="fs_client_logo_remove" <?= $client_logo_id <= 0 ? ' style="display:none;"' : '' ?>><?= esc_html__('Remove', 'fromscratch') ?></button>
+						</p>
+					</td>
+				</tr>
+			</table>
+
+			<hr>
+
+			<h2 class="title" style="margin-top: 28px;"><?= esc_html__('Fallback OG image', 'fromscratch') ?></h2>
 			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Used as the social preview image (og:image) when a page or post has no SEO image and no featured image. Best size: 1200 × 630 px.', 'fromscratch') ?></p>
 			<table class="form-table" role="presentation">
 				<tr>
@@ -554,6 +591,9 @@ function theme_settings_page(): void
 					</td>
 				</tr>
 			</table>
+
+			<hr>
+
 			<h2 class="title" style="margin-top: 28px;"><?= esc_html__('Excerpt', 'fromscratch') ?></h2>
 			<table class="form-table" role="presentation">
 				<tr>

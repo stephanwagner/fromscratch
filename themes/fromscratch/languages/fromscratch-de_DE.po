@@ -701,6 +701,23 @@ msgstr "Nicht indexieren"
 msgid "Ask search engines not to index this page."
 msgstr "Suchmaschinen bitten, diese Seite nicht zu indexieren."
 
+# Theme settings: Client logo (General tab)
+msgid "Client logo"
+msgstr "Kundenlogo"
+
+msgid "Used on the login page, the site password page and the maintenance page."
+msgstr "Wird auf der Anmeldeseite, der Passwortseite und der Wartungsseite angezeigt."
+
+# Theme settings: Fallback OG image (General tab)
+msgid "Fallback OG image"
+msgstr "Fallback-OG-Bild"
+
+msgid "Used as the social preview image (og:image) when a page or post has no SEO image and no featured image. Best size: 1200 × 630 px."
+msgstr "Wird als Vorschaubild für soziale Medien (og:image) genutzt, wenn eine Seite oder ein Beitrag kein SEO-Bild und kein Beitragsbild hat. Ideale Größe: 1200 × 630 px."
+
+msgid "Image"
+msgstr "Bild"
+
 # SVG upload
 msgid "SVG file must be under %1$s. You tried to upload a file of %2$s."
 msgstr "Die SVG-Datei muss unter %1$s liegen. Du hast eine Datei mit %2$s hochgeladen."
