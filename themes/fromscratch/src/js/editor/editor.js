@@ -1,2 +1,2 @@
-import './seo';
 import './expirator';
+import './seo';

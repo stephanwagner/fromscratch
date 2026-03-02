@@ -67,7 +67,7 @@
 
     return el(
       'div',
-      { className: 'fromscratch-seo-panel' },
+      { className: 'fromscratch-panel fromscratch-seo-panel' },
       el(
         PanelRow,
         null,
@@ -212,7 +212,8 @@
       {
         name: 'fromscratch-seo',
         title: labels.panelTitle || 'SEO',
-        className: 'fromscratch-seo-document-panel'
+        className: 'fromscratch-seo-document-panel',
+        order: 20
       },
       el(SeoPanelContent, null)
     );

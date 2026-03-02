@@ -83,19 +83,15 @@ add_action('wp_enqueue_scripts', 'fs_styles');
 
 /**
  * Enqueue admin stylesheets (admin.css).
- * Skipped on block editor screens (post.php, post-new.php) so the style is not
- * added to the editor iframe (WordPress expects iframe styles via block.json or enqueue_block_assets).
+ * Also loaded on block editor screens (post.php, post-new.php) so the document
+ * sidebar (e.g. Expiration, SEO panels) gets theme admin styles. The editor
+ * content iframe is unaffected; styles apply to the parent admin document.
  *
  * @param string $hook_suffix Current admin page hook from admin_enqueue_scripts.
  * @return void
  */
 function fs_admin_styles(string $hook_suffix): void
 {
-	$block_editor_hooks = ['post.php', 'post-new.php'];
-	if (in_array($hook_suffix, $block_editor_hooks, true)) {
-		return;
-	}
-
 	$min = fs_is_debug() ? '' : '.min';
 
 	$file = '/assets/css/admin' . $min . '.css';

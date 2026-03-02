@@ -1,5 +1,20 @@
 @use '../variables' as *;
 
+// Panel
+
+.fromscratch-panel {
+  .components-panel__row > * {
+    width: 100%;
+  }
+}
+
+
+
+/*
+
+TODOD 
+
+Check 
 // Main title
 
 .editor-post-title {
@@ -27,3 +42,4 @@
     font-size: 14px;
   }
 }
+*/

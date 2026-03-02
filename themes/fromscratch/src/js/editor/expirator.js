@@ -16,6 +16,7 @@
   const PanelRow = wp.components?.PanelRow;
   const DateTimePicker = wp.components?.DateTimePicker;
   const SelectControl = wp.components?.SelectControl;
+  const TextControl = wp.components?.TextControl;
   const wpDate = wp.date;
 
   const META_KEY_DATE = '_fs_expiration_date';
@@ -241,20 +242,22 @@
 
     const { date: datePart, time: timePart } = storedToParts(rawValue);
     const timeDisplayValue = is12Hour ? time24ToDisplay(timePart, amLabel, pmLabel) : timePart;
-    const previewText = rawValue
-      ? formatStoredForDisplay(rawValue) + (timezone ? ' (' + timezone + ')' : '')
+    const previewContent = rawValue
+      ? (timezone
+          ? [formatStoredForDisplay(rawValue), el('br'), '(' + timezone + ')']
+          : formatStoredForDisplay(rawValue))
       : previewEmptyLabel;
 
     const previewTrigger = el(
       'button',
       {
         type: 'button',
-        className: 'fromscratch-expirator-preview link-button',
+        className: 'fromscratch-expirator-preview',
         onClick: function () { setIsPickerOpen(function (prev) { return !prev; }); },
         'aria-expanded': isPickerOpen,
         style: { padding: 0, border: 0, background: 'none', cursor: 'pointer', color: 'var(--wp-admin-theme-color, #0073aa)', textAlign: 'left', fontSize: 'inherit' }
       },
-      previewText
+      previewContent
     );
 
     const pickerContent = !isPickerOpen
@@ -343,11 +346,9 @@
               value: actionValue,
               options: actionOptions,
               onChange: handleActionChange,
-              style: { marginTop: '12px' }
             })
           : el(
               'div',
-              { style: { marginTop: '12px' } },
               el('label', { htmlFor: 'fs_expiration_action', style: { display: 'block', marginBottom: '4px', fontWeight: '600' } }, actionLabel),
               el('select', {
                 id: 'fs_expiration_action',
@@ -358,20 +359,26 @@
             ))
       : null;
     const redirectInputEl = (isPickerOpen || isEnabled) && actionValue === 'redirect'
-      ? el(
-          'div',
-          { style: { marginTop: '8px' } },
-          el('label', { htmlFor: 'fs_expiration_redirect', style: { display: 'block', marginBottom: '4px', fontWeight: '600' } }, redirectLabel),
-          el('input', {
-            type: 'url',
-            id: 'fs_expiration_redirect',
-            className: 'fromscratch-expirator-redirect-input',
-            value: redirectValue,
-            onChange: handleRedirectChange,
-            placeholder: redirectPlaceholder,
-            style: { width: '100%', maxWidth: '320px' }
-          })
-        )
+      ? (TextControl
+          ? el(TextControl, {
+              label: redirectLabel,
+              value: redirectValue,
+              onChange: handleRedirectChange,
+              placeholder: redirectPlaceholder,
+              type: 'url',
+            })
+          : el(
+              'div',
+              el('label', { htmlFor: 'fs_expiration_redirect', style: { display: 'block', marginBottom: '4px', fontWeight: '600' } }, redirectLabel),
+              el('input', {
+                type: 'url',
+                id: 'fs_expiration_redirect',
+                className: 'fromscratch-expirator-redirect-input',
+                value: redirectValue,
+                onChange: handleRedirectChange,
+                placeholder: redirectPlaceholder,
+              })
+            ))
       : null;
 
     return el(
@@ -418,7 +425,8 @@
       {
         name: 'fromscratch-expirator',
         title: labels.panelTitle || 'Expiration',
-        className: 'fromscratch-expirator-document-panel'
+        className: 'fromscratch-expirator-document-panel',
+        order: 10
       },
       el(ExpiratorPanelContent, null)
     );
