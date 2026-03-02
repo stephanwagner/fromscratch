@@ -14,10 +14,13 @@
   const PanelRow = wp.components?.PanelRow;
   const DateTimePicker = wp.components?.DateTimePicker;
   const CheckboxControl = wp.components?.CheckboxControl;
+  const SelectControl = wp.components?.SelectControl;
   const wpDate = wp.date;
 
   const META_KEY_DATE = '_fs_expiration_date';
   const META_KEY_ENABLED = '_fs_expiration_enabled';
+  const META_KEY_ACTION = '_fs_expiration_action';
+  const META_KEY_REDIRECT = '_fs_expiration_redirect_url';
   const labels = typeof fromscratchExpirator !== 'undefined' ? fromscratchExpirator : {};
   const timezone = labels.timezone || '';
   // Match WordPress publish date. wp_localize_script can output booleans as "1"/"0", so accept both.
@@ -149,6 +152,8 @@
 
     const rawValue = meta[META_KEY_DATE] || '';
     const isEnabled = meta[META_KEY_ENABLED] === '1';
+    const actionValue = meta[META_KEY_ACTION] || 'draft';
+    const redirectValue = meta[META_KEY_REDIRECT] || '';
     const useWordPressPicker = Boolean(DateTimePicker && PanelRow);
 
     function handleChange(newDate) {
@@ -189,16 +194,25 @@
       setMeta({ ...meta, [META_KEY_DATE]: partsToStored(date, timeVal) });
     }
 
+    function handleActionChange(value) {
+      setMeta({ ...meta, [META_KEY_ACTION]: value || 'draft' });
+    }
+
+    function handleRedirectChange(e) {
+      setMeta({ ...meta, [META_KEY_REDIRECT]: (e.target && e.target.value) || '' });
+    }
+
     const dateLabel = labels.dateLabel || 'Expiration date and time';
     const nowLabel = labels.nowLabel || 'Now';
     const clearLabel = labels.clearLabel || 'Clear';
     const enableLabel = labels.enableLabel || 'Activate expire';
     const enableHelp = labels.enableHelp || 'Uncheck to disable expiration.';
-    const dateHelp = labels.dateHelp ||
-      'When this date and time is reached, the post will be set to draft.';
-    const timezoneNote = timezone
-      ? ' Times are in your site timezone (Settings → General).'
-      : '';
+    const actionLabel = labels.actionLabel || 'After expiration';
+    const actionDraft = labels.actionDraft || 'Set to draft';
+    const actionPrivate = labels.actionPrivate || 'Set to private';
+    const actionRedirect = labels.actionRedirect || 'Redirect to';
+    const redirectLabel = labels.redirectLabel || 'Redirect URL';
+    const redirectPlaceholder = labels.redirectPlaceholder || 'https://example.com';
 
     const { date: datePart, time: timePart } = storedToParts(rawValue);
     const timeDisplayValue = is12Hour ? time24ToDisplay(timePart, amLabel, pmLabel) : timePart;
@@ -291,6 +305,49 @@
             )
           ];
 
+    const actionOptions = [
+      { value: 'draft', label: actionDraft },
+      { value: 'private', label: actionPrivate },
+      { value: 'redirect', label: actionRedirect }
+    ];
+    const actionSelectEl = isEnabled
+      ? (SelectControl
+          ? el(SelectControl, {
+              label: actionLabel,
+              value: actionValue,
+              options: actionOptions,
+              onChange: handleActionChange,
+              style: { marginTop: '12px' }
+            })
+          : el(
+              'div',
+              { style: { marginTop: '12px' } },
+              el('label', { htmlFor: 'fs_expiration_action', style: { display: 'block', marginBottom: '4px', fontWeight: '600' } }, actionLabel),
+              el('select', {
+                id: 'fs_expiration_action',
+                value: actionValue,
+                onChange: function (e) { handleActionChange(e.target.value); },
+                style: { width: '100%', maxWidth: '240px' }
+              }, actionOptions.map(function (opt) { return el('option', { key: opt.value, value: opt.value }, opt.label); }))
+            ))
+      : null;
+    const redirectInputEl = isEnabled && actionValue === 'redirect'
+      ? el(
+          'div',
+          { style: { marginTop: '8px' } },
+          el('label', { htmlFor: 'fs_expiration_redirect', style: { display: 'block', marginBottom: '4px', fontWeight: '600' } }, redirectLabel),
+          el('input', {
+            type: 'url',
+            id: 'fs_expiration_redirect',
+            className: 'fromscratch-expirator-redirect-input',
+            value: redirectValue,
+            onChange: handleRedirectChange,
+            placeholder: redirectPlaceholder,
+            style: { width: '100%', maxWidth: '320px' }
+          })
+        )
+      : null;
+
     return el(
       'div',
       { className: 'fromscratch-expirator-panel' },
@@ -304,14 +361,8 @@
               checkboxEl,
               isEnabled ? el('p', { className: 'description', style: { marginTop: '2px', marginBottom: '6px', fontSize: '12px' } }, enableHelp) : null,
               ...pickerContent,
-              el(
-                'p',
-                {
-                  className: 'description',
-                  style: { marginTop: '8px', marginBottom: '0' }
-                },
-                dateHelp + (isEnabled && useWordPressPicker ? '' : timezoneNote)
-              )
+              actionSelectEl,
+              redirectInputEl
             )
           )
         : el(
@@ -320,7 +371,8 @@
             checkboxEl,
             isEnabled ? el('p', { className: 'description', style: { marginTop: '2px', marginBottom: '6px', fontSize: '12px' } }, enableHelp) : null,
             ...pickerContent,
-            el('p', { className: 'description' }, dateHelp + (isEnabled ? timezoneNote : ''))
+            actionSelectEl,
+            redirectInputEl
           )
     );
   }

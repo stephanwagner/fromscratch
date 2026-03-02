@@ -10,7 +10,11 @@ defined('ABSPATH') || exit;
 
 const FS_EXPIRATION_META_KEY = '_fs_expiration_date';
 const FS_EXPIRATION_ENABLED_KEY = '_fs_expiration_enabled';
+const FS_EXPIRATION_ACTION_KEY = '_fs_expiration_action';
+const FS_EXPIRATION_REDIRECT_KEY = '_fs_expiration_redirect_url';
 const FS_EXPIRE_POST_HOOK = 'fs_expire_post';
+
+const FS_EXPIRATION_ACTIONS = ['draft', 'private', 'redirect'];
 
 /**
  * Unschedule any existing expiration event for a post.
@@ -78,6 +82,31 @@ add_action('init', function () {
 	foreach ($types as $post_type) {
 		register_post_meta($post_type, FS_EXPIRATION_ENABLED_KEY, $enabled_args);
 	}
+	$action_args = [
+		'type' => 'string',
+		'single' => true,
+		'show_in_rest' => true,
+		'default' => 'draft',
+		'sanitize_callback' => function ($value) {
+			$value = is_string($value) ? trim($value) : '';
+			return in_array($value, FS_EXPIRATION_ACTIONS, true) ? $value : 'draft';
+		},
+		'auth_callback' => $auth,
+	];
+	$redirect_args = [
+		'type' => 'string',
+		'single' => true,
+		'show_in_rest' => true,
+		'sanitize_callback' => function ($value) {
+			$value = is_string($value) ? trim($value) : '';
+			return $value === '' ? '' : esc_url_raw($value);
+		},
+		'auth_callback' => $auth,
+	];
+	foreach ($types as $post_type) {
+		register_post_meta($post_type, FS_EXPIRATION_ACTION_KEY, $action_args);
+		register_post_meta($post_type, FS_EXPIRATION_REDIRECT_KEY, $redirect_args);
+	}
 });
 
 /**
@@ -108,6 +137,12 @@ add_action('enqueue_block_editor_assets', function () {
 		'amLabel'    => $am_label,
 		'pmLabel'    => $pm_label,
 		'timePlaceholder' => $is_12_hour ? 'e.g. 2:30 ' . $pm_label : 'HH:mm',
+		'actionLabel' => __('After expiration', 'fromscratch'),
+		'actionDraft' => __('Set to draft', 'fromscratch'),
+		'actionPrivate' => __('Set to private', 'fromscratch'),
+		'actionRedirect' => __('Redirect to', 'fromscratch'),
+		'redirectPlaceholder' => __('https://example.com', 'fromscratch'),
+		'redirectLabel' => __('Redirect URL', 'fromscratch'),
 	], 11);
 });
 
@@ -154,8 +189,7 @@ add_action('deleted_post_meta', function (array $deleted_meta_ids, int $object_i
 }, 10, 3);
 
 /**
- * Run when the scheduled time is reached: set post to draft and remove expiration meta.
- * Only expires if the checkbox (enabled meta) is still set.
+ * Run when the scheduled time is reached. Action: draft → set to draft; private → set to private; redirect → keep published, redirect on visit.
  */
 add_action(FS_EXPIRE_POST_HOOK, function (int $post_id): void {
 	if (get_post_meta($post_id, FS_EXPIRATION_ENABLED_KEY, true) !== '1') {
@@ -165,12 +199,23 @@ add_action(FS_EXPIRE_POST_HOOK, function (int $post_id): void {
 	if (get_post_status($post_id) !== 'publish') {
 		return;
 	}
+	$action = get_post_meta($post_id, FS_EXPIRATION_ACTION_KEY, true);
+	if (!in_array($action, FS_EXPIRATION_ACTIONS, true)) {
+		$action = 'draft';
+	}
+	fs_unschedule_expire_post($post_id);
+	if ($action === 'redirect') {
+		// Leave post published; redirect happens on template_redirect when visiting the URL.
+		return;
+	}
 	wp_update_post([
 		'ID'          => $post_id,
-		'post_status' => 'draft',
+		'post_status' => $action === 'private' ? 'private' : 'draft',
 	]);
 	delete_post_meta($post_id, FS_EXPIRATION_META_KEY);
 	delete_post_meta($post_id, FS_EXPIRATION_ENABLED_KEY);
+	delete_post_meta($post_id, FS_EXPIRATION_ACTION_KEY);
+	delete_post_meta($post_id, FS_EXPIRATION_REDIRECT_KEY);
 });
 
 /**
@@ -212,12 +257,54 @@ add_action('init', function (): void {
 		'fields' => 'ids',
 	]);
 	foreach ($query->posts as $post_id) {
+		$action = get_post_meta($post_id, FS_EXPIRATION_ACTION_KEY, true);
+		if (!in_array($action, FS_EXPIRATION_ACTIONS, true)) {
+			$action = 'draft';
+		}
+		fs_unschedule_expire_post($post_id);
+		if ($action === 'redirect') {
+			continue;
+		}
 		wp_update_post([
 			'ID'          => $post_id,
-			'post_status' => 'draft',
+			'post_status' => $action === 'private' ? 'private' : 'draft',
 		]);
 		delete_post_meta($post_id, FS_EXPIRATION_META_KEY);
 		delete_post_meta($post_id, FS_EXPIRATION_ENABLED_KEY);
-		fs_unschedule_expire_post($post_id);
+		delete_post_meta($post_id, FS_EXPIRATION_ACTION_KEY);
+		delete_post_meta($post_id, FS_EXPIRATION_REDIRECT_KEY);
 	}
 }, 20);
+
+/**
+ * Redirect to the configured URL when visiting an expired post with action "redirect".
+ */
+add_action('template_redirect', function (): void {
+	if (!is_singular()) {
+		return;
+	}
+	$post_id = get_queried_object_id();
+	if (!$post_id) {
+		return;
+	}
+	if (get_post_meta($post_id, FS_EXPIRATION_ENABLED_KEY, true) !== '1') {
+		return;
+	}
+	$date = get_post_meta($post_id, FS_EXPIRATION_META_KEY, true);
+	if (!is_string($date) || $date === '') {
+		return;
+	}
+	$now = current_time('Y-m-d H:i');
+	if (strcmp($date, $now) > 0) {
+		return;
+	}
+	if (get_post_meta($post_id, FS_EXPIRATION_ACTION_KEY, true) !== 'redirect') {
+		return;
+	}
+	$url = get_post_meta($post_id, FS_EXPIRATION_REDIRECT_KEY, true);
+	if (!is_string($url) || $url === '') {
+		return;
+	}
+	wp_redirect(esc_url_raw($url), 301);
+	exit;
+});
