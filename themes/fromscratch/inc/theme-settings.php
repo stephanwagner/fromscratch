@@ -430,10 +430,13 @@ function fs_sanitize_features($value): array
 	if (!is_array($value)) {
 		return [];
 	}
-	$keys = ['enable_blogs', 'enable_svg', 'enable_duplicate_post', 'enable_seo', 'enable_post_expirator'];
+	$defaults = function_exists('fs_theme_feature_defaults') ? fs_theme_feature_defaults() : [];
 	$out = [];
-	foreach ($keys as $key) {
+	foreach (array_keys($defaults) as $key) {
 		$out[$key] = (!empty($value[$key])) ? 1 : 0;
+	}
+	if (empty($out['enable_blogs'])) {
+		$out['enable_remove_post_tags'] = 0;
 	}
 	if (empty($out['enable_post_expirator'])) {
 		wp_clear_scheduled_hook('fs_expire_post');

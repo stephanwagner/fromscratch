@@ -209,16 +209,13 @@ function fs_render_developer_settings_page(): void
 					<th scope="row"><?= esc_html__('Blogs', 'fromscratch') ?></th>
 					<td>
 						<input type="hidden" name="fromscratch_features[enable_blogs]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_blogs]" value="1" <?= checked($feat('enable_blogs'), 1, false) ?>> <?= esc_html__('Allow posts', 'fromscratch') ?></label>
-						<p class="description fs-description-adjust-checkbox"><?= esc_html__('Shows the Posts menu in the admin and allows creating and editing blog posts.', 'fromscratch') ?></p>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><?= esc_html__('SVG support', 'fromscratch') ?></th>
-					<td>
-						<input type="hidden" name="fromscratch_features[enable_svg]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_svg]" value="1" <?= checked($feat('enable_svg'), 1, false) ?>> <?= esc_html__('Allow SVG uploads', 'fromscratch') ?></label>
-						<p class="description fs-description-adjust-checkbox"><?= esc_html__('SVGs are sanitized on upload.', 'fromscratch') ?></p>
+						<label><input type="checkbox" name="fromscratch_features[enable_blogs]" id="fromscratch_features_enable_blogs" value="1" <?= checked($feat('enable_blogs'), 1, false) ?>> <?= esc_html__('Allow posts', 'fromscratch') ?></label>
+						<p class="description fs-indent-checkbox"><?= esc_html__('Shows the Posts menu in the admin and allows creating and editing blog posts.', 'fromscratch') ?></p>
+						<div class="fs-feature-sub fs-indent-checkbox" id="fs-feature-sub-blogs" style="margin-top: 12px; <?= $feat('enable_blogs') !== 1 ? 'display:none;' : '' ?>">
+							<input type="hidden" name="fromscratch_features[enable_remove_post_tags]" value="0">
+							<label><input type="checkbox" name="fromscratch_features[enable_remove_post_tags]" value="1" <?= checked($feat('enable_remove_post_tags'), 1, false) ?>> <?= esc_html__('Disable tags', 'fromscratch') ?></label>
+							<p class="description fs-indent-checkbox" style="margin-top: 4px;"><?= esc_html__('Unregisters the Tags taxonomy for posts.', 'fromscratch') ?></p>
+						</div>
 					</td>
 				</tr>
 				<tr>
@@ -226,15 +223,7 @@ function fs_render_developer_settings_page(): void
 					<td>
 						<input type="hidden" name="fromscratch_features[enable_duplicate_post]" value="0">
 						<label><input type="checkbox" name="fromscratch_features[enable_duplicate_post]" value="1" <?= checked($feat('enable_duplicate_post'), 1, false) ?>> <?= esc_html__('Allow duplication', 'fromscratch') ?></label>
-						<p class="description fs-description-adjust-checkbox"><?= esc_html__('Shows a "Duplicate" row action for posts, pages, and custom post types.', 'fromscratch') ?></p>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><?= esc_html__('SEO', 'fromscratch') ?></th>
-					<td>
-						<input type="hidden" name="fromscratch_features[enable_seo]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_seo]" value="1" <?= checked($feat('enable_seo'), 1, false) ?>> <?= esc_html__('SEO panel', 'fromscratch') ?></label>
-						<p class="description fs-description-adjust-checkbox"><?= esc_html__('Adds a section to pages, posts and custom post types to enter SEO info (title, description, OG image, noindex).', 'fromscratch') ?></p>
+						<p class="description fs-indent-checkbox"><?= esc_html__('Shows a "Duplicate" row action for posts, pages, and custom post types.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 				<tr>
@@ -242,12 +231,37 @@ function fs_render_developer_settings_page(): void
 					<td>
 						<input type="hidden" name="fromscratch_features[enable_post_expirator]" value="0">
 						<label><input type="checkbox" name="fromscratch_features[enable_post_expirator]" value="1" <?= checked($feat('enable_post_expirator'), 1, false) ?>> <?= esc_html__('Enable post expirator', 'fromscratch') ?></label>
-						<p class="description fs-description-adjust-checkbox"><?= esc_html__('Adds an expiration date/time to posts, pages and theme CPTs. When reached, the post is set to draft.', 'fromscratch') ?></p>
+						<p class="description fs-indent-checkbox"><?= esc_html__('Adds an expiration date/time to posts, pages and custom post types When reached, the post is set to draft.', 'fromscratch') ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?= esc_html__('SEO', 'fromscratch') ?></th>
+					<td>
+						<input type="hidden" name="fromscratch_features[enable_seo]" value="0">
+						<label><input type="checkbox" name="fromscratch_features[enable_seo]" value="1" <?= checked($feat('enable_seo'), 1, false) ?>> <?= esc_html__('SEO panel', 'fromscratch') ?></label>
+						<p class="description fs-indent-checkbox"><?= esc_html__('Adds a section to pages, posts and custom post types to enter SEO info.', 'fromscratch') ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?= esc_html__('SVG support', 'fromscratch') ?></th>
+					<td>
+						<input type="hidden" name="fromscratch_features[enable_svg]" value="0">
+						<label><input type="checkbox" name="fromscratch_features[enable_svg]" value="1" <?= checked($feat('enable_svg'), 1, false) ?>> <?= esc_html__('Allow SVG uploads', 'fromscratch') ?></label>
+						<p class="description fs-indent-checkbox"><?= esc_html__('Uploaded SVG files are automatically sanitized to remove potentially unsafe code.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 			</table>
 			<p class="submit"><?php submit_button(); ?></p>
 		</form>
+		<script>
+		(function() {
+			var blogs = document.getElementById('fromscratch_features_enable_blogs');
+			var sub = document.getElementById('fs-feature-sub-blogs');
+			if (!blogs || !sub) return;
+			function toggle() { sub.style.display = blogs.checked ? '' : 'none'; }
+			blogs.addEventListener('change', toggle);
+		})();
+		</script>
 
 		<?php elseif ($tab === 'access') : ?>
 		<?php

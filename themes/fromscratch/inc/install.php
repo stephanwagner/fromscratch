@@ -1167,12 +1167,14 @@ Tags:
   }
 
   /**
-   * Blogs: save enable_blogs from install form (default on)
+   * Features: merge central defaults with existing, then set enable_blogs from install form.
    */
+  $defaults = function_exists('fs_theme_feature_defaults') ? fs_theme_feature_defaults() : [];
   $features = get_option('fromscratch_features', []);
   if (!is_array($features)) {
     $features = [];
   }
+  $features = array_merge($defaults, $features);
   $features['enable_blogs'] = !empty($_POST['install']['blogs']) ? 1 : 0;
   update_option('fromscratch_features', $features);
 

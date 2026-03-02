@@ -40,6 +40,19 @@ function fs_menus(): void
 add_action('init', 'fs_menus', 10);
 
 /**
+ * Unregister post_tag for posts when Settings → Developer → Features: Blogs is on and "Disable tags" is on.
+ */
+add_action('init', function (): void {
+	if (!function_exists('fs_theme_feature_enabled')) {
+		return;
+	}
+	if (!fs_theme_feature_enabled('blogs') || !fs_theme_feature_enabled('remove_post_tags')) {
+		return;
+	}
+	unregister_taxonomy_for_object_type('post_tag', 'post');
+}, 11);
+
+/**
  * Support alignwide and alignfull for block editor.
  *
  * @return void

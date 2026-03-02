@@ -487,8 +487,8 @@ msgstr "Beitrags-Ablauf"
 msgid "Enable post expirator"
 msgstr "Beitrags-Ablauf aktivieren"
 
-msgid "Adds an expiration date/time to posts, pages and theme CPTs. When reached, the post is set to draft."
-msgstr "Fügt Beiträgen, Seiten und Theme-CPTs ein Ablaufdatum/-uhrzeit hinzu. Nach Ablauf wird der Beitrag als Entwurf gesetzt."
+msgid "Adds an expiration date/time to posts, pages and custom post types When reached, the post is set to draft."
+msgstr "Fügt Beiträgen, Seiten und benutzerdefinierten Beitragstypen ein Ablaufdatum/-uhrzeit hinzu. Nach Ablauf wird der Beitrag als Entwurf gesetzt."
 
 msgid "Add redirect"
 msgstr "Redirect hinzufügen"
@@ -511,14 +511,20 @@ msgstr "Beiträge erlauben"
 msgid "Shows the Posts menu in the admin and allows creating and editing blog posts."
 msgstr "Zeigt im Admin das Menü „Beiträge“ und erlaubt das Erstellen und Bearbeiten von Blogbeiträgen."
 
+msgid "Disable tags"
+msgstr "Tags deaktivieren"
+
+msgid "Unregisters the Tags taxonomy for posts."
+msgstr "Entfernt die Tags-Taxonomie für Beiträge."
+
 msgid "SVG support"
 msgstr "SVG-Unterstützung"
 
 msgid "Allow SVG uploads"
 msgstr "SVG-Uploads erlauben"
 
-msgid "SVGs are sanitized on upload."
-msgstr "SVGs werden beim Upload bereinigt."
+msgid "Uploaded SVG files are automatically sanitized to remove potentially unsafe code."
+msgstr "SVG-Dateien werden beim Upload automatisch bereinigt, um potenziell schädlichen Code zu entfernen."
 
 msgid "Duplicate"
 msgstr "Duplizieren"
@@ -535,8 +541,8 @@ msgstr "SEO"
 msgid "SEO panel"
 msgstr "SEO-Bereich"
 
-msgid "Adds a section to pages, posts and custom post types to enter SEO info (title, description, OG image, noindex)."
-msgstr "Fügt Seiten, Beiträgen und eigenen Beitragstypen einen Bereich zum Eintragen von SEO-Infos hinzu (Titel, Beschreibung, OG-Bild, noindex)."
+msgid "Adds a section to pages, posts and custom post types to enter SEO info."
+msgstr "Fügt Seiten, Beiträgen und benutzerdefinierten Beitragstypen einen Bereich zum Eintragen von SEO-Infos hinzu."
 
 msgid "No password set. Set a password below to activate protection."
 msgstr "Kein Passwort gesetzt. Setze unten ein Passwort, um den Schutz zu aktivieren."
