@@ -7,136 +7,42 @@
 @forward '../layout/shared/tags-editor';
 @forward '../layout/shared/wordpress-blocks-editor';
 
+// Wordpress
+@forward 'wordpress';
+
+// Forms
+@forward 'form';
+
+// Common
+@forward 'common';
+
 // Editor
 @forward 'editor';
 
 // Blocks
 @forward '../blocks/all-blocks';
 
+/*
 
-// TODO SORT
+// TODO: Maybe move to blocks plugin
 
-.fs-indent-checkbox {
-  padding-left: 24px;
-}
+// Block preview
 
-.fs-hidden {
-  display: none !important;
-}
+.admin-block-preview {
+  border: 1px solid #000;
+  border-left-width: 4px;
+  background: #f6f6f6;
+  border-radius: 8px;
+  padding: 20px 24px 24px;
+  font-size: 16px;
 
-.fs-notice-error {
-  ul {
-    list-style-type: none;
-
-    li {
-      position: relative;
-      margin: 0 0 8px;
-      padding-left: 12px;
-
-      &::before {
-        content: "›";
-        position: absolute;
-        left: 2px;
-        top: -1px;
-        transform: scale(1.25);
-      }
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
-  }
-}
-
-.fs-details {
-  summary {
-    position: relative;
-    padding-left: 12px;
-    cursor: pointer;
-    list-style: none;
-
-    &::-webkit-details-marker {
-      display: none;
-    }
-
-    &::before {
-      content: "›";
-      position: absolute;
-      left: 0;
-      top: 0;
-      transition: transform 280ms;
-      transform: translateY(-1px) translateX(1px) scale(1.25);
-    }
+  b {
+    font-weight: 600;
   }
 
-  &[open] summary::before {
-    transform: translateY(-1px) translateX(1px) scale(1.25) rotate(90deg);
+  code {
+    color: #999;
+    font-size: 14px;
   }
 }
-
-.fs-input-label {
-  display: block;
-  margin-bottom: 4px;
-  font-size: 14px;
-}
-
-.fs-input-description {
-  margin-top: 4px;
-  font-size: 13px;
-}
-
-.fs-table-tight {
-  width: auto;
-
-  th {
-    width: auto;
-  }
-
-  th,
-  td {
-    padding: 8px 6px;
-
-    &:first-child {
-      padding-left: 12px;
-    }
-
-    &:last-child {
-      padding-right: 12px;
-    }
-  }
-}
-
-.fs-description-link {
-  &.-has-icon {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-
-    .fs-description-link-icon {
-      width: 16px;
-      height: 16px;
-      transform: translateY(1px);
-
-      svg {
-        display: block;
-        width: 100%;
-        height: 100%;
-      }
-    }
-  }
-
-  &:not(:hover) {
-    &.-gray {
-      color: #646970;
-    }
-  }
-}
-
-
-
-
-// Forced checkbox
-input[type="checkbox"][data-fs-forced='1'] {
-  cursor: not-allowed;
-  opacity: 0.35;
-}
+*/

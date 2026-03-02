@@ -1,0 +1,9 @@
+.nav-tab {
+  border-radius: 3px 3px 0 0;
+  padding-top: 3px;
+  padding-bottom: 3px;
+
+  @media (max-width: 600px) {
+    border-radius: 3px;
+  }
+}

@@ -708,8 +708,8 @@ msgstr "Suchmaschinen bitten, diese Seite nicht zu indexieren."
 msgid "Client logo"
 msgstr "Kundenlogo"
 
-msgid "Used on the login page, the site password page and the maintenance page."
-msgstr "Wird auf der Anmeldeseite, der Passwortseite und der Wartungsseite angezeigt."
+msgid "Shown on the login page instead of the WordPress logo."
+msgstr "Wird auf der Anmeldeseite anstelle des WordPress-Logos angezeigt."
 
 # Theme settings: Fallback OG image (General tab)
 msgid "Fallback OG image"
@@ -720,6 +720,22 @@ msgstr "Wird als Vorschaubild für soziale Medien (og:image) genutzt, wenn eine 
 
 msgid "Image"
 msgstr "Bild"
+
+# Theme settings: Excerpt (General tab)
+msgid "Excerpt"
+msgstr "Auszug"
+
+msgid "Excerpt length"
+msgstr "Auszugslänge"
+
+msgid "Number of words used when trimming excerpts."
+msgstr "Anzahl der Wörter beim Kürzen von Auszügen."
+
+msgid "Excerpt \"more\" text"
+msgstr "Auszug „Weiterlesen“-Text"
+
+msgid "Text shown after the excerpt when it is truncated (e.g. …). Leave blank for none."
+msgstr "Text, der nach dem Auszug angezeigt wird, wenn er gekürzt wurde (z. B. …). Leer lassen für keinen."
 
 # SVG upload
 msgid "SVG file must be under %1$s. You tried to upload a file of %2$s."

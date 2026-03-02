@@ -541,7 +541,7 @@ function theme_settings_page(): void
 		<form method="post" action="options.php" class="page-settings-form">
 			<?php settings_fields(FS_THEME_OPTION_GROUP_GENERAL); ?>
 			<h2 class="title"><?= esc_html__('Client logo', 'fromscratch') ?></h2>
-			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Used on the login page, the site password page and the maintenance page.', 'fromscratch') ?></p>
+			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Shown on the login page instead of the WordPress logo.', 'fromscratch') ?></p>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row"><?= esc_html__('Image', 'fromscratch') ?></th>
@@ -574,7 +574,7 @@ function theme_settings_page(): void
 							<input type="hidden" name="fromscratch_og_image_fallback" id="fromscratch_og_image_fallback" value="<?= esc_attr($og_fallback_id) ?>" data-fs-image-picker-input>
 							<div class="fs-og-fallback-preview" style="margin-bottom: 8px;" data-fs-image-picker-preview>
 								<?php if ($og_fallback_url) : ?>
-									<img src="<?= esc_url($og_fallback_url) ?>" alt="" style="max-width: 240px; height: auto; display: block;">
+									<img src="<?= esc_url($og_fallback_url) ?>" alt="" style="max-width: 240px; height: auto; display: block; border-radius: 3px;">
 								<?php endif; ?>
 							</div>
 							<p>

@@ -1,0 +1,23 @@
+// Forms
+
+.fs-input-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.fs-input-description {
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+// Checkboxes
+
+.fs-indent-checkbox {
+  padding-left: 24px;
+}
+
+input[type="checkbox"][data-fs-forced='1'] {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
