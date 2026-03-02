@@ -446,46 +446,56 @@ function fs_render_developer_settings_page(): void
 			</script>
 
 		<?php elseif ($tab === 'tools') : ?>
-			<?php
-			$flush_notice = get_transient('fromscratch_flush_redirect_cache_notice');
-			if ($flush_notice !== false) {
-				delete_transient('fromscratch_flush_redirect_cache_notice');
-			}
-			$revisions_notice = get_transient('fromscratch_clean_revisions_notice');
-			if ($revisions_notice !== false) {
-				delete_transient('fromscratch_clean_revisions_notice');
-			}
-			?>
-			<?php if ($flush_notice !== false) : ?>
-				<div class="notice notice-success is-dismissible">
-					<p><strong><?= esc_html__('Redirect cache flushed.', 'fromscratch') ?></strong></p>
-				</div>
-			<?php endif; ?>
-			<?php if ($revisions_notice !== false && is_numeric($revisions_notice)) : ?>
-				<div class="notice notice-success is-dismissible">
-					<p><strong><?= esc_html(sprintf(_n('%s revision deleted.', '%s revisions deleted.', (int) $revisions_notice, 'fromscratch'), number_format_i18n((int) $revisions_notice))) ?></strong></p>
-				</div>
-			<?php endif; ?>
-			<h2 class="title"><?= esc_html__('Flush redirect cache', 'fromscratch') ?></h2>
-			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Flushes WordPress rewrite rules so that redirect and permalink changes take effect immediately. Use this after changing redirects or permalink structure.', 'fromscratch') ?></p>
-			<form method="post" action="">
-				<?php wp_nonce_field('fromscratch_flush_redirect_cache'); ?>
-				<input type="hidden" name="fromscratch_flush_redirect_cache" value="1">
-				<p><button type="submit" class="button button-primary"><?= esc_html__('Flush redirect cache', 'fromscratch') ?></button></p>
-			</form>
+			<div class="page-settings-form">
+				<?php
+				$flush_notice = get_transient('fromscratch_flush_redirect_cache_notice');
+				if ($flush_notice !== false) {
+					delete_transient('fromscratch_flush_redirect_cache_notice');
+				}
+				$revisions_notice = get_transient('fromscratch_clean_revisions_notice');
+				if ($revisions_notice !== false) {
+					delete_transient('fromscratch_clean_revisions_notice');
+				}
+				?>
+				<?php if ($flush_notice !== false) : ?>
+					<div class="notice notice-success is-dismissible">
+						<p><strong><?= esc_html__('Permalink rules have been successfully refreshed.', 'fromscratch') ?></strong></p>
+					</div>
+				<?php endif; ?>
+				<?php if ($revisions_notice !== false && is_numeric($revisions_notice)) : ?>
+					<div class="notice notice-success is-dismissible">
+						<p><strong><?= esc_html(sprintf(_n('%s revision deleted.', '%s revisions deleted.', (int) $revisions_notice, 'fromscratch'), number_format_i18n((int) $revisions_notice))) ?></strong></p>
+					</div>
+				<?php endif; ?>
+				<h2 class="title"><?= esc_html__('Refresh Permalink Rules', 'fromscratch') ?></h2>
+				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Updates the WordPress permalink structure and rewrite rules.', 'fromscratch') ?></p>
+				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Run after structural changes.', 'fromscratch') ?></p>
+				<form method="post" action="">
+					<?php wp_nonce_field('fromscratch_flush_redirect_cache'); ?>
+					<input type="hidden" name="fromscratch_flush_redirect_cache" value="1">
+					<div style="margin-top: 20px;"><button type="submit" class="button button-primary"><?= esc_html_x('Refresh Permalink Rules', 'Button text', 'fromscratch') ?></button></div>
+				</form>
 
-			<h2 class="title" style="margin-top: 28px;"><?= esc_html__('Revision cleaner', 'fromscratch') ?></h2>
-			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Delete old revisions for all posts and pages. Set how many of the most recent revisions to keep per post; older ones will be removed.', 'fromscratch') ?></p>
-			<form method="post" action="">
-				<?php wp_nonce_field('fromscratch_clean_revisions'); ?>
-				<input type="hidden" name="fromscratch_clean_revisions" value="1">
-				<p>
-					<label for="fromscratch_revisions_keep"><?= esc_html__('Keep per post', 'fromscratch') ?></label>
-					<input type="number" name="fromscratch_revisions_keep" id="fromscratch_revisions_keep" value="5" min="0" max="99" step="1" class="small-text" style="margin-left: 6px; margin-right: 8px;">
-					<?= esc_html__('revisions (0 = delete all)', 'fromscratch') ?>
-				</p>
-				<p><button type="submit" class="button button-primary"><?= esc_html__('Clean revisions', 'fromscratch') ?></button></p>
-			</form>
+				<hr>
+
+				<h2 class="title" style="margin-top: 28px;"><?= esc_html__('Revision cleaner', 'fromscratch') ?></h2>
+				<?php
+				global $wpdb;
+				$revisions_total = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'revision'");
+				?>
+				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Delete old revisions for all posts and pages. Set how many of the most recent revisions to keep per post, older ones will be removed.', 'fromscratch') ?></p>
+				<p class="description" style="margin-bottom: 12px;"><strong><?= esc_html(sprintf(_n('%s revision in total.', '%s revisions in total.', $revisions_total, 'fromscratch'), number_format_i18n($revisions_total))) ?></strong></p>
+				<form method="post" action="">
+					<?php wp_nonce_field('fromscratch_clean_revisions'); ?>
+					<input type="hidden" name="fromscratch_clean_revisions" value="1">
+					<p>
+						<label for="fromscratch_revisions_keep"><?= esc_html__('Keep per post', 'fromscratch') ?></label>
+						<input type="number" name="fromscratch_revisions_keep" id="fromscratch_revisions_keep" value="5" min="0" max="99" step="1" class="small-text" style="margin-left: 6px; margin-right: 8px;">
+						<?= esc_html__('revisions (0 = delete all)', 'fromscratch') ?>
+					</p>
+					<div style="margin-top: 24px;"><button type="submit" class="button button-primary"><?= esc_html__('Clean revisions', 'fromscratch') ?></button></div>
+				</form>
+			</div>
 		<?php endif; ?>
 	</div>
 <?php

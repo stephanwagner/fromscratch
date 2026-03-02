@@ -353,20 +353,27 @@ msgstr "Alle Overrides zurücksetzen"
 msgid "Tools"
 msgstr "Werkzeuge"
 
-msgid "Redirect cache flushed."
-msgstr "Redirect-Cache geleert."
+msgid "Permalink rules have been successfully refreshed."
+msgstr "Permalink-Regeln wurden erfolgreich aktualisiert."
 
-msgid "Flush redirect cache"
-msgstr "Redirect-Cache leeren"
+msgid "Refresh Permalink Rules"
+msgstr "Permalink-Regeln aktualisieren"
 
-msgid "Flushes WordPress rewrite rules so that redirect and permalink changes take effect immediately. Use this after changing redirects or permalink structure."
-msgstr "Leert die WordPress-Weiterleitungsregeln, damit Änderungen an Redirects oder Permalink-Struktur sofort wirksam werden. Nach Änderungen an Redirects oder Permalinks ausführen."
+msgid "Updates the WordPress permalink structure and rewrite rules."
+msgstr "Aktualisiert die WordPress-Permalink-Struktur und Rewrite-Regeln."
+
+msgid "Run after structural changes."
+msgstr "Nach Änderungen an Permalinks oder Weiterleitungen ausführen."
+
+msgctxt "Button text"
+msgid "Refresh Permalink Rules"
+msgstr "Permalink-Regeln aktualisieren"
 
 msgid "Revision cleaner"
 msgstr "Revisionen bereinigen"
 
-msgid "Delete old revisions for all posts and pages. Set how many of the most recent revisions to keep per post; older ones will be removed."
-msgstr "Entfernt alte Revisionen von allen Beiträgen und Seiten. Gib an, wie viele der neuesten Revisionen pro Beitrag behalten werden; ältere werden gelöscht."
+msgid "Delete old revisions for all posts and pages. Set how many of the most recent revisions to keep per post, older ones will be removed."
+msgstr "Entfernt alte Revisionen von allen Beiträgen und Seiten. Gib an, wie viele der neuesten Revisionen pro Beitrag behalten werden, ältere werden gelöscht."
 
 msgid "Keep per post"
 msgstr "Pro Beitrag behalten"
