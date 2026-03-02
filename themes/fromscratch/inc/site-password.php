@@ -92,18 +92,19 @@ function fs_site_password_show_form(): void
 			body {
 				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, sans-serif;
 				margin: 0;
-				padding: 0;
+				padding: 0 16px;
 				min-height: 100vh;
 				display: flex;
 				align-items: center;
 				justify-content: center;
 				background: #f0f0f1;
+				color: #3c434a;
 			}
 
 			.box {
 				background: #fff;
 				padding: 32px 24px;
-				max-width: 360px;
+				max-width: 420px;
 				width: 100%;
 				box-shadow: 0 1px 3px rgba(0, 0, 0, .13);
 				border: 1px solid #c3c4c7;
@@ -113,16 +114,34 @@ function fs_site_password_show_form(): void
 				line-height: 1.4;
 			}
 
+			@media (max-width: 600px) {
+				.box {
+					padding: 24px 16px;
+				}
+			}
+
 			h1 {
 				margin: 0 0 24px;
 				font-size: 22px;
 				line-height: 1.2;
 				font-weight: 600;
+				color: #1d2327;
+			}
+
+			@media (max-width: 600px) {
+				h1 {
+					margin-bottom: 16px;
+				}
 			}
 
 			.notice {
-				margin: 0 0 24px;
+				margin: 0 auto 24px;
 				color: #50575e;
+				max-width: 360px;
+			}
+
+			.notice:last-child {
+				margin-bottom: 0;
 			}
 
 			form {
@@ -172,6 +191,13 @@ function fs_site_password_show_form(): void
 				margin: -4px 0 24px;
 				color: #e33;
 				font-weight: 600;
+			}
+
+			@media (max-width: 600px) {
+				.error {
+					margin-top: -12px;
+					margin-bottom: 16px;
+				}
 			}
 		</style>
 	</head>

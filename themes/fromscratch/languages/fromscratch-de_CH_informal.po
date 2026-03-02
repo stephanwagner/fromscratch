@@ -648,7 +648,7 @@ msgid "Short message shown below the title. Leave blank for default."
 msgstr "Kurzer Hinweistext unter der Überschrift. Leer lassen für den Standardtext."
 
 msgid "We are currently performing scheduled maintenance. Please check back shortly."
-msgstr "Wir führen gerade planmäßige Wartungsarbeiten durch. Bitte schau in Kürze wieder vorbei."
+msgstr "Es werden planmäßige Wartungsarbeiten durchgeführt. Bitte in Kürze wieder vorbeischauen."
 
 msgid "Override SCSS design variables. Values are output as CSS custom properties (:root). Add new variables in config/theme.php under design.sections."
 msgstr "SCSS-Designvariablen überschreiben. Werte werden als CSS-Custom-Properties (:root) ausgegeben. Neue Variablen in config/theme.php unter design.sections hinzufügen."

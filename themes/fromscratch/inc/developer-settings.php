@@ -421,7 +421,7 @@ function fs_render_developer_settings_page(): void
 					<tr>
 						<th scope="row"><label for="fromscratch_maintenance_description"><?= esc_html__('Description', 'fromscratch') ?></label></th>
 						<td>
-							<textarea name="fromscratch_maintenance_description" id="fromscratch_maintenance_description" rows="3" class="large-text"><?= esc_textarea(get_option('fromscratch_maintenance_description', '')) ?></textarea>
+							<textarea name="fromscratch_maintenance_description" id="fromscratch_maintenance_description" rows="3" class="large-text" placeholder="<?= esc_attr__('We are currently performing scheduled maintenance. Please check back shortly.', 'fromscratch') ?>"><?= esc_textarea(get_option('fromscratch_maintenance_description', '')) ?></textarea>
 							<p class="description"><?= esc_html__('Short message shown below the title. Leave blank for default.', 'fromscratch') ?></p>
 						</td>
 					</tr>
