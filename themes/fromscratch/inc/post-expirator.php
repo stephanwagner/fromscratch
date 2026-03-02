@@ -9,6 +9,7 @@ defined('ABSPATH') || exit;
  */
 
 const FS_EXPIRATION_META_KEY = '_fs_expiration_date';
+const FS_EXPIRATION_ENABLED_KEY = '_fs_expiration_enabled';
 const FS_EXPIRE_POST_HOOK = 'fs_expire_post';
 
 /**
@@ -65,6 +66,18 @@ add_action('init', function () {
 	foreach ($types as $post_type) {
 		register_post_meta($post_type, FS_EXPIRATION_META_KEY, $args);
 	}
+	$enabled_args = [
+		'type' => 'string',
+		'single' => true,
+		'show_in_rest' => true,
+		'sanitize_callback' => function ($value) {
+			return ($value === '1' || $value === true) ? '1' : '';
+		},
+		'auth_callback' => $auth,
+	];
+	foreach ($types as $post_type) {
+		register_post_meta($post_type, FS_EXPIRATION_ENABLED_KEY, $enabled_args);
+	}
 });
 
 /**
@@ -88,7 +101,10 @@ add_action('enqueue_block_editor_assets', function () {
 		'timezone'   => wp_timezone_string(),
 		'is12Hour'   => $is_12_hour ? 1 : 0,
 		'startOfWeek' => (int) get_option('start_of_week', 0),
+		'nowLabel'   => __('Now', 'fromscratch'),
 		'clearLabel' => __('Clear', 'fromscratch'),
+		'enableLabel' => __('Activate expire', 'fromscratch'),
+		'enableHelp'  => __('Uncheck to disable expiration.', 'fromscratch'),
 		'amLabel'    => $am_label,
 		'pmLabel'    => $pm_label,
 		'timePlaceholder' => $is_12_hour ? 'e.g. 2:30 ' . $pm_label : 'HH:mm',
@@ -96,27 +112,42 @@ add_action('enqueue_block_editor_assets', function () {
 });
 
 /**
- * When expiration meta is added or updated, schedule a one-time event at that date/time.
+ * Only schedule expiration when the post has expiration enabled and a valid date.
  */
-add_action('added_post_meta', function (int $meta_id, int $object_id, string $meta_key, mixed $meta_value): void {
-	if ($meta_key !== FS_EXPIRATION_META_KEY || !function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('post_expirator')) {
+function fs_maybe_schedule_expire_post(int $post_id): void
+{
+	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('post_expirator')) {
 		return;
 	}
-	fs_schedule_expire_post($object_id, (string) $meta_value);
+	$enabled = get_post_meta($post_id, FS_EXPIRATION_ENABLED_KEY, true);
+	if ($enabled !== '1') {
+		fs_unschedule_expire_post($post_id);
+		return;
+	}
+	$date = get_post_meta($post_id, FS_EXPIRATION_META_KEY, true);
+	if (is_string($date) && $date !== '') {
+		fs_schedule_expire_post($post_id, $date);
+	} else {
+		fs_unschedule_expire_post($post_id);
+	}
+}
+
+add_action('added_post_meta', function (int $meta_id, int $object_id, string $meta_key, mixed $meta_value): void {
+	if ($meta_key !== FS_EXPIRATION_META_KEY && $meta_key !== FS_EXPIRATION_ENABLED_KEY) {
+		return;
+	}
+	fs_maybe_schedule_expire_post($object_id);
 }, 10, 4);
 
 add_action('updated_post_meta', function (int $meta_id, int $object_id, string $meta_key, mixed $meta_value): void {
-	if ($meta_key !== FS_EXPIRATION_META_KEY || !function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('post_expirator')) {
+	if ($meta_key !== FS_EXPIRATION_META_KEY && $meta_key !== FS_EXPIRATION_ENABLED_KEY) {
 		return;
 	}
-	fs_unschedule_expire_post($object_id);
-	if ($meta_value !== '' && $meta_value !== null) {
-		fs_schedule_expire_post($object_id, (string) $meta_value);
-	}
+	fs_maybe_schedule_expire_post($object_id);
 }, 10, 4);
 
 add_action('deleted_post_meta', function (array $deleted_meta_ids, int $object_id, string $meta_key): void {
-	if ($meta_key !== FS_EXPIRATION_META_KEY) {
+	if ($meta_key !== FS_EXPIRATION_META_KEY && $meta_key !== FS_EXPIRATION_ENABLED_KEY) {
 		return;
 	}
 	fs_unschedule_expire_post($object_id);
@@ -124,8 +155,13 @@ add_action('deleted_post_meta', function (array $deleted_meta_ids, int $object_i
 
 /**
  * Run when the scheduled time is reached: set post to draft and remove expiration meta.
+ * Only expires if the checkbox (enabled meta) is still set.
  */
 add_action(FS_EXPIRE_POST_HOOK, function (int $post_id): void {
+	if (get_post_meta($post_id, FS_EXPIRATION_ENABLED_KEY, true) !== '1') {
+		fs_unschedule_expire_post($post_id);
+		return;
+	}
 	if (get_post_status($post_id) !== 'publish') {
 		return;
 	}
@@ -134,6 +170,7 @@ add_action(FS_EXPIRE_POST_HOOK, function (int $post_id): void {
 		'post_status' => 'draft',
 	]);
 	delete_post_meta($post_id, FS_EXPIRATION_META_KEY);
+	delete_post_meta($post_id, FS_EXPIRATION_ENABLED_KEY);
 });
 
 /**
@@ -159,6 +196,12 @@ add_action('init', function (): void {
 		'post_status'    => 'publish',
 		'posts_per_page' => 50,
 		'meta_query'     => [
+			'relation' => 'AND',
+			[
+				'key'     => FS_EXPIRATION_ENABLED_KEY,
+				'value'   => '1',
+				'compare' => '=',
+			],
 			[
 				'key'     => FS_EXPIRATION_META_KEY,
 				'value'   => $now,
@@ -174,6 +217,7 @@ add_action('init', function (): void {
 			'post_status' => 'draft',
 		]);
 		delete_post_meta($post_id, FS_EXPIRATION_META_KEY);
+		delete_post_meta($post_id, FS_EXPIRATION_ENABLED_KEY);
 		fs_unschedule_expire_post($post_id);
 	}
 }, 20);

@@ -13,9 +13,11 @@
   const { useEntityProp } = wp.coreData;
   const PanelRow = wp.components?.PanelRow;
   const DateTimePicker = wp.components?.DateTimePicker;
+  const CheckboxControl = wp.components?.CheckboxControl;
   const wpDate = wp.date;
 
-  const META_KEY = '_fs_expiration_date';
+  const META_KEY_DATE = '_fs_expiration_date';
+  const META_KEY_ENABLED = '_fs_expiration_enabled';
   const labels = typeof fromscratchExpirator !== 'undefined' ? fromscratchExpirator : {};
   const timezone = labels.timezone || '';
   // Match WordPress publish date. wp_localize_script can output booleans as "1"/"0", so accept both.
@@ -87,6 +89,11 @@
     return time ? date + ' ' + time : date + ' 00:00';
   }
 
+  /** Current date/time in site timezone as stored "Y-m-d H:i". */
+  function getNowForStorage() {
+    return formatForStorage(new Date());
+  }
+
   function parseStoredDate(value) {
     if (!value || typeof value !== 'string') return null;
     const trimmed = value.trim();
@@ -140,111 +147,149 @@
       return null;
     }
 
-    const rawValue = meta[META_KEY] || '';
+    const rawValue = meta[META_KEY_DATE] || '';
+    const isEnabled = meta[META_KEY_ENABLED] === '1';
     const useWordPressPicker = Boolean(DateTimePicker && PanelRow);
 
     function handleChange(newDate) {
       if (newDate === null || newDate === undefined) {
-        setMeta({ ...meta, [META_KEY]: '' });
+        setMeta({ ...meta, [META_KEY_DATE]: '' });
         return;
       }
       const dateObj = newDate instanceof Date ? newDate : new Date(newDate);
       const normalized = formatForStorage(dateObj);
-      setMeta({ ...meta, [META_KEY]: normalized });
+      setMeta({ ...meta, [META_KEY_DATE]: normalized });
+    }
+
+    function handleNow() {
+      setMeta({ ...meta, [META_KEY_DATE]: getNowForStorage() });
     }
 
     function handleClear() {
-      setMeta({ ...meta, [META_KEY]: '' });
+      setMeta({ ...meta, [META_KEY_ENABLED]: '', [META_KEY_DATE]: '' });
+    }
+
+    function handleEnableChange(checked) {
+      setMeta({
+        ...meta,
+        [META_KEY_ENABLED]: checked ? '1' : '',
+        [META_KEY_DATE]: checked && !rawValue ? getNowForStorage() : rawValue
+      });
     }
 
     function handleDateChange(e) {
       const dateVal = e.target && e.target.value;
       const { time } = storedToParts(rawValue);
-      setMeta({ ...meta, [META_KEY]: partsToStored(dateVal, time) });
+      setMeta({ ...meta, [META_KEY_DATE]: partsToStored(dateVal, time) });
     }
 
     function handleTimeBlur(e) {
       const timeVal = (e.target && e.target.value) || '';
       const { date } = storedToParts(rawValue);
-      setMeta({ ...meta, [META_KEY]: partsToStored(date, timeVal) });
+      setMeta({ ...meta, [META_KEY_DATE]: partsToStored(date, timeVal) });
     }
 
     const dateLabel = labels.dateLabel || 'Expiration date and time';
+    const nowLabel = labels.nowLabel || 'Now';
     const clearLabel = labels.clearLabel || 'Clear';
+    const enableLabel = labels.enableLabel || 'Activate expire';
+    const enableHelp = labels.enableHelp || 'Uncheck to disable expiration.';
     const dateHelp = labels.dateHelp ||
-      'When this date and time is reached, the post will be set to draft. Leave empty for no expiration.';
+      'When this date and time is reached, the post will be set to draft.';
     const timezoneNote = timezone
       ? ' Times are in your site timezone (Settings → General).'
       : '';
 
     const { date: datePart, time: timePart } = storedToParts(rawValue);
     const timeDisplayValue = is12Hour ? time24ToDisplay(timePart, amLabel, pmLabel) : timePart;
-    const pickerContent = useWordPressPicker
-      ? [
-          el(DateTimePicker, {
-            currentDate: parseStoredDate(rawValue) || null,
-            onChange: handleChange,
-            is12Hour: is12Hour,
-            startOfWeek: typeof labels.startOfWeek === 'number' ? labels.startOfWeek : 0
+
+    const checkboxEl = CheckboxControl
+      ? el(CheckboxControl, {
+          label: enableLabel,
+          checked: isEnabled,
+          onChange: handleEnableChange
+        })
+      : el(
+          'label',
+          { style: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' } },
+          el('input', {
+            type: 'checkbox',
+            checked: isEnabled,
+            onChange: function (e) { handleEnableChange(e.target.checked); }
           }),
-          rawValue
-            ? el(
-                'p',
-                { style: { marginTop: '8px', marginBottom: '0' } },
-                el(
-                  'button',
-                  {
-                    type: 'button',
-                    className: 'button button-small',
-                    onClick: handleClear
-                  },
-                  clearLabel
-                )
-              )
-            : null
-        ]
-      : [
-          el('div', {
-            className: 'fromscratch-expirator-date-time',
-            style: { display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }
-          }, [
-            el('input', {
-              type: 'date',
-              id: 'fs_expiration_date',
-              'aria-label': labels.dateLabel || 'Expiration date',
-              className: 'fromscratch-expirator-date-input',
-              style: { minWidth: '10em' },
-              value: datePart,
-              onChange: handleDateChange
+          enableLabel
+        );
+
+    const pickerContent = !isEnabled
+      ? []
+      : useWordPressPicker
+        ? [
+            el(DateTimePicker, {
+              currentDate: parseStoredDate(rawValue) || null,
+              onChange: handleChange,
+              is12Hour: is12Hour,
+              startOfWeek: typeof labels.startOfWeek === 'number' ? labels.startOfWeek : 0
             }),
-            el('input', {
-              type: 'text',
-              key: 'expirator-time-' + (rawValue || 'empty'),
-              'aria-label': labels.timeLabel || 'Expiration time',
-              className: 'fromscratch-expirator-time-input',
-              style: { width: is12Hour ? '8em' : '5em', fontVariantNumeric: 'tabular-nums' },
-              placeholder: labels.timePlaceholder || (is12Hour ? 'e.g. 2:30 pm' : 'HH:mm'),
-              maxLength: is12Hour ? 10 : 5,
-              defaultValue: timeDisplayValue,
-              onBlur: handleTimeBlur
-            })
-          ]),
-          rawValue
-            ? el(
-                'p',
-                { style: { marginTop: '8px', marginBottom: '0' } },
-                el(
-                  'button',
-                  {
-                    type: 'button',
-                    className: 'button button-small',
-                    onClick: handleClear
-                  },
-                  clearLabel
-                )
-              )
-            : null
-        ];
+            el(
+              'p',
+              { style: { marginTop: '8px', marginBottom: '0', display: 'flex', gap: '8px', flexWrap: 'wrap' } },
+              el(
+                'button',
+                { type: 'button', className: 'button button-small', onClick: handleNow },
+                nowLabel
+              ),
+              rawValue
+                ? el(
+                    'button',
+                    { type: 'button', className: 'button button-small', onClick: handleClear },
+                    clearLabel
+                  )
+                : null
+            )
+          ]
+        : [
+            el('div', {
+              className: 'fromscratch-expirator-date-time',
+              style: { display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }
+            }, [
+              el('input', {
+                type: 'date',
+                id: 'fs_expiration_date',
+                'aria-label': dateLabel,
+                className: 'fromscratch-expirator-date-input',
+                style: { minWidth: '10em' },
+                value: datePart,
+                onChange: handleDateChange
+              }),
+              el('input', {
+                type: 'text',
+                key: 'expirator-time-' + (rawValue || 'empty'),
+                'aria-label': labels.timeLabel || 'Expiration time',
+                className: 'fromscratch-expirator-time-input',
+                style: { width: is12Hour ? '8em' : '5em', fontVariantNumeric: 'tabular-nums' },
+                placeholder: labels.timePlaceholder || (is12Hour ? 'e.g. 2:30 pm' : 'HH:mm'),
+                maxLength: is12Hour ? 10 : 5,
+                defaultValue: timeDisplayValue,
+                onBlur: handleTimeBlur
+              })
+            ]),
+            el(
+              'p',
+              { style: { marginTop: '8px', marginBottom: '0', display: 'flex', gap: '8px', flexWrap: 'wrap' } },
+              el(
+                'button',
+                { type: 'button', className: 'button button-small', onClick: handleNow },
+                nowLabel
+              ),
+              rawValue
+                ? el(
+                    'button',
+                    { type: 'button', className: 'button button-small', onClick: handleClear },
+                    clearLabel
+                  )
+                : null
+            )
+          ];
 
     return el(
       'div',
@@ -256,14 +301,8 @@
             el(
               'div',
               { className: 'fromscratch-expirator-field', style: { width: '100%' } },
-              el(
-                'label',
-                {
-                  htmlFor: 'fs_expiration_date',
-                  style: { display: 'block', marginBottom: '6px', fontWeight: '600' }
-                },
-                dateLabel
-              ),
+              checkboxEl,
+              isEnabled ? el('p', { className: 'description', style: { marginTop: '2px', marginBottom: '6px', fontSize: '12px' } }, enableHelp) : null,
               ...pickerContent,
               el(
                 'p',
@@ -271,16 +310,17 @@
                   className: 'description',
                   style: { marginTop: '8px', marginBottom: '0' }
                 },
-                dateHelp + (useWordPressPicker ? '' : timezoneNote)
+                dateHelp + (isEnabled && useWordPressPicker ? '' : timezoneNote)
               )
             )
           )
         : el(
             'div',
             { className: 'fromscratch-expirator-field' },
-            el('label', { htmlFor: 'fs_expiration_date' }, dateLabel),
+            checkboxEl,
+            isEnabled ? el('p', { className: 'description', style: { marginTop: '2px', marginBottom: '6px', fontSize: '12px' } }, enableHelp) : null,
             ...pickerContent,
-            el('p', { className: 'description' }, dateHelp + (useWordPressPicker ? '' : timezoneNote))
+            el('p', { className: 'description' }, dateHelp + (isEnabled ? timezoneNote : ''))
           )
     );
   }

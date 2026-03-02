@@ -481,6 +481,18 @@ msgstr "Ablaufdatum und -uhrzeit"
 msgid "When this date and time is reached, the post will be set to draft. Leave empty for no expiration."
 msgstr "Wenn dieses Datum und diese Uhrzeit erreicht sind, wird der Beitrag in einen Entwurf gesetzt. Leer lassen für keinen Ablauf."
 
+msgid "Now"
+msgstr "Jetzt"
+
+msgid "Clear"
+msgstr "Löschen"
+
+msgid "Activate expire"
+msgstr "Ablauf aktivieren"
+
+msgid "Uncheck to disable expiration."
+msgstr "Abwählen, um den Ablauf zu deaktivieren."
+
 msgid "Post expirator"
 msgstr "Beitrags-Ablauf"
 
