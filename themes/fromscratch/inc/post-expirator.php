@@ -133,7 +133,6 @@ add_action('enqueue_block_editor_assets', function () {
 		'timeLabel'  => $is_12_hour ? __('Time', 'fromscratch') : __('Time (24h)', 'fromscratch'),
 		'dateHelp'   => __('When this date and time is reached, the post will be set to draft. Leave empty for no expiration.', 'fromscratch'),
 		'timezone'   => wp_timezone_string(),
-		'timezoneNote' => __('Times are in your site timezone (Settings → General).', 'fromscratch'),
 		'dateFormat' => $date_format,
 		'timeFormat' => $time_format,
 		'is12Hour'   => $is_12_hour ? 1 : 0,

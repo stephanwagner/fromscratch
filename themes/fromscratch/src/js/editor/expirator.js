@@ -24,17 +24,6 @@
   const META_KEY_REDIRECT = '_fs_expiration_redirect_url';
   const labels = typeof fromscratchExpirator !== 'undefined' ? fromscratchExpirator : {};
   const timezone = labels.timezone || '';
-
-  if (wpDate && timezone && typeof wpDate.getSettings === 'function' && typeof wpDate.setSettings === 'function') {
-    try {
-      var dateSettings = wpDate.getSettings();
-      if (dateSettings && typeof dateSettings === 'object') {
-        wpDate.setSettings(Object.assign({}, dateSettings, { timezone: { string: timezone } }));
-      }
-    } catch (e) {
-      /* ignore */
-    }
-  }
   // Match WordPress publish date. wp_localize_script can output booleans as "1"/"0", so accept both.
   const is12Hour = labels.is12Hour !== false && labels.is12Hour !== '0' && labels.is12Hour !== 0;
   const amLabel = labels.amLabel || 'am';
@@ -249,11 +238,12 @@
     const actionRedirect = labels.actionRedirect || 'Redirect to';
     const redirectLabel = labels.redirectLabel || 'Redirect URL';
     const redirectPlaceholder = labels.redirectPlaceholder || 'https://example.com';
-    const timezoneNote = labels.timezoneNote || 'Times are in your site timezone.';
 
     const { date: datePart, time: timePart } = storedToParts(rawValue);
     const timeDisplayValue = is12Hour ? time24ToDisplay(timePart, amLabel, pmLabel) : timePart;
-    const previewText = rawValue ? formatStoredForDisplay(rawValue) : previewEmptyLabel;
+    const previewText = rawValue
+      ? formatStoredForDisplay(rawValue) + (timezone ? ' (' + timezone + ')' : '')
+      : previewEmptyLabel;
 
     const previewTrigger = el(
       'button',
@@ -278,8 +268,7 @@
               startOfWeek: (function () {
                 var n = parseInt(labels.startOfWeek, 10);
                 return (n >= 0 && n <= 6) ? n : 0;
-              })(),
-              timeZone: timezone || undefined
+              })()
             }),
             el(
               'p',
@@ -339,11 +328,6 @@
                     clearLabel
                   )
                 : null
-            ),
-            el(
-              'p',
-              { className: 'description', style: { marginTop: '6px', marginBottom: '0', fontSize: '12px' } },
-              timezoneNote + (timezone ? ' (' + timezone + ')' : '')
             )
           ];
 
