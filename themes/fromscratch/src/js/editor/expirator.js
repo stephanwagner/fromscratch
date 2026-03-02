@@ -2,31 +2,36 @@
   'use strict';
 
   const wp = typeof window !== 'undefined' ? window.wp : null;
-  if (!wp || typeof fromscratchFeatures === 'undefined' || !fromscratchFeatures.post_expirator) {
+  if (
+    !wp ||
+    typeof fromscratchFeatures === 'undefined' ||
+    !fromscratchFeatures.post_expirator
+  ) {
     return;
   }
 
   const el = wp.element.createElement;
-  const useState = wp.element?.useState;
-  const useStateSafe = useState || function (initial) { return [initial, function () {}]; };
+  const { useState } = wp.element;
   const { registerPlugin } = wp.plugins;
-  const PluginDocumentSettingPanel = wp.editPost?.PluginDocumentSettingPanel;
+  const { PluginDocumentSettingPanel } = wp.editPost;
   const { useSelect } = wp.data;
   const { useEntityProp } = wp.coreData;
-  const PanelRow = wp.components?.PanelRow;
-  const DateTimePicker = wp.components?.DateTimePicker;
-  const SelectControl = wp.components?.SelectControl;
-  const TextControl = wp.components?.TextControl;
+  const { PanelRow, DateTimePicker, SelectControl, TextControl } =
+    wp.components;
   const wpDate = wp.date;
 
   const META_KEY_DATE = '_fs_expiration_date';
   const META_KEY_ENABLED = '_fs_expiration_enabled';
   const META_KEY_ACTION = '_fs_expiration_action';
   const META_KEY_REDIRECT = '_fs_expiration_redirect_url';
-  const labels = typeof fromscratchExpirator !== 'undefined' ? fromscratchExpirator : {};
+  const labels =
+    typeof fromscratchExpirator !== 'undefined' ? fromscratchExpirator : {};
   const timezone = labels.timezone || '';
   // Match WordPress publish date. wp_localize_script can output booleans as "1"/"0", so accept both.
-  const is12Hour = labels.is12Hour !== false && labels.is12Hour !== '0' && labels.is12Hour !== 0;
+  const is12Hour =
+    labels.is12Hour !== false &&
+    labels.is12Hour !== '0' &&
+    labels.is12Hour !== 0;
   const amLabel = labels.amLabel || 'am';
   const pmLabel = labels.pmLabel || 'pm';
 
@@ -49,7 +54,7 @@
     const h = parseInt(time24.substring(0, 2), 10);
     const i = time24.substring(3, 5);
     const hour12 = h % 12 || 12;
-    const suffix = h < 12 ? (am || 'am') : (pm || 'pm');
+    const suffix = h < 12 ? am || 'am' : pm || 'pm';
     return hour12 + ':' + i + ' ' + suffix;
   }
 
@@ -87,7 +92,7 @@
 
   /** Build stored "Y-m-d H:i" from date + time (time defaults to "00:00" if date set). */
   function partsToStored(dateVal, timeVal) {
-    const date = (dateVal && typeof dateVal === 'string') ? dateVal.trim() : '';
+    const date = dateVal && typeof dateVal === 'string' ? dateVal.trim() : '';
     const time = parseTimeForStorage(timeVal, is12Hour);
     if (date === '') return '';
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return '';
@@ -120,11 +125,19 @@
     }
     const { date: datePart, time: timePart } = storedToParts(stored);
     if (!datePart) return '';
-    const months = labels.monthNames && Array.isArray(labels.monthNames) ? labels.monthNames : [];
+    const months =
+      labels.monthNames && Array.isArray(labels.monthNames)
+        ? labels.monthNames
+        : [];
     const [y, m, d] = datePart.split('-').map(Number);
-    const monthStr = m >= 1 && m <= 12 && months[m - 1] ? months[m - 1] : String(m);
+    const monthStr =
+      m >= 1 && m <= 12 && months[m - 1] ? months[m - 1] : String(m);
     const dateStr = monthStr + ' ' + d + ', ' + y;
-    const timeStr = timePart ? (is12Hour ? time24ToDisplay(timePart, amLabel, pmLabel) : timePart) : '';
+    const timeStr = timePart
+      ? is12Hour
+        ? time24ToDisplay(timePart, amLabel, pmLabel)
+        : timePart
+      : '';
     return timeStr ? dateStr + ', ' + timeStr : dateStr;
   }
 
@@ -185,8 +198,7 @@
     const isEnabled = meta[META_KEY_ENABLED] === '1';
     const actionValue = meta[META_KEY_ACTION] || 'draft';
     const redirectValue = meta[META_KEY_REDIRECT] || '';
-    const useWordPressPicker = Boolean(DateTimePicker && PanelRow);
-    const [isPickerOpen, setIsPickerOpen] = useStateSafe(false);
+    const [isPickerOpen, setIsPickerOpen] = useState(false);
 
     function handleChange(newDate) {
       if (newDate === null || newDate === undefined) {
@@ -195,11 +207,19 @@
       }
       const dateObj = newDate instanceof Date ? newDate : new Date(newDate);
       const normalized = formatForStorage(dateObj);
-      setMeta({ ...meta, [META_KEY_ENABLED]: '1', [META_KEY_DATE]: normalized });
+      setMeta({
+        ...meta,
+        [META_KEY_ENABLED]: '1',
+        [META_KEY_DATE]: normalized
+      });
     }
 
     function handleNow() {
-      setMeta({ ...meta, [META_KEY_ENABLED]: '1', [META_KEY_DATE]: getNowForStorage() });
+      setMeta({
+        ...meta,
+        [META_KEY_ENABLED]: '1',
+        [META_KEY_DATE]: getNowForStorage()
+      });
     }
 
     function handleClear() {
@@ -211,14 +231,22 @@
       const dateVal = e.target && e.target.value;
       const { time } = storedToParts(rawValue);
       const stored = partsToStored(dateVal, time);
-      setMeta({ ...meta, [META_KEY_ENABLED]: stored ? '1' : '', [META_KEY_DATE]: stored || '' });
+      setMeta({
+        ...meta,
+        [META_KEY_ENABLED]: stored ? '1' : '',
+        [META_KEY_DATE]: stored || ''
+      });
     }
 
     function handleTimeBlur(e) {
       const timeVal = (e.target && e.target.value) || '';
       const { date } = storedToParts(rawValue);
       const stored = partsToStored(date, timeVal);
-      setMeta({ ...meta, [META_KEY_ENABLED]: stored ? '1' : '', [META_KEY_DATE]: stored || '' });
+      setMeta({
+        ...meta,
+        [META_KEY_ENABLED]: stored ? '1' : '',
+        [META_KEY_DATE]: stored || ''
+      });
     }
 
     function handleActionChange(value) {
@@ -226,185 +254,132 @@
     }
 
     function handleRedirectChange(e) {
-      setMeta({ ...meta, [META_KEY_REDIRECT]: (e.target && e.target.value) || '' });
+      setMeta({
+        ...meta,
+        [META_KEY_REDIRECT]: (e.target && e.target.value) || ''
+      });
     }
 
-    const dateLabel = labels.dateLabel || 'Expiration date and time';
     const nowLabel = labels.nowLabel || 'Now';
-    const clearLabel = labels.clearLabel || 'Clear';
-    const previewEmptyLabel = labels.previewEmptyLabel || 'Set expiration date and time';
+    const clearLabel = labels.clearLabel || 'Reset';
+    const previewEmptyLabel =
+      labels.previewEmptyLabel || 'Set expiration date and time';
     const actionLabel = labels.actionLabel || 'After expiration';
     const actionDraft = labels.actionDraft || 'Set to draft';
     const actionPrivate = labels.actionPrivate || 'Set to private';
     const actionRedirect = labels.actionRedirect || 'Redirect to';
     const redirectLabel = labels.redirectLabel || 'Redirect URL';
-    const redirectPlaceholder = labels.redirectPlaceholder || 'https://example.com';
+    const redirectPlaceholder =
+      labels.redirectPlaceholder || '/new-path';
 
-    const { date: datePart, time: timePart } = storedToParts(rawValue);
-    const timeDisplayValue = is12Hour ? time24ToDisplay(timePart, amLabel, pmLabel) : timePart;
     const previewContent = rawValue
-      ? (timezone
-          ? [formatStoredForDisplay(rawValue), el('br'), '(' + timezone + ')']
-          : formatStoredForDisplay(rawValue))
+      ? timezone
+        ? [formatStoredForDisplay(rawValue), el('br'), '(' + timezone + ')']
+        : formatStoredForDisplay(rawValue)
       : previewEmptyLabel;
 
     const previewTrigger = el(
       'button',
       {
-        type: 'button',
-        className: 'fromscratch-expirator-preview',
-        onClick: function () { setIsPickerOpen(function (prev) { return !prev; }); },
-        'aria-expanded': isPickerOpen,
-        style: { padding: 0, border: 0, background: 'none', cursor: 'pointer', color: 'var(--wp-admin-theme-color, #0073aa)', textAlign: 'left', fontSize: 'inherit' }
+        'type': 'button',
+        'className':
+          'fromscratch-expirator-preview components-button editor-post-schedule__dialog-toggle is-tertiary',
+        'onClick': function () {
+          setIsPickerOpen(function (prev) {
+            return !prev;
+          });
+        },
+        'aria-expanded': isPickerOpen
       },
       previewContent
     );
 
     const pickerContent = !isPickerOpen
       ? []
-      : useWordPressPicker
-        ? [
-            el(DateTimePicker, {
-              currentDate: parseStoredDate(rawValue) || null,
-              onChange: handleChange,
-              is12Hour: is12Hour,
-              startOfWeek: (function () {
-                var n = parseInt(labels.startOfWeek, 10);
-                return (n >= 0 && n <= 6) ? n : 0;
-              })()
-            }),
+      : [
+          el(DateTimePicker, {
+            currentDate: parseStoredDate(rawValue) || null,
+            onChange: handleChange,
+            is12Hour: is12Hour,
+            startOfWeek: (function () {
+              var n = parseInt(labels.startOfWeek, 10);
+              return n >= 0 && n <= 6 ? n : 0;
+            })()
+          }),
+          el(
+            'p',
+            {
+              style: {
+                marginTop: '8px',
+                marginBottom: '0',
+                display: 'flex',
+                gap: '8px',
+                flexWrap: 'wrap'
+              }
+            },
             el(
-              'p',
-              { style: { marginTop: '8px', marginBottom: '0', display: 'flex', gap: '8px', flexWrap: 'wrap' } },
-              el(
-                'button',
-                { type: 'button', className: 'button button-small', onClick: handleNow },
-                nowLabel
-              ),
-              rawValue
-                ? el(
-                    'button',
-                    { type: 'button', className: 'button button-small', onClick: handleClear },
-                    clearLabel
-                  )
-                : null
-            )
-          ]
-        : [
-            el('div', {
-              className: 'fromscratch-expirator-date-time',
-              style: { display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }
-            }, [
-              el('input', {
-                type: 'date',
-                id: 'fs_expiration_date',
-                'aria-label': dateLabel,
-                className: 'fromscratch-expirator-date-input',
-                style: { minWidth: '10em' },
-                value: datePart,
-                onChange: handleDateChange
-              }),
-              el('input', {
-                type: 'text',
-                key: 'expirator-time-' + (rawValue || 'empty'),
-                'aria-label': labels.timeLabel || 'Expiration time',
-                className: 'fromscratch-expirator-time-input',
-                style: { width: is12Hour ? '8em' : '5em', fontVariantNumeric: 'tabular-nums' },
-                placeholder: labels.timePlaceholder || (is12Hour ? 'e.g. 2:30 pm' : 'HH:mm'),
-                maxLength: is12Hour ? 10 : 5,
-                defaultValue: timeDisplayValue,
-                onBlur: handleTimeBlur
-              })
-            ]),
-            el(
-              'p',
-              { style: { marginTop: '8px', marginBottom: '0', display: 'flex', gap: '8px', flexWrap: 'wrap' } },
-              el(
-                'button',
-                { type: 'button', className: 'button button-small', onClick: handleNow },
-                nowLabel
-              ),
-              rawValue
-                ? el(
-                    'button',
-                    { type: 'button', className: 'button button-small', onClick: handleClear },
-                    clearLabel
-                  )
-                : null
-            )
-          ];
+              'button',
+              {
+                type: 'button',
+                className: 'button button-small',
+                onClick: handleNow
+              },
+              nowLabel
+            ),
+            rawValue
+              ? el(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'button button-small',
+                    onClick: handleClear
+                  },
+                  clearLabel
+                )
+              : null
+          )
+        ];
 
     const actionOptions = [
       { value: 'draft', label: actionDraft },
       { value: 'private', label: actionPrivate },
       { value: 'redirect', label: actionRedirect }
     ];
-    const actionSelectEl = (isPickerOpen || isEnabled)
-      ? (SelectControl
-          ? el(SelectControl, {
-              label: actionLabel,
-              value: actionValue,
-              options: actionOptions,
-              onChange: handleActionChange,
-            })
-          : el(
-              'div',
-              el('label', { htmlFor: 'fs_expiration_action' }, actionLabel),
-              el('select', {
-                id: 'fs_expiration_action',
-                value: actionValue,
-                onChange: function (e) { handleActionChange(e.target.value); },
-                style: { width: '100%' }
-              }, actionOptions.map(function (opt) { return el('option', { key: opt.value, value: opt.value }, opt.label); }))
-            ))
-      : null;
-    const redirectInputEl = (isPickerOpen || isEnabled) && actionValue === 'redirect'
-      ? (TextControl
-          ? el(TextControl, {
-              label: redirectLabel,
-              value: redirectValue,
-              onChange: handleRedirectChange,
-              placeholder: redirectPlaceholder,
-              type: 'url',
-            })
-          : el(
-              'div',
-              el('label', { htmlFor: 'fs_expiration_redirect', style: { display: 'block', marginBottom: '4px', fontWeight: '600' } }, redirectLabel),
-              el('input', {
-                type: 'url',
-                id: 'fs_expiration_redirect',
-                className: 'fromscratch-expirator-redirect-input',
-                value: redirectValue,
-                onChange: handleRedirectChange,
-                placeholder: redirectPlaceholder,
-              })
-            ))
-      : null;
+    const actionSelectEl =
+      isPickerOpen || isEnabled
+        ? el(SelectControl, {
+            className: 'fromscratch-expirator-field-action',
+            label: actionLabel,
+            value: actionValue,
+            options: actionOptions,
+            onChange: handleActionChange
+          })
+        : null;
+    const redirectInputEl =
+      (isPickerOpen || isEnabled) && actionValue === 'redirect'
+        ? el(TextControl, {
+            className: 'fromscratch-expirator-field-redirect',
+            label: redirectLabel,
+            value: redirectValue,
+            onChange: handleRedirectChange,
+            placeholder: redirectPlaceholder,
+            type: 'url'
+          })
+        : null;
 
     return el(
       'div',
-      { className: 'fromscratch-panel fromscratch-expirator-panel' },
-      PanelRow
+      { className: 'fromscratch-editor-panel fromscratch-expirator-panel' },
+      el(PanelRow, null, previewTrigger),
+      isPickerOpen
         ? el(
             PanelRow,
             null,
-            el(
-              'div',
-              { className: 'fromscratch-expirator-field', style: { width: '100%' } },
-              previewTrigger,
-              ...pickerContent,
-              actionSelectEl,
-              redirectInputEl
-            )
+            el('div', { style: { width: '100%' } }, ...pickerContent)
           )
-        : el(
-            'div',
-            { className: 'fromscratch-expirator-field' },
-            previewTrigger,
-            ...pickerContent,
-            actionSelectEl,
-            redirectInputEl
-          )
+        : null,
+      actionSelectEl ? el(PanelRow, null, actionSelectEl) : null,
+      redirectInputEl ? el(PanelRow, null, redirectInputEl) : null
     );
   }
 
@@ -419,7 +394,6 @@
     if (!postType || allowed.indexOf(postType) === -1) {
       return null;
     }
-    if (!PluginDocumentSettingPanel) return null;
     return el(
       PluginDocumentSettingPanel,
       {

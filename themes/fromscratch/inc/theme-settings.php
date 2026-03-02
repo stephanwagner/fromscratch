@@ -549,7 +549,7 @@ function theme_settings_page(): void
 						</div>
 						<p>
 							<button type="button" class="button" id="fs_og_fallback_select"><?= esc_html__('Select image', 'fromscratch') ?></button>
-							<button type="button" class="button" id="fs_og_fallback_remove" <?= $og_fallback_id <= 0 ? ' style="display:none;"' : '' ?>><?= esc_html__('Remove image', 'fromscratch') ?></button>
+							<button type="button" class="button" id="fs_og_fallback_remove" <?= $og_fallback_id <= 0 ? ' style="display:none;"' : '' ?>><?= esc_html__('Remove', 'fromscratch') ?></button>
 						</p>
 					</td>
 				</tr>

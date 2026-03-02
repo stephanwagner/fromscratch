@@ -195,6 +195,9 @@ msgstr "Seite"
 msgid "Title"
 msgstr "Titel"
 
+msgid "Description"
+msgstr "Beschreibung"
+
 msgid "Slug"
 msgstr "Slug"
 
@@ -473,7 +476,7 @@ msgid "302 (Temporary)"
 msgstr "302 (Temporär)"
 
 msgid "Expiration"
-msgstr "Ablauf"
+msgstr "Ablaufdatum"
 
 msgid "Expiration date and time"
 msgstr "Ablaufdatum und -uhrzeit"
@@ -484,6 +487,9 @@ msgstr "Wenn dieses Datum und diese Uhrzeit erreicht sind, wird der Beitrag in e
 msgid "Now"
 msgstr "Jetzt"
 
+msgid "Reset"
+msgstr "Zurücksetzen"
+
 msgid "Clear"
 msgstr "Löschen"
 
@@ -492,6 +498,24 @@ msgstr "Ablauf aktivieren"
 
 msgid "Set expiration date and time"
 msgstr "Ablaufdatum und -uhrzeit festlegen"
+
+msgid "Redirect URL"
+msgstr "Weiterleitungs-URL"
+
+msgid "/new-path"
+msgstr "/neuer-pfad"
+
+msgid "After expiration"
+msgstr "Nach Ablauf"
+
+msgid "Set to draft"
+msgstr "Als Entwurf speichern"
+
+msgid "Set to private"
+msgstr "Als Privat speichern"
+
+msgid "Redirect to"
+msgstr "Weiterleiten zu"
 
 msgid "Uncheck to disable expiration."
 msgstr "Abwählen, um den Ablauf zu deaktivieren."
@@ -650,7 +674,6 @@ msgstr "Anmelden"
 msgid "Incorrect password. Please try again."
 msgstr "Falsches Passwort. Bitte erneut versuchen."
 
-# SEO panel (editor)
 msgid "Recommended length: up to 60 characters."
 msgstr "Empfohlene Länge: bis zu 60 Zeichen."
 
@@ -666,8 +689,11 @@ msgstr "Ideale Größe: 1200 × 630 px. Fallback: Beitragsbild, falls gesetzt."
 msgid "Select image"
 msgstr "Bild auswählen"
 
-msgid "Remove image"
-msgstr "Bild entfernen"
+msgid "Replace"
+msgstr "Ersetzen"
+
+msgid "Remove"
+msgstr "Entfernen"
 
 msgid "No index"
 msgstr "Nicht indexieren"

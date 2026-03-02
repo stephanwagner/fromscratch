@@ -79,7 +79,7 @@
 
     return el(
       'div',
-      { className: 'fromscratch-panel fromscratch-seo-panel' },
+      { className: 'fromscratch-editor-panel fromscratch-seo-panel' },
       el(
         PanelRow,
         null,
@@ -138,150 +138,120 @@
             },
             labels.ogImageHelp || 'Best size: 1200 × 630 px.'
           ),
-          MediaUploadCheck
-            ? el(
-                MediaUploadCheck,
-                {
-                  fallback: el(
-                    'p',
-                    { className: 'description' },
-                    labels.ogImagePermissionHelp ||
-                      'To set an OG image, you need permission to upload media.'
-                  )
-                },
-                el(
-                  'div',
-                  { className: 'editor-post-featured-image' },
-                  el(
-                    'div',
-                    { className: 'editor-post-featured-image__container' },
-                    ogImageId
-                      ? el(
-                          MediaUpload,
-                          {
-                            allowedTypes: ['image'],
-                            value: ogImageId,
-                            onSelect: function (media) {
-                              set('ogImage', media.id ? media.id : 0);
-                            },
-                            render: function (renderProps) {
-                              return el(
-                                'div',
-                                null,
-                                el(
-                                  'div',
-                                  { className: 'editor-post-featured-image__preview' },
-                                  ogImageUrl
-                                    ? el('img', {
-                                        src: ogImageUrl,
-                                        alt: '',
-                                        className: 'editor-post-featured-image__preview-image'
-                                      })
-                                    : null
-                                ),
-                                el(
-                                  'div',
-                                  { className: 'editor-post-featured-image__actions' },
-                                  el(
-                                    Button,
-                                    {
-                                      className: 'editor-post-featured-image__action',
-                                      onClick: renderProps.open
-                                    },
-                                    labels.ogImageReplace || 'Replace'
-                                  ),
-                                  el(
-                                    Button,
-                                    {
-                                      className: 'editor-post-featured-image__action',
-                                      onClick: function () {
-                                        set('ogImage', 0);
-                                      }
-                                    },
-                                    labels.ogImageRemove || 'Remove'
-                                  )
-                                )
-                              );
-                            }
-                          }
-                        )
-                      : el(
-                          MediaUpload,
-                          {
-                            allowedTypes: ['image'],
-                            value: undefined,
-                            onSelect: function (media) {
-                              set('ogImage', media.id ? media.id : 0);
-                            },
-                            render: function (renderProps) {
-                              var settings = getBlockEditorSettings
-                                ? getBlockEditorSettings()
-                                : null;
-                              var mediaUpload = settings?.mediaUpload;
-                              var toggleButton = el(
+          el(
+            MediaUploadCheck,
+            {
+              fallback: el(
+                'p',
+                { className: 'description' },
+                labels.ogImagePermissionHelp ||
+                  'To set an OG image, you need permission to upload media.'
+              )
+            },
+            el(
+              'div',
+              { className: 'editor-post-featured-image' },
+              el(
+                'div',
+                { className: 'editor-post-featured-image__container' },
+                ogImageId
+                  ? el(
+                      MediaUpload,
+                      {
+                        allowedTypes: ['image'],
+                        value: ogImageId,
+                        onSelect: function (media) {
+                          set('ogImage', media.id ? media.id : 0);
+                        },
+                        render: function (renderProps) {
+                          return el(
+                            'div',
+                            null,
+                            el(
+                              'div',
+                              { className: 'editor-post-featured-image__preview' },
+                              ogImageUrl
+                                ? el('img', {
+                                    src: ogImageUrl,
+                                    alt: '',
+                                    className: 'editor-post-featured-image__preview-image'
+                                  })
+                                : null
+                            ),
+                            el(
+                              'div',
+                              { className: 'editor-post-featured-image__actions' },
+                              el(
                                 Button,
                                 {
-                                  className: 'editor-post-featured-image__toggle',
-                                  onClick: renderProps.open,
-                                  style: { width: '100%' }
+                                  className: 'editor-post-featured-image__action',
+                                  onClick: renderProps.open
                                 },
-                                labels.ogImageButton || 'Set OG image'
-                              );
-                              return el(
-                                'div',
-                                { className: 'editor-post-featured-image__toggle' },
-                                DropZone && mediaUpload &&
-                                  el(DropZone, {
-                                    onFilesDrop: function (files) {
-                                      mediaUpload({
-                                        allowedTypes: ['image'],
-                                        filesList: files,
-                                        onFileChange: function (images) {
-                                          if (images && images[0] && images[0].id) {
-                                            set('ogImage', images[0].id);
-                                          }
-                                        },
-                                        multiple: false
-                                      });
-                                    }
-                                  }),
-                                toggleButton
-                              );
-                            }
-                          }
-                        )
-                  )
-                )
+                                labels.ogImageReplace || 'Replace'
+                              ),
+                              el(
+                                Button,
+                                {
+                                  className: 'editor-post-featured-image__action',
+                                  onClick: function () {
+                                    set('ogImage', 0);
+                                  }
+                                },
+                                labels.ogImageRemove || 'Remove'
+                              )
+                            )
+                          );
+                        }
+                      }
+                    )
+                  : el(
+                      MediaUpload,
+                      {
+                        allowedTypes: ['image'],
+                        value: undefined,
+                        onSelect: function (media) {
+                          set('ogImage', media.id ? media.id : 0);
+                        },
+                        render: function (renderProps) {
+                          var settings = getBlockEditorSettings
+                            ? getBlockEditorSettings()
+                            : null;
+                          var mediaUpload = settings?.mediaUpload;
+                          var toggleButton = el(
+                            Button,
+                            {
+                              className: 'editor-post-featured-image__toggle',
+                              onClick: renderProps.open,
+                              style: { width: '100%' }
+                            },
+                            labels.ogImageButton || 'Set OG image'
+                          );
+                          return el(
+                            'div',
+                            { className: 'editor-post-featured-image__toggle' },
+                            DropZone && mediaUpload &&
+                              el(DropZone, {
+                                onFilesDrop: function (files) {
+                                  mediaUpload({
+                                    allowedTypes: ['image'],
+                                    filesList: files,
+                                    onFileChange: function (images) {
+                                      if (images && images[0] && images[0].id) {
+                                        set('ogImage', images[0].id);
+                                      }
+                                    },
+                                    multiple: false
+                                  });
+                                }
+                              }),
+                            toggleButton
+                          );
+                        }
+                      }
+                    )
               )
-            : el(MediaUpload, {
-                allowedTypes: ['image'],
-                value: ogImageId || undefined,
-                onSelect: function (media) {
-                  set('ogImage', media.id ? media.id : 0);
-                },
-                render: function (obj) {
-                  return ogImageId && ogImageUrl
-                    ? el(
-                        'div',
-                        null,
-                        el('img', {
-                          src: ogImageUrl,
-                          alt: '',
-                          style: { maxWidth: '100%', height: 'auto', display: 'block', marginBottom: '8px' }
-                        }),
-                        el(Button, { variant: 'secondary', onClick: obj.open }, labels.ogImageReplace || 'Replace'),
-                        ' ',
-                        el(Button, {
-                          variant: 'secondary',
-                          isDestructive: true,
-                          onClick: function () {
-                            set('ogImage', 0);
-                          }
-                        }, labels.ogImageRemove || 'Remove')
-                      )
-                    : el(Button, { variant: 'secondary', onClick: obj.open }, labels.ogImageButton || 'Set OG image');
-                }
-              })
+            )
+          )
         )
       )
     );

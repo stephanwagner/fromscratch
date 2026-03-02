@@ -244,7 +244,7 @@ function fs_seo_editor_localize(): void
 		'ogImageHelp' => __('Best size: 1200 × 630 px. Fallback: featured image if set.', 'fromscratch'),
 		'ogImageButton' => __('Set OG image', 'fromscratch'),
 		'ogImageReplace' => __('Replace', 'fromscratch'),
-		'ogImageRemove' => __('Remove image', 'fromscratch'),
+		'ogImageRemove' => __('Remove', 'fromscratch'),
 		'ogImagePermissionHelp' => __('To set an OG image, you need permission to upload media.', 'fromscratch'),
 		'noindexLabel' => __('No index', 'fromscratch'),
 		'noindexHelp' => __('Ask search engines not to index this page.', 'fromscratch'),
