@@ -128,14 +128,13 @@
           { className: 'fromscratch-seo-og-image-wrap' },
           el(
             'label',
-            { className: 'fromscratch-seo-og-image-label', style: { display: 'block', marginBottom: '8px' } },
+            { className: 'fromscratch-seo-og-image-label components-base-control__label' },
             labels.ogImageLabel || 'OG Image'
           ),
           el(
             'p',
             {
-              className: 'description',
-              style: { marginTop: '0', marginBottom: '8px' }
+              className: 'components-base-control__help'
             },
             labels.ogImageHelp || 'Best size: 1200 × 630 px.'
           ),
@@ -186,7 +185,6 @@
                                   el(
                                     Button,
                                     {
-                                      variant: 'secondary',
                                       className: 'editor-post-featured-image__action',
                                       onClick: renderProps.open
                                     },
@@ -195,8 +193,6 @@
                                   el(
                                     Button,
                                     {
-                                      variant: 'secondary',
-                                      isDestructive: true,
                                       className: 'editor-post-featured-image__action',
                                       onClick: function () {
                                         set('ogImage', 0);
@@ -225,10 +221,9 @@
                               var toggleButton = el(
                                 Button,
                                 {
-                                  variant: 'secondary',
                                   className: 'editor-post-featured-image__toggle',
                                   onClick: renderProps.open,
-                                  style: { minHeight: '50px', width: '100%' }
+                                  style: { width: '100%' }
                                 },
                                 labels.ogImageButton || 'Set OG image'
                               );

@@ -349,12 +349,12 @@
             })
           : el(
               'div',
-              el('label', { htmlFor: 'fs_expiration_action', style: { display: 'block', marginBottom: '4px', fontWeight: '600' } }, actionLabel),
+              el('label', { htmlFor: 'fs_expiration_action' }, actionLabel),
               el('select', {
                 id: 'fs_expiration_action',
                 value: actionValue,
                 onChange: function (e) { handleActionChange(e.target.value); },
-                style: { width: '100%', maxWidth: '240px' }
+                style: { width: '100%' }
               }, actionOptions.map(function (opt) { return el('option', { key: opt.value, value: opt.value }, opt.label); }))
             ))
       : null;
@@ -383,7 +383,7 @@
 
     return el(
       'div',
-      { className: 'fromscratch-expirator-panel' },
+      { className: 'fromscratch-panel fromscratch-expirator-panel' },
       PanelRow
         ? el(
             PanelRow,

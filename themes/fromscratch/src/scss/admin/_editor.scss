@@ -2,9 +2,41 @@
 
 // Panel
 
-.fromscratch-panel {
-  .components-panel__row > * {
-    width: 100%;
+div.fromscratch-panel {
+  .components-panel__row {
+    >* {
+      width: 100%;
+    }
+
+    .components-base-control__label,
+    .components-input-control__label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      max-width: 100%;
+      text-transform: none;
+      margin-right: 0;
+      margin-bottom: 6px;
+    }
+
+    .components-base-control__help {
+      margin-top: 6px;
+      font-size: 12px;
+      font-style: normal;
+      color: #757575;
+      margin-bottom: revert;
+    }
+
+    .editor-post-featured-image__actions {
+      width: 100%;
+      display: flex;
+      gap: 8px;
+    }
+
+    .editor-post-featured-image__preview,
+    .editor-post-featured-image__toggle {
+      border-radius: 2px;
+    }
   }
 }
 
