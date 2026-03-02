@@ -71,7 +71,7 @@ add_action('load-settings_page_fs-theme-settings', function () {
 	exit;
 });
 
-// Enqueue media picker for General tab (fallback OG image)
+// Ensure media modal is available on General tab (image picker is in admin.js)
 add_action('admin_enqueue_scripts', function ($hook_suffix) {
 	if ($hook_suffix !== 'settings_page_fs-theme-settings') {
 		return;
@@ -85,16 +85,6 @@ add_action('admin_enqueue_scripts', function ($hook_suffix) {
 		return;
 	}
 	wp_enqueue_media();
-	$script_path = get_theme_file_path('src/js/admin/og-fallback-picker.js');
-	$script_url = get_theme_file_uri('src/js/admin/og-fallback-picker.js');
-	$version = file_exists($script_path) ? (string) filemtime($script_path) : '1';
-	wp_enqueue_script(
-		'fs-og-fallback-picker',
-		$script_url,
-		['jquery', 'media-editor'],
-		$version,
-		true
-	);
 }, 10);
 
 // Enqueue WordPress code editor (syntax highlight, lint) for CSS tab
@@ -556,16 +546,18 @@ function theme_settings_page(): void
 				<tr>
 					<th scope="row"><?= esc_html__('Image', 'fromscratch') ?></th>
 					<td>
-						<input type="hidden" name="fromscratch_client_logo" id="fromscratch_client_logo" value="<?= esc_attr($client_logo_id) ?>">
-						<div id="fs_client_logo_preview" class="fs-client-logo-preview" style="margin-bottom: 8px;">
-							<?php if ($client_logo_url) : ?>
-								<img src="<?= esc_url($client_logo_url) ?>" alt="" style="max-width: 300px; height: auto; display: block;">
-							<?php endif; ?>
+						<div data-fs-image-picker>
+							<input type="hidden" name="fromscratch_client_logo" id="fromscratch_client_logo" value="<?= esc_attr($client_logo_id) ?>" data-fs-image-picker-input>
+							<div class="fs-client-logo-preview" style="margin-bottom: 8px;" data-fs-image-picker-preview>
+								<?php if ($client_logo_url) : ?>
+									<img src="<?= esc_url($client_logo_url) ?>" alt="" style="max-width: 240px; height: auto; display: block;">
+								<?php endif; ?>
+							</div>
+							<p>
+								<button type="button" class="button" data-fs-image-picker-select><?= esc_html__('Select image', 'fromscratch') ?></button>
+								<button type="button" class="button" data-fs-image-picker-remove<?= $client_logo_id <= 0 ? ' style="display:none;"' : '' ?>><?= esc_html__('Remove', 'fromscratch') ?></button>
+							</p>
 						</div>
-						<p>
-							<button type="button" class="button" id="fs_client_logo_select"><?= esc_html__('Select image', 'fromscratch') ?></button>
-							<button type="button" class="button" id="fs_client_logo_remove" <?= $client_logo_id <= 0 ? ' style="display:none;"' : '' ?>><?= esc_html__('Remove', 'fromscratch') ?></button>
-						</p>
 					</td>
 				</tr>
 			</table>
@@ -578,16 +570,18 @@ function theme_settings_page(): void
 				<tr>
 					<th scope="row"><?= esc_html__('Image', 'fromscratch') ?></th>
 					<td>
-						<input type="hidden" name="fromscratch_og_image_fallback" id="fromscratch_og_image_fallback" value="<?= esc_attr($og_fallback_id) ?>">
-						<div id="fs_og_fallback_preview" class="fs-og-fallback-preview" style="margin-bottom: 8px;">
-							<?php if ($og_fallback_url) : ?>
-								<img src="<?= esc_url($og_fallback_url) ?>" alt="" style="max-width: 300px; height: auto; display: block;">
-							<?php endif; ?>
+						<div data-fs-image-picker>
+							<input type="hidden" name="fromscratch_og_image_fallback" id="fromscratch_og_image_fallback" value="<?= esc_attr($og_fallback_id) ?>" data-fs-image-picker-input>
+							<div class="fs-og-fallback-preview" style="margin-bottom: 8px;" data-fs-image-picker-preview>
+								<?php if ($og_fallback_url) : ?>
+									<img src="<?= esc_url($og_fallback_url) ?>" alt="" style="max-width: 240px; height: auto; display: block;">
+								<?php endif; ?>
+							</div>
+							<p>
+								<button type="button" class="button" data-fs-image-picker-select><?= esc_html__('Select image', 'fromscratch') ?></button>
+								<button type="button" class="button" data-fs-image-picker-remove<?= $og_fallback_id <= 0 ? ' style="display:none;"' : '' ?>><?= esc_html__('Remove', 'fromscratch') ?></button>
+							</p>
 						</div>
-						<p>
-							<button type="button" class="button" id="fs_og_fallback_select"><?= esc_html__('Select image', 'fromscratch') ?></button>
-							<button type="button" class="button" id="fs_og_fallback_remove" <?= $og_fallback_id <= 0 ? ' style="display:none;"' : '' ?>><?= esc_html__('Remove', 'fromscratch') ?></button>
-						</p>
 					</td>
 				</tr>
 			</table>
