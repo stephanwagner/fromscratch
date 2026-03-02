@@ -34,6 +34,7 @@ if (is_admin()) {
 
 // ─── Features ────────────────────────────────────────────────────────────────
 require_once 'inc/login-limit.php';
+require_once 'inc/login-client-logo.php';
 require_once 'inc/site-password.php';
 require_once 'inc/maintenance.php';
 require_once 'inc/assets.php';
