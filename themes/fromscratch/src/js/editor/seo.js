@@ -10,9 +10,15 @@
   const { PluginDocumentSettingPanel } = wp.editPost;
   const { useSelect } = wp.data;
   const { useEntityProp } = wp.coreData;
-  const { TextControl, TextareaControl, PanelRow, CheckboxControl } =
-    wp.components;
-  const { MediaUpload } = wp.blockEditor;
+  const {
+    TextControl,
+    TextareaControl,
+    PanelRow,
+    CheckboxControl,
+    Button,
+    DropZone
+  } = wp.components;
+  const { MediaUpload, MediaUploadCheck } = wp.blockEditor;
 
   const META_KEYS = {
     title: '_fs_seo_title',
@@ -63,6 +69,12 @@
         return media && media.source_url ? media.source_url : '';
       },
       [ogImageId]
+    );
+    const getBlockEditorSettings = useSelect(
+      function (select) {
+        return select('core/block-editor')?.getSettings || null;
+      },
+      []
     );
 
     return el(
@@ -116,81 +128,165 @@
           { className: 'fromscratch-seo-og-image-wrap' },
           el(
             'label',
-            { className: 'fromscratch-seo-og-image-label' },
+            { className: 'fromscratch-seo-og-image-label', style: { display: 'block', marginBottom: '8px' } },
             labels.ogImageLabel || 'OG Image'
           ),
           el(
             'p',
             {
               className: 'description',
-              style: { marginTop: '4px', marginBottom: '8px' }
+              style: { marginTop: '0', marginBottom: '8px' }
             },
             labels.ogImageHelp || 'Best size: 1200 × 630 px.'
           ),
-          el(MediaUpload, {
-            allowedTypes: ['image'],
-            value: ogImageId || undefined,
-            onSelect: function (media) {
-              set('ogImage', media.id ? String(media.id) : '');
-            },
-            render: function (obj) {
-              return el(
-                'div',
-                null,
-                ogImageId
-                  ? el(
-                      'div',
-                      { style: { marginBottom: '8px' } },
-                      ogImageUrl
-                        ? el('img', {
-                            src: ogImageUrl,
-                            alt: '',
-                            style: {
-                              maxWidth: '100%',
-                              height: 'auto',
-                              display: 'block',
-                              marginBottom: '8px'
+          MediaUploadCheck
+            ? el(
+                MediaUploadCheck,
+                {
+                  fallback: el(
+                    'p',
+                    { className: 'description' },
+                    labels.ogImagePermissionHelp ||
+                      'To set an OG image, you need permission to upload media.'
+                  )
+                },
+                el(
+                  'div',
+                  { className: 'editor-post-featured-image' },
+                  el(
+                    'div',
+                    { className: 'editor-post-featured-image__container' },
+                    ogImageId
+                      ? el(
+                          MediaUpload,
+                          {
+                            allowedTypes: ['image'],
+                            value: ogImageId,
+                            onSelect: function (media) {
+                              set('ogImage', media.id ? media.id : 0);
+                            },
+                            render: function (renderProps) {
+                              return el(
+                                'div',
+                                null,
+                                el(
+                                  'div',
+                                  { className: 'editor-post-featured-image__preview' },
+                                  ogImageUrl
+                                    ? el('img', {
+                                        src: ogImageUrl,
+                                        alt: '',
+                                        className: 'editor-post-featured-image__preview-image'
+                                      })
+                                    : null
+                                ),
+                                el(
+                                  'div',
+                                  { className: 'editor-post-featured-image__actions' },
+                                  el(
+                                    Button,
+                                    {
+                                      variant: 'secondary',
+                                      className: 'editor-post-featured-image__action',
+                                      onClick: renderProps.open
+                                    },
+                                    labels.ogImageReplace || 'Replace'
+                                  ),
+                                  el(
+                                    Button,
+                                    {
+                                      variant: 'secondary',
+                                      isDestructive: true,
+                                      className: 'editor-post-featured-image__action',
+                                      onClick: function () {
+                                        set('ogImage', 0);
+                                      }
+                                    },
+                                    labels.ogImageRemove || 'Remove'
+                                  )
+                                )
+                              );
                             }
-                          })
-                        : null,
-                      el(
+                          }
+                        )
+                      : el(
+                          MediaUpload,
+                          {
+                            allowedTypes: ['image'],
+                            value: undefined,
+                            onSelect: function (media) {
+                              set('ogImage', media.id ? media.id : 0);
+                            },
+                            render: function (renderProps) {
+                              var settings = getBlockEditorSettings
+                                ? getBlockEditorSettings()
+                                : null;
+                              var mediaUpload = settings?.mediaUpload;
+                              var toggleButton = el(
+                                Button,
+                                {
+                                  variant: 'secondary',
+                                  className: 'editor-post-featured-image__toggle',
+                                  onClick: renderProps.open,
+                                  style: { minHeight: '50px', width: '100%' }
+                                },
+                                labels.ogImageButton || 'Set OG image'
+                              );
+                              return el(
+                                'div',
+                                { className: 'editor-post-featured-image__toggle' },
+                                DropZone && mediaUpload &&
+                                  el(DropZone, {
+                                    onFilesDrop: function (files) {
+                                      mediaUpload({
+                                        allowedTypes: ['image'],
+                                        filesList: files,
+                                        onFileChange: function (images) {
+                                          if (images && images[0] && images[0].id) {
+                                            set('ogImage', images[0].id);
+                                          }
+                                        },
+                                        multiple: false
+                                      });
+                                    }
+                                  }),
+                                toggleButton
+                              );
+                            }
+                          }
+                        )
+                  )
+                )
+              )
+            : el(MediaUpload, {
+                allowedTypes: ['image'],
+                value: ogImageId || undefined,
+                onSelect: function (media) {
+                  set('ogImage', media.id ? media.id : 0);
+                },
+                render: function (obj) {
+                  return ogImageId && ogImageUrl
+                    ? el(
                         'div',
                         null,
-                        el(
-                          'button',
-                          {
-                            type: 'button',
-                            className: 'button',
-                            onClick: obj.open
-                          },
-                          labels.ogImageButton || 'Replace'
-                        ),
+                        el('img', {
+                          src: ogImageUrl,
+                          alt: '',
+                          style: { maxWidth: '100%', height: 'auto', display: 'block', marginBottom: '8px' }
+                        }),
+                        el(Button, { variant: 'secondary', onClick: obj.open }, labels.ogImageReplace || 'Replace'),
                         ' ',
-                        el(
-                          'button',
-                          {
-                            type: 'button',
-                            className: 'button',
-                            onClick: function () {
-                              set('ogImage', '');
-                            }
-                          },
-                          labels.ogImageRemove || 'Remove'
-                        )
+                        el(Button, {
+                          variant: 'secondary',
+                          isDestructive: true,
+                          onClick: function () {
+                            set('ogImage', 0);
+                          }
+                        }, labels.ogImageRemove || 'Remove')
                       )
-                    )
-                  : el(
-                      'button',
-                      {
-                        type: 'button',
-                        className: 'button',
-                        onClick: obj.open
-                      },
-                      labels.ogImageButton || 'Select image'
-                    )
-              );
-            }
-          })
+                    : el(Button, { variant: 'secondary', onClick: obj.open }, labels.ogImageButton || 'Set OG image');
+                }
+              })
         )
       )
     );
