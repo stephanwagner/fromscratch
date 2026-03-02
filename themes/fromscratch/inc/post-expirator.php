@@ -71,11 +71,17 @@ add_action('init', function () {
  * Pass labels to the block editor expirator panel.
  */
 add_action('enqueue_block_editor_assets', function () {
+	$time_format = get_option('time_format', 'H:i');
+	$is_12_hour = (bool) preg_match('/[gaA]/', $time_format);
 	wp_localize_script('fromscratch-editor', 'fromscratchExpirator', [
-		'postTypes' => fs_theme_post_types(),
+		'postTypes'   => fs_theme_post_types(),
 		'panelTitle' => __('Expiration', 'fromscratch'),
-		'dateLabel' => __('Expiration date and time', 'fromscratch'),
-		'dateHelp' => __('When this date and time is reached, the post will be set to draft. Leave empty for no expiration.', 'fromscratch'),
+		'dateLabel'  => __('Expiration date and time', 'fromscratch'),
+		'dateHelp'   => __('When this date and time is reached, the post will be set to draft. Leave empty for no expiration.', 'fromscratch'),
+		'timezone'   => wp_timezone_string(),
+		'is12Hour'   => $is_12_hour,
+		'startOfWeek' => (int) get_option('start_of_week', 0),
+		'clearLabel' => __('Clear', 'fromscratch'),
 	], 11);
 });
 
