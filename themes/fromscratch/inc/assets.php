@@ -173,6 +173,7 @@ function fs_editor_scripts(): void
 			'wp-data',
 			'wp-core-data',
 			'wp-i18n',
+			'wp-date',
 		],
 		fs_asset_hash($file),
 		true
