@@ -487,6 +487,9 @@ msgstr "Wenn dieses Datum und diese Uhrzeit erreicht sind, wird der Beitrag in e
 msgid "Now"
 msgstr "Jetzt"
 
+msgid "OK"
+msgstr "OK"
+
 msgid "Reset"
 msgstr "Zurücksetzen"
 
@@ -501,9 +504,6 @@ msgstr "Ablaufdatum und -uhrzeit festlegen"
 
 msgid "Redirect URL"
 msgstr "Weiterleitungs-URL"
-
-msgid "/new-path"
-msgstr "/neuer-pfad"
 
 msgid "After expiration"
 msgstr "Nach Ablauf"

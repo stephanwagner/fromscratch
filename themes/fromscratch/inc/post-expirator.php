@@ -135,6 +135,7 @@ add_action('enqueue_block_editor_assets', function () {
 		'is12Hour'        => $is_12_hour ? 1 : 0,
 		'startOfWeek'     => (int) get_option('start_of_week', 0),
 		'nowLabel'        => __('Now', 'fromscratch'),
+		'okLabel'         => __('OK', 'fromscratch'),
 		'clearLabel'      => __('Reset', 'fromscratch'),
 		'amLabel'         => $am_label,
 		'pmLabel'         => $pm_label,

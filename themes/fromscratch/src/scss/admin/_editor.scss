@@ -41,13 +41,26 @@ div.fromscratch-editor-panel {
 
   // Expirator
 
+  .components-datetime {
+    h3.components-heading {
+      margin: 0;
+      line-height: 1.4;
+      text-wrap: pretty;
+      display: block;
+      font-size: 13px;
+      font-weight: normal;
+      text-transform: none;
+    }
+  }
+
   .fromscratch-expirator-field-action {
     .components-flex {
       gap: 0 !important;
     }
   }
 
-  .components-button.fromscratch-expirator-preview {
+  .components-button.fromscratch-expirator-preview,
+  .components-button.fromscratch-expirator-preview-reset {
     padding: 6px 12px;
     background: #f6f6f6;
     border-radius: 2px;
@@ -56,23 +69,22 @@ div.fromscratch-editor-panel {
     line-height: 1.4;
     min-height: 40px;
   }
+
+  .components-button.fromscratch-expirator-preview {
+    flex: 1;
+  }
+
+  .components-button.fromscratch-expirator-preview-reset {
+    flex-shrink: 0;
+    align-self: stretch;
+  }
 }
 
-// style: { padding: 0, border: 0, background: 'none', cursor: 'pointer', color: 'var(--wp-admin-theme-color, #0073aa)', textAlign: 'left', fontSize: 'inherit' }
 
 
 /*
 
 TODOD 
-
-Check 
-// Main title
-
-.editor-post-title {
-  margin-top: 0 !important;
-  margin-bottom: 32px !important;
-  color: color('gray-600');
-}
 
 // Block preview
 

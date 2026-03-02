@@ -253,10 +253,10 @@
       setMeta({ ...meta, [META_KEY_ACTION]: value || 'draft' });
     }
 
-    function handleRedirectChange(e) {
+    function handleRedirectChange(value) {
       setMeta({
         ...meta,
-        [META_KEY_REDIRECT]: (e.target && e.target.value) || ''
+        [META_KEY_REDIRECT]: value || ''
       });
     }
 
@@ -269,8 +269,7 @@
     const actionPrivate = labels.actionPrivate || 'Set to private';
     const actionRedirect = labels.actionRedirect || 'Redirect to';
     const redirectLabel = labels.redirectLabel || 'Redirect URL';
-    const redirectPlaceholder =
-      labels.redirectPlaceholder || '/new-path';
+    const redirectPlaceholder = labels.redirectPlaceholder || '/new-path';
 
     const previewContent = rawValue
       ? timezone
@@ -283,7 +282,7 @@
       {
         'type': 'button',
         'className':
-          'fromscratch-expirator-preview components-button editor-post-schedule__dialog-toggle is-tertiary',
+          'fromscratch-expirator-preview components-button is-tertiary',
         'onClick': function () {
           setIsPickerOpen(function (prev) {
             return !prev;
@@ -293,6 +292,40 @@
       },
       previewContent
     );
+
+    const previewResetButton = rawValue
+      ? el(
+          'button',
+          {
+            'type': 'button',
+            'className':
+              'fromscratch-expirator-preview-reset components-button is-tertiary has-icon',
+            'onClick': handleClear,
+            'aria-label': clearLabel
+          },
+          el('span', {
+            className: 'dashicons dashicons-no-alt',
+            style: { fontSize: '16px', width: '16px', height: '16px' }
+          })
+        )
+      : null;
+
+    const firstRowContent = rawValue
+      ? el(
+          'div',
+          {
+            style: {
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              width: '100%',
+              marginBottom: '4px'
+            }
+          },
+          previewTrigger,
+          previewResetButton
+        )
+      : previewTrigger;
 
     const pickerContent = !isPickerOpen
       ? []
@@ -311,7 +344,7 @@
             {
               style: {
                 marginTop: '8px',
-                marginBottom: '0',
+                marginBottom: '12px',
                 display: 'flex',
                 gap: '8px',
                 flexWrap: 'wrap'
@@ -321,7 +354,18 @@
               'button',
               {
                 type: 'button',
-                className: 'button button-small',
+                className: 'components-button is-tertiary is-small',
+                onClick: function () {
+                  setIsPickerOpen(false);
+                }
+              },
+              labels.okLabel || 'OK'
+            ),
+            el(
+              'button',
+              {
+                type: 'button',
+                className: 'components-button is-tertiary is-small',
                 onClick: handleNow
               },
               nowLabel
@@ -331,7 +375,7 @@
                   'button',
                   {
                     type: 'button',
-                    className: 'button button-small',
+                    className: 'components-button is-tertiary is-small',
                     onClick: handleClear
                   },
                   clearLabel
@@ -370,7 +414,7 @@
     return el(
       'div',
       { className: 'fromscratch-editor-panel fromscratch-expirator-panel' },
-      el(PanelRow, null, previewTrigger),
+      el(PanelRow, null, firstRowContent),
       isPickerOpen
         ? el(
             PanelRow,
