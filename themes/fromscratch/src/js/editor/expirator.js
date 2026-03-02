@@ -98,8 +98,25 @@
     return formatForStorage(new Date());
   }
 
-  /** Format stored "Y-m-d H:i" for preview: "Mon D, YYYY, time" using monthNames. */
+  /** Format stored "Y-m-d H:i" for preview using WordPress date/time format (Settings → General). */
   function formatStoredForDisplay(stored) {
+    const dateObj = parseStoredDate(stored);
+    if (!dateObj) return '';
+    const df = labels.dateFormat || 'F j, Y';
+    const tf = labels.timeFormat || 'g:i a';
+    const format = df + ' ' + tf;
+    if (wpDate) {
+      try {
+        if (typeof wpDate.dateI18n === 'function') {
+          return wpDate.dateI18n(format, dateObj, timezone || undefined);
+        }
+        if (typeof wpDate.date === 'function') {
+          return wpDate.date(format, dateObj, timezone || undefined);
+        }
+      } catch (e) {
+        /* fall through to fallback */
+      }
+    }
     const { date: datePart, time: timePart } = storedToParts(stored);
     if (!datePart) return '';
     const months = labels.monthNames && Array.isArray(labels.monthNames) ? labels.monthNames : [];

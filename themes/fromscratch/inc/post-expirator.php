@@ -113,6 +113,7 @@ add_action('init', function () {
  * Pass labels to the block editor expirator panel.
  */
 add_action('enqueue_block_editor_assets', function () {
+	$date_format = get_option('date_format', 'F j, Y');
 	$time_format = get_option('time_format', 'H:i');
 	// Match 12-hour format: g (1-12), h (01-12), a (am/pm), A (AM/PM). 24-hour uses H or G.
 	$is_12_hour = (bool) preg_match('/[ghaA]/', $time_format);
@@ -132,6 +133,8 @@ add_action('enqueue_block_editor_assets', function () {
 		'timeLabel'  => $is_12_hour ? __('Time', 'fromscratch') : __('Time (24h)', 'fromscratch'),
 		'dateHelp'   => __('When this date and time is reached, the post will be set to draft. Leave empty for no expiration.', 'fromscratch'),
 		'timezone'   => wp_timezone_string(),
+		'dateFormat' => $date_format,
+		'timeFormat' => $time_format,
 		'is12Hour'   => $is_12_hour ? 1 : 0,
 		'startOfWeek' => (int) get_option('start_of_week', 0),
 		'nowLabel'   => __('Now', 'fromscratch'),
