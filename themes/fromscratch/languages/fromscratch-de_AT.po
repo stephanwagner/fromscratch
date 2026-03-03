@@ -339,8 +339,8 @@ msgstr "Administrator-E-Mail"
 msgid "Changes the Administrator email instantly without notifying."
 msgstr "Ändert die Administrator-E-Mail sofort ohne Benachrichtigung."
 
-msgid "Cache"
-msgstr "Cache"
+msgid "Asset Cache"
+msgstr "Asset Cache"
 
 msgid "Cache version"
 msgstr "Cache-Version"

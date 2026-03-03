@@ -265,7 +265,7 @@ function fs_render_developer_settings_page(): void
 		<?php if ($tab === 'general') : ?>
 			<div class="page-settings-form">
 				<?php $asset_version = get_option('fromscratch_asset_version', '1'); ?>
-				<h2 class="title"><?= esc_html__('Cache', 'fromscratch') ?></h2>
+				<h2 class="title"><?= esc_html__('Asset Cache', 'fromscratch') ?></h2>
 				<p class="description"><?= esc_html__('Bump when static theme files using fs_asset_url have been changed so the cache of the files is updated.', 'fromscratch') ?></p>
 				<table class="form-table" role="presentation">
 					<tr>

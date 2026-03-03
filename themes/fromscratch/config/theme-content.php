@@ -27,6 +27,7 @@ return [
 						'title' => 'Firmenname',
 						'translate' => false,
 						'type' => 'textfield',
+						'placeholder' => 'Firmenname', // TODO
 						'width' => 400,
 					],
 					[
