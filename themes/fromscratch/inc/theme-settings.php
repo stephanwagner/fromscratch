@@ -77,6 +77,26 @@ add_action('admin_init', function () {
 	exit;
 }, 1);
 
+// CSS form (self-POST to avoid options.php redirect flicker)
+add_action('admin_init', function () {
+	global $pagenow;
+	if (!current_user_can('manage_options') || $_SERVER['REQUEST_METHOD'] !== 'POST') {
+		return;
+	}
+	if ($pagenow !== 'options-general.php' || (isset($_GET['page']) ? $_GET['page'] : '') !== 'fs-theme-settings') {
+		return;
+	}
+	if (empty($_POST['fromscratch_save_css']) || empty($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_save_css')) {
+		return;
+	}
+	$value = isset($_POST['fromscratch_custom_css']) ? $_POST['fromscratch_custom_css'] : '';
+	$sanitized = fs_sanitize_custom_css($value);
+	update_option('fromscratch_custom_css', $sanitized);
+	set_transient('fromscratch_css_saved', '1', 30);
+	wp_safe_redirect(admin_url('options-general.php?page=fs-theme-settings&tab=css'));
+	exit;
+}, 1);
+
 // Clear design overrides (developer only); redirects back to Design tab
 add_action('load-settings_page_fs-theme-settings', function () {
 	if (!current_user_can('manage_options') || empty($_GET['fromscratch_clear_design']) || empty($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'fromscratch_clear_design')) {
@@ -529,6 +549,10 @@ function theme_settings_page(): void
 	if ($redirects_saved !== false) {
 		delete_transient('fromscratch_redirects_saved');
 	}
+	$css_saved = get_transient('fromscratch_css_saved');
+	if ($css_saved !== false) {
+		delete_transient('fromscratch_css_saved');
+	}
 	$clear_design_url = wp_nonce_url(add_query_arg(['fromscratch_clear_design' => '1', 'tab' => 'design'], $base_url), 'fromscratch_clear_design');
 ?>
 	<div class="wrap">
@@ -538,7 +562,7 @@ function theme_settings_page(): void
 		if ($clear_design_notice !== false) {
 			$notices[] = __('Design overrides cleared. All values reset to defaults.', 'fromscratch');
 		}
-		if ($redirects_saved !== false) {
+		if ($redirects_saved !== false || $css_saved !== false) {
 			$notices[] = __('Settings saved.', 'fromscratch');
 		}
 		foreach ($notices as $msg) : ?>
@@ -744,11 +768,12 @@ function theme_settings_page(): void
 		})();
 		</script>
 		<?php elseif ($tab === 'css') : ?>
-		<form method="post" action="options.php" class="page-settings-form">
+		<form method="post" action="<?= esc_url(admin_url('options-general.php?page=fs-theme-settings&tab=css')) ?>" class="page-settings-form">
+			<?php wp_nonce_field('fromscratch_save_css'); ?>
+			<input type="hidden" name="fromscratch_save_css" value="1">
 			<h2 class="title"><?= esc_html__('Custom CSS', 'fromscratch') ?></h2>
 			<p class="description"><?= esc_html__('The CSS is output after the design variables (:root).', 'fromscratch') ?></p>
 			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('You can use design variables, e.g. var(--color-primary).', 'fromscratch') ?></p>
-			<?php settings_fields(FS_THEME_OPTION_GROUP_CSS); ?>
 			<table class="form-table" role="presentation">
 				<tr>
 					<td colspan="2" style="padding: 0;">
