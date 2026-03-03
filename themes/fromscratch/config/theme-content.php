@@ -19,7 +19,7 @@ return [
 
 	/**
 	 * Content: tabs (left nav), each with sections (fields).
-	 * Labels can be translated in code; ids are used for option names (see FS_THEME_CONTENT_OPTION_PREFIX in inc/theme-settings.php; format: {prefix}{section_id}_{variable_id}).
+	 * Labels can be translated in code; ids are used for option names (see FS_THEME_CONTENT_OPTION_PREFIX in inc/config.php; format: {prefix}{tab_id}_{section_id}_{variable_id}).
 	 */
 	'content' => [
 		'tabs' => [

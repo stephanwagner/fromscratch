@@ -661,7 +661,7 @@ function theme_settings_page(): void
 							<?php
 							if (!empty($ct['sections']) && is_array($ct['sections'])) {
 								foreach ($ct['sections'] as $section) {
-									do_settings_sections(FS_THEME_CONTENT_OPTION_PREFIX . $section['id']);
+									do_settings_sections(FS_THEME_CONTENT_OPTION_PREFIX . $ct['id'] . '_' . $section['id']);
 								}
 							}
 							?>
@@ -849,18 +849,25 @@ function theme_settings_page(): void
 }
 
 /**
- * Output option name row (for developers only): copy button + monospace option id. Uses copy-from-source; no label on button.
+ * Output option name row (for developers only): copy option name, copy get_option snippet, monospace option id.
+ * Uses copy-from-source; no label on buttons.
  */
-function fs_content_field_option_name_row(string $variableId): void
+function fs_content_field_option_name_row(string $variableId, array $variable = []): void
 {
 	if (!function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
 		return;
 	}
+	$type = $variable['type'] ?? 'textfield';
+	$default = ($type === 'multiselect') ? '[]' : (($type === 'image') ? '0' : "''");
+	$snippet = "get_option('" . $variableId . "', " . $default . ")";
 	$id_attr = 'fs-opt-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', $variableId);
+	$id_snippet_attr = 'fs-opt-snippet-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', $variableId);
 	?>
 	<div class="fs-content-option-name-row" style="display: flex; align-items: center; gap: 6px; margin: 4px 0 0 4px;">
-		<button type="button" class="button button-small fs-copy-option-name" style="padding: 0 6px; min-height: 28px;" data-fs-copy-from-source="<?= esc_attr($id_attr) ?>" aria-label="<?= esc_attr__('Copy option name', 'fromscratch') ?>"><span class="dashicons dashicons-clipboard" style="font-size: 16px; width: 16px; height: 16px;"></span></button>
+		<button type="button" class="button button-small" style="padding: 0 6px; min-height: 28px;" data-fs-copy-from-source="<?= esc_attr($id_attr) ?>" aria-label="<?= esc_attr__('Copy option name', 'fromscratch') ?>"><span class="dashicons dashicons-clipboard" style="font-size: 16px; width: 16px; height: 16px;"></span></button>
+		<button type="button" class="button button-small" style="padding: 0 6px; min-height: 28px;" data-fs-copy-from-source="<?= esc_attr($id_snippet_attr) ?>" aria-label="<?= esc_attr__('Copy get_option snippet', 'fromscratch') ?>"><span class="dashicons dashicons-media-code" style="font-size: 16px; width: 16px; height: 16px;"></span></button>
 		<span id="<?= esc_attr($id_attr) ?>" style="color: #999; font-size: 12px; font-family: monospace;"><?= esc_html($variableId) ?></span>
+		<span id="<?= esc_attr($id_snippet_attr) ?>" style="display: none;"><?= esc_html($snippet) ?></span>
 	</div>
 	<?php
 }
@@ -952,7 +959,7 @@ function display_custom_info_field($variable, $variableId, $languageId = null): 
 	if (!empty($variable['description'])) {
 		echo '<p class="description" style="margin-top: 6px; margin-bottom: 0;">' . esc_html($variable['description']) . '</p>';
 	}
-	fs_content_field_option_name_row($variableId);
+	fs_content_field_option_name_row($variableId, $variable);
 	if ($languageId) {
 		echo '</div>';
 	}
@@ -970,9 +977,10 @@ function display_custom_info_fields(): void
 		}
 		foreach ($tab['sections'] as $section) {
 			$section_title = $section['title'] ?? $section['id'] ?? '';
-			add_settings_section('section', $section_title, null, FS_THEME_CONTENT_OPTION_PREFIX . $section['id']);
+			$content_page = FS_THEME_CONTENT_OPTION_PREFIX . $tab['id'] . '_' . $section['id'];
+			add_settings_section('section', $section_title, null, $content_page);
 			foreach ($section['variables'] as $variable) {
-				$variableId = FS_THEME_CONTENT_OPTION_PREFIX . $section['id'] . '_' . $variable['id'];
+				$variableId = FS_THEME_CONTENT_OPTION_PREFIX . $tab['id'] . '_' . $section['id'] . '_' . $variable['id'];
 				$variable_title = $variable['title'] ?? $variable['id'] ?? '';
 				$is_multiselect = isset($variable['type']) && $variable['type'] === 'multiselect';
 				$register_args = [];
@@ -994,13 +1002,13 @@ function display_custom_info_fields(): void
 						$variableIdLang = $variableId . '_' . $language['id'];
 						add_settings_field($variableIdLang, $variable_title, function () use ($variable, $variableIdLang, $language) {
 							display_custom_info_field($variable, $variableIdLang, $language['id']);
-						}, FS_THEME_CONTENT_OPTION_PREFIX . $section['id'], 'section');
+						}, $content_page, 'section');
 						register_setting(FS_THEME_OPTION_GROUP_TEXTE, $variableIdLang, $register_args);
 					}
 				} else {
 					add_settings_field($variableId, $variable_title, function () use ($variable, $variableId) {
 						display_custom_info_field($variable, $variableId);
-					}, FS_THEME_CONTENT_OPTION_PREFIX . $section['id'], 'section');
+					}, $content_page, 'section');
 					register_setting(FS_THEME_OPTION_GROUP_TEXTE, $variableId, $register_args);
 				}
 			}

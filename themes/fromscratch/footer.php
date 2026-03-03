@@ -2,8 +2,8 @@
 	<div class="footer__container container">
 		<div class="footer__credits">
 			<?php
-			if (get_option(FS_THEME_CONTENT_OPTION_PREFIX . 'footer4_text')) {
-				echo get_option(FS_THEME_CONTENT_OPTION_PREFIX . 'footer4_text');
+			if (get_option(FS_THEME_CONTENT_OPTION_PREFIX . 'footer_footer4_text')) {
+				echo get_option(FS_THEME_CONTENT_OPTION_PREFIX . 'footer_footer4_text');
 			} else {
 				$menu_label = esc_html__('Theme', 'fromscratch');
 				if (current_user_can('manage_options')) {
