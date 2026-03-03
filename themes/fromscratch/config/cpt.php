@@ -1,7 +1,8 @@
 <?php
 
 /**
- * Custom post types. Registered CPTs are included in the SEO panel when they support the editor.
+ * Custom post types
+ * Registered CPTs are included in the SEO panel when they support the editor.
  *
  * @see register_post_type() for all supported args.
  */

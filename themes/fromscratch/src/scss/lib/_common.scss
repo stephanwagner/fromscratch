@@ -1,4 +1,4 @@
-@use "../variables" as *;
+@use "../core" as *;
 
 .grayscale {
   -webkit-filter: grayscale(100%);

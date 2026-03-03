@@ -1,0 +1,66 @@
+@use 'variables' as *;
+@use 'sass:string';
+@use 'sass:list';
+
+@function color($value) {
+  @each $name, $color in $colors {
+    @if $name == $value {
+      @return var(--color-#{$name}, $color);
+    }
+  }
+  @return $value;
+}
+
+@function gradient($value) {
+  @each $name, $values in $gradients {
+    @if $name == $value {
+      $direction: list.nth($values, 1);
+      $color1: list.nth($values, 2);
+      $color2: list.nth($values, 3);
+      @return linear-gradient($direction, $color1, $color2);
+    }
+  }
+  @return '';
+}
+
+@function fontSize($value) {
+  @each $name, $size in $fontSizes {
+    @if $name == $value {
+      @return $size;
+    }
+  }
+  @return $value;
+}
+
+@function lineHeight($value) {
+  @each $name, $size, $lineHeight in $fontSizes {
+    @if $name == $value {
+      @return $lineHeight;
+    }
+  }
+  @return $value;
+}
+
+@function transition($values...) {
+  $transition: '';
+  @each $name in $values {
+    @if ($transition != '') {
+      $transition: $transition, string.unquote($name) $defaultTransitionSpeed;
+    } @else {
+      $transition: string.unquote($name) $defaultTransitionSpeed;
+    }
+  }
+  @return $transition;
+}
+
+@function transitionSlow($values...) {
+  $transition: '';
+  @each $name in $values {
+    @if ($transition != '') {
+      $transition: $transition, string.unquote($name) $slowTransitionSpeed;
+    } @else {
+      $transition: string.unquote($name) $slowTransitionSpeed;
+    }
+  }
+  @return $transition;
+}

@@ -1,13 +1,12 @@
 <?php
 
 /**
- * Theme settings page config: page/menu titles, text sections (Texte tab), languages.
- * Used by Settings → Theme. Edit to add new text sections or languages.
+ * Theme settings: Content
+ * Used by Settings → Theme → Content.
+ * 
+ * Edit to add new text sections or languages.
  */
 return [
-	'title_page' => 'Theme settings',
-	'title_menu' => 'Theme',
-
 	'languages' => [
 		['id' => 'en', 'nameEnglish' => 'English', 'nameOriginalLanguage' => 'English'],
 		['id' => 'de', 'nameEnglish' => 'German', 'nameOriginalLanguage' => 'Deutsch'],
