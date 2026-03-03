@@ -97,17 +97,14 @@ add_action('admin_init', function () {
 	exit;
 }, 1);
 
-// Ensure media modal is available on General tab (image picker is in admin.js)
+// Ensure media modal is available on General tab (client logo, OG image) and Content tab (image fields).
 add_action('admin_enqueue_scripts', function ($hook_suffix) {
 	if ($hook_suffix !== 'settings_page_fs-theme-settings') {
 		return;
 	}
-	$requested_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : '';
-	$is_general = ($requested_tab === 'general' || $requested_tab === '');
-	if (!$is_general) {
-		return;
-	}
-	if (!current_user_can('manage_options') || (function_exists('fs_admin_can_access') && !fs_admin_can_access('theme_settings_general'))) {
+	$can_general = current_user_can('manage_options') && (!function_exists('fs_admin_can_access') || fs_admin_can_access('theme_settings_general'));
+	$can_content = current_user_can('manage_options') && (!function_exists('fs_admin_can_access') || fs_admin_can_access('theme_settings_texts'));
+	if (!$can_general && !$can_content) {
 		return;
 	}
 	wp_enqueue_media();
@@ -890,6 +887,21 @@ function display_custom_info_field($variable, $variableId, $languageId = null): 
 			echo '<input type="checkbox" name="' . esc_attr($variableId) . '" value="1" class="settings-page-toggle"' . ($checked ? ' checked' : '') . '>';
 			echo '<span class="fs-content-toggle-label">' . esc_html(!empty($variable['toggle_label']) ? $variable['toggle_label'] : __('On', 'fromscratch')) . '</span>';
 			echo '</label>';
+			echo '<div style="color: #999; font-size: 12px; margin: 4px 0 0 4px; font-family: monospace;">' . esc_html($variableId) . '</div>';
+			break;
+		case 'image':
+			$img_id = (int) $value;
+			$img_url = $img_id > 0 ? wp_get_attachment_image_url($img_id, 'medium') : '';
+			echo '<div data-fs-image-picker>';
+			echo '<input type="hidden" name="' . esc_attr($variableId) . '" id="' . esc_attr($variableId) . '" value="' . esc_attr($img_id > 0 ? $img_id : '0') . '" data-fs-image-picker-input>';
+			echo '<div class="fs-image-picker-preview" style="margin-bottom: 8px;" data-fs-image-picker-preview>';
+			if ($img_url) {
+				echo '<img src="' . esc_url($img_url) . '" alt="" style="max-width: 240px; height: auto; display: block;">';
+			}
+			echo '</div>';
+			echo '<p><button type="button" class="button" data-fs-image-picker-select>' . esc_html__('Select image', 'fromscratch') . '</button> ';
+			echo '<button type="button" class="button" data-fs-image-picker-remove' . ($img_id <= 0 ? ' style="display:none;"' : '') . '>' . esc_html__('Remove', 'fromscratch') . '</button></p>';
+			echo '</div>';
 			echo '<div style="color: #999; font-size: 12px; margin: 4px 0 0 4px; font-family: monospace;">' . esc_html($variableId) . '</div>';
 			break;
 		default:

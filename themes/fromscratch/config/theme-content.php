@@ -114,6 +114,12 @@ return [
 									'form' => 'Contact form',
 								],
 							],
+							[
+								'id' => 'hero_image',
+								'title' => 'Hero image',
+								'translate' => false,
+								'type' => 'image',
+							],
 						],
 					],
 				],
