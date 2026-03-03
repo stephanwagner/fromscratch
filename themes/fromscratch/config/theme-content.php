@@ -4,7 +4,8 @@
  * Theme settings: Content
  * Used by Settings → Theme → Content.
  *
- * Edit to add new text sections or languages.
+ * Edit to add new tabs, sections and languages.
+ * Structure: content.tabs[] (left-hand tabs) → each tab has sections[] → each section has variables[].
  */
 return [
 	'languages' => [
@@ -13,44 +14,69 @@ return [
 	],
 
 	/**
-	 * Text sections for Settings → Theme → Content tab.
-	 * Each section defines editable text/textarea fields for templates.
+	 * Content: tabs (left nav), each with sections (fields).
+	 * Labels can be translated in code; ids are used for option names (theme_variables_{section_id}_{variable_id}).
 	 */
-	'variables' => [
-		'sections' => [
+	'content' => [
+		'tabs' => [
 			[
-				'id' => 'company',
-				'title' => 'Firmen-Daten',
-				'variables' => [
+				'id' => 'general',
+				'title' => 'General',
+				'sections' => [
 					[
-						'id' => 'name',
-						'title' => 'Firmenname',
-						'translate' => false,
-						'type' => 'textfield',
-						'placeholder' => 'Firmenname', // TODO
-						'width' => 400,
+						'id' => 'company',
+						'title' => 'Company data',
+						'variables' => [
+							[
+								'id' => 'name',
+								'title' => 'Company name',
+								'translate' => false,
+								'type' => 'textfield',
+								'placeholder' => 'Company name',
+								'width' => 400,
+							],
+							[
+								'id' => 'address',
+								'title' => 'Address',
+								'translate' => false,
+								'type' => 'textarea',
+								'rows' => 3,
+								'width' => 400,
+							],
+							[
+								'id' => 'phone',
+								'title' => 'Phone',
+								'translate' => false,
+								'type' => 'textfield',
+								'width' => 400,
+							],
+							[
+								'id' => 'email',
+								'title' => 'Email',
+								'translate' => false,
+								'type' => 'textfield',
+								'width' => 400,
+							],
+						],
 					],
+				],
+			],
+			[
+				'id' => 'footer',
+				'title' => 'Footer',
+				'sections' => [
 					[
-						'id' => 'address',
-						'title' => 'Adresse',
-						'translate' => false,
-						'type' => 'textarea',
-						'rows' => 3,
-						'width' => 400,
-					],
-					[
-						'id' => 'phone',
-						'title' => 'Telefon',
-						'translate' => false,
-						'type' => 'textfield',
-						'width' => 400,
-					],
-					[
-						'id' => 'email',
-						'title' => 'E-Mail',
-						'translate' => false,
-						'type' => 'textfield',
-						'width' => 400,
+						'id' => 'footer',
+						'title' => 'Footer text',
+						'variables' => [
+							[
+								'id' => 'text',
+								'title' => 'Text',
+								'translate' => false,
+								'type' => 'textfield',
+								'width' => 400,
+							],
+						],
 					],
 				],
 			],

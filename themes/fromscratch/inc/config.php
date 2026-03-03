@@ -22,7 +22,7 @@ function fs_config(?string $key = null)
 /**
  * Get theme settings: Content (config/theme-content.php). Used for Settings → Theme → Content.
  *
- * @param string|null $key Optional. Dot path, e.g. 'variables.sections', 'languages'.
+ * @param string|null $key Optional. Dot path, e.g. 'content.tabs', 'languages'.
  * @return array|mixed Full config if $key is null, else value at $key.
  */
 function fs_config_settings(?string $key = null)

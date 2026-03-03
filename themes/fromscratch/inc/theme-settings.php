@@ -646,15 +646,55 @@ function theme_settings_page(): void
 			<?php submit_button(); ?>
 		</form>
 		<?php elseif ($tab === 'texts') : ?>
-		<form method="post" action="options.php" class="page-settings-form">
+		<?php
+			$content_tabs = fs_config_settings('content.tabs');
+			$content_tabs = is_array($content_tabs) ? $content_tabs : [];
+		?>
+		<form method="post" action="options.php" class="page-settings-form" id="fs-content-form">
 			<?php settings_fields(FS_THEME_OPTION_GROUP_TEXTE); ?>
-			<?php
-			foreach (fs_config_settings('variables.sections') as $section) {
-				do_settings_sections('theme_variables_' . $section['id']);
-			}
-			?>
+			<div class="fs-content-tabs-wrap" style="display: flex; gap: 24px; margin-bottom: 24px;">
+				<nav class="fs-content-tabs-nav" role="tablist" style="flex-shrink: 0; width: 180px;">
+					<?php foreach ($content_tabs as $i => $ct) : ?>
+						<button type="button" class="button fs-content-tab-btn <?= ($i === 0) ? 'active' : '' ?>" role="tab" aria-selected="<?= ($i === 0) ? 'true' : 'false' ?>" aria-controls="fs-content-panel-<?= esc_attr($ct['id']) ?>" data-tab="<?= esc_attr($ct['id']) ?>" style="display: block; width: 100%; margin-bottom: 4px; text-align: left;"><?= esc_html($ct['title'] ?? $ct['id']) ?></button>
+					<?php endforeach; ?>
+				</nav>
+				<div class="fs-content-tabs-panels" style="flex: 1;">
+					<?php foreach ($content_tabs as $i => $ct) : ?>
+						<div id="fs-content-panel-<?= esc_attr($ct['id']) ?>" class="fs-content-tab-panel" role="tabpanel" data-tab="<?= esc_attr($ct['id']) ?>" style="display: <?= $i === 0 ? 'block' : 'none' ?>;">
+							<?php
+							if (!empty($ct['sections']) && is_array($ct['sections'])) {
+								foreach ($ct['sections'] as $section) {
+									do_settings_sections('theme_variables_' . $section['id']);
+								}
+							}
+							?>
+						</div>
+					<?php endforeach; ?>
+				</div>
+			</div>
 			<?php submit_button(); ?>
 		</form>
+		<style>.fs-content-tabs-wrap .fs-content-tab-btn.active { background: #2271b1; color: #fff; border-color: #2271b1; }</style>
+		<script>
+		(function() {
+			var form = document.getElementById('fs-content-form');
+			if (!form) return;
+			var nav = form.querySelector('.fs-content-tabs-nav');
+			var panels = form.querySelectorAll('.fs-content-tab-panel');
+			nav.addEventListener('click', function(e) {
+				var btn = e.target.closest('.fs-content-tab-btn');
+				if (!btn) return;
+				var tabId = btn.getAttribute('data-tab');
+				nav.querySelectorAll('.fs-content-tab-btn').forEach(function(b) { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+				btn.classList.add('active');
+				btn.setAttribute('aria-selected', 'true');
+				panels.forEach(function(p) {
+					var show = p.getAttribute('data-tab') === tabId;
+					p.style.display = show ? 'block' : 'none';
+				});
+			});
+		})();
+		</script>
 		<?php elseif ($tab === 'redirects') : ?>
 		<?php
 			$redirects_raw = get_option('fs_redirects', []);
@@ -836,27 +876,34 @@ function display_custom_info_field($variable, $variableId, $languageId = null): 
 
 function display_custom_info_fields(): void
 {
-	$sections = fs_config_settings('variables.sections');
-	if (!is_array($sections)) {
+	$tabs = fs_config_settings('content.tabs');
+	if (!is_array($tabs)) {
 		return;
 	}
-	foreach ($sections as $section) {
-		add_settings_section('section', $section['title'], null, 'theme_variables_' . $section['id']);
-		foreach ($section['variables'] as $variable) {
-			$variableId = 'theme_variables_' . $section['id'] . '_' . $variable['id'];
-			if (!empty($variable['translate'])) {
-				foreach (fs_config_settings('languages') as $language) {
-					$variableIdLang = $variableId . '_' . $language['id'];
-					add_settings_field($variableIdLang, $variable['title'], function () use ($variable, $variableIdLang, $language) {
-						display_custom_info_field($variable, $variableIdLang, $language['id']);
+	foreach ($tabs as $tab) {
+		if (empty($tab['sections']) || !is_array($tab['sections'])) {
+			continue;
+		}
+		foreach ($tab['sections'] as $section) {
+			$section_title = $section['title'] ?? $section['id'] ?? '';
+			add_settings_section('section', $section_title, null, 'theme_variables_' . $section['id']);
+			foreach ($section['variables'] as $variable) {
+				$variableId = 'theme_variables_' . $section['id'] . '_' . $variable['id'];
+				$variable_title = $variable['title'] ?? $variable['id'] ?? '';
+				if (!empty($variable['translate'])) {
+					foreach (fs_config_settings('languages') as $language) {
+						$variableIdLang = $variableId . '_' . $language['id'];
+						add_settings_field($variableIdLang, $variable_title, function () use ($variable, $variableIdLang, $language) {
+							display_custom_info_field($variable, $variableIdLang, $language['id']);
+						}, 'theme_variables_' . $section['id'], 'section');
+						register_setting(FS_THEME_OPTION_GROUP_TEXTE, $variableIdLang);
+					}
+				} else {
+					add_settings_field($variableId, $variable_title, function () use ($variable, $variableId) {
+						display_custom_info_field($variable, $variableId);
 					}, 'theme_variables_' . $section['id'], 'section');
-					register_setting(FS_THEME_OPTION_GROUP_TEXTE, $variableIdLang);
+					register_setting(FS_THEME_OPTION_GROUP_TEXTE, $variableId);
 				}
-			} else {
-				add_settings_field($variableId, $variable['title'], function () use ($variable, $variableId) {
-					display_custom_info_field($variable, $variableId);
-				}, 'theme_variables_' . $section['id'], 'section');
-				register_setting(FS_THEME_OPTION_GROUP_TEXTE, $variableId);
 			}
 		}
 	}
