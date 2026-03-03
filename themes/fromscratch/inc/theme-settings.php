@@ -564,8 +564,9 @@ function theme_settings_page(): void
 
 			<hr>
 
-			<h2 class="title" style="margin-top: 28px;"><?= esc_html__('Fallback OG image', 'fromscratch') ?></h2>
-			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Used as the social preview image (og:image) when a page or post has no SEO image and no featured image. Best size: 1200 × 630 px.', 'fromscratch') ?></p>
+			<h2 class="title"><?= esc_html__('Fallback OG image', 'fromscratch') ?></h2>
+			<p class="description"><?= esc_html__('Used as the social preview image (og:image) when a page or post has no SEO image and no featured image.', 'fromscratch') ?></p>
+			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Best size: 1200 × 630 px.', 'fromscratch') ?></p>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row"><?= esc_html__('Image', 'fromscratch') ?></th>
@@ -588,7 +589,7 @@ function theme_settings_page(): void
 
 			<hr>
 
-			<h2 class="title" style="margin-top: 28px;"><?= esc_html__('Excerpt', 'fromscratch') ?></h2>
+			<h2 class="title"><?= esc_html__('Excerpt', 'fromscratch') ?></h2>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row">
@@ -617,7 +618,7 @@ function theme_settings_page(): void
 					</td>
 				</tr>
 			</table>
-			<p class="submit"><?php submit_button(); ?></p>
+			<?php submit_button(); ?>
 		</form>
 		<?php elseif ($tab === 'texts') : ?>
 		<form method="post" action="options.php" class="page-settings-form">
@@ -627,7 +628,7 @@ function theme_settings_page(): void
 				do_settings_sections('theme_variables_' . $section['id']);
 			}
 			?>
-			<p class="submit"><?php submit_button(); ?></p>
+			<?php submit_button(); ?>
 		</form>
 		<?php elseif ($tab === 'redirects') : ?>
 		<?php
@@ -693,7 +694,7 @@ function theme_settings_page(): void
 			<p style="margin-top: 12px;">
 				<button type="button" class="button" id="fs-redirect-add"><?= esc_html__('Add redirect', 'fromscratch') ?></button>
 			</p>
-			<p class="submit"><?php submit_button(); ?></p>
+			<?php submit_button(); ?>
 		</form>
 		<script>
 		(function() {
@@ -734,7 +735,7 @@ function theme_settings_page(): void
 					</td>
 				</tr>
 			</table>
-			<p class="submit"><?php submit_button(); ?></p>
+			<?php submit_button(); ?>
 		</form>
 		<?php else : ?>
 		<p class="description" style="margin-bottom: 8px;"><?= esc_html__('Override SCSS design variables. Values are output as CSS custom properties (:root). Add new variables in config/theme.php under design.sections.', 'fromscratch') ?></p>
@@ -781,7 +782,7 @@ function theme_settings_page(): void
 				</table>
 			</div>
 			<?php endforeach; ?>
-			<p class="submit"><?php submit_button(); ?></p>
+			<?php submit_button(); ?>
 		</form>
 		<?php endif; ?>
 	</div>
@@ -842,12 +843,10 @@ add_action('admin_init', 'display_custom_info_fields');
 
 /**
  * Whether the current user has access to at least one Theme settings tab (for menu visibility).
+ * When all Theme settings tabs are disabled in User rights for that role, the menu is hidden.
  */
 function fs_theme_settings_has_any_access(): bool
 {
-	if (function_exists('fs_is_developer_user') && fs_is_developer_user((int) get_current_user_id())) {
-		return true;
-	}
 	if (!function_exists('fs_admin_can_access')) {
 		return true;
 	}

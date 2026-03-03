@@ -263,35 +263,44 @@ function fs_render_developer_settings_page(): void
 		</nav>
 
 		<?php if ($tab === 'general') : ?>
-			<?php $asset_version = get_option('fromscratch_asset_version', '1'); ?>
-			<h2 class="title"><?= esc_html__('Cache', 'fromscratch') ?></h2>
-			<p class="description" style="margin-bottom: 8px;"><?= esc_html__('Use fs_asset_url( \'/path/to/file.css\' ) in templates to output the asset URL with ?ver= so the browser cache updates when you bump the version.', 'fromscratch') ?></p>
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><?= esc_html__('Cache version', 'fromscratch') ?></th>
-					<td>
-						<code style="font-size: 14px;"><?= esc_html($asset_version) ?></code>
-						<a href="<?= esc_url($bump_url) ?>" class="button" style="margin-left: 8px;"><?= esc_html__('Bump version', 'fromscratch') ?></a>
-						<p class="description"><?= esc_html__('Bump when static theme files have been changed so the cache of the files is updated.', 'fromscratch') ?></p>
-					</td>
-				</tr>
-			</table>
-			<h2 class="title" style="margin-top: 24px;"><?= esc_html__('Administrator email', 'fromscratch') ?></h2>
-			<form method="post" action="" class="page-settings-form">
-				<?php settings_fields(FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL); ?>
+			<div class="page-settings-form">
+				<?php $asset_version = get_option('fromscratch_asset_version', '1'); ?>
+				<h2 class="title"><?= esc_html__('Cache', 'fromscratch') ?></h2>
+				<p class="description"><?= esc_html__('Bump when static theme files using fs_asset_url have been changed so the cache of the files is updated.', 'fromscratch') ?></p>
 				<table class="form-table" role="presentation">
 					<tr>
-						<th scope="row">
-							<label for="admin_email"><?= esc_html__('Administrator email', 'fromscratch') ?></label>
-						</th>
+						<th scope="row"><?= esc_html__('Cache version', 'fromscratch') ?></th>
 						<td>
-							<input type="email" name="admin_email" id="admin_email" value="<?= esc_attr(get_option('admin_email')) ?>" class="regular-text">
-							<p class="description"><?= esc_html__('Changes the Administrator email instantly without notifying.', 'fromscratch') ?></p>
+							<div style="display: flex; align-items: center;">
+								<code style="font-size: 14px; height: 30px; line-height: 30px; padding: 0 8px; min-width: 30px; text-align: center; box-sizing: border-box; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);">
+									<?= esc_html($asset_version) ?>
+								</code>
+								<a href="<?= esc_url($bump_url) ?>" class="button" style="margin-left: 8px;"><?= esc_html__('Bump version', 'fromscratch') ?></a>
+							</div>
 						</td>
 					</tr>
 				</table>
-				<?php submit_button(); ?>
-			</form>
+
+				<hr>
+
+				<h2 class="title" style="margin-top: 24px;"><?= esc_html__('Administrator email', 'fromscratch') ?></h2>
+				<form method="post" action="">
+					<?php settings_fields(FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL); ?>
+
+					<p class="description"><?= esc_html__('Changes the Administrator email instantly without notifying.', 'fromscratch') ?></p>
+					<table class="form-table" role="presentation">
+						<tr>
+							<th scope="row">
+								<label for="admin_email"><?= esc_html__('Email address', 'fromscratch') ?></label>
+							</th>
+							<td>
+								<input type="email" name="admin_email" id="admin_email" value="<?= esc_attr(get_option('admin_email')) ?>" class="regular-text">
+							</td>
+						</tr>
+					</table>
+					<?php submit_button(); ?>
+				</form>
+			</div>
 
 		<?php elseif ($tab === 'features') : ?>
 			<?php
@@ -343,7 +352,7 @@ function fs_render_developer_settings_page(): void
 						<td>
 							<input type="hidden" name="fromscratch_features[enable_post_expirator]" value="0">
 							<label><input type="checkbox" name="fromscratch_features[enable_post_expirator]" value="1" <?= checked($feat('enable_post_expirator'), 1, false) ?>> <?= esc_html__('Enable post expirator', 'fromscratch') ?></label>
-							<p class="description fs-indent-checkbox"><?= esc_html__('Adds an expiration date/time to posts, pages and custom post types When reached, the post is set to draft.', 'fromscratch') ?></p>
+							<p class="description fs-indent-checkbox"><?= esc_html__('Adds an expiration date to posts, pages and custom post types.', 'fromscratch') ?></p>
 						</td>
 					</tr>
 				</table>
@@ -391,55 +400,66 @@ function fs_render_developer_settings_page(): void
 		<?php elseif ($tab === 'access') : ?>
 			<?php
 			$admin_access = get_option('fromscratch_admin_access', function_exists('fs_admin_access_defaults') ? fs_admin_access_defaults() : []);
-			$admin_access_labels = [
-				'plugins' => __('Plugins', 'fromscratch'),
-				'options_general' => __('Settings: General', 'fromscratch'),
-				'options_writing' => __('Settings: Writing', 'fromscratch'),
-				'options_reading' => __('Settings: Reading', 'fromscratch'),
-				'options_media' => __('Settings: Media', 'fromscratch'),
-				'options_permalink' => __('Settings: Permalinks', 'fromscratch'),
-				'options_privacy' => __('Settings: Privacy', 'fromscratch'),
-				'tools' => __('Tools', 'fromscratch'),
-				'themes' => __('Appearance (Themes)', 'fromscratch'),
-				'theme_settings_general' => __('Theme settings: General', 'fromscratch'),
-				'theme_settings_texts' => __('Theme settings: Texts', 'fromscratch'),
-				'theme_settings_design' => __('Theme settings: Design', 'fromscratch'),
-				'theme_settings_css' => __('Theme settings: CSS', 'fromscratch'),
-				'theme_settings_redirects' => __('Theme settings: Redirect manager', 'fromscratch'),
+			$admin_access_groups = [
+				['title' => null, 'items' => [
+					'plugins' => __('Plugins', 'fromscratch'),
+					'tools' => __('Tools', 'fromscratch'),
+					'themes' => __('Appearance (Themes)', 'fromscratch'),
+				]],
+				['title' => __('Settings', 'fromscratch'), 'items' => [
+					'options_general' => __('General', 'fromscratch'),
+					'options_writing' => __('Writing', 'fromscratch'),
+					'options_reading' => __('Reading', 'fromscratch'),
+					'options_media' => __('Media', 'fromscratch'),
+					'options_permalink' => __('Permalinks', 'fromscratch'),
+					'options_privacy' => __('Privacy', 'fromscratch'),
+				]],
+				['title' => __('Theme settings', 'fromscratch'), 'items' => [
+					'theme_settings_general' => __('General', 'fromscratch'),
+					'theme_settings_texts' => __('Texts', 'fromscratch'),
+					'theme_settings_design' => __('Design', 'fromscratch'),
+					'theme_settings_css' => __('CSS', 'fromscratch'),
+					'theme_settings_redirects' => __('Redirects', 'fromscratch'),
+				]],
 			];
 			?>
-			<h2 class="title"><?= esc_html__('User rights', 'fromscratch') ?></h2>
-			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Control which admin pages and Settings sections are visible to Administrators (Admin) and users with developer rights (Developer). Uncheck to hide from that role.', 'fromscratch') ?></p>
 			<form method="post" action="" class="page-settings-form">
+				<h2 class="title"><?= esc_html__('User rights', 'fromscratch') ?></h2>
+				<p class="description" style="margin-bottom: 16px;"><?= esc_html__('Control which admin pages and Settings sections are visible to Administrators (Admin) and users with developer rights (Developer). Uncheck to hide from that role.', 'fromscratch') ?></p>
 				<?php settings_fields(FS_THEME_OPTION_GROUP_DEVELOPER); ?>
-				<table class="form-table" role="presentation">
-					<thead>
-						<tr>
-							<th scope="col" class="row-title"><?= esc_html__('Page / Section', 'fromscratch') ?></th>
-							<th scope="col"><?= esc_html__('Admin', 'fromscratch') ?></th>
-							<th scope="col"><?= esc_html__('Developer', 'fromscratch') ?></th>
-						</tr>
-					</thead>
-					<tbody>
-						<?php foreach ($admin_access_labels as $key => $label) :
-							$val = isset($admin_access[$key]) ? $admin_access[$key] : ['admin' => 0, 'developer' => 1];
-							$admin_checked = !empty($val['admin']);
-							$dev_checked = !empty($val['developer']);
-						?>
+				<?php foreach ($admin_access_groups as $group) : ?>
+					<?php if ($group['title']) : ?>
+						<h3 class="title" style="margin-top: 24px; margin-bottom: 12px;"><?= esc_html($group['title']) ?></h3>
+					<?php endif; ?>
+					<table class="widefat striped" role="presentation" style="margin-bottom: 0; width: auto;">
+						<thead>
 							<tr>
-								<td class="row-title"><?= esc_html($label) ?></td>
-								<td>
-									<input type="hidden" name="fromscratch_admin_access[<?= esc_attr($key) ?>][admin]" value="0">
-									<label><input type="checkbox" name="fromscratch_admin_access[<?= esc_attr($key) ?>][admin]" value="1" <?= checked($admin_checked, true, false) ?>></label>
-								</td>
-								<td>
-									<input type="hidden" name="fromscratch_admin_access[<?= esc_attr($key) ?>][developer]" value="0">
-									<label><input type="checkbox" name="fromscratch_admin_access[<?= esc_attr($key) ?>][developer]" value="1" <?= checked($dev_checked, true, false) ?>></label>
-								</td>
+								<th scope="col" class="row-title"><?= esc_html__('Section', 'fromscratch') ?></th>
+								<th scope="col"><?= esc_html__('Admin', 'fromscratch') ?></th>
+								<th scope="col"><?= esc_html__('Developer', 'fromscratch') ?></th>
 							</tr>
-						<?php endforeach; ?>
-					</tbody>
-				</table>
+						</thead>
+						<tbody>
+							<?php foreach ($group['items'] as $key => $label) :
+								$val = isset($admin_access[$key]) ? $admin_access[$key] : ['admin' => 0, 'developer' => 1];
+								$admin_checked = !empty($val['admin']);
+								$dev_checked = !empty($val['developer']);
+							?>
+								<tr>
+									<td class="row-title" style="width: 200px;"><?= esc_html($label) ?></td>
+									<td style="width: 120px;">
+										<input type="hidden" name="fromscratch_admin_access[<?= esc_attr($key) ?>][admin]" value="0">
+										<label><input type="checkbox" name="fromscratch_admin_access[<?= esc_attr($key) ?>][admin]" value="1" <?= checked($admin_checked, true, false) ?>></label>
+									</td>
+									<td style="width: 120px;">
+										<input type="hidden" name="fromscratch_admin_access[<?= esc_attr($key) ?>][developer]" value="0">
+										<label><input type="checkbox" name="fromscratch_admin_access[<?= esc_attr($key) ?>][developer]" value="1" <?= checked($dev_checked, true, false) ?>></label>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				<?php endforeach; ?>
 				<?php submit_button(); ?>
 			</form>
 
