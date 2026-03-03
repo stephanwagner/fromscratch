@@ -857,11 +857,16 @@ function display_custom_info_field($variable, $variableId, $languageId = null): 
 	$type = $variable['type'] ?? 'textfield';
 	switch ($type) {
 		case 'textfield':
-			echo '<input class="settings-page-textfield" type="text" name="' . esc_attr($variableId) . '" value="' . esc_attr($value) . '" style="width: ' . (int) ($variable['width'] ?? 400) . 'px"' . (isset($variable['placeholder']) ? ' placeholder="' . esc_attr($variable['placeholder']) . '"' : '') . '>';
+			$tw = isset($variable['width']) ? (int) $variable['width'] : 0;
+			$tw_style = $tw > 0 ? 'width: ' . $tw . 'px' : 'width: 100%';
+			echo '<input class="settings-page-textfield" type="text" name="' . esc_attr($variableId) . '" value="' . esc_attr($value) . '" style="' . $tw_style . '"' . (isset($variable['placeholder']) ? ' placeholder="' . esc_attr($variable['placeholder']) . '"' : '') . '>';
 			echo '<div style="color: #999; font-size: 12px; margin: 4px 0 0 4px; font-family: monospace;">' . esc_html($variableId) . '</div>';
 			break;
 		case 'textarea':
-			echo '<textarea class="settings-page-textfield" name="' . esc_attr($variableId) . '" rows="' . (int) ($variable['rows'] ?? 4) . '" style="width: ' . (int) ($variable['width'] ?? 400) . 'px">' . esc_textarea($value) . '</textarea>';
+			$taw = isset($variable['width']) ? (int) $variable['width'] : 0;
+			$taw_style = $taw > 0 ? 'width: ' . $taw . 'px' : 'width: 100%';
+			$textarea_placeholder = isset($variable['placeholder']) ? ' placeholder="' . esc_attr($variable['placeholder']) . '"' : '';
+			echo '<textarea class="settings-page-textfield" name="' . esc_attr($variableId) . '" rows="' . (int) ($variable['rows'] ?? 4) . '" style="' . $taw_style . '"' . $textarea_placeholder . '>' . esc_textarea($value) . '</textarea>';
 			echo '<div style="color: #999; font-size: 12px; margin: 4px 0 0 4px; font-family: monospace;">' . esc_html($variableId) . '</div>';
 			break;
 		case 'select':
@@ -889,6 +894,28 @@ function display_custom_info_field($variable, $variableId, $languageId = null): 
 			echo '</label>';
 			echo '<div style="color: #999; font-size: 12px; margin: 4px 0 0 4px; font-family: monospace;">' . esc_html($variableId) . '</div>';
 			break;
+		case 'multiselect':
+			$options = $variable['options'] ?? [];
+			$selected = is_array($value) ? $value : (array) json_decode((string) $value, true);
+			$selected = array_map('strval', $selected);
+			echo '<div class="fs-content-multiselect" style="display: flex; flex-direction: column; gap: 6px;">';
+			echo '<input type="hidden" name="' . esc_attr($variableId) . '[]" value="">';
+			foreach ($options as $opt_value => $opt_label) {
+				if (is_int($opt_value) && is_array($opt_label)) {
+					$opt_value = $opt_label['value'] ?? '';
+					$opt_label = $opt_label['label'] ?? $opt_value;
+				}
+				$opt_value = (string) $opt_value;
+				$checked = in_array($opt_value, $selected, true);
+				$cb_id = esc_attr($variableId . '_' . preg_replace('/[^a-z0-9_-]/i', '_', $opt_value));
+				echo '<label style="display: flex; align-items: center; gap: 8px;">';
+				echo '<input type="checkbox" name="' . esc_attr($variableId) . '[]" id="' . $cb_id . '" value="' . esc_attr($opt_value) . '"' . ($checked ? ' checked' : '') . '>';
+				echo '<span>' . esc_html($opt_label) . '</span>';
+				echo '</label>';
+			}
+			echo '</div>';
+			echo '<div style="color: #999; font-size: 12px; margin: 4px 0 0 4px; font-family: monospace;">' . esc_html($variableId) . '</div>';
+			break;
 		case 'image':
 			$img_id = (int) $value;
 			$img_url = $img_id > 0 ? wp_get_attachment_image_url($img_id, 'medium') : '';
@@ -905,12 +932,15 @@ function display_custom_info_field($variable, $variableId, $languageId = null): 
 			echo '<div style="color: #999; font-size: 12px; margin: 4px 0 0 4px; font-family: monospace;">' . esc_html($variableId) . '</div>';
 			break;
 		default:
-			echo '<input class="settings-page-textfield" type="text" name="' . esc_attr($variableId) . '" value="' . esc_attr($value) . '" style="width: ' . (int) ($variable['width'] ?? 400) . 'px">';
+			$defw = isset($variable['width']) ? (int) $variable['width'] : 0;
+			$defw_style = $defw > 0 ? 'width: ' . $defw . 'px' : 'width: 100%';
+			$def_placeholder = isset($variable['placeholder']) ? ' placeholder="' . esc_attr($variable['placeholder']) . '"' : '';
+			echo '<input class="settings-page-textfield" type="text" name="' . esc_attr($variableId) . '" value="' . esc_attr($value) . '" style="' . $defw_style . '"' . $def_placeholder . '>';
 			echo '<div style="color: #999; font-size: 12px; margin: 4px 0 0 4px; font-family: monospace;">' . esc_html($variableId) . '</div>';
 			break;
 	}
 	if (!empty($variable['description'])) {
-		echo '<div class="page-settings-description">' . esc_html($variable['description']) . '</div>';
+		echo '<p class="description" style="margin-top: 6px; margin-bottom: 0;">' . esc_html($variable['description']) . '</p>';
 	}
 	if ($languageId) {
 		echo '</div>';
@@ -933,19 +963,34 @@ function display_custom_info_fields(): void
 			foreach ($section['variables'] as $variable) {
 				$variableId = 'theme_variables_' . $section['id'] . '_' . $variable['id'];
 				$variable_title = $variable['title'] ?? $variable['id'] ?? '';
+				$is_multiselect = isset($variable['type']) && $variable['type'] === 'multiselect';
+				$register_args = [];
+				if ($is_multiselect && !empty($variable['options'])) {
+					$allowed = [];
+					foreach ($variable['options'] as $k => $v) {
+						$allowed[] = is_int($k) && is_array($v) ? (string) ($v['value'] ?? '') : (string) $k;
+					}
+					$allowed = array_filter($allowed);
+					$register_args['sanitize_callback'] = function ($input) use ($allowed) {
+						if (!is_array($input)) {
+							return [];
+						}
+						return array_values(array_intersect(array_map('strval', $input), $allowed));
+					};
+				}
 				if (!empty($variable['translate'])) {
 					foreach (fs_config_settings('languages') as $language) {
 						$variableIdLang = $variableId . '_' . $language['id'];
 						add_settings_field($variableIdLang, $variable_title, function () use ($variable, $variableIdLang, $language) {
 							display_custom_info_field($variable, $variableIdLang, $language['id']);
 						}, 'theme_variables_' . $section['id'], 'section');
-						register_setting(FS_THEME_OPTION_GROUP_TEXTE, $variableIdLang);
+						register_setting(FS_THEME_OPTION_GROUP_TEXTE, $variableIdLang, $register_args);
 					}
 				} else {
 					add_settings_field($variableId, $variable_title, function () use ($variable, $variableId) {
 						display_custom_info_field($variable, $variableId);
 					}, 'theme_variables_' . $section['id'], 'section');
-					register_setting(FS_THEME_OPTION_GROUP_TEXTE, $variableId);
+					register_setting(FS_THEME_OPTION_GROUP_TEXTE, $variableId, $register_args);
 				}
 			}
 		}

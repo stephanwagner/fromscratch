@@ -6,6 +6,10 @@
  *
  * Edit to add new tabs, sections and languages.
  * Structure: content.tabs[] (left-hand tabs) → each tab has sections[] → each section has variables[].
+ *
+ * Per variable you can use:
+ * - placeholder: hint text inside textfield/textarea (optional).
+ * - description: help text shown below the field (optional).
  */
 return [
 	'languages' => [
@@ -32,8 +36,8 @@ return [
 								'title' => 'Company name',
 								'translate' => false,
 								'type' => 'textfield',
-								// 'placeholder' => 'Company name',
-								// 'width' => 400,
+								'placeholder' => 'e.g. Acme Inc.',
+								'description' => 'Shown in the header and footer.',
 							],
 							[
 								'id' => 'address',
@@ -41,18 +45,22 @@ return [
 								'translate' => false,
 								'type' => 'textarea',
 								'rows' => 3,
+								'placeholder' => 'Street, number, postal code, city',
+								'description' => 'Full postal address for contact and legal notices.',
 							],
 							[
 								'id' => 'phone',
 								'title' => 'Phone',
 								'translate' => false,
 								'type' => 'textfield',
+								'placeholder' => '+43 1 234 567',
 							],
 							[
 								'id' => 'email',
 								'title' => 'Email',
 								'translate' => false,
 								'type' => 'textfield',
+								'placeholder' => 'office@example.com',
 							],
 						],
 					],
@@ -85,6 +93,15 @@ return [
 						'title' => 'Select & Toggle',
 						'variables' => [
 							[
+								'id' => 'hello',
+								'title' => 'Hello',
+								'translate' => false,
+								'type' => 'textfield',
+								'placeholder' => 'Hello',
+								'description' => 'Hello',
+								'width' => 100,
+							],
+							[
 								'id' => 'display_mode',
 								'title' => 'Display mode',
 								'translate' => false,
@@ -112,6 +129,18 @@ return [
 									'email' => 'Email',
 									'phone' => 'Phone',
 									'form' => 'Contact form',
+								],
+							],
+							[
+								'id' => 'contact_channels',
+								'title' => 'Contact channels',
+								'translate' => false,
+								'type' => 'multiselect',
+								'options' => [
+									'email' => 'Email',
+									'phone' => 'Phone',
+									'form' => 'Contact form',
+									'chat' => 'Chat',
 								],
 							],
 							[
