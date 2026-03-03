@@ -3,7 +3,7 @@
 /**
  * Theme settings: Content
  * Used by Settings → Theme → Content.
- * 
+ *
  * Edit to add new text sections or languages.
  */
 return [
@@ -13,7 +13,7 @@ return [
 	],
 
 	/**
-	 * Text sections for Settings → Theme → Texts tab.
+	 * Text sections for Settings → Theme → Content tab.
 	 * Each section defines editable text/textarea fields for templates.
 	 */
 	'variables' => [

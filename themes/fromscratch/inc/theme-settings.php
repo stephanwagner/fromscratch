@@ -11,7 +11,7 @@ defined('ABSPATH') || exit;
 /** Tab definitions: slug => [ 'label' => string, 'developer_only' => bool ] */
 const FS_THEME_SETTINGS_TABS = [
 	'general'   => ['label' => 'General', 'developer_only' => false],
-	'texts'     => ['label' => 'Texts', 'developer_only' => false],
+	'texts'     => ['label' => 'Content', 'developer_only' => false],
 	'design'    => ['label' => 'Design', 'developer_only' => false],
 	'css'       => ['label' => 'CSS', 'developer_only' => false],
 	'redirects' => ['label' => 'Redirects', 'developer_only' => false],
@@ -556,7 +556,7 @@ function theme_settings_page(): void
 	$clear_design_url = wp_nonce_url(add_query_arg(['fromscratch_clear_design' => '1', 'tab' => 'design'], $base_url), 'fromscratch_clear_design');
 ?>
 	<div class="wrap">
-		<h1><?= esc_html(__(fs_config_settings('title_page'), 'fromscratch')) ?></h1>
+		<h1><?= esc_html__('Theme settings', 'fromscratch') ?></h1>
 		<?php
 		$notices = [];
 		if ($clear_design_notice !== false) {
@@ -699,7 +699,7 @@ function theme_settings_page(): void
 				$redirect_method === 'wordpress'
 			) : ?>
 				<div class="notice notice-info inline">
-					<p><?= esc_html__('You are running Apache. For better performance, you can set the redirect method to .htaccess in config/redirects.php.', 'fromscratch') ?></p>
+					<p><?= esc_html__('You are running Apache. For better performance, you can set the redirect method to .htaccess in config/theme.php under redirects.', 'fromscratch') ?></p>
 				</div>
 			<?php endif; ?>
 			<h2 class="title"><?= esc_html__('Redirects', 'fromscratch') ?></h2>
@@ -787,7 +787,7 @@ function theme_settings_page(): void
 			<?php submit_button(); ?>
 		</form>
 		<?php else : ?>
-		<p class="description" style="margin-bottom: 8px;"><?= esc_html__('Override SCSS design variables. Values are output as CSS custom properties (:root). Add new variables in config/theme.php under design.sections.', 'fromscratch') ?></p>
+		<p class="description" style="margin-bottom: 8px;"><?= esc_html__('Override SCSS design variables. Values are output as CSS custom properties (:root). Add new variables in config/theme-design.php under design.sections.', 'fromscratch') ?></p>
 		<?php if (function_exists('fs_is_developer_user') && fs_is_developer_user((int) get_current_user_id())) : ?>
 		<p style="margin-bottom: 16px;">
 			<a href="<?= esc_url($clear_design_url) ?>" class="button" onclick="return confirm('<?= esc_js(__('Reset all design overrides to defaults?', 'fromscratch')) ?>');"><?= esc_html__('Clear all overrides', 'fromscratch') ?></a>
@@ -915,8 +915,8 @@ function add_theme_settings_menu_item(): void
 	}
 	add_submenu_page(
 		'options-general.php',
-		__(fs_config_settings('title_page'), 'fromscratch'),
-		__(fs_config_settings('title_menu'), 'fromscratch'),
+		__('Theme settings', 'fromscratch'),
+		__('Theme', 'fromscratch'),
 		'manage_options',
 		'fs-theme-settings',
 		'theme_settings_page',

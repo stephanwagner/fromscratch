@@ -416,7 +416,7 @@ function fs_render_developer_settings_page(): void
 				]],
 				['title' => __('Theme settings', 'fromscratch'), 'items' => [
 					'theme_settings_general' => __('General', 'fromscratch'),
-					'theme_settings_texts' => __('Texts', 'fromscratch'),
+					'theme_settings_texts' => __('Content', 'fromscratch'),
 					'theme_settings_design' => __('Design', 'fromscratch'),
 					'theme_settings_css' => __('CSS', 'fromscratch'),
 					'theme_settings_redirects' => __('Redirects', 'fromscratch'),

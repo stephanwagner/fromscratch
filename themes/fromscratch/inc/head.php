@@ -57,4 +57,4 @@ function fs_meta_tags(): void
 		echo '<meta name="' . $name . '" content="' . $content . '">' . "\n";
 	}
 }
-add_action('wp_head', 'fs_meta_tags');
+add_action('wp_head', 'fs_meta_tags', 1);

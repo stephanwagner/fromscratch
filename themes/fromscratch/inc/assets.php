@@ -4,11 +4,15 @@ defined('ABSPATH') || exit;
 
 /**
  * Asset version for static assets (logo, etc.). Bump in Theme settings → General when you change files.
+ * In debug mode (WP_DEBUG) returns time() so cache is bypassed on every request.
  *
  * @return string Version string for ?ver= query arg (default '1').
  */
 function fs_asset_version(): string
 {
+	if (function_exists('fs_is_debug') && fs_is_debug()) {
+		return (string) time();
+	}
 	$v = get_option('fromscratch_asset_version', '1');
 	return $v !== '' ? (string) $v : '1';
 }

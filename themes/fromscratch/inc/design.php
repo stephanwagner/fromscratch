@@ -4,7 +4,7 @@ defined('ABSPATH') || exit;
 
 /**
  * Design variables: overridable in Settings → Theme → Design.
- * Values come from config/theme.php design.sections; overrides are stored in fromscratch_design option.
+ * Values come from config/theme-design.php design.sections; overrides are stored in fromscratch_design option.
  */
 
 /**
@@ -263,12 +263,12 @@ function fs_output_design_css(): void
 	foreach ($vars as $v) {
 		$value = fs_design_variable_value($v['id']);
 		$value = fs_sanitize_css_custom_property_value($value);
-		$lines[] = '  --' . $v['id'] . ': ' . $value . ';';
+		$lines[] = ' --' . $v['id'] . ': ' . $value . ';';
 	}
 	if ($lines === []) {
 		return;
 	}
-	echo "\n<style id=\"fromscratch-design-vars\">\n:root {\n" . implode("\n", $lines) . "\n}\n</style>\n";
+	echo '<style id="fromscratch-design-vars">:root{' . implode('', $lines) . '}</style>' . "\n";
 }
 
 /**
@@ -283,8 +283,10 @@ function fs_output_custom_css(): void
 	$css = wp_strip_all_tags($css);
 	$css = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $css);
 	$css = str_ireplace('</style>', '', $css);
-	if ($css === '') {
+	$css = preg_replace('/[\r\n]+/', ' ', $css);
+	$css = preg_replace('/\s+/', ' ', $css);
+	if (trim($css) === '') {
 		return;
 	}
-	echo "\n<style id=\"fromscratch-custom-css\">\n" . $css . "\n</style>\n";
+	echo '<style id="fromscratch-custom-css">' . trim($css) . '</style>' . "\n";
 }
