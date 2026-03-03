@@ -53,3 +53,6 @@ if (fs_theme_feature_enabled('seo')) {
 if (fs_theme_feature_enabled('post_expirator')) {
 	require_once 'inc/post-expirator.php';
 }
+if (fs_theme_feature_enabled('languages')) {
+	require_once 'inc/content-languages.php';
+}
