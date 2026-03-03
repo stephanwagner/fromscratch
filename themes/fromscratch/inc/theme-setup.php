@@ -169,9 +169,9 @@ add_filter('excerpt_more', 'fs_excerpt_more');
 add_filter('wp_theme_json_data_default', function ($theme_json) {
 	$data = $theme_json->get_data();
 
-	$data['settings']['color']['palette'] = fs_config('theme_colors');
-	$data['settings']['color']['gradients'] = fs_config('theme_gradients');
-	$data['settings']['typography']['fontSizes'] = fs_config('theme_font_sizes');
+	$data['settings']['color']['palette'] = fs_config('colors');
+	$data['settings']['color']['gradients'] = fs_config('gradients');
+	$data['settings']['typography']['fontSizes'] = fs_config('font_sizes');
 	// $data['settings']['spacing']['spacingSizes'] = [];
 	// $data['settings']['shadow']['presets'] = [];
 

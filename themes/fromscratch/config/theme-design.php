@@ -8,29 +8,15 @@
  */
 return [
 	/**
-	 * Meta tags: Added to the head section of the HTML document.
-	 */
-	'meta' => [
-		'viewport' => 'width=device-width, initial-scale=1',
-	],
-
-	/**
-	 * Menus: Registered navigation menus.
-	 */
-	'menus' => [
-		'main_menu' => 'Main menu',
-		'footer_menu' => 'Footer menu',
-	],
-
-	/**
 	 * Colors: used for colors in Settings → Theme → Design.
 	 */
-	'theme_colors' => [
+	'colors' => [
 		// Primary colors
 		['slug' => 'primary', 'color' => '#00aaff', 'name' => 'Primärfarbe'],
 		['slug' => 'secondary', 'color' => '#00ddff', 'name' => 'Sekundärfarbe'],
 
 		// Grayscale
+		['slug' => 'white', 'color' => '#fff', 'name' => 'Weiß'],
 		['slug' => 'black', 'color' => '#000', 'name' => 'Schwarz'],
 		['slug' => 'off-black', 'color' => '#222', 'name' => 'Helleres Schwarz'],
 		['slug' => 'gray-600', 'color' => '#666', 'name' => 'Grau 600'],
@@ -39,24 +25,23 @@ return [
 		['slug' => 'gray-300', 'color' => '#ddd', 'name' => 'Grau 300'],
 		['slug' => 'gray-200', 'color' => '#eee', 'name' => 'Grau 200'],
 		['slug' => 'gray-100', 'color' => '#f6f6f6', 'name' => 'Grau 100'],
-		['slug' => 'white', 'color' => '#fff', 'name' => 'Weiß'],
 	],
 
 	/**
 	 * Gradients: used for gradients in Settings → Theme → Design.
 	 */
-	'theme_gradients' => [
+	'gradients' => [
 		[
 			'slug' => 'primary',
-			'name' => 'Primär',
-			'gradient' => 'linear-gradient(to bottom, #00aaff, #00ddff)',
+			'name' => 'Primär-Verlauf',
+			'gradient' => 'linear-gradient(to right, #00aaff, #00ddff)',
 		],
 	],
 
 	/**
 	 * Font sizes: used for typography in Settings → Theme → Design.
 	 */
-	'theme_font_sizes' => [
+	'font_sizes' => [
 		['name' => 'Klein', 'shortName' => 'S', 'size' => 14, 'slug' => 's'],
 		['name' => 'Normal', 'shortName' => 'M', 'size' => 16, 'slug' => 'm'],
 		['name' => 'Groß', 'shortName' => 'L', 'size' => 18, 'slug' => 'l'],
@@ -66,28 +51,22 @@ return [
 	/**
 	 * Design variables: overridable in Settings → Theme → Design.
 	 * IDs become CSS custom properties (e.g. "color-primary" → --color-primary).
-	 * Sections with 'from' => 'theme_colors' etc. are derived from the arrays above.
+	 * Sections with 'from' => 'colors' etc. are derived from the arrays above.
 	 */
 	'design' => [
 		'sections' => [
-			'colors' => [
-				'title' => 'Farben',
-				'from' => 'theme_colors',
-				'variables' => [
-					['id' => 'color-error', 'title' => 'Fehler', 'default' => '#f33', 'type' => 'color'],
-					['id' => 'color-warning', 'title' => 'Warnung', 'default' => '#fc0', 'type' => 'color'],
-					['id' => 'color-success', 'title' => 'Erfolg', 'default' => '#5d5', 'type' => 'color'],
-				],
-			],
-			'gradients' => ['title' => 'Verläufe', 'from' => 'theme_gradients'],
-			'font_sizes' => ['title' => 'Schriftgrößen', 'from' => 'theme_font_sizes'],
+			'colors' => ['title' => 'Farben', 'from' => 'colors'],
+			'gradients' => ['title' => 'Verläufe', 'from' => 'gradients'],
+			'font_sizes' => ['title' => 'Schriftgrößen', 'from' => 'font_sizes'],
 			'typography' => [
-				'title' => 'Typografie',
+				'title' => 'Text',
 				'variables' => [
 					['id' => 'primary-font', 'title' => 'Schriftart', 'default' => 'Open Sans, sans-serif', 'type' => 'text'],
 					['id' => 'default-text-color', 'title' => 'Standard Textfarbe', 'default' => '#222', 'type' => 'color'],
 					['id' => 'default-font-size', 'title' => 'Standard Schriftgröße', 'default' => '16px', 'type' => 'text'],
 					['id' => 'default-line-height', 'title' => 'Standard Zeilenhöhe', 'default' => '1.6', 'type' => 'text'],
+					['id' => 'link-color', 'title' => 'Linkfarbe', 'default' => '#00aaff', 'type' => 'color'],
+					['id' => 'link-hover-color', 'title' => 'Linkfarbe (hover)', 'default' => '#00ddff', 'type' => 'color'],
 				],
 			],
 			'content' => [
@@ -103,18 +82,13 @@ return [
 					['id' => 'content-padding-xs', 'title' => 'Innenabstand XS', 'default' => '24px', 'type' => 'text'],
 				],
 			],
-			'header' => [
-				'title' => 'Header',
+			'dimensions' => [
+				'title' => 'Dimensionen',
 				'variables' => [
 					['id' => 'header-height', 'title' => 'Header-Höhe', 'default' => '120px', 'type' => 'text'],
 					['id' => 'header-height-mobile', 'title' => 'Header-Höhe (mobil)', 'default' => '80px', 'type' => 'text'],
 					['id' => 'header-height-scrolled', 'title' => 'Header-Höhe (gescrollt)', 'default' => '62px', 'type' => 'text'],
-				],
-			],
-			'menu' => [
-				'title' => 'Menü',
-				'variables' => [
-					['id' => 'menu-width', 'title' => 'Menübreite', 'default' => '280px', 'type' => 'text'],
+					['id' => 'mobile-menu-width', 'title' => 'Breite mobilesMenü', 'default' => '280px', 'type' => 'text'],
 				],
 			],
 			'breakpoints' => [
@@ -143,42 +117,5 @@ return [
 				],
 			],
 		],
-	],
-
-	/**
-	 * Extra image sizes: added to Settings → Media and registered with add_image_size().
-	 * Width and height can be overridden in Settings → Media.
-	 */
-	'image_sizes_extra' => [
-		['slug' => 'small', 'name' => 'Small', 'width' => 600, 'height' => 600],
-	],
-
-	/**
-	 * SVG support: max file size in MB
-	 * SVGs are sanitized on upload, large filesizes can cause memory issues.
-	 */
-	'svg_max_size' => 2,
-
-	/**
-	 * Login limit: failed attempts per minute per IP, lockout duration (from config only).
-	 */
-	'login_limit' => true, // Enable login limit
-	'login_limit_attempts' => 5, // failed attempts per minute per IP
-	'login_limit_lockout' => 3, // lockout duration in minutes
-
-	/**
-	 * Site password: cookie duration in days.
-	 */
-	'site_password_cookie_days' => 14,
-
-	/**
-	 * HTTP response headers (front-end only).
-	 */
-	'headers' => [
-		'Cache-Control' => 'no-cache, must-revalidate, max-age=0',
-		'X-Content-Type-Options' => 'nosniff',
-		'X-Frame-Options' => 'SAMEORIGIN',
-		'Referrer-Policy' => 'strict-origin-when-cross-origin',
-		'X-Permitted-Cross-Domain-Policies' => 'none',
 	],
 ];

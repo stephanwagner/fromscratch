@@ -29,7 +29,7 @@ $colors: (
 
 // Gradients
 $gradients: (
-  "primary": ((to bottom), #00aaff, #00ddff)
+  "primary": ((to right), #00aaff, #00ddff)
 );
 
 // Font sizes
@@ -45,6 +45,8 @@ $primaryFontFamily: var(--primary-font, 'Open Sans', sans-serif);
 $defaultTextColor: var(--default-text-color, #222);
 $defaultFontSize: var(--default-font-size, 16px);
 $defaultLineHeight: var(--default-line-height, 1.6);
+$linkColor: var(--link-color, #00aaff);
+$linkHoverColor: var(--link-hover-color, #00ddff);
 
 // Content
 $maxContentWidth: var(--max-content-width, 1200px);
@@ -63,15 +65,17 @@ $headerHeightMobile: var(--header-height-mobile, 80px);
 $headerHeightScrolled: var(--header-height-scrolled, 64px);
 
 // Menu
-$mobileMenuWidth: var(--menu-width, 280px);
+$mobileMenuWidth: var(--mobile-menu-width, 280px);
 
-// Breakpoints
+// Mobile breakpoint
+$mobileBreakpoint: var(--mobile-breakpoint, 900px);
+
+// Content breakpoints
 $breakpointXL: var(--breakpoint-xl, 1400px);
 $breakpointL: var(--breakpoint-l, 1200px);
 $breakpointM: var(--breakpoint-m, 900px);
 $breakpointS: var(--breakpoint-s, 600px);
 $breakpointXS: var(--breakpoint-xs, 400px);
-$mobileBreakpoint: var(--mobile-breakpoint, 900px);
 
 // Transitions
 $defaultTransitionSpeed: var(--default-transition-speed, 280ms);

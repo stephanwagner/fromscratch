@@ -18,19 +18,41 @@ return [
 	 */
 	'variables' => [
 		'sections' => [
-		[
-			'id' => 'footer',
-			'title' => 'Footer',
-			'variables' => [
-				[
-					'id' => 'text',
-					'title' => 'Text',
-					'translate' => false,
-					'type' => 'textfield',
-					'width' => 400,
+			[
+				'id' => 'company',
+				'title' => 'Firmen-Daten',
+				'variables' => [
+					[
+						'id' => 'name',
+						'title' => 'Firmenname',
+						'translate' => false,
+						'type' => 'textfield',
+						'width' => 400,
+					],
+					[
+						'id' => 'address',
+						'title' => 'Adresse',
+						'translate' => false,
+						'type' => 'textarea',
+						'rows' => 3,
+						'width' => 400,
+					],
+					[
+						'id' => 'phone',
+						'title' => 'Telefon',
+						'translate' => false,
+						'type' => 'textfield',
+						'width' => 400,
+					],
+					[
+						'id' => 'email',
+						'title' => 'E-Mail',
+						'translate' => false,
+						'type' => 'textfield',
+						'width' => 400,
+					],
 				],
 			],
 		],
-	],
 	],
 ];

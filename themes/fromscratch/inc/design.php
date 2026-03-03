@@ -35,10 +35,10 @@ function fs_get_design_variables_list(): array
 	foreach ($sections as $section) {
 		$variables = [];
 
-		if (!empty($section['from']) && $section['from'] === 'theme_colors') {
-			$theme_colors = fs_config('theme_colors');
-			if (is_array($theme_colors)) {
-				foreach ($theme_colors as $tc) {
+		if (!empty($section['from']) && $section['from'] === 'colors') {
+			$colors = fs_config('colors');
+			if (is_array($colors)) {
+				foreach ($colors as $tc) {
 					if (!empty($tc['slug']) && isset($tc['color'])) {
 						$variables[] = [
 							'id' => 'color-' . (string) $tc['slug'],
@@ -51,10 +51,10 @@ function fs_get_design_variables_list(): array
 			}
 		}
 
-		if (!empty($section['from']) && $section['from'] === 'theme_gradients') {
-			$theme_gradients = fs_config('theme_gradients');
-			if (is_array($theme_gradients)) {
-				foreach ($theme_gradients as $tg) {
+		if (!empty($section['from']) && $section['from'] === 'gradients') {
+			$gradients = fs_config('gradients');
+			if (is_array($gradients)) {
+				foreach ($gradients as $tg) {
 					if (!empty($tg['slug']) && isset($tg['gradient'])) {
 						$variables[] = [
 							'id' => 'gradient-' . (string) $tg['slug'],
@@ -67,10 +67,10 @@ function fs_get_design_variables_list(): array
 			}
 		}
 
-		if (!empty($section['from']) && $section['from'] === 'theme_font_sizes') {
-			$theme_font_sizes = fs_config('theme_font_sizes');
-			if (is_array($theme_font_sizes)) {
-				foreach ($theme_font_sizes as $tfs) {
+		if (!empty($section['from']) && $section['from'] === 'font_sizes') {
+			$font_sizes = fs_config('font_sizes');
+			if (is_array($font_sizes)) {
+				foreach ($font_sizes as $tfs) {
 					if (!empty($tfs['slug']) && isset($tfs['size'])) {
 						$variables[] = [
 							'id' => 'font-size-' . (string) $tfs['slug'],
@@ -118,10 +118,10 @@ function fs_get_design_sections_resolved(): array
 	foreach ($sections as $section_id => $section) {
 		$variables = [];
 
-		if (!empty($section['from']) && $section['from'] === 'theme_colors') {
-			$theme_colors = fs_config('theme_colors');
-			if (is_array($theme_colors)) {
-				foreach ($theme_colors as $tc) {
+		if (!empty($section['from']) && $section['from'] === 'colors') {
+			$colors = fs_config('colors');
+			if (is_array($colors)) {
+				foreach ($colors as $tc) {
 					if (!empty($tc['slug']) && isset($tc['color'])) {
 						$variables[] = [
 							'id' => 'color-' . (string) $tc['slug'],
@@ -134,10 +134,10 @@ function fs_get_design_sections_resolved(): array
 			}
 		}
 
-		if (!empty($section['from']) && $section['from'] === 'theme_gradients') {
-			$theme_gradients = fs_config('theme_gradients');
-			if (is_array($theme_gradients)) {
-				foreach ($theme_gradients as $tg) {
+		if (!empty($section['from']) && $section['from'] === 'gradients') {
+			$gradients = fs_config('gradients');
+			if (is_array($gradients)) {
+				foreach ($gradients as $tg) {
 					if (!empty($tg['slug']) && isset($tg['gradient'])) {
 						$variables[] = [
 							'id' => 'gradient-' . (string) $tg['slug'],
@@ -150,10 +150,10 @@ function fs_get_design_sections_resolved(): array
 			}
 		}
 
-		if (!empty($section['from']) && $section['from'] === 'theme_font_sizes') {
-			$theme_font_sizes = fs_config('theme_font_sizes');
-			if (is_array($theme_font_sizes)) {
-				foreach ($theme_font_sizes as $tfs) {
+		if (!empty($section['from']) && $section['from'] === 'font_sizes') {
+			$font_sizes = fs_config('font_sizes');
+			if (is_array($font_sizes)) {
+				foreach ($font_sizes as $tfs) {
 					if (!empty($tfs['slug']) && isset($tfs['size'])) {
 						$variables[] = [
 							'id' => 'font-size-' . (string) $tfs['slug'],

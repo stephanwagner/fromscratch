@@ -97,20 +97,6 @@ add_action('admin_init', function () {
 	exit;
 }, 1);
 
-// Clear design overrides (developer only); redirects back to Design tab
-add_action('load-settings_page_fs-theme-settings', function () {
-	if (!current_user_can('manage_options') || empty($_GET['fromscratch_clear_design']) || empty($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'fromscratch_clear_design')) {
-		return;
-	}
-	if (!function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
-		return;
-	}
-	delete_option('fromscratch_design');
-	set_transient('fromscratch_clear_design_notice', '1', 30);
-	wp_safe_redirect(admin_url('options-general.php?page=fs-theme-settings&tab=design'));
-	exit;
-});
-
 // Ensure media modal is available on General tab (image picker is in admin.js)
 add_action('admin_enqueue_scripts', function ($hook_suffix) {
 	if ($hook_suffix !== 'settings_page_fs-theme-settings') {
@@ -541,10 +527,6 @@ function theme_settings_page(): void
 	if ($bump_notice !== false) {
 		delete_transient('fromscratch_bump_notice');
 	}
-	$clear_design_notice = get_transient('fromscratch_clear_design_notice');
-	if ($clear_design_notice !== false) {
-		delete_transient('fromscratch_clear_design_notice');
-	}
 	$redirects_saved = get_transient('fromscratch_redirects_saved');
 	if ($redirects_saved !== false) {
 		delete_transient('fromscratch_redirects_saved');
@@ -553,15 +535,11 @@ function theme_settings_page(): void
 	if ($css_saved !== false) {
 		delete_transient('fromscratch_css_saved');
 	}
-	$clear_design_url = wp_nonce_url(add_query_arg(['fromscratch_clear_design' => '1', 'tab' => 'design'], $base_url), 'fromscratch_clear_design');
 ?>
 	<div class="wrap">
 		<h1><?= esc_html__('Theme settings', 'fromscratch') ?></h1>
 		<?php
 		$notices = [];
-		if ($clear_design_notice !== false) {
-			$notices[] = __('Design overrides cleared. All values reset to defaults.', 'fromscratch');
-		}
 		if ($redirects_saved !== false || $css_saved !== false) {
 			$notices[] = __('Settings saved.', 'fromscratch');
 		}
@@ -788,11 +766,6 @@ function theme_settings_page(): void
 		</form>
 		<?php else : ?>
 		<p class="description" style="margin-bottom: 8px;"><?= esc_html__('Override SCSS design variables. Values are output as CSS custom properties (:root). Add new variables in config/theme-design.php under design.sections.', 'fromscratch') ?></p>
-		<?php if (function_exists('fs_is_developer_user') && fs_is_developer_user((int) get_current_user_id())) : ?>
-		<p style="margin-bottom: 16px;">
-			<a href="<?= esc_url($clear_design_url) ?>" class="button" onclick="return confirm('<?= esc_js(__('Reset all design overrides to defaults?', 'fromscratch')) ?>');"><?= esc_html__('Clear all overrides', 'fromscratch') ?></a>
-		</p>
-		<?php endif; ?>
 		<form method="post" action="options.php" class="page-settings-form">
 			<?php settings_fields(FS_THEME_OPTION_GROUP_DESIGN); ?>
 			<?php
