@@ -372,11 +372,14 @@ msgstr "Permalink-Regeln aktualisieren"
 msgid "Revision cleaner"
 msgstr "Revisionen bereinigen"
 
-msgid "Delete old revisions for all posts and pages. Set how many of the most recent revisions to keep per post, older ones will be removed."
-msgstr "Entfernt alte Revisionen von allen Beiträgen und Seiten. Gib an, wie viele der neuesten Revisionen pro Beitrag behalten werden, ältere werden gelöscht."
+msgid "Delete old revisions for all posts and pages."
+msgstr "Entfernt alte Revisionen von allen Beiträgen und Seiten."
 
-msgid "Keep per post"
-msgstr "Pro Beitrag behalten"
+msgid "Set how many of the most recent revisions to keep per post, older ones will be removed."
+msgstr "Gib an, wie viele der neuesten Revisionen pro Beitrag behalten werden, ältere werden gelöscht."
+
+msgid "Keep per post:"
+msgstr "Pro Beitrag behalten:"
 
 msgid "revisions (0 = delete all)"
 msgstr "Revisionen (0 = alle löschen)"
@@ -388,6 +391,11 @@ msgid "%s revision deleted."
 msgid_plural "%s revisions deleted."
 msgstr[0] "%s Revision gelöscht."
 msgstr[1] "%s Revisionen gelöscht."
+
+msgid "%s revision in total."
+msgid_plural "%s revisions in total."
+msgstr[0] "%s Revision insgesamt."
+msgstr[1] "%s Revisionen insgesamt."
 
 msgid "User rights"
 msgstr "Benutzerrechte"
@@ -639,8 +647,11 @@ msgstr "Wie lange die Anmeldung nach Erreichen des Limits blockiert wird.<br>Erl
 msgid "Maintenance mode"
 msgstr "Wartungsmodus"
 
-msgid "When enabled, the entire frontend is blocked with HTTP 503. Logged-in administrators and editors can still view the site."
-msgstr "Wenn aktiviert, wird die gesamte Website mit HTTP 503 blockiert. Eingeloggte Administratoren und Redakteure können die Website weiterhin ansehen."
+msgid "When enabled, the entire frontend is blocked with HTTP 503."
+msgstr "Wenn aktiviert, wird die gesamte Website mit HTTP 503 blockiert."
+
+msgid "Logged-in administrators and editors can still view the site."
+msgstr "Eingeloggte Administratoren und Redakteure können die Website weiterhin ansehen."
 
 msgid "Enable maintenance mode"
 msgstr "Wartungsmodus aktivieren"
