@@ -32,8 +32,8 @@ return [
 								'title' => 'Company name',
 								'translate' => false,
 								'type' => 'textfield',
-								'placeholder' => 'Company name',
-								'width' => 400,
+								// 'placeholder' => 'Company name',
+								// 'width' => 400,
 							],
 							[
 								'id' => 'address',
@@ -41,21 +41,18 @@ return [
 								'translate' => false,
 								'type' => 'textarea',
 								'rows' => 3,
-								'width' => 400,
 							],
 							[
 								'id' => 'phone',
 								'title' => 'Phone',
 								'translate' => false,
 								'type' => 'textfield',
-								'width' => 400,
 							],
 							[
 								'id' => 'email',
 								'title' => 'Email',
 								'translate' => false,
 								'type' => 'textfield',
-								'width' => 400,
 							],
 						],
 					],
@@ -66,7 +63,7 @@ return [
 				'title' => 'Footer',
 				'sections' => [
 					[
-						'id' => 'footer',
+						'id' => 'footer4',
 						'title' => 'Footer text',
 						'variables' => [
 							[
@@ -74,7 +71,48 @@ return [
 								'title' => 'Text',
 								'translate' => false,
 								'type' => 'textfield',
-								'width' => 400,
+							],
+						],
+					],
+				],
+			],
+			[
+				'id' => 'examples',
+				'title' => 'Examples',
+				'sections' => [
+					[
+						'id' => 'select_toggle_examples',
+						'title' => 'Select & Toggle',
+						'variables' => [
+							[
+								'id' => 'display_mode',
+								'title' => 'Display mode',
+								'translate' => false,
+								'type' => 'select',
+								'placeholder' => '— Choose —',
+								'options' => [
+									'default' => 'Default',
+									'compact' => 'Compact',
+									'full' => 'Full',
+								],
+							],
+							[
+								'id' => 'show_extra_info',
+								'title' => 'Show extra info',
+								'translate' => false,
+								'type' => 'toggle',
+								'toggle_label' => 'Enable',
+							],
+							[
+								'id' => 'contact_method',
+								'title' => 'Preferred contact method',
+								'translate' => false,
+								'type' => 'select',
+								'options' => [
+									'email' => 'Email',
+									'phone' => 'Phone',
+									'form' => 'Contact form',
+								],
 							],
 						],
 					],

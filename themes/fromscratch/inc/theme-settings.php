@@ -856,13 +856,44 @@ function display_custom_info_field($variable, $variableId, $languageId = null): 
 	if ($languageId) {
 		echo '<div class="page-settings-language-container page-settings-language-container-' . $languageId . '">';
 	}
-	switch ($variable['type']) {
+	$value = get_option($variableId, '');
+	$type = $variable['type'] ?? 'textfield';
+	switch ($type) {
 		case 'textfield':
-			echo '<input class="settings-page-textfield" type="text" name="' . esc_attr($variableId) . '" value="' . esc_attr(get_option($variableId, '')) . '" style="width: ' . (int) ($variable['width'] ?? 400) . 'px">';
+			echo '<input class="settings-page-textfield" type="text" name="' . esc_attr($variableId) . '" value="' . esc_attr($value) . '" style="width: ' . (int) ($variable['width'] ?? 400) . 'px"' . (isset($variable['placeholder']) ? ' placeholder="' . esc_attr($variable['placeholder']) . '"' : '') . '>';
 			echo '<div style="color: #999; font-size: 12px; margin: 4px 0 0 4px; font-family: monospace;">' . esc_html($variableId) . '</div>';
 			break;
 		case 'textarea':
-			echo '<textarea class="settings-page-textfield" name="' . esc_attr($variableId) . '" rows="' . (int) ($variable['rows'] ?? 4) . '" style="width: ' . (int) ($variable['width'] ?? 400) . 'px">' . esc_textarea(get_option($variableId, '')) . '</textarea>';
+			echo '<textarea class="settings-page-textfield" name="' . esc_attr($variableId) . '" rows="' . (int) ($variable['rows'] ?? 4) . '" style="width: ' . (int) ($variable['width'] ?? 400) . 'px">' . esc_textarea($value) . '</textarea>';
+			echo '<div style="color: #999; font-size: 12px; margin: 4px 0 0 4px; font-family: monospace;">' . esc_html($variableId) . '</div>';
+			break;
+		case 'select':
+			$options = $variable['options'] ?? [];
+			echo '<select name="' . esc_attr($variableId) . '" class="settings-page-select" style="min-width: ' . (int) ($variable['width'] ?? 200) . 'px">';
+			if (!empty($variable['placeholder'])) {
+				echo '<option value="">' . esc_html($variable['placeholder']) . '</option>';
+			}
+			foreach ($options as $opt_value => $opt_label) {
+				if (is_int($opt_value) && is_array($opt_label)) {
+					$opt_value = $opt_label['value'] ?? '';
+					$opt_label = $opt_label['label'] ?? $opt_value;
+				}
+				echo '<option value="' . esc_attr($opt_value) . '"' . selected($value, (string) $opt_value, false) . '>' . esc_html($opt_label) . '</option>';
+			}
+			echo '</select>';
+			echo '<div style="color: #999; font-size: 12px; margin: 4px 0 0 4px; font-family: monospace;">' . esc_html($variableId) . '</div>';
+			break;
+		case 'toggle':
+			$checked = ($value === '1' || $value === 'on' || $value === true);
+			echo '<label class="fs-content-toggle-wrap">';
+			echo '<input type="hidden" name="' . esc_attr($variableId) . '" value="0">';
+			echo '<input type="checkbox" name="' . esc_attr($variableId) . '" value="1" class="settings-page-toggle"' . ($checked ? ' checked' : '') . '>';
+			echo '<span class="fs-content-toggle-label">' . esc_html(!empty($variable['toggle_label']) ? $variable['toggle_label'] : __('On', 'fromscratch')) . '</span>';
+			echo '</label>';
+			echo '<div style="color: #999; font-size: 12px; margin: 4px 0 0 4px; font-family: monospace;">' . esc_html($variableId) . '</div>';
+			break;
+		default:
+			echo '<input class="settings-page-textfield" type="text" name="' . esc_attr($variableId) . '" value="' . esc_attr($value) . '" style="width: ' . (int) ($variable['width'] ?? 400) . 'px">';
 			echo '<div style="color: #999; font-size: 12px; margin: 4px 0 0 4px; font-family: monospace;">' . esc_html($variableId) . '</div>';
 			break;
 	}
