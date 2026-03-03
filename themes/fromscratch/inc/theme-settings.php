@@ -125,10 +125,6 @@ add_action('admin_enqueue_scripts', function ($hook_suffix) {
 	if ($settings === false) {
 		return;
 	}
-	wp_add_inline_style('code-editor', '
-		.fs-custom-css-editor-wrap { resize: vertical; overflow: auto; display: block; }
-		.fs-custom-css-editor-wrap .CodeMirror { min-height: 100% !important; }
-	');
 	wp_add_inline_script('code-editor', sprintf(
 		'jQuery(function() { if (wp.codeEditor && document.getElementById("fromscratch_custom_css")) { wp.codeEditor.initialize("fromscratch_custom_css", %s); } });',
 		wp_json_encode($settings)
@@ -616,6 +612,7 @@ function theme_settings_page(): void
 			<hr>
 
 			<h2 class="title"><?= esc_html__('Excerpt', 'fromscratch') ?></h2>
+			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Defines how automatically generated excerpts are shortened.', 'fromscratch') ?></p>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row">
@@ -747,8 +744,10 @@ function theme_settings_page(): void
 		})();
 		</script>
 		<?php elseif ($tab === 'css') : ?>
-		<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Custom CSS is output after the design variables (:root). You can use design variables, e.g. var(--primary).', 'fromscratch') ?></p>
 		<form method="post" action="options.php" class="page-settings-form">
+			<h2 class="title"><?= esc_html__('Custom CSS', 'fromscratch') ?></h2>
+			<p class="description"><?= esc_html__('The CSS is output after the design variables (:root).', 'fromscratch') ?></p>
+			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('You can use design variables, e.g. var(--color-primary).', 'fromscratch') ?></p>
 			<?php settings_fields(FS_THEME_OPTION_GROUP_CSS); ?>
 			<table class="form-table" role="presentation">
 				<tr>

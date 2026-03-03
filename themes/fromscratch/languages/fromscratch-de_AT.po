@@ -533,8 +533,11 @@ msgstr "Redirect hinzufügen"
 msgid "Custom CSS"
 msgstr "Eigenes CSS"
 
-msgid "Custom CSS is output after the design variables (:root). You can use design variables, e.g. var(--primary)."
-msgstr "Eigenes CSS wird nach den Design-Variablen (:root) ausgegeben. Du kannst Design-Variablen nutzen, z. B. var(--primary)."
+msgid "The CSS is output after the design variables (:root)."
+msgstr "Eigenes CSS wird nach den Design-Variablen (:root) ausgegeben."
+
+msgid "You can use design variables, e.g. var(--color-primary)."
+msgstr "Du kannst Design-Variablen nutzen, z. B. var(--color-primary)."
 
 msgid "Plugins"
 msgstr "Plugins"
@@ -750,6 +753,9 @@ msgstr "Bild"
 # Theme settings: Excerpt (General tab)
 msgid "Excerpt"
 msgstr "Auszug"
+
+msgid "Defines how automatically generated excerpts are shortened."
+msgstr "Legt fest, wie automatisch erzeugte Auszüge gekürzt werden."
 
 msgid "Excerpt length"
 msgstr "Auszugslänge"
