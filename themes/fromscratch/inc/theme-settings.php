@@ -178,6 +178,7 @@ const FS_THEME_OPTION_GROUP_SECURITY = 'fs_theme_security';
 const FS_THEME_OPTION_GROUP_REDIRECTS = 'fs_theme_redirects';
 const FS_THEME_OPTION_GROUP_DEVELOPER = 'fs_theme_developer';
 const FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL = 'fs_theme_developer_general';
+const FS_THEME_OPTION_GROUP_LANGUAGES = 'fs_theme_languages';
 
 add_action('admin_init', function () {
 	register_setting(FS_THEME_OPTION_GROUP_DEVELOPER, 'fromscratch_admin_access', [
@@ -263,6 +264,46 @@ add_action('admin_init', function () {
 		'sanitize_callback' => 'fs_sanitize_redirects',
 	]);
 }, 5);
+
+add_action('admin_init', function () {
+	register_setting(FS_THEME_OPTION_GROUP_LANGUAGES, 'fs_theme_languages', [
+		'type' => 'array',
+		'sanitize_callback' => 'fs_sanitize_theme_languages',
+	]);
+}, 5);
+
+/**
+ * Sanitize Languages tab data: list of { id, nameEnglish, nameOriginalLanguage }, plus default id.
+ *
+ * @param mixed $value Raw POST value.
+ * @return array{list: array<int, array{id: string, nameEnglish: string, nameOriginalLanguage: string}>, default: string}
+ */
+function fs_sanitize_theme_languages($value): array
+{
+	$list = [];
+	if (isset($value['list']) && is_array($value['list'])) {
+		foreach ($value['list'] as $row) {
+			if (!is_array($row)) {
+				continue;
+			}
+			$id = isset($row['id']) ? preg_replace('/[^a-z0-9_-]/i', '', (string) $row['id']) : '';
+			if ($id === '') {
+				continue;
+			}
+			$list[] = [
+				'id' => $id,
+				'nameEnglish' => isset($row['nameEnglish']) ? sanitize_text_field((string) $row['nameEnglish']) : '',
+				'nameOriginalLanguage' => isset($row['nameOriginalLanguage']) ? sanitize_text_field((string) $row['nameOriginalLanguage']) : '',
+			];
+		}
+	}
+	$ids = array_column($list, 'id');
+	$default = isset($value['default']) ? preg_replace('/[^a-z0-9_-]/i', '', (string) $value['default']) : '';
+	if ($default === '' || !in_array($default, $ids, true)) {
+		$default = $ids[0] ?? '';
+	}
+	return ['list' => $list, 'default' => $default];
+}
 
 /**
  * Preserve existing asset version when the option is not in the form (e.g. saving Features only).
@@ -998,7 +1039,7 @@ function display_custom_info_fields(): void
 					};
 				}
 				if (!empty($variable['translate'])) {
-					foreach (fs_config_settings('languages') as $language) {
+					foreach (fs_get_content_languages() as $language) {
 						$variableIdLang = $variableId . '_' . $language['id'];
 						add_settings_field($variableIdLang, $variable_title, function () use ($variable, $variableIdLang, $language) {
 							display_custom_info_field($variable, $variableIdLang, $language['id']);
