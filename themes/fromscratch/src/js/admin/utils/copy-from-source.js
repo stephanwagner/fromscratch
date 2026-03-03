@@ -16,8 +16,7 @@ function initCopyFromSource(root = document) {
     const source = scope.querySelector(`#${CSS.escape(sourceId)}`);
     if (!source) return;
 
-    const feedbackText =
-      trigger.getAttribute('data-fs-copy-feedback-text') || 'Copied';
+    const feedbackText = trigger.getAttribute('data-fs-copy-feedback-text');
     const defaultLabel = trigger.textContent.trim();
 
     trigger.addEventListener('click', () => {
@@ -26,10 +25,17 @@ function initCopyFromSource(root = document) {
       if (text == null) return;
 
       navigator.clipboard.writeText(text).then(() => {
-        trigger.textContent = feedbackText;
-        setTimeout(() => {
-          trigger.textContent = defaultLabel;
-        }, 2000);
+        if (feedbackText) {
+          trigger.textContent = feedbackText;
+          setTimeout(() => {
+            trigger.textContent = defaultLabel;
+          }, 2000);
+        } else {
+          trigger.classList.add('fs-copied');
+          setTimeout(() => {
+            trigger.classList.remove('fs-copied');
+          }, 600);
+        }
       });
     });
   });

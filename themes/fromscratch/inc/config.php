@@ -2,6 +2,11 @@
 
 defined('ABSPATH') || exit;
 
+/** Option name prefix for Content tab fields (Settings → Theme → Content). Format: {prefix}{section_id}_{variable_id}. */
+if (!defined('FS_THEME_CONTENT_OPTION_PREFIX')) {
+	define('FS_THEME_CONTENT_OPTION_PREFIX', 'theme_content_');
+}
+
 /**
  * Get theme config: config/theme.php merged with config/theme-design.php.
  *
