@@ -296,6 +296,18 @@ add_action('admin_menu', function () {
   }
 }, 999);
 
+/**
+ * When Design (Themes) menu is disabled for the user, add no-customize-support so
+ * elements with class hide-if-no-customize (e.g. "Manage with live preview") are hidden.
+ */
+add_filter('admin_body_class', function (string $classes): string {
+  if (!function_exists('fs_admin_can_access') || fs_admin_can_access('themes')) {
+    return $classes;
+  }
+  $classes .= ' no-customize-support';
+  return $classes;
+});
+
 add_action('load-nav-menus.php', function () {
   global $parent_file, $submenu_file;
   $parent_file = 'options-general.php';

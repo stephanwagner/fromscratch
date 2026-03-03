@@ -296,6 +296,9 @@ msgstr "Slider"
 msgid "Developer"
 msgstr "Entwickler"
 
+msgid "Developer settings"
+msgstr "Entwickler Einstellungen"
+
 msgid "Developer rights"
 msgstr "Entwicklerrechte"
 
@@ -434,17 +437,20 @@ msgstr "Methode"
 msgid "WordPress (template_redirect)"
 msgstr "WordPress (template_redirect)"
 
-msgid ".htaccess"
-msgstr ".htaccess"
+msgid "You are running Apache. For better performance, you can set the redirect method to htaccess in config/redirects.php."
+msgstr "Apache erkannt. Für eine bessere Performance kannst du die Redirect-Methode in config/redirects.php auf htaccess setzen."
 
-msgid "WordPress runs redirects in PHP. .htaccess writes rules to your server config (Apache); the file must be writable."
-msgstr "WordPress führt Redirects per PHP aus. .htaccess schreibt Regeln in die Server-Konfiguration (Apache); die Datei muss beschreibbar sein."
+msgid "Enter paths without the domain (e.g. /old-path)."
+msgstr "Pfade ohne Domain eingeben (z. B. /alter-pfad)."
 
-msgid "Enter paths without the domain (e.g. /old-page). From URL is the requested path; To URL can be a path or full URL."
-msgstr "Pfade ohne Domain eingeben (z. B. /alte-seite). Von-URL ist der angeforderte Pfad; Ziel-URL kann ein Pfad oder eine vollständige URL sein."
+msgid "The source URL represents the requested path."
+msgstr "Die Von-URL entspricht dem relativen Anfragepfad."
+
+msgid "The target URL can be an internal path or a full URL."
+msgstr "Als Ziel sind interne Pfade oder vollständige URLs zulässig."
 
 msgid "From URL"
-msgstr "Von URL"
+msgstr "Von-URL"
 
 msgid "To URL"
 msgstr "Ziel-URL"

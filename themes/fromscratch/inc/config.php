@@ -49,6 +49,22 @@ function fs_config_cpt(?string $key = null)
 }
 
 /**
+ * Get redirect manager config (config/redirects.php). Method (wordpress/htaccess) is not exposed in the UI.
+ *
+ * @param string|null $key Optional. Dot path, e.g. 'method'.
+ * @return array|mixed Full config if $key is null, else value at $key.
+ */
+function fs_config_redirects(?string $key = null)
+{
+	static $config = null;
+	if ($config === null) {
+		$file = get_template_directory() . '/config/redirects.php';
+		$config = is_file($file) ? include $file : ['method' => 'wordpress'];
+	}
+	return fs_config_resolve($config, $key);
+}
+
+/**
  * Resolve dot-path key into config value.
  *
  * @param array $config Config array.

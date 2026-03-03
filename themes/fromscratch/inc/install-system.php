@@ -2,6 +2,9 @@
 
 defined('ABSPATH') || exit;
 
+const FS_HTACCESS_MARKER_START = '# BEGIN FromScratch ';
+const FS_HTACCESS_MARKER_END = '# END FromScratch';
+
 /**
  * Write recommended .htaccess rules to WP root (Apache only).
  * Adds: MIME types, Cache-Control via mod_headers, Brotli/deflate, Vary Accept-Encoding.
@@ -12,8 +15,8 @@ defined('ABSPATH') || exit;
 function fs_write_htaccess(): bool
 {
 	$htaccess     = ABSPATH . '.htaccess';
-	$marker_start = '# BEGIN FromScratch';
-	$marker_end   = '# END FromScratch';
+	$marker_start = FS_HTACCESS_MARKER_START;
+	$marker_end   = FS_HTACCESS_MARKER_END;
 
 	$template = __DIR__ . '/install-htaccess.txt';
 	if (!is_readable($template)) {
@@ -56,8 +59,8 @@ function fs_write_htaccess(): bool
  */
 function fs_get_htaccess_config(): string
 {
-	$marker_start = '# BEGIN FromScratch';
-	$marker_end   = '# END FromScratch';
+	$marker_start = FS_HTACCESS_MARKER_START;
+	$marker_end   = FS_HTACCESS_MARKER_END;
 	$template     = __DIR__ . '/install-htaccess.txt';
 	if (!is_readable($template)) {
 		return '';

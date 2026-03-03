@@ -57,6 +57,26 @@ function fs_theme_settings_current_tab(): string
 	return $available[0] ?? 'general';
 }
 
+// Redirects form (self-POST to avoid options.php redirect flicker). Use admin_init so we run regardless of load-hook.
+add_action('admin_init', function () {
+	global $pagenow;
+	if (!current_user_can('manage_options') || $_SERVER['REQUEST_METHOD'] !== 'POST') {
+		return;
+	}
+	if ($pagenow !== 'options-general.php' || (isset($_GET['page']) ? $_GET['page'] : '') !== 'fs-theme-settings') {
+		return;
+	}
+	if (empty($_POST['fromscratch_save_redirects']) || empty($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_save_redirects')) {
+		return;
+	}
+	$value = isset($_POST['fs_redirects']) && is_array($_POST['fs_redirects']) ? $_POST['fs_redirects'] : [];
+	$sanitized = fs_sanitize_redirects($value);
+	update_option('fs_redirects', $sanitized);
+	set_transient('fromscratch_redirects_saved', '1', 30);
+	wp_safe_redirect(admin_url('options-general.php?page=fs-theme-settings&tab=redirects'));
+	exit;
+}, 1);
+
 // Clear design overrides (developer only); redirects back to Design tab
 add_action('load-settings_page_fs-theme-settings', function () {
 	if (!current_user_can('manage_options') || empty($_GET['fromscratch_clear_design']) || empty($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'fromscratch_clear_design')) {
@@ -243,10 +263,6 @@ add_action('admin_init', function () {
 		'type' => 'array',
 		'sanitize_callback' => 'fs_sanitize_redirects',
 	]);
-	register_setting(FS_THEME_OPTION_GROUP_REDIRECTS, 'fs_redirect_method', [
-		'type' => 'string',
-		'sanitize_callback' => 'fs_sanitize_redirect_method',
-	]);
 }, 5);
 
 /**
@@ -302,19 +318,6 @@ function fs_sanitize_custom_css($value): string
 }
 
 /**
- * Sanitize redirect method: wordpress or htaccess.
- */
-function fs_sanitize_redirect_method($value): string
-{
-	$value = is_string($value) ? trim($value) : '';
-	$value = in_array($value, ['wordpress', 'htaccess'], true) ? $value : 'wordpress';
-	if ($value === 'wordpress') {
-		fs_remove_redirects_htaccess_block();
-	}
-	return $value;
-}
-
-/**
  * Sanitize redirects list. Expects POST fs_redirects as array of [from, to, code]. Saves as fs_redirects keyed by from path.
  */
 function fs_sanitize_redirects($value): array
@@ -342,10 +345,14 @@ function fs_sanitize_redirects($value): array
 		$code = in_array($code, $allowed_codes, true) ? $code : 301;
 		$out[$from] = ['to' => $to, 'code' => $code];
 	}
-	// Use POSTed method so we act on the same save; get_option can still be old when both options save in one request.
-	$method = isset($_POST['fs_redirect_method']) ? sanitize_text_field(wp_unslash($_POST['fs_redirect_method'])) : get_option('fs_redirect_method', 'wordpress');
+	$method = function_exists('fs_config_redirects') ? fs_config_redirects('method') : 'wordpress';
+	if (!in_array($method, ['wordpress', 'htaccess'], true)) {
+		$method = 'wordpress';
+	}
 	if ($method === 'htaccess') {
 		fs_write_redirects_htaccess($out);
+	} else {
+		fs_remove_redirects_htaccess_block();
 	}
 	return $out;
 }
@@ -376,8 +383,8 @@ function fs_normalize_redirect_to_path(string $path): string
 	return $path === '' ? '/' : '/' . $path;
 }
 
-const FS_HTACCESS_REDIRECTS_MARKER_START = '# BEGIN FROMSCRATCH REDIRECTS';
-const FS_HTACCESS_REDIRECTS_MARKER_END = '# END FROMSCRATCH REDIRECTS';
+const FS_HTACCESS_REDIRECTS_MARKER_START = '# BEGIN FromScratch redirects';
+const FS_HTACCESS_REDIRECTS_MARKER_END = '# END FromScratch redirects';
 
 /**
  * Remove the FromScratch redirects block from .htaccess.
@@ -398,32 +405,39 @@ function fs_remove_redirects_htaccess_block(): bool
 }
 
 /**
- * Write redirect rules to .htaccess between markers.
+ * Write redirect rules to .htaccess. Block is always placed at the start of the file (before WordPress) so rules run first.
  */
 function fs_write_redirects_htaccess(array $redirects): bool
 {
-	$file = ABSPATH . '.htaccess';
+	$file = rtrim(ABSPATH, '/\\') . '/.htaccess';
 	if (file_exists($file) && !is_writable($file)) {
 		return false;
 	}
-	if (!file_exists($file) && !is_writable(ABSPATH)) {
+	$dir = dirname($file);
+	if (!file_exists($file) && (!is_writable($dir) || !is_dir($dir))) {
 		return false;
 	}
 	$content = file_exists($file) ? (string) file_get_contents($file) : '';
-	$pattern = '/\s*' . preg_quote(FS_HTACCESS_REDIRECTS_MARKER_START, '/') . '.*?' . preg_quote(FS_HTACCESS_REDIRECTS_MARKER_END, '/') . '\s*/s';
-	if (preg_match($pattern, $content)) {
-		$content = preg_replace($pattern, "\n", $content);
-	}
+	$block_pattern = '/\s*' . preg_quote(FS_HTACCESS_REDIRECTS_MARKER_START, '/') . '.*?' . preg_quote(FS_HTACCESS_REDIRECTS_MARKER_END, '/') . '\s*/s';
+	$content = preg_replace($block_pattern, "\n", $content);
+	$content = trim($content);
+
 	if ($redirects !== []) {
 		$block = FS_HTACCESS_REDIRECTS_MARKER_START . "\n";
+		$block .= "<IfModule mod_rewrite.c>\nRewriteEngine On\n";
 		foreach ($redirects as $from => $item) {
 			$to = $item['to'];
 			$code = (int) ($item['code'] ?? 301);
-			$block .= 'Redirect ' . $code . ' ' . $from . ' ' . $to . "\n";
+			$path_for_regex = ltrim($from, '/');
+			$rewrite_pattern = $path_for_regex === '' ? '^/?$' : '^' . preg_quote($path_for_regex, '#') . '/?$';
+			$target = strpos($to, ' ') !== false ? '"' . $to . '"' : $to;
+			$block .= 'RewriteRule ' . $rewrite_pattern . ' ' . $target . ' [R=' . $code . ',L,NC]' . "\n";
 		}
+		$block .= "</IfModule>\n";
 		$block .= FS_HTACCESS_REDIRECTS_MARKER_END . "\n";
-		$content .= "\n" . $block;
+		$content = $block . ($content !== '' ? "\n\n" . $content : '');
 	}
+
 	$content = trim($content) . "\n";
 	return (bool) file_put_contents($file, $content, LOCK_EX);
 }
@@ -515,13 +529,25 @@ function theme_settings_page(): void
 	if ($clear_design_notice !== false) {
 		delete_transient('fromscratch_clear_design_notice');
 	}
+	$redirects_saved = get_transient('fromscratch_redirects_saved');
+	if ($redirects_saved !== false) {
+		delete_transient('fromscratch_redirects_saved');
+	}
 	$clear_design_url = wp_nonce_url(add_query_arg(['fromscratch_clear_design' => '1', 'tab' => 'design'], $base_url), 'fromscratch_clear_design');
 ?>
 	<div class="wrap">
 		<h1><?= esc_html(__(fs_config_settings('title_page'), 'fromscratch')) ?></h1>
-		<?php if ($clear_design_notice !== false && $tab === 'design') : ?>
-			<div class="notice notice-success is-dismissible"><p><strong><?= esc_html__('Design overrides cleared. All values reset to defaults.', 'fromscratch') ?></strong></p></div>
-		<?php endif; ?>
+		<?php
+		$notices = [];
+		if ($clear_design_notice !== false) {
+			$notices[] = __('Design overrides cleared. All values reset to defaults.', 'fromscratch');
+		}
+		if ($redirects_saved !== false) {
+			$notices[] = __('Settings saved.', 'fromscratch');
+		}
+		foreach ($notices as $msg) : ?>
+			<div class="notice notice-success is-dismissible"><p><strong><?= esc_html($msg) ?></strong></p></div>
+		<?php endforeach; ?>
 
 		<?php if (count($available_tabs) > 1) : ?>
 		<nav class="nav-tab-wrapper wp-clearfix" aria-label="Secondary menu">
@@ -632,7 +658,6 @@ function theme_settings_page(): void
 		</form>
 		<?php elseif ($tab === 'redirects') : ?>
 		<?php
-			$redirect_method = get_option('fs_redirect_method', 'wordpress');
 			$redirects_raw = get_option('fs_redirects', []);
 			$redirects_list = [];
 			foreach ($redirects_raw as $from => $item) {
@@ -643,37 +668,37 @@ function theme_settings_page(): void
 				];
 			}
 		?>
-		<form method="post" action="options.php" class="page-settings-form" id="fs-redirects-form">
-			<?php settings_fields(FS_THEME_OPTION_GROUP_REDIRECTS); ?>
-			<h2 class="title"><?= esc_html__('Method', 'fromscratch') ?></h2>
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><?= esc_html__('Method', 'fromscratch') ?></th>
-					<td>
-						<fieldset>
-							<label><input type="radio" name="fs_redirect_method" value="wordpress" <?= checked($redirect_method, 'wordpress', false) ?>> <?= esc_html__('WordPress (template_redirect)', 'fromscratch') ?></label><br>
-							<label><input type="radio" name="fs_redirect_method" value="htaccess" <?= checked($redirect_method, 'htaccess', false) ?>> <?= esc_html__('.htaccess', 'fromscratch') ?></label>
-						</fieldset>
-						<p class="description"><?= esc_html__('WordPress runs redirects in PHP. .htaccess writes rules to your server config (Apache); the file must be writable.', 'fromscratch') ?></p>
-					</td>
-				</tr>
-			</table>
-			<h2 class="title" style="margin-top: 24px;"><?= esc_html__('Redirects', 'fromscratch') ?></h2>
-			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Enter paths without the domain (e.g. /old-page). From URL is the requested path; To URL can be a path or full URL.', 'fromscratch') ?></p>
-			<table class="wp-list-table widefat fixed striped" id="fs-redirects-table">
+		<form method="post" action="<?= esc_url(admin_url('options-general.php?page=fs-theme-settings&tab=redirects')) ?>" class="page-settings-form" id="fs-redirects-form">
+			<?php wp_nonce_field('fromscratch_save_redirects'); ?>
+			<input type="hidden" name="fromscratch_save_redirects" value="1">
+			<?php
+			$redirect_method = function_exists('fs_config_redirects') ? fs_config_redirects('method') : 'wordpress';
+			if (
+				function_exists('fs_can_use_htaccess_redirects') && fs_can_use_htaccess_redirects() &&
+				$redirect_method === 'wordpress'
+			) : ?>
+				<div class="notice notice-info inline">
+					<p><?= esc_html__('You are running Apache. For better performance, you can set the redirect method to .htaccess in config/redirects.php.', 'fromscratch') ?></p>
+				</div>
+			<?php endif; ?>
+			<h2 class="title"><?= esc_html__('Redirects', 'fromscratch') ?></h2>
+			<p class="description"><?= esc_html__('Enter paths without the domain (e.g. /old-path).', 'fromscratch') ?></p>
+			<p class="description"><?= esc_html__('The source URL represents the requested path.', 'fromscratch') ?></p>
+			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('The target URL can be an internal path or a full URL.', 'fromscratch') ?></p>
+			<table class="wp-list-table widefat fixed striped" id="fs-redirects-table" style="width: auto;">
 				<thead>
 					<tr>
-						<th scope="col" class="column-from"><?= esc_html__('From URL', 'fromscratch') ?></th>
-						<th scope="col" class="column-to"><?= esc_html__('To URL', 'fromscratch') ?></th>
+						<th scope="col" class="column-from" style="width: 50%;"><?= esc_html__('From URL', 'fromscratch') ?></th>
+						<th scope="col" class="column-to" style="width: 50%;"><?= esc_html__('To URL', 'fromscratch') ?></th>
 						<th scope="col" class="column-code"><?= esc_html__('Code', 'fromscratch') ?></th>
-						<th scope="col" class="column-delete"><?= esc_html__('Delete', 'fromscratch') ?></th>
+						<th scope="col" class="column-delete"></th>
 					</tr>
 				</thead>
 				<tbody>
 					<?php foreach ($redirects_list as $i => $r) : ?>
 					<tr class="fs-redirect-row">
-						<td><input type="text" name="fs_redirects[<?= (int) $i ?>][from]" value="<?= esc_attr($r['from']) ?>" class="regular-text" placeholder="<?= esc_attr__('/old-path', 'fromscratch') ?>"></td>
-						<td><input type="text" name="fs_redirects[<?= (int) $i ?>][to]" value="<?= esc_attr($r['to']) ?>" class="regular-text" placeholder="<?= esc_attr__('/new-path', 'fromscratch') ?>"></td>
+						<td><input type="text" name="fs_redirects[<?= (int) $i ?>][from]" value="<?= esc_attr($r['from']) ?>" class="regular-text" style="width: 100%;" placeholder="<?= esc_attr__('/old-path', 'fromscratch') ?>"></td>
+						<td><input type="text" name="fs_redirects[<?= (int) $i ?>][to]" value="<?= esc_attr($r['to']) ?>" class="regular-text" style="width: 100%;" placeholder="<?= esc_attr__('/new-path', 'fromscratch') ?>"></td>
 						<td>
 							<select name="fs_redirects[<?= (int) $i ?>][code]">
 								<option value="301" <?= selected($r['code'], 301, false) ?>><?= esc_html__('301 (Permanent)', 'fromscratch') ?></option>

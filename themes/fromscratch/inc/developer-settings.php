@@ -218,7 +218,7 @@ function fs_render_developer_settings_page(): void
 	$bump_url = wp_nonce_url(add_query_arg(['fromscratch_bump' => '1', 'tab' => 'general'], $base_url), 'fromscratch_bump_asset_version');
 ?>
 	<div class="wrap">
-		<h1><?= esc_html(__('Developer', 'fromscratch')) ?></h1>
+		<h1><?= esc_html(__('Developer settings', 'fromscratch')) ?></h1>
 		<?php
 		$notices = [];
 		if ($bump_notice !== false) {
