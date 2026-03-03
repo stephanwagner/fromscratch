@@ -69,7 +69,10 @@ add_action('load-settings_page_fs-developer-settings', function () {
 	exit;
 }, 1);
 
-// Flush redirect cache (Tools tab)
+/**
+ * Handle all form submissions on the Developer page (self-POST, no options.php).
+ * Processes POST, sets notice transient, redirects to same page with correct tab.
+ */
 add_action('load-settings_page_fs-developer-settings', function () {
 	if (!current_user_can('manage_options') || $_SERVER['REQUEST_METHOD'] !== 'POST') {
 		return;
@@ -77,32 +80,71 @@ add_action('load-settings_page_fs-developer-settings', function () {
 	if (!function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
 		return;
 	}
-	if (empty($_POST['fromscratch_flush_redirect_cache']) || empty($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_flush_redirect_cache')) {
-		return;
-	}
-	flush_rewrite_rules();
-	set_transient('fromscratch_flush_redirect_cache_notice', '1', 30);
-	wp_safe_redirect(admin_url('options-general.php?page=fs-developer-settings&tab=tools'));
-	exit;
-}, 5);
 
-// Revision cleaner (Tools tab)
-add_action('load-settings_page_fs-developer-settings', function () {
-	if (!current_user_can('manage_options') || $_SERVER['REQUEST_METHOD'] !== 'POST') {
-		return;
+	$base = admin_url('options-general.php?page=fs-developer-settings');
+
+	// Flush redirect cache (Tools)
+	if (!empty($_POST['fromscratch_flush_redirect_cache']) && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_flush_redirect_cache')) {
+		flush_rewrite_rules();
+		set_transient('fromscratch_flush_redirect_cache_notice', '1', 30);
+		wp_safe_redirect($base . '&tab=tools');
+		exit;
 	}
-	if (!function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
-		return;
+
+	// Revision cleaner (Tools)
+	if (!empty($_POST['fromscratch_clean_revisions']) && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_clean_revisions')) {
+		$keep = isset($_POST['fromscratch_revisions_keep']) ? max(0, (int) $_POST['fromscratch_revisions_keep']) : 5;
+		$deleted = fs_clean_revisions($keep);
+		set_transient('fromscratch_clean_revisions_notice', $deleted, 30);
+		wp_safe_redirect($base . '&tab=tools');
+		exit;
 	}
-	if (empty($_POST['fromscratch_clean_revisions']) || empty($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_clean_revisions')) {
-		return;
+
+	// Features
+	if (!empty($_POST['option_page']) && $_POST['option_page'] === FS_THEME_OPTION_GROUP_FEATURES && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], FS_THEME_OPTION_GROUP_FEATURES . '-options')) {
+		$value = isset($_POST['fromscratch_features']) && is_array($_POST['fromscratch_features']) ? $_POST['fromscratch_features'] : [];
+		$sanitized = function_exists('fs_sanitize_features') ? fs_sanitize_features($value) : [];
+		update_option('fromscratch_features', $sanitized);
+		set_transient('fromscratch_features_saved', '1', 30);
+		wp_safe_redirect($base . '&tab=features');
+		exit;
 	}
-	$keep = isset($_POST['fromscratch_revisions_keep']) ? (int) $_POST['fromscratch_revisions_keep'] : 5;
-	$keep = max(0, $keep);
-	$deleted = fs_clean_revisions($keep);
-	set_transient('fromscratch_clean_revisions_notice', $deleted, 30);
-	wp_safe_redirect(admin_url('options-general.php?page=fs-developer-settings&tab=tools'));
-	exit;
+
+	// User rights (Access)
+	if (!empty($_POST['option_page']) && $_POST['option_page'] === FS_THEME_OPTION_GROUP_DEVELOPER && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], FS_THEME_OPTION_GROUP_DEVELOPER . '-options')) {
+		$value = isset($_POST['fromscratch_admin_access']) && is_array($_POST['fromscratch_admin_access']) ? $_POST['fromscratch_admin_access'] : [];
+		$sanitized = function_exists('fs_sanitize_admin_access') ? fs_sanitize_admin_access($value) : [];
+		update_option('fromscratch_admin_access', $sanitized);
+		set_transient('fromscratch_access_saved', '1', 30);
+		wp_safe_redirect($base . '&tab=access');
+		exit;
+	}
+
+	// General (admin email)
+	if (!empty($_POST['option_page']) && $_POST['option_page'] === FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL . '-options')) {
+		$email = isset($_POST['admin_email']) ? sanitize_email(wp_unslash($_POST['admin_email'])) : '';
+		if (is_email($email)) {
+			update_option('admin_email', $email);
+		}
+		set_transient('fromscratch_general_saved', '1', 30);
+		wp_safe_redirect($base . '&tab=general');
+		exit;
+	}
+
+	// Security (password, maintenance)
+	if (!empty($_POST['option_page']) && $_POST['option_page'] === FS_THEME_OPTION_GROUP_SECURITY && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], FS_THEME_OPTION_GROUP_SECURITY . '-options')) {
+		$prot = function_exists('fs_sanitize_site_password_protection') ? fs_sanitize_site_password_protection($_POST['fromscratch_site_password_protection'] ?? '') : '';
+		update_option('fromscratch_site_password_protection', $prot);
+		$mode = function_exists('fs_sanitize_maintenance_mode') ? fs_sanitize_maintenance_mode($_POST['fromscratch_maintenance_mode'] ?? '') : '';
+		update_option('fromscratch_maintenance_mode', $mode);
+		$title = function_exists('fs_sanitize_maintenance_title') ? fs_sanitize_maintenance_title($_POST['fromscratch_maintenance_title'] ?? '') : '';
+		update_option('fromscratch_maintenance_title', $title);
+		$desc = function_exists('fs_sanitize_maintenance_description') ? fs_sanitize_maintenance_description($_POST['fromscratch_maintenance_description'] ?? '') : '';
+		update_option('fromscratch_maintenance_description', $desc);
+		set_transient('fromscratch_security_saved', '1', 30);
+		wp_safe_redirect($base . '&tab=security');
+		exit;
+	}
 }, 5);
 
 /**
@@ -157,6 +199,22 @@ function fs_render_developer_settings_page(): void
 	if ($revisions_notice !== false) {
 		delete_transient('fromscratch_clean_revisions_notice');
 	}
+	$features_saved = get_transient('fromscratch_features_saved');
+	if ($features_saved !== false) {
+		delete_transient('fromscratch_features_saved');
+	}
+	$access_saved = get_transient('fromscratch_access_saved');
+	if ($access_saved !== false) {
+		delete_transient('fromscratch_access_saved');
+	}
+	$general_saved = get_transient('fromscratch_general_saved');
+	if ($general_saved !== false) {
+		delete_transient('fromscratch_general_saved');
+	}
+	$security_saved = get_transient('fromscratch_security_saved');
+	if ($security_saved !== false) {
+		delete_transient('fromscratch_security_saved');
+	}
 	$bump_url = wp_nonce_url(add_query_arg(['fromscratch_bump' => '1', 'tab' => 'general'], $base_url), 'fromscratch_bump_asset_version');
 ?>
 	<div class="wrap">
@@ -171,6 +229,9 @@ function fs_render_developer_settings_page(): void
 		}
 		if ($revisions_notice !== false && is_numeric($revisions_notice)) {
 			$notices[] = sprintf(_n('%s revision deleted.', '%s revisions deleted.', (int) $revisions_notice, 'fromscratch'), number_format_i18n((int) $revisions_notice));
+		}
+		if ($features_saved !== false || $access_saved !== false || $general_saved !== false || $security_saved !== false) {
+			$notices[] = __('Settings saved.', 'fromscratch');
 		}
 		foreach ($notices as $msg) : ?>
 			<div class="notice notice-success is-dismissible">
@@ -216,7 +277,7 @@ function fs_render_developer_settings_page(): void
 				</tr>
 			</table>
 			<h2 class="title" style="margin-top: 24px;"><?= esc_html__('Administrator email', 'fromscratch') ?></h2>
-			<form method="post" action="options.php" class="page-settings-form">
+			<form method="post" action="" class="page-settings-form">
 				<?php settings_fields(FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL); ?>
 				<table class="form-table" role="presentation">
 					<tr>
@@ -243,7 +304,7 @@ function fs_render_developer_settings_page(): void
 			};
 			?>
 			<h2 class="title"><?= esc_html__('Features', 'fromscratch') ?></h2>
-			<form method="post" action="options.php" class="page-settings-form">
+			<form method="post" action="" class="page-settings-form">
 				<?php settings_fields(FS_THEME_OPTION_GROUP_FEATURES); ?>
 				<table class="form-table" role="presentation">
 					<tr>
@@ -259,6 +320,11 @@ function fs_render_developer_settings_page(): void
 							</div>
 						</td>
 					</tr>
+				</table>
+
+				<hr class="fs-small">
+
+				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><?= esc_html__('Duplicate', 'fromscratch') ?></th>
 						<td>
@@ -267,6 +333,11 @@ function fs_render_developer_settings_page(): void
 							<p class="description fs-indent-checkbox"><?= esc_html__('Shows a "Duplicate" row action for posts, pages, and custom post types.', 'fromscratch') ?></p>
 						</td>
 					</tr>
+				</table>
+
+				<hr class="fs-small">
+
+				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><?= esc_html__('Post expirator', 'fromscratch') ?></th>
 						<td>
@@ -275,6 +346,11 @@ function fs_render_developer_settings_page(): void
 							<p class="description fs-indent-checkbox"><?= esc_html__('Adds an expiration date/time to posts, pages and custom post types When reached, the post is set to draft.', 'fromscratch') ?></p>
 						</td>
 					</tr>
+				</table>
+
+				<hr class="fs-small">
+
+				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><?= esc_html__('SEO', 'fromscratch') ?></th>
 						<td>
@@ -283,6 +359,11 @@ function fs_render_developer_settings_page(): void
 							<p class="description fs-indent-checkbox"><?= esc_html__('Adds a section to pages, posts and custom post types to enter SEO info.', 'fromscratch') ?></p>
 						</td>
 					</tr>
+				</table>
+
+				<hr class="fs-small">
+
+				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><?= esc_html__('SVG support', 'fromscratch') ?></th>
 						<td>
@@ -329,7 +410,7 @@ function fs_render_developer_settings_page(): void
 			?>
 			<h2 class="title"><?= esc_html__('User rights', 'fromscratch') ?></h2>
 			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Control which admin pages and Settings sections are visible to Administrators (Admin) and users with developer rights (Developer). Uncheck to hide from that role.', 'fromscratch') ?></p>
-			<form method="post" action="options.php" class="page-settings-form">
+			<form method="post" action="" class="page-settings-form">
 				<?php settings_fields(FS_THEME_OPTION_GROUP_DEVELOPER); ?>
 				<table class="form-table" role="presentation">
 					<thead>
@@ -378,7 +459,7 @@ function fs_render_developer_settings_page(): void
 					<p><?= esc_html__('No password set. Set a password below to activate protection.', 'fromscratch') ?></p>
 				</div>
 			<?php endif; ?>
-			<form method="post" action="options.php" class="page-settings-form">
+			<form method="post" action="" class="page-settings-form">
 				<?php settings_fields(FS_THEME_OPTION_GROUP_SECURITY); ?>
 				<h2 class="title"><?= esc_html__('Password protection', 'fromscratch') ?></h2>
 				<table class="form-table" role="presentation">

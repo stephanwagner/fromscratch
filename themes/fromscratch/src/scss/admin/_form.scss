@@ -5,6 +5,10 @@
 
   hr {
     margin: 24px 0;
+
+    &.fs-small {
+      margin: 12px 0;
+    }
   }
 }
 

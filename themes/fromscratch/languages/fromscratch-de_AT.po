@@ -323,6 +323,9 @@ msgstr "Design"
 msgid "Security"
 msgstr "Sicherheit"
 
+msgid "Settings saved."
+msgstr "Einstellungen gespeichert."
+
 msgid "Administrator email"
 msgstr "Administrator-E-Mail"
 
