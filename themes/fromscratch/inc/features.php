@@ -116,3 +116,18 @@ function fs_get_default_language(): string
 	}
 	return (string) ($config[0]['id'] ?? '');
 }
+
+/**
+ * Whether the default language should have a URL prefix (e.g. /en/).
+ * When false: default language has no prefix; when true: all languages use a prefix.
+ *
+ * @return bool
+ */
+function fs_prefix_default_language(): bool
+{
+	if (!fs_theme_feature_enabled('languages')) {
+		return false;
+	}
+	$data = get_option('fs_theme_languages', ['list' => [], 'default' => '', 'prefix_default' => false]);
+	return !empty($data['prefix_default']);
+}

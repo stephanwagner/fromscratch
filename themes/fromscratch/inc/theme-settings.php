@@ -302,7 +302,8 @@ function fs_sanitize_theme_languages($value): array
 	if ($default === '' || !in_array($default, $ids, true)) {
 		$default = $ids[0] ?? '';
 	}
-	return ['list' => $list, 'default' => $default];
+	$prefix_default = !empty($value['prefix_default']);
+	return ['list' => $list, 'default' => $default, 'prefix_default' => $prefix_default];
 }
 
 /**

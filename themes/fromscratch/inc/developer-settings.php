@@ -161,8 +161,9 @@ add_action('load-settings_page_fs-developer-settings', function () {
 		 && !empty($_POST['option_page']) && $_POST['option_page'] === FS_THEME_OPTION_GROUP_LANGUAGES
 		 && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], FS_THEME_OPTION_GROUP_LANGUAGES . '-options')) {
 		$value = isset($_POST['fs_theme_languages']) && is_array($_POST['fs_theme_languages']) ? $_POST['fs_theme_languages'] : [];
-		$sanitized = function_exists('fs_sanitize_theme_languages') ? fs_sanitize_theme_languages($value) : ['list' => [], 'default' => ''];
+		$sanitized = function_exists('fs_sanitize_theme_languages') ? fs_sanitize_theme_languages($value) : ['list' => [], 'default' => '', 'prefix_default' => false];
 		update_option('fs_theme_languages', $sanitized);
+		flush_rewrite_rules(false);
 		set_transient('fromscratch_languages_saved', '1', 30);
 		wp_safe_redirect($base . '&tab=languages');
 		exit;
@@ -608,9 +609,10 @@ function fs_render_developer_settings_page(): void
 
 		<?php elseif ($tab === 'languages') : ?>
 			<?php
-			$lang_data = get_option('fs_theme_languages', ['list' => [], 'default' => '']);
+			$lang_data = get_option('fs_theme_languages', ['list' => [], 'default' => '', 'prefix_default' => false]);
 			$lang_list = isset($lang_data['list']) && is_array($lang_data['list']) ? $lang_data['list'] : [];
 			$lang_default = isset($lang_data['default']) ? (string) $lang_data['default'] : '';
+			$lang_prefix_default = !empty($lang_data['prefix_default']);
 			if ($lang_default === '' && !empty($lang_list)) {
 				$lang_default = $lang_list[0]['id'] ?? '';
 			}
@@ -631,6 +633,14 @@ function fs_render_developer_settings_page(): void
 									<option value=""><?= esc_html__('— Add at least one language below —', 'fromscratch') ?></option>
 								<?php endif; ?>
 							</select>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?= esc_html__('URL prefix', 'fromscratch') ?></th>
+						<td>
+							<input type="hidden" name="fs_theme_languages[prefix_default]" value="0">
+							<label><input type="checkbox" name="fs_theme_languages[prefix_default]" value="1" <?= checked($lang_prefix_default, true, false) ?>> <?= esc_html__('Prefix default language in URL', 'fromscratch') ?></label>
+							<p class="description"><?= esc_html__('When off: default language has no prefix (e.g. /about/). When on: all languages use a prefix (e.g. /en/about/, /de/about/).', 'fromscratch') ?></p>
 						</td>
 					</tr>
 				</table>
