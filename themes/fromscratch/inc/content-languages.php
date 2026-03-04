@@ -262,6 +262,153 @@ add_action('pre_get_posts', function (\WP_Query $query): void {
 }, 10, 1);
 
 /**
+ * Order list table by translation group: default language first, then translations (indented in UI).
+ */
+add_filter('posts_clauses', function (array $clauses, \WP_Query $query): array {
+	global $wpdb;
+	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
+		return $clauses;
+	}
+	if (!is_admin()) {
+		return $clauses;
+	}
+	$screen = get_current_screen();
+	if (!$screen || strpos($screen->id, 'edit-') !== 0) {
+		return $clauses;
+	}
+	$post_type = $query->get('post_type');
+	$allowed = fs_language_post_types();
+	$ok = false;
+	if (is_array($post_type)) {
+		$ok = !empty(array_intersect($post_type, $allowed));
+	} elseif (in_array($post_type, $allowed, true)) {
+		$ok = true;
+	}
+	if (!$ok) {
+		return $clauses;
+	}
+	$default_slug = fs_get_default_language();
+	$default_term_id = 0;
+	if ($default_slug !== '' && taxonomy_exists(FS_LANGUAGE_TAXONOMY)) {
+		$t = get_term_by('slug', $default_slug, FS_LANGUAGE_TAXONOMY);
+		if ($t) {
+			$default_term_id = (int) $t->term_id;
+		}
+	}
+	$meta_key = FS_TRANSLATION_GROUP_META;
+	$join_alias = 'fs_lang_grp';
+	$tr_alias = 'fs_lang_tr';
+	$tt_alias = 'fs_lang_tt';
+	$clauses['join'] .= " LEFT JOIN {$wpdb->postmeta} AS {$join_alias} ON {$join_alias}.post_id = {$wpdb->posts}.ID AND {$join_alias}.meta_key = '" . esc_sql($meta_key) . "' ";
+	if ($default_term_id > 0) {
+		$clauses['join'] .= " LEFT JOIN {$wpdb->term_relationships} AS {$tr_alias} ON {$tr_alias}.object_id = {$wpdb->posts}.ID ";
+		$clauses['join'] .= " LEFT JOIN {$wpdb->term_taxonomy} AS {$tt_alias} ON {$tt_alias}.term_taxonomy_id = {$tr_alias}.term_taxonomy_id AND {$tt_alias}.taxonomy = '" . esc_sql(FS_LANGUAGE_TAXONOMY) . "' AND {$tt_alias}.term_id = " . $default_term_id . " ";
+	}
+	$group_order = " COALESCE(CAST({$join_alias}.meta_value AS UNSIGNED), {$wpdb->posts}.ID) ";
+	$default_first = $default_term_id > 0
+		? " (CASE WHEN {$tt_alias}.term_id IS NOT NULL THEN 0 ELSE 1 END) "
+		: " 0 ";
+	$existing = trim($clauses['orderby']);
+	$clauses['orderby'] = $group_order . ' ASC, ' . $default_first . ' ASC' . ($existing !== '' ? ', ' . $existing : '');
+	return $clauses;
+}, 10, 2);
+
+/**
+ * Whether the post is the default-language item in its translation group (no indent in list).
+ */
+function fs_language_is_default_in_group(int $post_id): bool
+{
+	$group_id = (int) get_post_meta($post_id, FS_TRANSLATION_GROUP_META, true);
+	if ($group_id <= 0) {
+		return true;
+	}
+	$term = fs_language_get_post_language($post_id);
+	$default_slug = fs_get_default_language();
+	if ($default_slug === '') {
+		return true;
+	}
+	return $term && $term->slug === $default_slug;
+}
+
+/**
+ * Whether the list table row for this post should be indented (translation linked to default language).
+ * Only true when the post is not the default in its group AND the group contains a default-language post.
+ */
+function fs_language_should_indent_in_list(int $post_id): bool
+{
+	if (fs_language_is_default_in_group($post_id)) {
+		return false;
+	}
+	$group_id = (int) get_post_meta($post_id, FS_TRANSLATION_GROUP_META, true);
+	if ($group_id <= 0) {
+		return false;
+	}
+	$default_slug = fs_get_default_language();
+	if ($default_slug === '') {
+		return false;
+	}
+	$linked = fs_language_get_linked_translations($post_id, $group_id);
+	$member_ids = array_values($linked);
+	$member_ids[] = $post_id;
+	foreach ($member_ids as $member_id) {
+		$term = fs_language_get_post_language((int) $member_id);
+		if ($term && $term->slug === $default_slug) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ * Add row class for translation rows that are linked to default language (indent via CSS).
+ * Note: post_class filter can receive $class as string or array depending on context.
+ */
+add_filter('post_class', function ($classes, $class, $post_id) {
+	if (!is_array($classes)) {
+		return $classes;
+	}
+	$post_id = (int) $post_id;
+	if ($post_id <= 0) {
+		return $classes;
+	}
+	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
+		return $classes;
+	}
+	if (!is_admin()) {
+		return $classes;
+	}
+	$screen = get_current_screen();
+	if (!$screen || strpos($screen->id, 'edit-') !== 0) {
+		return $classes;
+	}
+	if (!in_array(get_post_type($post_id), fs_language_post_types(), true)) {
+		return $classes;
+	}
+	if (fs_language_should_indent_in_list($post_id)) {
+		$classes[] = 'fs-list-translation-row';
+	}
+	return $classes;
+}, 10, 3);
+
+/**
+ * Admin CSS: indent translation rows in the list table (row class, no HTML in title).
+ */
+add_action('admin_enqueue_scripts', function (string $hook_suffix): void {
+	if ($hook_suffix !== 'edit.php') {
+		return;
+	}
+	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
+		return;
+	}
+	$screen = get_current_screen();
+	if (!$screen || !in_array($screen->post_type ?? '', fs_language_post_types(), true)) {
+		return;
+	}
+	$css = '.fs-list-translation-row .column-title { padding-left: 1.5em; }';
+	wp_add_inline_style('main-admin-styles', $css);
+}, 20);
+
+/**
  * Pass language panel data to the block editor (same sidebar as SEO / Expirator).
  */
 add_action('enqueue_block_editor_assets', function (): void {
