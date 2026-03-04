@@ -547,6 +547,129 @@ function fs_language_get_linked_translations(int $post_id, int $group_id): array
 }
 
 /**
+ * Current language for this request: from queried object when singular, else from URL or default.
+ *
+ * @return string Language slug.
+ */
+function fs_language_current_request_lang(): string
+{
+	$default = function_exists('fs_get_default_language') ? fs_get_default_language() : '';
+	if (is_singular()) {
+		$post = get_queried_object();
+		if ($post && isset($post->ID)) {
+			$lang = get_post_meta($post->ID, FS_LANGUAGE_META, true);
+			if ($lang !== '' && $lang !== false) {
+				return $lang;
+			}
+			$term = fs_language_get_post_language($post->ID);
+			return $term ? $term->slug : $default;
+		}
+	}
+	if (function_exists('fs_use_language_url_prefix') && fs_use_language_url_prefix()) {
+		$path = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+		if ($path !== '') {
+			$segments = explode('/', $path);
+			$first = $segments[0] ?? '';
+			$languages = fs_get_content_languages();
+			foreach ($languages as $l) {
+				if (isset($l['id']) && (string) $l['id'] === $first) {
+					return $first;
+				}
+			}
+		}
+	}
+	return $default;
+}
+
+/**
+ * URL for a language's homepage: prefixed home when use_url_prefix, else site home.
+ *
+ * @param string $lang_slug Language id/slug.
+ * @return string
+ */
+function fs_language_home_url(string $lang_slug): string
+{
+	if ($lang_slug === '') {
+		return home_url('/');
+	}
+	if (function_exists('fs_use_language_url_prefix') && fs_use_language_url_prefix()) {
+		return trailingslashit(home_url('/' . $lang_slug . '/'));
+	}
+	return home_url('/');
+}
+
+/**
+ * Language toggler shortcode: list of language links with active class on current language.
+ * When a language has no translation for the current page, behavior is controlled by Settings → Developer → Languages (no_translation).
+ */
+add_shortcode('fs_language_toggler', function (): string {
+	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
+		return '';
+	}
+	$languages = fs_get_content_languages();
+	if (empty($languages)) {
+		return '';
+	}
+
+	$current_lang = fs_language_current_request_lang();
+	$behavior = function_exists('fs_language_no_translation_behavior') ? fs_language_no_translation_behavior() : 'disabled';
+
+	$group_id = 0;
+	$linked = [];
+	if (is_singular()) {
+		$post = get_queried_object();
+		if ($post && isset($post->ID)) {
+			$group_id = (int) get_post_meta($post->ID, FS_TRANSLATION_GROUP_META, true);
+			if ($group_id <= 0) {
+				$group_id = $post->ID;
+			}
+			$linked = fs_language_get_linked_translations($post->ID, $group_id);
+			$post_lang = get_post_meta($post->ID, FS_LANGUAGE_META, true);
+			if ($post_lang === '' || $post_lang === false) {
+				$t = fs_language_get_post_language($post->ID);
+				$post_lang = $t ? $t->slug : '';
+			}
+			$linked[$post_lang] = $post->ID;
+		}
+	}
+
+	$items = [];
+	foreach ($languages as $lang) {
+		$id = isset($lang['id']) ? (string) $lang['id'] : '';
+		if ($id === '') {
+			continue;
+		}
+		$label = isset($lang['nameEnglish']) && $lang['nameEnglish'] !== '' ? $lang['nameEnglish'] : $id;
+		$is_active = ($id === $current_lang);
+
+		$translation_id = isset($linked[$id]) ? (int) $linked[$id] : 0;
+		$has_translation = $translation_id > 0 && get_post_status($translation_id) === 'publish';
+
+		if (!$has_translation) {
+			if ($behavior === 'hide') {
+				continue;
+			}
+			if ($behavior === 'disabled') {
+				$items[] = '<span class="fs-lang-item fs-lang-disabled' . ($is_active ? ' active' : '') . '" aria-current="' . ($is_active ? 'true' : 'false') . '">' . esc_html($label) . '</span>';
+				continue;
+			}
+			$url = fs_language_home_url($id);
+			$items[] = '<a class="fs-lang-item' . ($is_active ? ' active' : '') . '" href="' . esc_url($url) . '" aria-current="' . ($is_active ? 'true' : 'false') . '">' . esc_html($label) . '</a>';
+			continue;
+		}
+
+		$url = get_permalink($translation_id);
+		$items[] = '<a class="fs-lang-item' . ($is_active ? ' active' : '') . '" href="' . esc_url($url) . '" aria-current="' . ($is_active ? 'true' : 'false') . '">' . esc_html($label) . '</a>';
+	}
+
+	if (empty($items)) {
+		return '';
+	}
+
+	return '<ul class="fs-language-toggler"><li>' . implode('</li><li>', $items) . '</li></ul>';
+});
+
+/**
  * Ensure translation group is set when a post is saved (block editor saves language term via REST).
  */
 add_action('save_post', function (int $post_id): void {

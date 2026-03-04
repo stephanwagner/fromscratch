@@ -20,6 +20,8 @@
 					</a>
 				</div>
 
+				<?= do_shortcode('[fs_language_toggler]') ?>
+
 				<div class="header-menu__wrapper">
 					<?php wp_nav_menu([
 						'theme_location' => 'main_menu',

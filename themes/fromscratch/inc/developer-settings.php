@@ -161,7 +161,7 @@ add_action('load-settings_page_fs-developer-settings', function () {
 		 && !empty($_POST['option_page']) && $_POST['option_page'] === FS_THEME_OPTION_GROUP_LANGUAGES
 		 && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], FS_THEME_OPTION_GROUP_LANGUAGES . '-options')) {
 		$value = isset($_POST['fs_theme_languages']) && is_array($_POST['fs_theme_languages']) ? $_POST['fs_theme_languages'] : [];
-		$sanitized = function_exists('fs_sanitize_theme_languages') ? fs_sanitize_theme_languages($value) : ['list' => [], 'default' => '', 'use_url_prefix' => true, 'prefix_default' => false];
+		$sanitized = function_exists('fs_sanitize_theme_languages') ? fs_sanitize_theme_languages($value) : ['list' => [], 'default' => '', 'use_url_prefix' => true, 'prefix_default' => false, 'no_translation' => 'disabled'];
 		update_option('fs_theme_languages', $sanitized);
 		set_transient('fromscratch_languages_saved', '1', 30);
 		wp_safe_redirect($base . '&tab=languages');
@@ -608,11 +608,12 @@ function fs_render_developer_settings_page(): void
 
 		<?php elseif ($tab === 'languages') : ?>
 			<?php
-			$lang_data = get_option('fs_theme_languages', ['list' => [], 'default' => '', 'use_url_prefix' => true, 'prefix_default' => false]);
+			$lang_data = get_option('fs_theme_languages', ['list' => [], 'default' => '', 'use_url_prefix' => true, 'prefix_default' => false, 'no_translation' => 'disabled']);
 			$lang_list = isset($lang_data['list']) && is_array($lang_data['list']) ? $lang_data['list'] : [];
 			$lang_default = isset($lang_data['default']) ? (string) $lang_data['default'] : '';
 			$lang_use_url_prefix = isset($lang_data['use_url_prefix']) ? (bool) $lang_data['use_url_prefix'] : true;
 			$lang_prefix_default = !empty($lang_data['prefix_default']);
+			$lang_no_translation = isset($lang_data['no_translation']) && in_array($lang_data['no_translation'], ['hide', 'disabled', 'home'], true) ? $lang_data['no_translation'] : 'disabled';
 			if ($lang_default === '' && !empty($lang_list)) {
 				$lang_default = $lang_list[0]['id'] ?? '';
 			}
@@ -645,6 +646,22 @@ function fs_render_developer_settings_page(): void
 								<label><input type="checkbox" name="fs_theme_languages[prefix_default]" id="fs_prefix_default" value="1" <?= checked($lang_prefix_default, true, false) ?>> <?= esc_html__('Prefix default language in URL', 'fromscratch') ?></label>
 								<p class="description"><?= esc_html__('When off: default language has no prefix (e.g. /about/). When on: all languages use a prefix (e.g. /en/about/, /de/ueber-uns/).', 'fromscratch') ?></p>
 							</div>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2" style="padding-bottom: 8px;">
+							<p class="description" style="margin-bottom: 0;"><?= esc_html__('To display a language switcher in your theme, use the shortcode [fs_language_toggler] in a post, page, or widget. The current language link has the CSS class "active".', 'fromscratch') ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?= esc_html__('Language toggler: no translation', 'fromscratch') ?></th>
+						<td>
+							<select name="fs_theme_languages[no_translation]" id="fs_no_translation" class="regular-text">
+								<option value="hide" <?= selected($lang_no_translation, 'hide', false) ?>><?= esc_html__('Language will not be shown in language toggler', 'fromscratch') ?></option>
+								<option value="disabled" <?= selected($lang_no_translation, 'disabled', false) ?>><?= esc_html__('Language link is disabled', 'fromscratch') ?></option>
+								<option value="home" <?= selected($lang_no_translation, 'home', false) ?>><?= esc_html__('Language link goes to language homepage (or site home)', 'fromscratch') ?></option>
+							</select>
+							<p class="description"><?= esc_html__('When the current page has no translation in a language, how that language appears in the language toggler shortcode.', 'fromscratch') ?></p>
 						</td>
 					</tr>
 				</table>

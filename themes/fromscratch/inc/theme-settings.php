@@ -304,7 +304,9 @@ function fs_sanitize_theme_languages($value): array
 	}
 	$use_url_prefix = isset($value['use_url_prefix']) ? (bool) $value['use_url_prefix'] : true;
 	$prefix_default = $use_url_prefix && !empty($value['prefix_default']);
-	return ['list' => $list, 'default' => $default, 'use_url_prefix' => $use_url_prefix, 'prefix_default' => $prefix_default];
+	$no_translation = isset($value['no_translation']) && in_array($value['no_translation'], ['hide', 'disabled', 'home'], true)
+		? $value['no_translation'] : 'disabled';
+	return ['list' => $list, 'default' => $default, 'use_url_prefix' => $use_url_prefix, 'prefix_default' => $prefix_default, 'no_translation' => $no_translation];
 }
 
 /**

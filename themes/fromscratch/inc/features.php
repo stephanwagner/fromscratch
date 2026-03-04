@@ -147,3 +147,19 @@ function fs_prefix_default_language(): bool
 	$data = get_option('fs_theme_languages', ['list' => [], 'default' => '', 'prefix_default' => false]);
 	return !empty($data['prefix_default']);
 }
+
+/**
+ * Behavior when the language toggler has no translation for the current page for a given language.
+ * One of: 'hide' (do not show), 'disabled' (show but link disabled), 'home' (link to language homepage or /).
+ *
+ * @return string
+ */
+function fs_language_no_translation_behavior(): string
+{
+	if (!fs_theme_feature_enabled('languages')) {
+		return 'disabled';
+	}
+	$data = get_option('fs_theme_languages', ['no_translation' => 'disabled']);
+	$v = isset($data['no_translation']) ? $data['no_translation'] : 'disabled';
+	return in_array($v, ['hide', 'disabled', 'home'], true) ? $v : 'disabled';
+}
