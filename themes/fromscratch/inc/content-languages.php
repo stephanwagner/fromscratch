@@ -200,8 +200,8 @@ function fs_language_filter_links(string $post_type): string
 	$links = [];
 	$all_label = __('All languages', 'fromscratch');
 	$links[] = $current === ''
-		 ? '<span class="current">' . esc_html($all_label) . '</span>'
-		 : '<a href="' . esc_url($base_url) . '">' . esc_html($all_label) . '</a>';
+		? '<span class="current">' . esc_html($all_label) . '</span>'
+		: '<a href="' . esc_url($base_url) . '">' . esc_html($all_label) . '</a>';
 
 	foreach ($languages as $lang) {
 		$slug = $lang['id'] ?? '';
@@ -597,19 +597,21 @@ add_filter('rest_pre_dispatch', function ($result, $server, $request) {
  * @param array|null $term_ids When set, store these term IDs for this post (before REST update). When null, return stored value.
  * @return array|null Stored term IDs for this post, or null if we didn't store (not an update we're tracking).
  */
-function fs_language_rest_previous_terms(int $post_id = 0, ?array $term_ids = null): ?array {
+function fs_language_rest_previous_terms(int $post_id = 0, ?array $term_ids = null): ?array
+{
 	static $store = [];
 	if ($term_ids !== null && $post_id > 0) {
-		$store[ $post_id ] = $term_ids;
+		$store[$post_id] = $term_ids;
 		return $term_ids;
 	}
 	if ($post_id > 0 && array_key_exists($post_id, $store)) {
-		return $store[ $post_id ];
+		return $store[$post_id];
 	}
 	return null;
 }
 
-function fs_language_rest_revert_language($post, $request, $creating): void {
+function fs_language_rest_revert_language($post, $request, $creating): void
+{
 	if ($creating) {
 		return;
 	}
@@ -969,31 +971,55 @@ add_filter('page_link', 'fs_language_permalink', 10, 3);
 
 function fs_language_permalink(string $url, int $post_id, bool $sample): string
 {
-	if (is_admin() || !function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
+	if ($sample) {
 		return $url;
 	}
-	$post = get_post($post_id);
-	if (!$post || !in_array($post->post_type, fs_language_post_types(), true)) {
+
+	// Do not rewrite in admin (nav menu editor uses canonical URLs)
+	if (is_admin() && !wp_doing_ajax()) {
 		return $url;
 	}
-	$languages = fs_get_content_languages();
-	if (empty($languages)) {
+
+	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
 		return $url;
 	}
-	$default_lang = fs_get_default_language();
-	$prefix_default = function_exists('fs_prefix_default_language') && fs_prefix_default_language();
+
+	$post_type = get_post_type($post_id);
+
+	static $post_types = null;
+	if ($post_types === null) {
+		$post_types = fs_language_post_types();
+	}
+
+	if (!$post_type || !in_array($post_type, $post_types, true)) {
+		return $url;
+	}
+
+	static $default_lang = null;
+	static $prefix_default = null;
+
+	if ($default_lang === null) {
+		$default_lang = fs_get_default_language();
+		$prefix_default = function_exists('fs_prefix_default_language') && fs_prefix_default_language();
+	}
+
 	$term = fs_language_get_post_language($post_id);
-	$post_lang = $term ? $term->slug : '';
-	if ($post_lang === '') {
-		$post_lang = $default_lang;
-	}
-	if ($post_lang === '' || $post_lang === $default_lang && !$prefix_default) {
+	$post_lang = $term ? $term->slug : $default_lang;
+
+	if ($post_lang === $default_lang && !$prefix_default) {
 		return $url;
 	}
+
 	$canonical = fs_language_canonical_path($post_id);
+
 	if ($canonical === null) {
 		return $url;
 	}
-	$home = trailingslashit(home_url('/'));
+
+	static $home = null;
+	if ($home === null) {
+		$home = trailingslashit(home_url('/'));
+	}
+
 	return $home . $post_lang . '/' . $canonical;
 }
