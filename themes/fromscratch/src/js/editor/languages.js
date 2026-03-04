@@ -11,6 +11,7 @@
   const { useSelect, useDispatch } = wp.data;
   const { useEntityProp } = wp.coreData;
   const { SelectControl, PanelRow } = wp.components;
+  const { useEffect } = wp.element;
 
   const TAXONOMY = 'fs_language';
   const labels = typeof fromscratchLanguages !== 'undefined' ? fromscratchLanguages : {};
@@ -38,6 +39,7 @@
     const slugToTermId = labels.slugToTermId && typeof labels.slugToTermId === 'object' ? labels.slugToTermId : {};
     const linked = labels.linked && typeof labels.linked === 'object' ? labels.linked : {};
     const createUrls = labels.createTranslationUrls && typeof labels.createTranslationUrls === 'object' ? labels.createTranslationUrls : {};
+    const defaultLanguage = (labels.defaultLanguage && typeof labels.defaultLanguage === 'string') ? labels.defaultLanguage : '';
 
     const [termIds, setTermIds] = useEntityProp('postType', postType, TAXONOMY, postId);
     const currentTermIds = Array.isArray(termIds) ? termIds : [];
@@ -55,21 +57,27 @@
       editEntityRecord('postType', postType, postId, { [TAXONOMY]: next });
     };
 
+    // For new content, set default language once so the entity has a language on first save.
+    useEffect(function () {
+      if (!languageLocked && !currentSlug && defaultLanguage && slugToTermId[defaultLanguage]) {
+        setLanguage(defaultLanguage);
+      }
+    }, [languageLocked, currentSlug, defaultLanguage]);
+
     if (languages.length === 0) {
       return null;
     }
 
-    const options = [
-      { label: labels.selectLanguage || '— Select language —', value: '' }
-    ].concat(languages.map(function (lang) {
+    const options = languages.map(function (lang) {
       const id = lang.id || '';
       const label = (lang.nameEnglish && lang.nameEnglish !== '') ? lang.nameEnglish : id;
       return { label: label, value: id };
-    }));
+    });
 
-    const currentLanguageLabel = currentSlug
-      ? (languages.find(function (l) { return (l.id || '') === currentSlug; })?.nameEnglish || currentSlug)
-      : (labels.selectLanguage || '— Select language —');
+    const effectiveSlug = currentSlug || defaultLanguage;
+    const currentLanguageLabel = effectiveSlug
+      ? (languages.find(function (l) { return (l.id || '') === effectiveSlug; })?.nameEnglish || effectiveSlug)
+      : '';
 
     const rows = languages.map(function (lang) {
       const id = lang.id || '';
@@ -109,7 +117,7 @@
         )
       : el(SelectControl, {
           label: labels.thisContentIsIn || 'This content is in',
-          value: currentSlug,
+          value: effectiveSlug,
           options: options,
           onChange: setLanguage
         });

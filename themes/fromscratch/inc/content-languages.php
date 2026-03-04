@@ -463,6 +463,8 @@ add_action('enqueue_block_editor_assets', function (): void {
 		}
 	}
 
+	$default_lang = function_exists('fs_get_default_language') ? fs_get_default_language() : '';
+
 	wp_localize_script('fromscratch-editor', 'fromscratchLanguages', [
 		'postTypes'             => fs_language_post_types(),
 		'panelTitle'            => __('Language & translations', 'fromscratch'),
@@ -470,13 +472,13 @@ add_action('enqueue_block_editor_assets', function (): void {
 		'slugToTermId'          => $slug_to_term_id,
 		'linked'                => $linked,
 		'createTranslationUrls' => $create_translation_urls,
+		'defaultLanguage'       => $default_lang,
 		'thisContentIsIn'       => __('This content is in', 'fromscratch'),
 		'translations'          => __('Translations', 'fromscratch'),
 		'current'               => __('current', 'fromscratch'),
 		'linkedLabel'           => __('linked', 'fromscratch'),
 		'languageSetOnCreate'   => __('Language is set when you first create the content and cannot be changed.', 'fromscratch'),
 		'createTranslation'     => __('Create translation', 'fromscratch'),
-		'selectLanguage'        => __('— Select language —', 'fromscratch'),
 	]);
 }, 11);
 
@@ -558,8 +560,18 @@ add_action('save_post', function (int $post_id): void {
 		update_post_meta($post_id, FS_TRANSLATION_GROUP_META, $post_id);
 	}
 
-	// Sync language slug to meta so permalink filter can use get_post_meta() instead of wp_get_object_terms().
 	$term = fs_language_get_post_language($post_id);
+	if (!$term && function_exists('fs_get_default_language')) {
+		$default_slug = fs_get_default_language();
+		if ($default_slug !== '' && taxonomy_exists(FS_LANGUAGE_TAXONOMY)) {
+			$default_term = get_term_by('slug', $default_slug, FS_LANGUAGE_TAXONOMY);
+			if ($default_term && !is_wp_error($default_term)) {
+				wp_set_object_terms($post_id, [(int) $default_term->term_id], FS_LANGUAGE_TAXONOMY);
+				$term = $default_term;
+			}
+		}
+	}
+	// Sync language slug to meta so permalink filter can use get_post_meta() instead of wp_get_object_terms().
 	$slug = $term ? $term->slug : '';
 	update_post_meta($post_id, FS_LANGUAGE_META, $slug);
 }, 10, 1);
