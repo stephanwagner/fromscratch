@@ -9,6 +9,14 @@ defined('ABSPATH') || exit;
  */
 
 const FS_LANGUAGE_TAXONOMY = 'fs_language';
+const FS_THEME_LANGUAGES_OPTION = 'fs_theme_languages';
+
+/**
+ * Flush rewrite rules when language options are updated so URL prefix rules stay in sync and 404s are avoided.
+ */
+add_action('update_option_' . FS_THEME_LANGUAGES_OPTION, function (): void {
+	flush_rewrite_rules(true);
+}, 10, 0);
 const FS_TRANSLATION_GROUP_META = 'fs_translation_group';
 /** Post meta key for language slug (synced from taxonomy for fast permalink lookups). */
 const FS_LANGUAGE_META = '_fs_lang';

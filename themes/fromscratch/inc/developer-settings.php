@@ -163,7 +163,6 @@ add_action('load-settings_page_fs-developer-settings', function () {
 		$value = isset($_POST['fs_theme_languages']) && is_array($_POST['fs_theme_languages']) ? $_POST['fs_theme_languages'] : [];
 		$sanitized = function_exists('fs_sanitize_theme_languages') ? fs_sanitize_theme_languages($value) : ['list' => [], 'default' => '', 'use_url_prefix' => true, 'prefix_default' => false];
 		update_option('fs_theme_languages', $sanitized);
-		flush_rewrite_rules(false);
 		set_transient('fromscratch_languages_saved', '1', 30);
 		wp_safe_redirect($base . '&tab=languages');
 		exit;
