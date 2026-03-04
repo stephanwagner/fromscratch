@@ -325,6 +325,7 @@ add_action('enqueue_block_editor_assets', function (): void {
 		'translations'          => __('Translations', 'fromscratch'),
 		'current'               => __('current', 'fromscratch'),
 		'linkedLabel'           => __('linked', 'fromscratch'),
+		'languageSetOnCreate'   => __('Language is set when you first create the content and cannot be changed.', 'fromscratch'),
 		'createTranslation'     => __('Create translation', 'fromscratch'),
 		'selectLanguage'        => __('— Select language —', 'fromscratch'),
 	]);
@@ -408,6 +409,85 @@ add_action('save_post', function (int $post_id): void {
 		update_post_meta($post_id, FS_TRANSLATION_GROUP_META, $post_id);
 	}
 }, 10, 1);
+
+/**
+ * Language can only be set when creating content; lock it after first save.
+ * Store current language before REST update, then revert any change in rest_after_insert.
+ */
+add_filter('rest_pre_dispatch', function ($result, $server, $request) {
+	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
+		return $result;
+	}
+	if (!taxonomy_exists(FS_LANGUAGE_TAXONOMY)) {
+		return $result;
+	}
+	$route = $request->get_route();
+	if (!is_string($route) || ($request->get_method() !== 'PUT' && $request->get_method() !== 'POST')) {
+		return $result;
+	}
+	if (!preg_match('#^/wp/v2/(posts|pages|[\w-]+)/(?P<id>\d+)$#', $route, $m)) {
+		return $result;
+	}
+	$post_id = (int) $m['id'];
+	if ($post_id <= 0) {
+		return $result;
+	}
+	$post = get_post($post_id);
+	if (!$post || !in_array($post->post_type, fs_language_post_types(), true)) {
+		return $result;
+	}
+	if ($post->post_status === 'auto-draft') {
+		return $result;
+	}
+	$terms = wp_get_object_terms($post_id, FS_LANGUAGE_TAXONOMY);
+	$term_ids = array_map('intval', wp_list_pluck($terms, 'term_id'));
+	fs_language_rest_previous_terms($post_id, $term_ids);
+	return $result;
+}, 10, 3);
+
+/**
+ * @param int $post_id
+ * @param array|null $term_ids When set, store these term IDs for this post (before REST update). When null, return stored value.
+ * @return array|null Stored term IDs for this post, or null if we didn't store (not an update we're tracking).
+ */
+function fs_language_rest_previous_terms(int $post_id = 0, ?array $term_ids = null): ?array {
+	static $store = [];
+	if ($term_ids !== null && $post_id > 0) {
+		$store[ $post_id ] = $term_ids;
+		return $term_ids;
+	}
+	if ($post_id > 0 && array_key_exists($post_id, $store)) {
+		return $store[ $post_id ];
+	}
+	return null;
+}
+
+function fs_language_rest_revert_language($post, $request, $creating): void {
+	if ($creating) {
+		return;
+	}
+	$previous = fs_language_rest_previous_terms($post->ID);
+	if ($previous === null) {
+		return;
+	}
+	$current = wp_get_object_terms($post->ID, FS_LANGUAGE_TAXONOMY);
+	$current_ids = array_map('intval', wp_list_pluck($current, 'term_id'));
+	sort($previous);
+	sort($current_ids);
+	if ($previous === $current_ids) {
+		return;
+	}
+	wp_set_object_terms($post->ID, $previous, FS_LANGUAGE_TAXONOMY);
+}
+
+add_action('init', function (): void {
+	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
+		return;
+	}
+	foreach (fs_language_post_types() as $type) {
+		add_filter('rest_after_insert_' . $type, 'fs_language_rest_revert_language', 10, 3);
+	}
+}, 20);
 
 /**
  * Get a GET parameter by key; also check amp;key (when URL had &amp; in HTML and was sent literally).
@@ -513,18 +593,13 @@ add_action('init', function (): void {
 		return;
 	}
 
-	$default_lang = fs_get_default_language();
-	$prefix_default = function_exists('fs_prefix_default_language') && fs_prefix_default_language();
-
 	foreach ($languages as $lang) {
 		$id = isset($lang['id']) ? (string) $lang['id'] : '';
 		if ($id === '' || !preg_match('/^[a-z0-9_-]+$/i', $id)) {
 			continue;
 		}
-		// When prefix_default is false, default language has no URL prefix (normal WordPress handles /about/ etc.).
-		if (!$prefix_default && $id === $default_lang) {
-			continue;
-		}
+		// Add rules for all languages so that /en/about/ is seen even when prefix_default is off;
+		// we then redirect default-language prefixed URLs to the canonical URL without prefix.
 
 		// Language-prefixed path: /en/about/ or /de/ueber-uns/ (at least one character after the slash).
 		add_rewrite_rule(
@@ -665,6 +740,25 @@ add_action('parse_request', function (\WP $wp): void {
 	}
 
 	$path = is_string($path) ? trim($path, '/') : '';
+	$default_lang = fs_get_default_language();
+	$prefix_default = function_exists('fs_prefix_default_language') && fs_prefix_default_language();
+
+	// When prefix_default is off, redirect /en/about/ to /about/ (canonical URL without prefix).
+	if (!$prefix_default && $lang === $default_lang) {
+		$resolved = fs_language_resolve_request($lang, $path);
+		if ($resolved) {
+			$post_id = (int) $resolved['id'];
+			$redirect_url = $path !== '' ? get_permalink($post_id) : home_url('/');
+			if (is_string($redirect_url) && $redirect_url !== '') {
+				wp_safe_redirect($redirect_url, 301);
+				exit;
+			}
+		}
+		// Not resolved (e.g. /en/nonexistent/): unset and let WP handle (404).
+		unset($wp->query_vars['fs_lang'], $wp->query_vars['fs_path']);
+		return;
+	}
+
 	$resolved = fs_language_resolve_request($lang, $path);
 
 	if ($resolved) {

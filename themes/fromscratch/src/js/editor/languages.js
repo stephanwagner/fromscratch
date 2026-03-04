@@ -22,11 +22,17 @@
     const postId = useSelect(function (select) {
       return select('core/editor')?.getCurrentPostId?.();
     }, []);
+    const postStatus = useSelect(function (select) {
+      return select('core/editor')?.getCurrentPostAttribute?.('status') || '';
+    }, []);
 
     const postTypes = labels.postTypes && Array.isArray(labels.postTypes) ? labels.postTypes : ['post', 'page'];
     if (!postType || postTypes.indexOf(postType) === -1) {
       return null;
     }
+
+    // Language can only be chosen when creating; once the post is saved (not auto-draft), it is locked.
+    const languageLocked = postId && postId > 0 && postStatus && postStatus !== 'auto-draft';
 
     const languages = labels.languages && Array.isArray(labels.languages) ? labels.languages : [];
     const slugToTermId = labels.slugToTermId && typeof labels.slugToTermId === 'object' ? labels.slugToTermId : {};
@@ -61,6 +67,10 @@
       return { label: label, value: id };
     }));
 
+    const currentLanguageLabel = currentSlug
+      ? (languages.find(function (l) { return (l.id || '') === currentSlug; })?.nameEnglish || currentSlug)
+      : (labels.selectLanguage || '— Select language —');
+
     const rows = languages.map(function (lang) {
       const id = lang.id || '';
       const label = (lang.nameEnglish && lang.nameEnglish !== '') ? lang.nameEnglish : id;
@@ -89,19 +99,25 @@
       return el('div', { key: id, style: { marginBottom: '8px' } }, label);
     });
 
-    return el(
-      'div',
-      { className: 'fromscratch-editor-panel fromscratch-languages-panel' },
-      el(
-        PanelRow,
-        null,
-        el(SelectControl, {
+    var languageControl = languageLocked
+      ? el('div', { className: 'fromscratch-languages-readonly' },
+          el('div', { style: { marginBottom: '4px' } },
+            el('span', { className: 'fromscratch-languages-readonly-label' }, (labels.thisContentIsIn || 'This content is in') + ': '),
+            el('span', { className: 'fromscratch-languages-readonly-value' }, currentLanguageLabel)
+          ),
+          el('p', { className: 'description', style: { marginTop: '4px', marginBottom: 0 } }, labels.languageSetOnCreate || 'Language is set when you first create the content and cannot be changed.')
+        )
+      : el(SelectControl, {
           label: labels.thisContentIsIn || 'This content is in',
           value: currentSlug,
           options: options,
           onChange: setLanguage
-        })
-      ),
+        });
+
+    return el(
+      'div',
+      { className: 'fromscratch-editor-panel fromscratch-languages-panel' },
+      el(PanelRow, null, languageControl),
       el('div', { style: { marginTop: '12px' } },
         el('strong', null, labels.translations || 'Translations'),
         el('div', { style: { marginTop: '8px' } }, rows)
