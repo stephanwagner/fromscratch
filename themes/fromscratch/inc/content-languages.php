@@ -271,7 +271,7 @@ add_filter('posts_clauses', function (array $clauses, \WP_Query $query): array {
 	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
 		return $clauses;
 	}
-	if (!is_admin()) {
+	if (!is_admin() || !function_exists('get_current_screen')) {
 		return $clauses;
 	}
 	$screen = get_current_screen();
@@ -745,6 +745,9 @@ add_action('init', function (): void {
 	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
 		return;
 	}
+	if (!function_exists('fs_use_language_url_prefix') || !fs_use_language_url_prefix()) {
+		return;
+	}
 	$languages = fs_get_content_languages();
 	if (empty($languages)) {
 		return;
@@ -889,6 +892,9 @@ add_action('parse_request', function (\WP $wp): void {
 	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
 		return;
 	}
+	if (!function_exists('fs_use_language_url_prefix') || !fs_use_language_url_prefix()) {
+		return;
+	}
 	$lang = isset($wp->query_vars['fs_lang']) ? $wp->query_vars['fs_lang'] : '';
 	$path = isset($wp->query_vars['fs_path']) ? $wp->query_vars['fs_path'] : '';
 
@@ -974,21 +980,24 @@ function fs_language_canonical_path(int $post_id): ?string
 /**
  * Add language prefix to permalinks when the current request or target is in a prefixed language.
  */
-add_filter('post_link', 'fs_language_permalink', 10, 3);
-add_filter('page_link', 'fs_language_permalink', 10, 3);
+if (!is_admin()) {
+	add_filter('post_link', 'fs_language_permalink', 10, 3);
+	add_filter('page_link', 'fs_language_permalink', 10, 3);
+}
 
-function fs_language_permalink(string $url, int $post_id, bool $sample): string
+function fs_language_permalink(string $url, $post_id, bool $sample): string
 {
+	$post_id = $post_id instanceof \WP_Post ? $post_id->ID : (int) $post_id;
+	if ($post_id <= 0) {
+		return $url;
+	}
 	if ($sample) {
 		return $url;
 	}
-
-	// Do not rewrite in admin (nav menu editor uses canonical URLs)
-	if (is_admin() && !wp_doing_ajax()) {
+	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
 		return $url;
 	}
-
-	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
+	if (!function_exists('fs_use_language_url_prefix') || !fs_use_language_url_prefix()) {
 		return $url;
 	}
 
@@ -1011,22 +1020,20 @@ function fs_language_permalink(string $url, int $post_id, bool $sample): string
 		$prefix_default = function_exists('fs_prefix_default_language') && fs_prefix_default_language();
 	}
 
-	// Prefer meta (set on save) to avoid wp_get_object_terms(); fallback to term for posts not yet synced.
 	$post_lang = get_post_meta($post_id, FS_LANGUAGE_META, true);
+
 	if ($post_lang === '' || $post_lang === false) {
 		$term = fs_language_get_post_language($post_id);
 		$post_lang = $term ? $term->slug : $default_lang;
-	} else {
-		$post_lang = $post_lang ?: $default_lang;
 	}
 
-	if (!$post_lang || ($post_lang === $default_lang && !$prefix_default)) {
+	if ($post_lang === $default_lang && !$prefix_default) {
 		return $url;
 	}
 
-	$canonical = fs_language_canonical_path($post_id);
-
-	if ($canonical === null) {
+	// Use this post's own slug (WordPress path), not the default-language version's path.
+	$path = $post_type === 'page' ? get_page_uri($post_id) : get_post_field('post_name', $post_id);
+	if ($path === '' || $path === null) {
 		return $url;
 	}
 
@@ -1035,5 +1042,5 @@ function fs_language_permalink(string $url, int $post_id, bool $sample): string
 		$home = trailingslashit(home_url('/'));
 	}
 
-	return $home . $post_lang . '/' . $canonical;
+	return $home . $post_lang . '/' . trim($path, '/');
 }

@@ -118,14 +118,30 @@ function fs_get_default_language(): string
 }
 
 /**
+ * Whether language prefixes are used in URLs at all (e.g. /de/, /fr/).
+ * When false: no language segment in URLs; when true: URLs can use a language prefix.
+ *
+ * @return bool
+ */
+function fs_use_language_url_prefix(): bool
+{
+	if (!fs_theme_feature_enabled('languages')) {
+		return false;
+	}
+	$data = get_option('fs_theme_languages', ['list' => [], 'default' => '', 'prefix_default' => false, 'use_url_prefix' => true]);
+	return isset($data['use_url_prefix']) ? (bool) $data['use_url_prefix'] : true;
+}
+
+/**
  * Whether the default language should have a URL prefix (e.g. /en/).
  * When false: default language has no prefix; when true: all languages use a prefix.
+ * Only applies when fs_use_language_url_prefix() is true.
  *
  * @return bool
  */
 function fs_prefix_default_language(): bool
 {
-	if (!fs_theme_feature_enabled('languages')) {
+	if (!fs_use_language_url_prefix()) {
 		return false;
 	}
 	$data = get_option('fs_theme_languages', ['list' => [], 'default' => '', 'prefix_default' => false]);

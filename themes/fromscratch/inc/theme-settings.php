@@ -302,8 +302,9 @@ function fs_sanitize_theme_languages($value): array
 	if ($default === '' || !in_array($default, $ids, true)) {
 		$default = $ids[0] ?? '';
 	}
-	$prefix_default = !empty($value['prefix_default']);
-	return ['list' => $list, 'default' => $default, 'prefix_default' => $prefix_default];
+	$use_url_prefix = isset($value['use_url_prefix']) ? (bool) $value['use_url_prefix'] : true;
+	$prefix_default = $use_url_prefix && !empty($value['prefix_default']);
+	return ['list' => $list, 'default' => $default, 'use_url_prefix' => $use_url_prefix, 'prefix_default' => $prefix_default];
 }
 
 /**
