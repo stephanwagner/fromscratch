@@ -10,6 +10,8 @@ defined('ABSPATH') || exit;
 
 const FS_LANGUAGE_TAXONOMY = 'fs_language';
 const FS_TRANSLATION_GROUP_META = 'fs_translation_group';
+/** Post meta key for language slug (synced from taxonomy for fast permalink lookups). */
+const FS_LANGUAGE_META = '_fs_lang';
 
 /**
  * Post types that get the language taxonomy and translation panel.
@@ -555,6 +557,11 @@ add_action('save_post', function (int $post_id): void {
 	if ($group <= 0) {
 		update_post_meta($post_id, FS_TRANSLATION_GROUP_META, $post_id);
 	}
+
+	// Sync language slug to meta so permalink filter can use get_post_meta() instead of wp_get_object_terms().
+	$term = fs_language_get_post_language($post_id);
+	$slug = $term ? $term->slug : '';
+	update_post_meta($post_id, FS_LANGUAGE_META, $slug);
 }, 10, 1);
 
 /**
@@ -714,6 +721,7 @@ add_action('admin_post_fs_create_translation', function (): void {
 
 	wp_set_object_terms($new_id, (int) $term->term_id, FS_LANGUAGE_TAXONOMY);
 	update_post_meta($new_id, FS_TRANSLATION_GROUP_META, $group_id);
+	update_post_meta($new_id, FS_LANGUAGE_META, $lang_slug);
 
 	// Copy meta (optional: copy common meta like thumbnail, SEO, etc.)
 	$meta_keys = ['_thumbnail_id', '_fs_seo_title', '_fs_seo_description'];
@@ -1003,10 +1011,16 @@ function fs_language_permalink(string $url, int $post_id, bool $sample): string
 		$prefix_default = function_exists('fs_prefix_default_language') && fs_prefix_default_language();
 	}
 
-	$term = fs_language_get_post_language($post_id);
-	$post_lang = $term ? $term->slug : $default_lang;
+	// Prefer meta (set on save) to avoid wp_get_object_terms(); fallback to term for posts not yet synced.
+	$post_lang = get_post_meta($post_id, FS_LANGUAGE_META, true);
+	if ($post_lang === '' || $post_lang === false) {
+		$term = fs_language_get_post_language($post_id);
+		$post_lang = $term ? $term->slug : $default_lang;
+	} else {
+		$post_lang = $post_lang ?: $default_lang;
+	}
 
-	if ($post_lang === $default_lang && !$prefix_default) {
+	if (!$post_lang || ($post_lang === $default_lang && !$prefix_default)) {
 		return $url;
 	}
 
