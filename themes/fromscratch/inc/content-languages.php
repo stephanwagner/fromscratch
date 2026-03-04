@@ -1064,3 +1064,58 @@ function fs_language_permalink(string $url, $post_id, bool $sample): string
 
 	return $home . $post_lang . '/' . trim($path, '/');
 }
+
+/**
+ * When language URL prefix is enabled, redirect singular content to its canonical prefixed URL
+ * so both /about/ and /en/about/ do not coexist; the canonical version is enforced.
+ */
+add_action('template_redirect', function (): void {
+	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
+		return;
+	}
+	if (!function_exists('fs_use_language_url_prefix') || !fs_use_language_url_prefix()) {
+		return;
+	}
+	if (is_admin() || is_preview() || is_feed()) {
+		return;
+	}
+	if (!is_singular()) {
+		return;
+	}
+
+	$post = get_queried_object();
+	if (!$post || !isset($post->ID, $post->post_type, $post->post_name)) {
+		return;
+	}
+	if (!in_array($post->post_type, fs_language_post_types(), true)) {
+		return;
+	}
+
+	$lang = get_post_meta($post->ID, FS_LANGUAGE_META, true);
+	if ($lang === '' || $lang === false) {
+		$term = fs_language_get_post_language($post->ID);
+		$lang = $term ? $term->slug : '';
+	}
+	$default = fs_get_default_language();
+	$prefix_default = function_exists('fs_prefix_default_language') && fs_prefix_default_language();
+
+	$current_path = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+
+	$path = $post->post_type === 'page' ? get_page_uri($post->ID) : $post->post_name;
+	$path = trim($path, '/');
+
+	if ($path !== '') {
+		if ($lang !== $default) {
+			$canonical = $lang . '/' . $path;
+		} else {
+			$canonical = $prefix_default ? $lang . '/' . $path : $path;
+		}
+	} else {
+		$canonical = $lang;
+	}
+
+	if ($current_path !== $canonical) {
+		wp_safe_redirect(home_url('/' . $canonical . '/'), 301);
+		exit;
+	}
+});
