@@ -15,12 +15,19 @@ const FS_DEVELOPER_TABS_BASE = [
 	'tools'    => ['label' => 'Tools'],
 ];
 
-/** Tab definitions: base tabs + Languages when feature is on. */
+/** Tab definitions: base tabs + Languages (before Tools) when feature is on. */
 function fs_developer_settings_available_tabs(): array
 {
 	$tabs = FS_DEVELOPER_TABS_BASE;
 	if (function_exists('fs_theme_feature_enabled') && fs_theme_feature_enabled('languages')) {
-		$tabs['languages'] = ['label' => 'Languages'];
+		$out = [];
+		foreach ($tabs as $key => $val) {
+			if ($key === 'tools') {
+				$out['languages'] = ['label' => 'Languages'];
+			}
+			$out[$key] = $val;
+		}
+		$tabs = $out;
 	}
 	return $tabs;
 }

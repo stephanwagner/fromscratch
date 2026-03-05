@@ -598,6 +598,271 @@ function fs_language_home_url(string $lang_slug): string
 	return home_url('/');
 }
 
+
+/**
+ * Menu editor: list default-language pages and pages that have no linked page (standalone).
+ * Exclude non-default pages that are linked to a default-language page (translations).
+ */
+add_action('pre_get_posts', function ($query): void {
+	if (!is_admin()) {
+		return;
+	}
+	$screen = function_exists('get_current_screen') ? get_current_screen() : null;
+	if (!$screen || $screen->id !== 'nav-menus') {
+		return;
+	}
+	if ($query->get('post_type') !== 'page') {
+		return;
+	}
+	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
+		return;
+	}
+	$default_lang = fs_get_default_language();
+	if ($default_lang === '') {
+		$query->set('suppress_filters', false);
+		return;
+	}
+
+	$query->set('suppress_filters', false);
+
+	static $exclude_ids = null;
+	if ($exclude_ids === null) {
+		$exclude_ids = [];
+		$pages = get_posts([
+			'post_type'      => 'page',
+			'post_status'    => 'any',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+		]);
+		foreach ($pages as $page_id) {
+			$term = fs_language_get_post_language($page_id);
+			$page_lang = $term ? $term->slug : $default_lang;
+			if ($page_lang === $default_lang) {
+				continue;
+			}
+			$group_id = (int) get_post_meta($page_id, FS_TRANSLATION_GROUP_META, true);
+			if ($group_id <= 0) {
+				$group_id = $page_id;
+			}
+			$linked = fs_language_get_linked_translations($page_id, $group_id);
+			$linked[$page_lang] = $page_id;
+			if (isset($linked[$default_lang])) {
+				$exclude_ids[] = $page_id;
+			}
+		}
+	}
+
+	if (!empty($exclude_ids)) {
+		$existing = $query->get('post__not_in');
+		$existing = is_array($existing) ? $existing : [];
+		$query->set('post__not_in', array_merge($existing, $exclude_ids));
+	}
+});
+
+/**
+ * Menu editor: do not append language in the_title (posts_results already sets post_title).
+ * Prevents double "(EN) (EN)" when the Walker uses get_the_title() which returns the cached modified title.
+ */
+add_filter('the_title', function ($title, $post_id) {
+	if (!is_admin()) {
+		return $title;
+	}
+	$screen = function_exists('get_current_screen') ? get_current_screen() : null;
+	if (!$screen || $screen->id !== 'nav-menus') {
+		return $title;
+	}
+	if (get_post_type($post_id) !== 'page') {
+		return $title;
+	}
+	return $title;
+}, 10, 2);
+
+/**
+ * Menu editor: also set language/linked info on post_title in query results (in case the UI uses post_title directly).
+ */
+add_filter('posts_results', function (array $posts, \WP_Query $query): array {
+	if (!is_admin() || $query->get('post_type') !== 'page') {
+		return $posts;
+	}
+	$screen = function_exists('get_current_screen') ? get_current_screen() : null;
+	if (!$screen || $screen->id !== 'nav-menus') {
+		return $posts;
+	}
+	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
+		return $posts;
+	}
+	$default_lang = fs_get_default_language();
+
+	foreach ($posts as $post) {
+		if (!isset($post->ID) || $post->post_type !== 'page') {
+			continue;
+		}
+		$term = fs_language_get_post_language($post->ID);
+		if (!$term) {
+			continue;
+		}
+		$page_lang = $term->slug;
+		$post->post_title .= ' (' . strtoupper($page_lang) . ')';
+
+		$group_id = (int) get_post_meta($post->ID, FS_TRANSLATION_GROUP_META, true);
+		if ($group_id <= 0) {
+			$group_id = $post->ID;
+		}
+		$linked = fs_language_get_linked_translations($post->ID, $group_id);
+		$linked[$page_lang] = $post->ID;
+		$other_langs = [];
+		foreach ($linked as $lang => $id) {
+			if ($lang !== $page_lang) {
+				$other_langs[] = strtoupper($lang);
+			}
+		}
+		if (!empty($other_langs)) {
+			$post->post_title .= ' [' . implode(', ', $other_langs) . ']';
+		}
+	}
+	return $posts;
+}, 10, 2);
+
+
+// /**
+//  * For menu: get the page ID to show for the current language (this page or its translation).
+//  *
+//  * @param int $page_id Menu item's linked page ID.
+//  * @return int Post ID to use for URL/title (same or translation in current language).
+//  */
+// function fs_language_menu_page_for_current_lang(int $page_id): int
+// {
+// 	if (!function_exists('fs_get_default_language') || !in_array('page', fs_language_post_types(), true)) {
+// 		return $page_id;
+// 	}
+// 	$current = fs_language_current_request_lang();
+// 	$group_id = (int) get_post_meta($page_id, FS_TRANSLATION_GROUP_META, true);
+// 	if ($group_id <= 0) {
+// 		$group_id = $page_id;
+// 	}
+// 	$linked = fs_language_get_linked_translations($page_id, $group_id);
+// 	$term = fs_language_get_post_language($page_id);
+// 	$page_lang = $term ? $term->slug : '';
+// 	$linked[$page_lang] = $page_id;
+// 	if (isset($linked[$current])) {
+// 		$translation_id = (int) $linked[$current];
+// 		if (get_post_status($translation_id) === 'publish') {
+// 			return $translation_id;
+// 		}
+// 	}
+// 	return $page_id;
+// }
+
+// /**
+//  * Restrict menu editor page list: only default-language pages, or pages not linked to a default-language page.
+//  * Non-default pages that are in a group with a default-language page (translations) are hidden.
+//  * Non-default pages not linked to default are shown with their language marked in the title.
+//  */
+// add_filter('get_pages', function (array $pages, array $parsed_args): array {
+// 	if (!is_admin() || !function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
+// 		return $pages;
+// 	}
+// 	$screen = function_exists('get_current_screen') ? get_current_screen() : null;
+// 	$on_nav_menus = $screen && $screen->id === 'nav-menus';
+// 	$on_customizer = isset($GLOBALS['wp_customize']);
+// 	if (!$on_nav_menus && !$on_customizer) {
+// 		return $pages;
+// 	}
+
+// 	$default_lang = fs_get_default_language();
+// 	$languages = fs_get_content_languages();
+// 	$lang_names = [];
+// 	foreach ($languages as $l) {
+// 		$id = isset($l['id']) ? (string) $l['id'] : '';
+// 		if ($id !== '') {
+// 			$lang_names[$id] = isset($l['nameEnglish']) && $l['nameEnglish'] !== '' ? $l['nameEnglish'] : $id;
+// 		}
+// 	}
+
+// 	$filtered = [];
+// 	foreach ($pages as $page) {
+// 		if (!isset($page->ID) || get_post_type($page->ID) !== 'page') {
+// 			$filtered[] = $page;
+// 			continue;
+// 		}
+// 		$term = fs_language_get_post_language($page->ID);
+// 		$page_lang = $term ? $term->slug : $default_lang;
+// 		$is_default = ($page_lang === $default_lang);
+
+// 		if ($is_default) {
+// 			$filtered[] = $page;
+// 			continue;
+// 		}
+
+// 		$group_id = (int) get_post_meta($page->ID, FS_TRANSLATION_GROUP_META, true);
+// 		if ($group_id <= 0) {
+// 			$group_id = $page->ID;
+// 		}
+// 		$linked = fs_language_get_linked_translations($page->ID, $group_id);
+// 		$linked[$page_lang] = $page->ID;
+
+// 		$group_has_default = false;
+// 		foreach (array_keys($linked) as $slug) {
+// 			if ($slug === $default_lang) {
+// 				$group_has_default = true;
+// 				break;
+// 			}
+// 		}
+// 		if ($group_has_default) {
+// 			continue;
+// 		}
+
+// 		$label = $lang_names[$page_lang] ?? $page_lang;
+// 		$page = clone $page;
+// 		$page->post_title = $page->post_title . ' (' . $label . ')';
+// 		$filtered[] = $page;
+// 	}
+
+// 	return $filtered;
+// }, 10, 2);
+
+// /**
+//  * Add a meta box on the menu editor screen explaining the page list (PHP-rendered).
+//  */
+// add_action('add_meta_boxes_nav-menus', function (): void {
+// 	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
+// 		return;
+// 	}
+// 	add_meta_box(
+// 		'fs_language_menu_notice',
+// 		__('Menu: pages by language', 'fromscratch'),
+// 		function () {
+// 			echo '<p style="margin:0; padding:0; font-size:13px;">';
+// 			echo esc_html(__('Only default-language pages and pages not linked to the default language are listed. Unlinked pages in other languages are marked with their language. The menu shows the correct translation per language on the frontend.', 'fromscratch'));
+// 			echo '</p>';
+// 		},
+// 		'nav-menus',
+// 		'side',
+// 		'high'
+// 	);
+// });
+
+// /**
+//  * On the frontend: for each menu item that is a page, use the translation in the current language (URL and title).
+//  */
+// add_filter('wp_nav_menu_objects', function (array $items, \stdClass $args): array {
+// 	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
+// 		return $items;
+// 	}
+// 	foreach ($items as $item) {
+// 		if (!isset($item->object, $item->object_id) || $item->object !== 'page') {
+// 			continue;
+// 		}
+// 		$page_id = (int) $item->object_id;
+// 		$show_id = fs_language_menu_page_for_current_lang($page_id);
+// 		if ($show_id !== $page_id) {
+// 			$item->url = get_permalink($show_id);
+// 			$item->title = get_the_title($show_id);
+// 		}
+// 	}
+// 	return $items;
+// }, 10, 2);
+
 /**
  * Language toggler shortcode: list of language links with active class on current language.
  * When a language has no translation for the current page, behavior is controlled by Settings → Developer → Languages (no_translation).
