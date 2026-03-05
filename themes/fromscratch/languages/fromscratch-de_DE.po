@@ -581,6 +581,88 @@ msgstr "Mehrsprachigkeit aktivieren"
 msgid "Enables built-in support for multiple content languages."
 msgstr "Aktiviert die integrierte Mehrsprachigkeit für Inhalte."
 
+# Developer settings: Languages page
+msgid "You do not have sufficient permissions to access this page."
+msgstr "Du hast nicht die erforderlichen Berechtigungen, um auf diese Seite zuzugreifen."
+
+msgid "Settings were not saved."
+msgstr "Einstellungen wurden nicht gespeichert."
+
+msgid "Each language must have a unique code. Duplicate codes:"
+msgstr "Jede Sprache muss einen eindeutigen Code haben. Doppelte Codes:"
+
+msgid "Configure the languages available for your content and manage how they are used across the site."
+msgstr "Konfiguriere die Sprachen für deine Inhalte und verwalte, wie sie auf der Website verwendet werden."
+
+msgid "Default language"
+msgstr "Standardsprache"
+
+msgid "Add at least one language in the list below to set a default language."
+msgstr "Füge unten mindestens eine Sprache hinzu, um eine Standardsprache festzulegen."
+
+msgid "URL prefix"
+msgstr "URL-Präfix"
+
+msgid "Use language prefix in URL"
+msgstr "Sprachpräfix in der URL verwenden"
+
+msgid "Adds a language prefix to URLs (e.g. /de/ueber-uns)."
+msgstr "Fügt URLs ein Sprachpräfix hinzu (z. B. /de/ueber-uns)."
+
+msgid "Prefix default language in URL"
+msgstr "Standardsprache in der URL mit Präfix"
+
+msgid "Controls whether the default language also uses a URL prefix."
+msgstr "Legt fest, ob die Standardsprache ebenfalls ein URL-Präfix verwendet."
+
+msgid "Language switcher"
+msgstr "Sprachumschalter"
+
+msgid "To display a language switcher in your theme, use the shortcode [fs_language_switcher]."
+msgstr "Um einen Sprachumschalter im Theme anzuzeigen, verwende den Shortcode [fs_language_switcher]."
+
+msgid "Language will not be shown in language toggler"
+msgstr "Sprache wird im Sprachumschalter nicht angezeigt"
+
+msgid "Language link is disabled"
+msgstr "Sprachlink ist deaktiviert"
+
+msgid "Language link goes to language homepage"
+msgstr "Sprachlink führt zur Sprachstartseite"
+
+msgid "Defines how the language switcher behaves when the current page is not available in another language."
+msgstr "Legt fest, wie sich der Sprachumschalter verhält, wenn die aktuelle Seite in einer anderen Sprache nicht verfügbar ist."
+
+msgid "Available languages"
+msgstr "Verfügbare Sprachen"
+
+msgid "Add and manage the languages available for your site's content."
+msgstr "Sprachen für die Inhalte deiner Website hinzufügen und verwalten."
+
+msgid "Language codes follow ISO-639-1 (e.g. en, de, fr)."
+msgstr "Sprachcodes folgen ISO-639-1 (z. B. en, de, fr)."
+
+msgid "Name"
+msgstr "Name"
+
+msgid "Native name"
+msgstr "Name in Muttersprache"
+
+msgid "Order"
+msgstr "Reihenfolge"
+
+msgid "Default"
+msgstr "Standard"
+
+msgid "Move up"
+msgstr "Nach oben"
+
+msgid "Move down"
+msgstr "Nach unten"
+
+msgid "Add language"
+msgstr "Sprache hinzufügen"
+
 msgid "Duplicate"
 msgstr "Duplizieren"
 

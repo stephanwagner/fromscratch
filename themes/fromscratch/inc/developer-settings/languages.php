@@ -109,7 +109,7 @@ function fs_render_developer_languages(): void
 		<?php endif; ?>
 		<?php if (!empty($duplicate_codes)) : ?>
 			<div class="notice notice-error is-dismissible">
-				<p><strong><?= esc_html__('Settings were not saved.', 'fromscratch') ?></strong> <?= esc_html__('Each language must have a unique code. Duplicate code(s):', 'fromscratch') ?> <code><?= esc_html(implode(', ', $duplicate_codes)) ?></code></p>
+				<p><strong><?= esc_html__('Settings were not saved.', 'fromscratch') ?></strong> <?= esc_html__('Each language must have a unique code. Duplicate codes:', 'fromscratch') ?> <code><?= esc_html(implode(', ', $duplicate_codes)) ?></code></p>
 			</div>
 		<?php endif; ?>
 
@@ -161,7 +161,7 @@ function fs_render_developer_languages(): void
 						<select name="fs_theme_languages[no_translation]" id="fs_no_translation" class="regular-text">
 							<option value="hide" <?= selected($lang_no_translation, 'hide', false) ?>><?= esc_html__('Language will not be shown in language toggler', 'fromscratch') ?></option>
 							<option value="disabled" <?= selected($lang_no_translation, 'disabled', false) ?>><?= esc_html__('Language link is disabled', 'fromscratch') ?></option>
-							<option value="home" <?= selected($lang_no_translation, 'home', false) ?>><?= esc_html__('Language link goes to language homepage (or site home)', 'fromscratch') ?></option>
+							<option value="home" <?= selected($lang_no_translation, 'home', false) ?>><?= esc_html__('Language link goes to language homepage', 'fromscratch') ?></option>
 						</select>
 						<p class="description"><?= esc_html__('Defines how the language switcher behaves when the current page is not available in another language.', 'fromscratch') ?></p>
 					</td>
