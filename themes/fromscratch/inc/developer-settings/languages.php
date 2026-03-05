@@ -43,6 +43,28 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 		return;
 	}
 	$value = isset($_POST['fs_theme_languages']) && is_array($_POST['fs_theme_languages']) ? $_POST['fs_theme_languages'] : [];
+	$raw_list = isset($value['list']) && is_array($value['list']) ? $value['list'] : [];
+	$raw_ids = [];
+	foreach ($raw_list as $row) {
+		if (is_array($row) && isset($row['id'])) {
+			$rid = strtolower(trim((string) $row['id']));
+			if ($rid !== '') {
+				$raw_ids[] = $rid;
+			}
+		}
+	}
+	$counts = array_count_values($raw_ids);
+	$duplicate_codes = [];
+	foreach ($counts as $code => $count) {
+		if ($count > 1) {
+			$duplicate_codes[] = $code;
+		}
+	}
+	if (!empty($duplicate_codes)) {
+		set_transient('fromscratch_languages_duplicate_codes', $duplicate_codes, 60);
+		wp_safe_redirect(admin_url('options-general.php?page=fs-developer-languages'));
+		exit;
+	}
 	$sanitized = function_exists('fs_sanitize_theme_languages') ? fs_sanitize_theme_languages($value) : ['list' => [], 'default' => '', 'use_url_prefix' => true, 'prefix_default' => false, 'no_translation' => 'disabled'];
 	update_option('fs_theme_languages', $sanitized);
 	flush_rewrite_rules(true);
@@ -61,6 +83,12 @@ function fs_render_developer_languages(): void
 	if ($languages_saved !== false) {
 		delete_transient('fromscratch_languages_saved');
 	}
+	$duplicate_codes = get_transient('fromscratch_languages_duplicate_codes');
+	if ($duplicate_codes !== false && is_array($duplicate_codes)) {
+		delete_transient('fromscratch_languages_duplicate_codes');
+	} else {
+		$duplicate_codes = [];
+	}
 
 	$lang_data = get_option('fs_theme_languages', ['list' => [], 'default' => '', 'use_url_prefix' => true, 'prefix_default' => false, 'no_translation' => 'disabled']);
 	$lang_list = isset($lang_data['list']) && is_array($lang_data['list']) ? $lang_data['list'] : [];
@@ -77,6 +105,11 @@ function fs_render_developer_languages(): void
 		<?php if ($languages_saved !== false) : ?>
 			<div class="notice notice-success is-dismissible">
 				<p><strong><?= esc_html(__('Settings saved.', 'fromscratch')) ?></strong></p>
+			</div>
+		<?php endif; ?>
+		<?php if (!empty($duplicate_codes)) : ?>
+			<div class="notice notice-error is-dismissible">
+				<p><strong><?= esc_html__('Settings were not saved.', 'fromscratch') ?></strong> <?= esc_html__('Each language must have a unique code. Duplicate code(s):', 'fromscratch') ?> <code><?= esc_html(implode(', ', $duplicate_codes)) ?></code></p>
 			</div>
 		<?php endif; ?>
 

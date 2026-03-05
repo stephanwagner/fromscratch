@@ -281,6 +281,7 @@ add_action('admin_init', function () {
 function fs_sanitize_theme_languages($value): array
 {
 	$list = [];
+	$seen_ids = [];
 	if (isset($value['list']) && is_array($value['list'])) {
 		foreach ($value['list'] as $row) {
 			if (!is_array($row)) {
@@ -290,6 +291,11 @@ function fs_sanitize_theme_languages($value): array
 			if ($id === '') {
 				continue;
 			}
+			$id_lower = strtolower($id);
+			if (isset($seen_ids[$id_lower])) {
+				continue;
+			}
+			$seen_ids[$id_lower] = true;
 			$list[] = [
 				'id' => $id,
 				'nameEnglish' => isset($row['nameEnglish']) ? sanitize_text_field((string) $row['nameEnglish']) : '',
