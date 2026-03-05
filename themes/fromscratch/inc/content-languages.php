@@ -229,6 +229,14 @@ function fs_language_filter_links(string $post_type): string
 }
 
 /**
+ * Register query var so translation lookup queries can skip our menu/post filters (prevent recursion).
+ */
+add_filter('query_vars', function (array $vars): array {
+	$vars[] = 'fs_translation_lookup';
+	return $vars;
+});
+
+/**
  * Filter the list by fs_language when fs_language query var is set.
  */
 add_action('pre_get_posts', function (\WP_Query $query): void {
@@ -522,12 +530,13 @@ function fs_language_get_linked_translations(int $post_id, int $group_id): array
 	$out = [];
 
 	$query = new \WP_Query([
-		'post_type'      => $post_type,
-		'post_status'    => 'any',
-		'post__not_in'   => [$post_id],
-		'posts_per_page' => -1,
-		'fields'         => 'ids',
-		'meta_query'     => [
+		'post_type'              => $post_type,
+		'post_status'            => 'any',
+		'post__not_in'           => [$post_id],
+		'posts_per_page'         => -1,
+		'fields'                 => 'ids',
+		'fs_translation_lookup'  => true,
+		'meta_query'             => [
 			[
 				'key'     => FS_TRANSLATION_GROUP_META,
 				'value'   => (string) $group_id,
@@ -604,6 +613,9 @@ function fs_language_home_url(string $lang_slug): string
  * Exclude non-default pages that are linked to a default-language page (translations).
  */
 add_action('pre_get_posts', function ($query): void {
+	if ($query->get('fs_translation_lookup')) {
+		return;
+	}
 	if (!is_admin()) {
 		return;
 	}
@@ -681,6 +693,9 @@ add_filter('the_title', function ($title, $post_id) {
  * Menu editor: also set language/linked info on post_title in query results (in case the UI uses post_title directly).
  */
 add_filter('posts_results', function (array $posts, \WP_Query $query): array {
+	if ($query->get('fs_translation_lookup')) {
+		return $posts;
+	}
 	if (!is_admin() || $query->get('post_type') !== 'page') {
 		return $posts;
 	}
@@ -691,7 +706,6 @@ add_filter('posts_results', function (array $posts, \WP_Query $query): array {
 	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
 		return $posts;
 	}
-	$default_lang = fs_get_default_language();
 
 	foreach ($posts as $post) {
 		if (!isset($post->ID) || $post->post_type !== 'page') {
