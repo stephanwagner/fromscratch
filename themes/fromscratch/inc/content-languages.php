@@ -738,34 +738,34 @@ add_filter('posts_results', function (array $posts, \WP_Query $query): array {
 }, 10, 2);
 
 
-// /**
-//  * For menu: get the page ID to show for the current language (this page or its translation).
-//  *
-//  * @param int $page_id Menu item's linked page ID.
-//  * @return int Post ID to use for URL/title (same or translation in current language).
-//  */
-// function fs_language_menu_page_for_current_lang(int $page_id): int
-// {
-// 	if (!function_exists('fs_get_default_language') || !in_array('page', fs_language_post_types(), true)) {
-// 		return $page_id;
-// 	}
-// 	$current = fs_language_current_request_lang();
-// 	$group_id = (int) get_post_meta($page_id, FS_TRANSLATION_GROUP_META, true);
-// 	if ($group_id <= 0) {
-// 		$group_id = $page_id;
-// 	}
-// 	$linked = fs_language_get_linked_translations($page_id, $group_id);
-// 	$term = fs_language_get_post_language($page_id);
-// 	$page_lang = $term ? $term->slug : '';
-// 	$linked[$page_lang] = $page_id;
-// 	if (isset($linked[$current])) {
-// 		$translation_id = (int) $linked[$current];
-// 		if (get_post_status($translation_id) === 'publish') {
-// 			return $translation_id;
-// 		}
-// 	}
-// 	return $page_id;
-// }
+/**
+ * For menu: get the page ID to show for the current language (this page or its translation).
+ *
+ * @param int $page_id Menu item's linked page ID.
+ * @return int Post ID to use for URL/title (same or translation in current language).
+ */
+function fs_language_menu_page_for_current_lang(int $page_id): int
+{
+	if (!function_exists('fs_get_default_language') || !in_array('page', fs_language_post_types(), true)) {
+		return $page_id;
+	}
+	$current = fs_language_current_request_lang();
+	$group_id = (int) get_post_meta($page_id, FS_TRANSLATION_GROUP_META, true);
+	if ($group_id <= 0) {
+		$group_id = $page_id;
+	}
+	$linked = fs_language_get_linked_translations($page_id, $group_id);
+	$term = fs_language_get_post_language($page_id);
+	$page_lang = $term ? $term->slug : '';
+	$linked[$page_lang] = $page_id;
+	if (isset($linked[$current])) {
+		$translation_id = (int) $linked[$current];
+		if (get_post_status($translation_id) === 'publish') {
+			return $translation_id;
+		}
+	}
+	return $page_id;
+}
 
 // /**
 //  * Restrict menu editor page list: only default-language pages, or pages not linked to a default-language page.
@@ -856,26 +856,28 @@ add_filter('posts_results', function (array $posts, \WP_Query $query): array {
 // 	);
 // });
 
-// /**
-//  * On the frontend: for each menu item that is a page, use the translation in the current language (URL and title).
-//  */
-// add_filter('wp_nav_menu_objects', function (array $items, \stdClass $args): array {
-// 	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
-// 		return $items;
-// 	}
-// 	foreach ($items as $item) {
-// 		if (!isset($item->object, $item->object_id) || $item->object !== 'page') {
-// 			continue;
-// 		}
-// 		$page_id = (int) $item->object_id;
-// 		$show_id = fs_language_menu_page_for_current_lang($page_id);
-// 		if ($show_id !== $page_id) {
-// 			$item->url = get_permalink($show_id);
-// 			$item->title = get_the_title($show_id);
-// 		}
-// 	}
-// 	return $items;
-// }, 10, 2);
+/**
+ * On the frontend only: for each menu item that is a page, use the translation in the current language (URL and title).
+ * Keeps admin labels like "(EN) [DE]" out of the frontend menu.
+ */
+add_filter('wp_nav_menu_objects', function (array $items, \stdClass $args): array {
+	if (is_admin()) {
+		return $items;
+	}
+	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
+		return $items;
+	}
+	foreach ($items as $item) {
+		if (!isset($item->object, $item->object_id) || $item->object !== 'page') {
+			continue;
+		}
+		$page_id = (int) $item->object_id;
+		$show_id = fs_language_menu_page_for_current_lang($page_id);
+		$item->url = get_permalink($show_id);
+		$item->title = get_the_title($show_id);
+	}
+	return $items;
+}, 10, 2);
 
 /**
  * Language toggler shortcode: list of language links with active class on current language.
