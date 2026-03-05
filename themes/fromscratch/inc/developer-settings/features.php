@@ -81,7 +81,13 @@ function fs_render_developer_features(): void
 		<?php fs_developer_settings_render_nav(); ?>
 
 		<h2 class="title"><?= esc_html__('Features', 'fromscratch') ?></h2>
+		<p class="description"><?= esc_html__('Enable the features your project needs.', 'fromscratch') ?></p>
+		<p class="description"><?= esc_html__('All features are modular and can be toggled at any time to keep the theme lean and maintainable.', 'fromscratch') ?></p>
+
 		<form method="post" action="" class="page-settings-form">
+
+			<hr class="fs-small">
+
 			<?php settings_fields(FS_THEME_OPTION_GROUP_FEATURES); ?>
 			<table class="form-table" role="presentation">
 				<tr>
@@ -107,7 +113,7 @@ function fs_render_developer_features(): void
 					<td>
 						<input type="hidden" name="fromscratch_features[enable_duplicate_post]" value="0">
 						<label><input type="checkbox" name="fromscratch_features[enable_duplicate_post]" value="1" <?= checked($feat('enable_duplicate_post'), 1, false) ?>> <?= esc_html__('Allow duplication', 'fromscratch') ?></label>
-						<p class="description fs-indent-checkbox"><?= esc_html__('Shows a "Duplicate" row action for posts, pages, and custom post types.', 'fromscratch') ?></p>
+						<p class="description fs-indent-checkbox"><?= esc_html__('Shows a "Duplicate" row action for pages and posts.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 			</table>
@@ -120,7 +126,7 @@ function fs_render_developer_features(): void
 					<td>
 						<input type="hidden" name="fromscratch_features[enable_post_expirator]" value="0">
 						<label><input type="checkbox" name="fromscratch_features[enable_post_expirator]" value="1" <?= checked($feat('enable_post_expirator'), 1, false) ?>> <?= esc_html__('Enable post expirator', 'fromscratch') ?></label>
-						<p class="description fs-indent-checkbox"><?= esc_html__('Adds an expiration date to posts, pages and custom post types.', 'fromscratch') ?></p>
+						<p class="description fs-indent-checkbox"><?= esc_html__('Adds an expiration date to pages and posts.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 			</table>
@@ -132,8 +138,8 @@ function fs_render_developer_features(): void
 					<th scope="row"><?= esc_html__('SEO', 'fromscratch') ?></th>
 					<td>
 						<input type="hidden" name="fromscratch_features[enable_seo]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_seo]" value="1" <?= checked($feat('enable_seo'), 1, false) ?>> <?= esc_html__('SEO panel', 'fromscratch') ?></label>
-						<p class="description fs-indent-checkbox"><?= esc_html__('Adds a section to pages, posts and custom post types to enter SEO info.', 'fromscratch') ?></p>
+						<label><input type="checkbox" name="fromscratch_features[enable_seo]" value="1" <?= checked($feat('enable_seo'), 1, false) ?>> <?= esc_html__('Enable SEO panel', 'fromscratch') ?></label>
+						<p class="description fs-indent-checkbox"><?= esc_html__('Adds a section to pages and posts to enter SEO info.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 			</table>
@@ -159,7 +165,7 @@ function fs_render_developer_features(): void
 					<td>
 						<input type="hidden" name="fromscratch_features[enable_languages]" value="0">
 						<label><input type="checkbox" name="fromscratch_features[enable_languages]" id="fromscratch_features_enable_languages" value="1" <?= checked($feat('enable_languages'), 1, false) ?>> <?= esc_html__('Enable languages', 'fromscratch') ?></label>
-						<p class="description fs-indent-checkbox"><?= esc_html__('Adds a Languages tab here where you can manage content languages and set the default language.', 'fromscratch') ?></p>
+						<p class="description fs-indent-checkbox"><?= esc_html__('Enables built-in support for multiple content languages.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 			</table>

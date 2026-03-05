@@ -39,6 +39,7 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 	if (!current_user_can('manage_options') || !function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
 		return;
 	}
+	// User rights form only
 	if (empty($_POST['option_page']) || $_POST['option_page'] !== FS_THEME_OPTION_GROUP_DEVELOPER || empty($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], FS_THEME_OPTION_GROUP_DEVELOPER . '-options')) {
 		return;
 	}

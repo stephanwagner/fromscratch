@@ -2,7 +2,7 @@
 
 defined('ABSPATH') || exit;
 
-$fs_developer_tab = 'security';
+$fs_developer_tab = 'system';
 $fs_developer_page_slug = fs_developer_settings_page_slug($fs_developer_tab);
 
 add_action('admin_menu', function () use ($fs_developer_tab, $fs_developer_page_slug) {
@@ -23,7 +23,7 @@ add_action('admin_menu', function () use ($fs_developer_tab, $fs_developer_page_
 		sprintf(__('Developer › %s', 'fromscratch'), $label),
 		'manage_options',
 		$fs_developer_page_slug,
-		'fs_render_developer_security',
+		'fs_render_developer_system',
 		fs_developer_tab_position($fs_developer_tab)
 	);
 }, 20);
@@ -39,31 +39,51 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 	if (!current_user_can('manage_options') || !function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
 		return;
 	}
-	if (empty($_POST['option_page']) || $_POST['option_page'] !== FS_THEME_OPTION_GROUP_SECURITY || empty($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], FS_THEME_OPTION_GROUP_SECURITY . '-options')) {
-		return;
+	$url = admin_url('options-general.php?page=fs-developer-system');
+
+	// Administrator email
+	if (!empty($_POST['option_page']) && $_POST['option_page'] === FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL . '-options')) {
+		$email = isset($_POST['admin_email']) ? sanitize_email(wp_unslash($_POST['admin_email'])) : '';
+		if (is_email($email)) {
+			update_option('admin_email', $email);
+		}
+		set_transient('fromscratch_system_saved', '1', 30);
+		wp_safe_redirect($url);
+		exit;
 	}
-	$prot = function_exists('fs_sanitize_site_password_protection') ? fs_sanitize_site_password_protection($_POST['fromscratch_site_password_protection'] ?? '') : '';
-	update_option('fromscratch_site_password_protection', $prot);
-	$mode = function_exists('fs_sanitize_maintenance_mode') ? fs_sanitize_maintenance_mode($_POST['fromscratch_maintenance_mode'] ?? '') : '';
-	update_option('fromscratch_maintenance_mode', $mode);
-	$title = function_exists('fs_sanitize_maintenance_title') ? fs_sanitize_maintenance_title($_POST['fromscratch_maintenance_title'] ?? '') : '';
-	update_option('fromscratch_maintenance_title', $title);
-	$desc = function_exists('fs_sanitize_maintenance_description') ? fs_sanitize_maintenance_description($_POST['fromscratch_maintenance_description'] ?? '') : '';
-	update_option('fromscratch_maintenance_description', $desc);
-	set_transient('fromscratch_security_saved', '1', 30);
-	wp_safe_redirect(admin_url('options-general.php?page=fs-developer-security'));
-	exit;
+
+	// Password protection only
+	if (!empty($_POST['fromscratch_save_password']) && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_system_password')) {
+		$prot = function_exists('fs_sanitize_site_password_protection') ? fs_sanitize_site_password_protection($_POST['fromscratch_site_password_protection'] ?? '') : '';
+		update_option('fromscratch_site_password_protection', $prot);
+		set_transient('fromscratch_system_saved', '1', 30);
+		wp_safe_redirect($url);
+		exit;
+	}
+
+	// Maintenance mode only
+	if (!empty($_POST['fromscratch_save_maintenance']) && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_system_maintenance')) {
+		$mode = function_exists('fs_sanitize_maintenance_mode') ? fs_sanitize_maintenance_mode($_POST['fromscratch_maintenance_mode'] ?? '') : '';
+		update_option('fromscratch_maintenance_mode', $mode);
+		$title = function_exists('fs_sanitize_maintenance_title') ? fs_sanitize_maintenance_title($_POST['fromscratch_maintenance_title'] ?? '') : '';
+		update_option('fromscratch_maintenance_title', $title);
+		$desc = function_exists('fs_sanitize_maintenance_description') ? fs_sanitize_maintenance_description($_POST['fromscratch_maintenance_description'] ?? '') : '';
+		update_option('fromscratch_maintenance_description', $desc);
+		set_transient('fromscratch_system_saved', '1', 30);
+		wp_safe_redirect($url);
+		exit;
+	}
 }, 1);
 
-function fs_render_developer_security(): void
+function fs_render_developer_system(): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'fromscratch'));
 	}
 
-	$security_saved = get_transient('fromscratch_security_saved');
-	if ($security_saved !== false) {
-		delete_transient('fromscratch_security_saved');
+	$system_saved = get_transient('fromscratch_system_saved');
+	if ($system_saved !== false) {
+		delete_transient('fromscratch_system_saved');
 	}
 
 	$site_password_on = get_option('fromscratch_site_password_protection') === '1';
@@ -72,7 +92,7 @@ function fs_render_developer_security(): void
 	?>
 	<div class="wrap">
 		<h1><?= esc_html(__('Developer settings', 'fromscratch')) ?></h1>
-		<?php if ($security_saved !== false) : ?>
+		<?php if ($system_saved !== false) : ?>
 			<div class="notice notice-success is-dismissible">
 				<p><strong><?= esc_html(__('Settings saved.', 'fromscratch')) ?></strong></p>
 			</div>
@@ -90,9 +110,30 @@ function fs_render_developer_security(): void
 				<p><?= esc_html__('No password set. Set a password below to activate protection.', 'fromscratch') ?></p>
 			</div>
 		<?php endif; ?>
+
 		<form method="post" action="" class="page-settings-form">
-			<?php settings_fields(FS_THEME_OPTION_GROUP_SECURITY); ?>
+			<?php settings_fields(FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL); ?>
+			<h2 class="title"><?= esc_html__('Administrator email', 'fromscratch') ?></h2>
+			<p class="description"><?= esc_html__('Changes the Administrator email instantly without notifying.', 'fromscratch') ?></p>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><label for="admin_email"><?= esc_html__('Email address', 'fromscratch') ?></label></th>
+					<td>
+						<input type="email" name="admin_email" id="admin_email" value="<?= esc_attr(get_option('admin_email')) ?>" class="regular-text" autocomplete="email">
+					</td>
+				</tr>
+			</table>
+			<?php submit_button(); ?>
+		</form>
+
+		<hr>
+
+		<form method="post" action="" class="page-settings-form">
+			<?php wp_nonce_field('fromscratch_system_password'); ?>
+			<input type="hidden" name="fromscratch_save_password" value="1">
 			<h2 class="title"><?= esc_html__('Password protection', 'fromscratch') ?></h2>
+			<p class="description"><?= esc_html__('When enabled, visitors must enter a password before viewing any part of the site.', 'fromscratch') ?></p>
+			<p class="description"><?= esc_html__('Logged-in administrators and editors skip the prompt.', 'fromscratch') ?></p>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row"><?= esc_html__('Activate', 'fromscratch') ?></th>
@@ -102,7 +143,6 @@ function fs_render_developer_security(): void
 							<input type="checkbox" name="fromscratch_site_password_protection" value="1" <?= checked(get_option('fromscratch_site_password_protection'), '1', false) ?>>
 							<?= esc_html__('Activate password protection', 'fromscratch') ?>
 						</label>
-						<p class="description"><?= wp_kses(__('When enabled, visitors must enter a password before viewing any part of the site.<br>Logged-in administrators and editors skip the prompt.', 'fromscratch'), ['br' => []]) ?></p>
 					</td>
 				</tr>
 				<tr>
@@ -126,12 +166,17 @@ function fs_render_developer_security(): void
 					</td>
 				</tr>
 			</table>
+			<?php submit_button(); ?>
+		</form>
 
-			<hr>
+		<hr>
 
+		<form method="post" action="" class="page-settings-form">
+			<?php wp_nonce_field('fromscratch_system_maintenance'); ?>
+			<input type="hidden" name="fromscratch_save_maintenance" value="1">
 			<h2 class="title"><?= esc_html__('Maintenance mode', 'fromscratch') ?></h2>
 			<p class="description"><?= esc_html__('When enabled, the entire frontend is blocked with HTTP 503.', 'fromscratch') ?></p>
-			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Logged-in administrators and editors can still view the site.', 'fromscratch') ?></p>
+			<p class="description"><?= esc_html__('Logged-in administrators and editors can still view the site.', 'fromscratch') ?></p>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row"><?= esc_html__('Activate', 'fromscratch') ?></th>
@@ -153,7 +198,7 @@ function fs_render_developer_security(): void
 				<tr>
 					<th scope="row"><label for="fromscratch_maintenance_description"><?= esc_html__('Description', 'fromscratch') ?></label></th>
 					<td>
-						<textarea name="fromscratch_maintenance_description" id="fromscratch_maintenance_description" rows="3" class="large-text" placeholder="<?= esc_attr__('We are currently performing scheduled maintenance. Please check back shortly.', 'fromscratch') ?>"><?= esc_textarea(get_option('fromscratch_maintenance_description', '')) ?></textarea>
+						<textarea name="fromscratch_maintenance_description" id="fromscratch_maintenance_description" rows="3" class="large-text" placeholder="<?= esc_attr__('We are currently performing scheduled maintenance. Please check back shortly.', 'fromscratch') ?>" style="display: block;"><?= esc_textarea(get_option('fromscratch_maintenance_description', '')) ?></textarea>
 						<p class="description"><?= esc_html__('Short message shown below the title. Leave blank for default.', 'fromscratch') ?></p>
 					</td>
 				</tr>

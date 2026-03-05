@@ -13,7 +13,7 @@ msgstr ""
 
 # General
 msgid "Email address"
-msgstr "E-Mail Adresse"
+msgstr "E-Mail-Adresse"
 
 # Install page
 msgid "Install theme"
@@ -354,6 +354,12 @@ msgstr "Version erhöhen"
 msgid "Features"
 msgstr "Features"
 
+msgid "Enable the features your project needs."
+msgstr "Aktiviere die Funktionen, die dein Projekt benötigt."
+
+msgid "All features are modular and can be toggled at any time to keep the theme lean and maintainable."
+msgstr "Alle Features sind modular aufgebaut und können jederzeit ein- oder ausgeschaltet werden, um das Theme schlank und übersichtlich zu halten."
+
 msgid "Clear all overrides"
 msgstr "Alle Overrides zurücksetzen"
 
@@ -524,8 +530,8 @@ msgstr "Beitrags-Ablauf"
 msgid "Enable post expirator"
 msgstr "Beitrags-Ablauf aktivieren"
 
-msgid "Adds an expiration date to posts, pages and custom post types."
-msgstr "Fügt Beiträgen, Seiten und benutzerdefinierten Beitragstypen ein Ablaufdatum hinzu."
+msgid "Adds an expiration date to pages and posts."
+msgstr "Fügt Seiten und Beiträgen ein Ablaufdatum hinzu."
 
 msgid "Add redirect"
 msgstr "Redirect hinzufügen"
@@ -566,23 +572,32 @@ msgstr "SVG-Uploads erlauben"
 msgid "Uploaded SVG files are automatically sanitized to remove potentially unsafe code."
 msgstr "SVG-Dateien werden beim Upload automatisch bereinigt, um potenziell schädlichen Code zu entfernen."
 
+msgid "Languages"
+msgstr "Sprachen"
+
+msgid "Enable languages"
+msgstr "Mehrsprachigkeit aktivieren"
+
+msgid "Enables built-in support for multiple content languages."
+msgstr "Aktiviert die integrierte Mehrsprachigkeit für Inhalte."
+
 msgid "Duplicate"
 msgstr "Duplizieren"
 
 msgid "Allow duplication"
 msgstr "Duplizierung erlauben"
 
-msgid "Shows a \"Duplicate\" row action for posts, pages, and custom post types."
-msgstr "Zeigt eine Zeilenaktion „Duplizieren“ für Beiträge, Seiten und benutzerdefinierte Beitragstypen."
+msgid "Shows a \"Duplicate\" row action for pages and posts."
+msgstr "Zeigt eine Zeilenaktion „Duplizieren“ für Seiten und Beiträge."
 
 msgid "SEO"
 msgstr "SEO"
 
-msgid "SEO panel"
-msgstr "SEO-Bereich"
+msgid "Enable SEO panel"
+msgstr "SEO-Bereich aktivieren"
 
-msgid "Adds a section to pages, posts and custom post types to enter SEO info."
-msgstr "Fügt Seiten, Beiträgen und benutzerdefinierten Beitragstypen einen Bereich zum Eintragen von SEO-Infos hinzu."
+msgid "Adds a section to pages and posts to enter SEO info."
+msgstr "Fügt Seiten und Beiträgen einen Bereich zum Eintragen von SEO-Infos hinzu."
 
 msgid "No password set. Set a password below to activate protection."
 msgstr "Kein Passwort gesetzt. Setze unten ein Passwort, um den Schutz zu aktivieren."
@@ -596,8 +611,11 @@ msgstr "Aktivieren"
 msgid "Activate password protection"
 msgstr "Passwortschutz aktivieren"
 
-msgid "When enabled, visitors must enter a password before viewing any part of the site.<br>Logged-in administrators and editors skip the prompt."
-msgstr "Wenn aktiviert, müssen Besucher ein Passwort eingeben, bevor sie einen Teil der Website sehen können.<br>Eingeloggte Administratoren und Redakteure überspringen die Abfrage."
+msgid "When enabled, visitors must enter a password before viewing any part of the site."
+msgstr "Wenn aktiviert, müssen Besucher ein Passwort eingeben, bevor sie einen Teil der Website sehen können."
+
+msgid "Logged-in administrators and editors skip the prompt."
+msgstr "Eingeloggte Administratoren und Redakteure überspringen die Abfrage."
 
 msgid "Because you are logged in as an administrator or editor, you can still access the frontend. Open the site in a private or incognito window (or log out) to see the maintenance or password page."
 msgstr "Da du als Administrator oder Redakteur angemeldet bist, kannst du die Website weiterhin aufrufen. Öffne die Website in einem privaten Fenster oder im Inkognito-Modus (oder melde dich ab), um die Wartungs- oder Passwortseite zu sehen."
