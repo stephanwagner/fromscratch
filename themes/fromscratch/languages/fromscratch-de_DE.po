@@ -443,8 +443,8 @@ msgstr "Methode"
 msgid "WordPress (template_redirect)"
 msgstr "WordPress (template_redirect)"
 
-msgid "You are running Apache. For better performance, you can set the redirect method to htaccess in config/redirects.php."
-msgstr "Apache erkannt. Für eine bessere Performance kannst du die Redirect-Methode in config/redirects.php auf htaccess setzen."
+msgid "You are running Apache. For better performance, you can set the redirect method to htaccess in config/theme.php under redirects."
+msgstr "Apache erkannt. Für eine bessere Performance kannst du die Redirect-Methode in config/theme.php unter redirects auf htaccess setzen."
 
 msgid "Enter paths without the domain (e.g. /old-path)."
 msgstr "Pfade ohne Domain eingeben (z. B. /alter-pfad)."

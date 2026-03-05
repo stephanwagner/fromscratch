@@ -780,7 +780,7 @@ function theme_settings_page(): void
 				$redirect_method === 'wordpress'
 			) : ?>
 				<div class="notice notice-info inline">
-					<p><?= esc_html__('You are running Apache. For better performance, you can set the redirect method to .htaccess in config/theme.php under redirects.', 'fromscratch') ?></p>
+					<p><?= esc_html__('You are running Apache. For better performance, you can set the redirect method to htaccess in config/theme.php under redirects.', 'fromscratch') ?></p>
 				</div>
 			<?php endif; ?>
 			<h2 class="title"><?= esc_html__('Redirects', 'fromscratch') ?></h2>
