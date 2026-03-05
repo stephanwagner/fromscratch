@@ -20,7 +20,7 @@
 					</a>
 				</div>
 
-				<?= do_shortcode('[fs_language_toggler]') ?>
+				<?= do_shortcode('[fs_language_switcher]') ?>
 
 				<div class="header-menu__wrapper">
 					<?php wp_nav_menu([

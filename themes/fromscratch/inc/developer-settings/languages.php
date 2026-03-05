@@ -83,21 +83,23 @@ function fs_render_developer_languages(): void
 		<?php fs_developer_settings_render_nav(); ?>
 
 		<h2 class="title"><?= esc_html__('Languages', 'fromscratch') ?></h2>
-		<p class="description" style="margin-bottom: 16px;"><?= esc_html__('Manage languages for translatable content (Settings → Theme → Content). Set the default language used when no translation is selected.', 'fromscratch') ?></p>
+		<p class="description"><?= esc_html__('Configure the languages available for your content and manage how they are used across the site.', 'fromscratch') ?></p>
 		<form method="post" action="" class="page-settings-form" id="fs-languages-form">
 			<?php settings_fields(FS_THEME_OPTION_GROUP_LANGUAGES); ?>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row"><?= esc_html__('Default language', 'fromscratch') ?></th>
 					<td>
-						<select name="fs_theme_languages[default]" id="fs_theme_languages_default" class="regular-text">
-							<?php foreach ($lang_list as $l) : ?>
-								<option value="<?= esc_attr($l['id']) ?>" <?= selected($lang_default, $l['id'], false) ?>><?= esc_html($l['nameEnglish'] !== '' ? $l['nameEnglish'] : $l['id']) ?></option>
-							<?php endforeach; ?>
-							<?php if (empty($lang_list)) : ?>
-								<option value=""><?= esc_html__('— Add at least one language below —', 'fromscratch') ?></option>
-							<?php endif; ?>
-						</select>
+						<?php if (!empty($lang_list)) : ?>
+							<select name="fs_theme_languages[default]" id="fs_theme_languages_default" class="regular-text">
+								<?php foreach ($lang_list as $l) : ?>
+									<option value="<?= esc_attr($l['id']) ?>" <?= selected($lang_default, $l['id'], false) ?>><?= esc_html($l['nameEnglish'] !== '' ? $l['nameEnglish'] : $l['id']) ?></option>
+								<?php endforeach; ?>
+							</select>
+						<?php else : ?>
+							<input type="hidden" name="fs_theme_languages[default]" value="">
+							<p class="description" style="margin: 0; color: #a7aaad; font-style: italic;"><?= esc_html__('Add at least one language in the list below to set a default language.', 'fromscratch') ?></p>
+						<?php endif; ?>
 					</td>
 				</tr>
 				<tr>
@@ -105,47 +107,51 @@ function fs_render_developer_languages(): void
 					<td>
 						<input type="hidden" name="fs_theme_languages[use_url_prefix]" value="0">
 						<label><input type="checkbox" name="fs_theme_languages[use_url_prefix]" id="fs_use_url_prefix" value="1" <?= checked($lang_use_url_prefix, true, false) ?>> <?= esc_html__('Use language prefix in URL', 'fromscratch') ?></label>
-						<p class="description"><?= esc_html__('When on: URLs include a language segment (e.g. /de/ueber-uns/, /en/about/). When off: no language segment is used.', 'fromscratch') ?></p>
+						<p class="description fs-indent-checkbox"><?= esc_html__('Adds a language prefix to URLs (e.g. /de/ueber-uns).', 'fromscratch') ?></p>
 						<div id="fs-prefix-default-wrap" class="fs-url-prefix-sub" style="margin-top: 12px; <?= $lang_use_url_prefix ? '' : 'display:none;' ?>">
 							<input type="hidden" name="fs_theme_languages[prefix_default]" value="0">
 							<label><input type="checkbox" name="fs_theme_languages[prefix_default]" id="fs_prefix_default" value="1" <?= checked($lang_prefix_default, true, false) ?>> <?= esc_html__('Prefix default language in URL', 'fromscratch') ?></label>
-							<p class="description"><?= esc_html__('When off: default language has no prefix (e.g. /about/). When on: all languages use a prefix (e.g. /en/about/, /de/ueber-uns/).', 'fromscratch') ?></p>
+							<p class="description fs-indent-checkbox"><?= esc_html__('Controls whether the default language also uses a URL prefix.', 'fromscratch') ?></p>
 						</div>
 					</td>
 				</tr>
 				<tr>
-					<td colspan="2" style="padding-bottom: 8px;">
-						<p class="description" style="margin-bottom: 0;"><?= esc_html__('To display a language switcher in your theme, use the shortcode [fs_language_toggler] in a post, page, or widget. The current language link has the CSS class "active".', 'fromscratch') ?></p>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><?= esc_html__('Language toggler: no translation', 'fromscratch') ?></th>
+					<th scope="row"><?= esc_html__('Language switcher', 'fromscratch') ?></th>
 					<td>
+						<div style="margin-bottom: 24px;">
+							<div style="display: flex; align-items: center; gap: 8px">
+								<input type="text" id="fs-language-toggler-shortcode" readonly class="regular-text code fs-code-small" value="[fs_language_switcher]" />
+								<button type="button" class="button" data-fs-copy-from-source="fs-language-toggler-shortcode" data-fs-copy-feedback-text="<?= esc_attr__('Copied', 'fromscratch') ?>"><?= esc_html__('Copy', 'fromscratch') ?></button>
+							</div>
+							<p class="description"><?= esc_html__('To display a language switcher in your theme, use the shortcode [fs_language_switcher].', 'fromscratch') ?></p>
+						</div>
 						<select name="fs_theme_languages[no_translation]" id="fs_no_translation" class="regular-text">
 							<option value="hide" <?= selected($lang_no_translation, 'hide', false) ?>><?= esc_html__('Language will not be shown in language toggler', 'fromscratch') ?></option>
 							<option value="disabled" <?= selected($lang_no_translation, 'disabled', false) ?>><?= esc_html__('Language link is disabled', 'fromscratch') ?></option>
 							<option value="home" <?= selected($lang_no_translation, 'home', false) ?>><?= esc_html__('Language link goes to language homepage (or site home)', 'fromscratch') ?></option>
 						</select>
-						<p class="description"><?= esc_html__('When the current page has no translation in a language, how that language appears in the language toggler shortcode.', 'fromscratch') ?></p>
+						<p class="description"><?= esc_html__('Defines how the language switcher behaves when the current page is not available in another language.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 			</table>
-			<h3 class="title" style="margin-top: 24px;"><?= esc_html__('Language list', 'fromscratch') ?></h3>
-			<table class="widefat striped" id="fs-languages-table" style="max-width: 640px;">
+			<h3 class="title" style="margin-top: 24px;"><?= esc_html__('Available languages', 'fromscratch') ?></h3>
+			<p class="description"><?= esc_html__('Add and manage the languages available for your site’s content.', 'fromscratch') ?></p>
+			<p class="description"><?= esc_html__('Language codes follow ISO-639-1 (e.g. en, de, fr).', 'fromscratch') ?></p>
+			<table class="widefat striped" id="fs-languages-table" style="width: auto; margin-top: 16px;">
 				<thead>
 					<tr>
 						<th style="width: 100px;"><?= esc_html__('Code', 'fromscratch') ?></th>
-						<th><?= esc_html__('Name (English)', 'fromscratch') ?></th>
-						<th><?= esc_html__('Name (original)', 'fromscratch') ?></th>
+						<th><?= esc_html__('Name', 'fromscratch') ?></th>
+						<th><?= esc_html__('Native name', 'fromscratch') ?></th>
 						<th style="width: 80px;"></th>
 					</tr>
 				</thead>
 				<tbody id="fs-languages-tbody">
 					<?php foreach ($lang_list as $i => $l) : ?>
 						<tr class="fs-language-row">
-							<td><input type="text" name="fs_theme_languages[list][<?= (int) $i ?>][id]" value="<?= esc_attr($l['id']) ?>" class="small-text" placeholder="en" maxlength="20" pattern="[a-zA-Z0-9_-]+" required></td>
-							<td><input type="text" name="fs_theme_languages[list][<?= (int) $i ?>][nameEnglish]" value="<?= esc_attr($l['nameEnglish']) ?>" class="regular-text" placeholder="<?= esc_attr__('English', 'fromscratch') ?>"></td>
-							<td><input type="text" name="fs_theme_languages[list][<?= (int) $i ?>][nameOriginalLanguage]" value="<?= esc_attr($l['nameOriginalLanguage']) ?>" class="regular-text" placeholder="<?= esc_attr__('English', 'fromscratch') ?>"></td>
+							<td><input type="text" name="fs_theme_languages[list][<?= (int) $i ?>][id]" value="<?= esc_attr($l['id']) ?>" class="small-text" placeholder="en" maxlength="2" required pattern="[a-z]{2}" /></td>
+							<td><input type="text" name="fs_theme_languages[list][<?= (int) $i ?>][nameEnglish]" value="<?= esc_attr($l['nameEnglish']) ?>" class="regular-text" required style="width: 140px;"></td>
+							<td><input type="text" name="fs_theme_languages[list][<?= (int) $i ?>][nameOriginalLanguage]" value="<?= esc_attr($l['nameOriginalLanguage']) ?>" class="regular-text" required style="width: 140px;"></td>
 							<td><button type="button" class="button button-small fs-remove-language" aria-label="<?= esc_attr__('Remove', 'fromscratch') ?>"><?= esc_html__('Remove', 'fromscratch') ?></button></td>
 						</tr>
 					<?php endforeach; ?>
@@ -175,9 +181,9 @@ function fs_render_developer_languages(): void
 				addBtn.addEventListener('click', function() {
 					var tr = document.createElement('tr');
 					tr.className = 'fs-language-row';
-					tr.innerHTML = '<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][id]" value="" class="small-text" placeholder="en" maxlength="20" required></td>' +
-						'<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][nameEnglish]" value="" class="regular-text"></td>' +
-						'<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][nameOriginalLanguage]" value="" class="regular-text"></td>' +
+					tr.innerHTML = '<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][id]" value="" class="small-text" placeholder="en" maxlength="2" required pattern="[a-z]{2}"></td>' +
+						'<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][nameEnglish]" value="" class="regular-text" required style="width: 140px;"></td>' +
+						'<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][nameOriginalLanguage]" value="" class="regular-text" required style="width: 140px;"></td>' +
 						'<td><button type="button" class="button button-small fs-remove-language" aria-label="<?= esc_js(__('Remove', 'fromscratch')) ?>"><?= esc_js(__('Remove', 'fromscratch')) ?></button></td>';
 					tbody.appendChild(tr);
 					rowIndex++;

@@ -954,7 +954,7 @@ add_filter('wp_nav_menu_objects', function (array $items, \stdClass $args): arra
  * Language toggler shortcode: list of language links with active class on current language.
  * When a language has no translation for the current page, behavior is controlled by Settings → Developer → Languages (no_translation).
  */
-add_shortcode('fs_language_toggler', function (): string {
+add_shortcode('fs_language_switcher', function (): string {
 	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
 		return '';
 	}
