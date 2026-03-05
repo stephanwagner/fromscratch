@@ -1442,37 +1442,6 @@ add_action('parse_request', function (\WP $wp): void {
 }, 10, 1);
 
 /**
- * Canonical path for a post (path of default-language version). Used for permalink prefix.
- */
-function fs_language_canonical_path(int $post_id): ?string
-{
-	$post = get_post($post_id);
-	if (!$post || !in_array($post->post_type, fs_language_post_types(), true)) {
-		return null;
-	}
-	$default_lang = fs_get_default_language();
-	$term = fs_language_get_post_language($post_id);
-	if ($term && $term->slug === $default_lang) {
-		return $post->post_type === 'page' ? get_page_uri($post_id) : $post->post_name;
-	}
-	$group_id = (int) get_post_meta($post_id, FS_TRANSLATION_GROUP_META, true);
-	if ($group_id <= 0) {
-		return $post->post_type === 'page' ? get_page_uri($post_id) : $post->post_name;
-	}
-	$linked = fs_language_get_linked_translations($post_id, $group_id);
-	$linked[$term ? $term->slug : ''] = $post_id;
-	if (!isset($linked[$default_lang])) {
-		return $post->post_type === 'page' ? get_page_uri($post_id) : $post->post_name;
-	}
-	$default_id = (int) $linked[$default_lang];
-	if ($post->post_type === 'page') {
-		return get_page_uri($default_id);
-	}
-	$default_post = get_post($default_id);
-	return $default_post ? $default_post->post_name : $post->post_name;
-}
-
-/**
  * Add language prefix to permalinks when the current request or target is in a prefixed language.
  */
 if (!is_admin()) {
