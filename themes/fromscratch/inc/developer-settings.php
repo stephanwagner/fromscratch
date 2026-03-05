@@ -646,6 +646,7 @@ function fs_render_developer_settings_page(): void
 					<tr>
 						<th scope="row"><?= esc_html__('URL prefix', 'fromscratch') ?></th>
 						<td>
+							<input type="hidden" name="fs_theme_languages[use_url_prefix]" value="0">
 							<label><input type="checkbox" name="fs_theme_languages[use_url_prefix]" id="fs_use_url_prefix" value="1" <?= checked($lang_use_url_prefix, true, false) ?>> <?= esc_html__('Use language prefix in URL', 'fromscratch') ?></label>
 							<p class="description"><?= esc_html__('When on: URLs include a language segment (e.g. /de/ueber-uns/, /en/about/). When off: no language segment is used.', 'fromscratch') ?></p>
 							<div id="fs-prefix-default-wrap" class="fs-url-prefix-sub" style="margin-top: 12px; <?= $lang_use_url_prefix ? '' : 'display:none;' ?>">
