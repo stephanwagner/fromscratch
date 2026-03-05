@@ -571,7 +571,24 @@ function fs_language_current_request_lang(): string
 				return $lang;
 			}
 			$term = fs_language_get_post_language($post->ID);
-			return $term ? $term->slug : $default;
+			if ($term) {
+				return $term->slug;
+			}
+			// Post has no language stored; use URL prefix so /de/impressum/ is treated as DE (avoids default when viewing a standalone non-default page).
+			if (function_exists('fs_use_language_url_prefix') && fs_use_language_url_prefix()) {
+				$path = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
+				if ($path !== '') {
+					$segments = explode('/', $path);
+					$first = $segments[0] ?? '';
+					$languages = fs_get_content_languages();
+					foreach ($languages as $l) {
+						if (isset($l['id']) && (string) $l['id'] === $first) {
+							return $first;
+						}
+					}
+				}
+			}
+			return $default;
 		}
 	}
 	if (function_exists('fs_use_language_url_prefix') && fs_use_language_url_prefix()) {
@@ -739,10 +756,11 @@ add_filter('posts_results', function (array $posts, \WP_Query $query): array {
 
 
 /**
- * For menu: get the page ID to show for the current language (this page or its translation).
+ * Frontend menu only: page ID to use for URL/title (translation for current language, or default-language fallback).
+ * Not used by the menu builder; see pre_get_posts/posts_results for backend.
  *
  * @param int $page_id Menu item's linked page ID.
- * @return int Post ID to use for URL/title (same or translation in current language).
+ * @return int Post ID to use for URL/title.
  */
 function fs_language_menu_page_for_current_lang(int $page_id): int
 {
@@ -750,6 +768,7 @@ function fs_language_menu_page_for_current_lang(int $page_id): int
 		return $page_id;
 	}
 	$current = fs_language_current_request_lang();
+	$default_lang = fs_get_default_language();
 	$group_id = (int) get_post_meta($page_id, FS_TRANSLATION_GROUP_META, true);
 	if ($group_id <= 0) {
 		$group_id = $page_id;
@@ -764,7 +783,39 @@ function fs_language_menu_page_for_current_lang(int $page_id): int
 			return $translation_id;
 		}
 	}
-	return $page_id;
+	// No translation for current language: use default-language page (fallback).
+	return (int) ($linked[$default_lang] ?? $page_id);
+}
+
+/**
+ * Frontend menu only: whether to show this page menu item in the current request language.
+ * - Page in a group that has a default-language page: always show (with translation or fallback).
+ * - Page not linked to default (standalone in one language): show only when current language matches.
+ * Not used by the menu builder.
+ *
+ * @param int $page_id Menu item's linked page ID.
+ * @return bool True if the item should appear in the menu.
+ */
+function fs_language_show_page_menu_item(int $page_id): bool
+{
+	if (!function_exists('fs_get_default_language') || !in_array('page', fs_language_post_types(), true)) {
+		return true;
+	}
+	$default_lang = fs_get_default_language();
+	$current_lang = fs_language_current_request_lang();
+	$group_id = (int) get_post_meta($page_id, FS_TRANSLATION_GROUP_META, true);
+	if ($group_id <= 0) {
+		$group_id = $page_id;
+	}
+	$linked = fs_language_get_linked_translations($page_id, $group_id);
+	$term = fs_language_get_post_language($page_id);
+	$page_lang = $term ? $term->slug : '';
+	$linked[$page_lang] = $page_id;
+	$group_has_default = isset($linked[$default_lang]);
+	if ($group_has_default) {
+		return true;
+	}
+	return $current_lang === $page_lang;
 }
 
 // /**
@@ -857,8 +908,10 @@ function fs_language_menu_page_for_current_lang(int $page_id): int
 // });
 
 /**
- * On the frontend only: for each menu item that is a page, use the translation in the current language (URL and title).
- * Keeps admin labels like "(EN) [DE]" out of the frontend menu.
+ * Frontend menu display only (decoupled from menu builder).
+ * - Page not linked to default language: show item only when current request language matches that page's language.
+ * - Page linked to default (or default itself): always show; use translation for current language or default-language fallback for URL/title.
+ * Backend menu builder uses pre_get_posts and posts_results on the nav-menus screen only.
  */
 add_filter('wp_nav_menu_objects', function (array $items, \stdClass $args): array {
 	if (is_admin()) {
@@ -867,16 +920,34 @@ add_filter('wp_nav_menu_objects', function (array $items, \stdClass $args): arra
 	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
 		return $items;
 	}
-	foreach ($items as $item) {
+	$queried_id = 0;
+	if (is_singular()) {
+		$queried = get_queried_object();
+		if ($queried && isset($queried->ID)) {
+			$queried_id = (int) $queried->ID;
+		}
+	}
+
+	foreach ($items as $key => $item) {
 		if (!isset($item->object, $item->object_id) || $item->object !== 'page') {
 			continue;
 		}
 		$page_id = (int) $item->object_id;
+		// When viewing this page, always show its menu item (avoids hiding when current-language detection falls back to default).
+		if ($queried_id > 0 && $page_id === $queried_id) {
+			$item->url = get_permalink($page_id);
+			$item->title = get_the_title($page_id);
+			continue;
+		}
+		if (!fs_language_show_page_menu_item($page_id)) {
+			unset($items[$key]);
+			continue;
+		}
 		$show_id = fs_language_menu_page_for_current_lang($page_id);
 		$item->url = get_permalink($show_id);
 		$item->title = get_the_title($show_id);
 	}
-	return $items;
+	return array_values($items);
 }, 10, 2);
 
 /**
