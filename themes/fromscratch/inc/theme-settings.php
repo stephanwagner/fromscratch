@@ -308,6 +308,21 @@ function fs_sanitize_theme_languages($value): array
 	if ($default === '' || !in_array($default, $ids, true)) {
 		$default = $ids[0] ?? '';
 	}
+	// Ensure default language is first in the list.
+	if ($default !== '' && count($list) > 1 && strtolower((string) ($list[0]['id'] ?? '')) !== strtolower($default)) {
+		$default_index = null;
+		foreach ($list as $i => $row) {
+			if (strtolower((string) $row['id']) === strtolower($default)) {
+				$default_index = $i;
+				break;
+			}
+		}
+		if ($default_index !== null) {
+			$default_row = $list[$default_index];
+			array_splice($list, $default_index, 1);
+			array_unshift($list, $default_row);
+		}
+	}
 	$use_url_prefix = isset($value['use_url_prefix']) ? (bool) $value['use_url_prefix'] : true;
 	$prefix_default = $use_url_prefix && !empty($value['prefix_default']);
 	$no_translation = isset($value['no_translation']) && in_array($value['no_translation'], ['hide', 'disabled', 'home'], true)

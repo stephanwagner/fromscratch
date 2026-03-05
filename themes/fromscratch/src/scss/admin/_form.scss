@@ -35,3 +35,9 @@ input[type="checkbox"][data-fs-forced='1'] {
   cursor: not-allowed;
   opacity: 0.35;
 }
+
+// Languages table: hide Order column when fewer than 3 languages
+.fs-languages-table.fs-hide-reorder .fs-reorder-th,
+.fs-languages-table.fs-hide-reorder .fs-reorder-cell {
+  display: none;
+}

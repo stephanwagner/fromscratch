@@ -99,7 +99,7 @@ function fs_render_developer_languages(): void
 	if ($lang_default === '' && !empty($lang_list)) {
 		$lang_default = $lang_list[0]['id'] ?? '';
 	}
-	?>
+?>
 	<div class="wrap">
 		<h1><?= esc_html(__('Developer settings', 'fromscratch')) ?></h1>
 		<?php if ($languages_saved !== false) : ?>
@@ -170,22 +170,33 @@ function fs_render_developer_languages(): void
 			<h3 class="title" style="margin-top: 24px;"><?= esc_html__('Available languages', 'fromscratch') ?></h3>
 			<p class="description"><?= esc_html__('Add and manage the languages available for your site’s content.', 'fromscratch') ?></p>
 			<p class="description"><?= esc_html__('Language codes follow ISO-639-1 (e.g. en, de, fr).', 'fromscratch') ?></p>
-			<table class="widefat striped" id="fs-languages-table" style="width: auto; margin-top: 16px;">
+			<?php $lang_count = count($lang_list);
+			$show_reorder = $lang_count >= 3; ?>
+			<table class="widefat striped fs-languages-table <?= $show_reorder ? '' : 'fs-hide-reorder' ?>" id="fs-languages-table" style="width: auto; margin-top: 16px;">
 				<thead>
 					<tr>
-						<th style="width: 100px;"><?= esc_html__('Code', 'fromscratch') ?></th>
+						<th><?= esc_html__('Code', 'fromscratch') ?></th>
 						<th><?= esc_html__('Name', 'fromscratch') ?></th>
 						<th><?= esc_html__('Native name', 'fromscratch') ?></th>
-						<th style="width: 80px;"></th>
+						<th class="fs-reorder-th" style="width: 70px;"><?= esc_html__('Order', 'fromscratch') ?></th>
+						<th></th>
 					</tr>
 				</thead>
 				<tbody id="fs-languages-tbody">
 					<?php foreach ($lang_list as $i => $l) : ?>
-						<tr class="fs-language-row">
-							<td><input type="text" name="fs_theme_languages[list][<?= (int) $i ?>][id]" value="<?= esc_attr($l['id']) ?>" class="small-text" placeholder="en" maxlength="2" required pattern="[a-z]{2}" /></td>
+						<tr class="fs-language-row" data-row-index="<?= (int) $i ?>">
+							<td><input type="text" name="fs_theme_languages[list][<?= (int) $i ?>][id]" value="<?= esc_attr($l['id']) ?>" class="small-text" placeholder="en" maxlength="20" required></td>
 							<td><input type="text" name="fs_theme_languages[list][<?= (int) $i ?>][nameEnglish]" value="<?= esc_attr($l['nameEnglish']) ?>" class="regular-text" required style="width: 140px;"></td>
 							<td><input type="text" name="fs_theme_languages[list][<?= (int) $i ?>][nameOriginalLanguage]" value="<?= esc_attr($l['nameOriginalLanguage']) ?>" class="regular-text" required style="width: 140px;"></td>
-							<td><button type="button" class="button button-small fs-remove-language" aria-label="<?= esc_attr__('Remove', 'fromscratch') ?>"><?= esc_html__('Remove', 'fromscratch') ?></button></td>
+							<td class="fs-reorder-cell" style="vertical-align: middle;">
+								<?php if ($i === 0) : ?>
+									<span class="fs-default-badge" style="color: #646970; font-size: 12px;"><?= esc_html__('Default', 'fromscratch') ?></span>
+								<?php else : ?>
+									<button type="button" class="button button-small fs-move-up" aria-label="<?= esc_attr__('Move up', 'fromscratch') ?>" title="<?= esc_attr__('Move up', 'fromscratch') ?>" <?= $i === 1 ? ' disabled' : '' ?>>↑</button>
+									<button type="button" class="button button-small fs-move-down" aria-label="<?= esc_attr__('Move down', 'fromscratch') ?>" title="<?= esc_attr__('Move down', 'fromscratch') ?>" <?= $i === $lang_count - 1 ? ' disabled' : '' ?>>↓</button>
+								<?php endif; ?>
+							</td>
+							<td style="vertical-align: middle;"><button type="button" class="button button-small fs-remove-language" aria-label="<?= esc_attr__('Remove', 'fromscratch') ?>"><?= esc_html__('Remove', 'fromscratch') ?></button></td>
 						</tr>
 					<?php endforeach; ?>
 				</tbody>
@@ -194,42 +205,94 @@ function fs_render_developer_languages(): void
 				<button type="button" class="button" id="fs-add-language"><?= esc_html__('Add language', 'fromscratch') ?></button>
 			</p>
 			<script>
-			(function() {
-				var form = document.getElementById('fs-languages-form');
-				var tbody = document.getElementById('fs-languages-tbody');
-				var addBtn = document.getElementById('fs-add-language');
-				var usePrefix = document.getElementById('fs_use_url_prefix');
-				var prefixWrap = document.getElementById('fs-prefix-default-wrap');
-				var prefixDefault = document.getElementById('fs_prefix_default');
-				function togglePrefixDefault() {
-					var on = usePrefix && usePrefix.checked;
-					if (prefixWrap) prefixWrap.style.display = on ? '' : 'none';
-					if (prefixDefault) prefixDefault.disabled = !on;
-				}
-				if (usePrefix) usePrefix.addEventListener('change', togglePrefixDefault);
-				togglePrefixDefault();
+				(function() {
+					var form = document.getElementById('fs-languages-form');
+					var tbody = document.getElementById('fs-languages-tbody');
+					var addBtn = document.getElementById('fs-add-language');
+					var usePrefix = document.getElementById('fs_use_url_prefix');
+					var prefixWrap = document.getElementById('fs-prefix-default-wrap');
+					var prefixDefault = document.getElementById('fs_prefix_default');
 
-				if (!form || !tbody || !addBtn) return;
-				var rowIndex = <?= (int) count($lang_list) ?>;
-				addBtn.addEventListener('click', function() {
-					var tr = document.createElement('tr');
-					tr.className = 'fs-language-row';
-					tr.innerHTML = '<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][id]" value="" class="small-text" placeholder="en" maxlength="2" required pattern="[a-z]{2}"></td>' +
-						'<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][nameEnglish]" value="" class="regular-text" required style="width: 140px;"></td>' +
-						'<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][nameOriginalLanguage]" value="" class="regular-text" required style="width: 140px;"></td>' +
-						'<td><button type="button" class="button button-small fs-remove-language" aria-label="<?= esc_js(__('Remove', 'fromscratch')) ?>"><?= esc_js(__('Remove', 'fromscratch')) ?></button></td>';
-					tbody.appendChild(tr);
-					rowIndex++;
-				});
-				tbody.addEventListener('click', function(e) {
-					if (e.target.classList.contains('fs-remove-language')) {
-						e.target.closest('tr').remove();
+					function togglePrefixDefault() {
+						var on = usePrefix && usePrefix.checked;
+						if (prefixWrap) prefixWrap.style.display = on ? '' : 'none';
+						if (prefixDefault) prefixDefault.disabled = !on;
 					}
-				});
-			})();
+					if (usePrefix) usePrefix.addEventListener('change', togglePrefixDefault);
+					togglePrefixDefault();
+
+					if (!form || !tbody || !addBtn) return;
+					var rowIndex = <?= (int) count($lang_list) ?>;
+
+					function reindexNames() {
+						var rows = tbody.querySelectorAll('tr.fs-language-row');
+						rows.forEach(function(tr, index) {
+							tr.setAttribute('data-row-index', index);
+							tr.querySelectorAll('input').forEach(function(input) {
+								input.name = input.name.replace(/\[list\]\[\d+\]/, '[list][' + index + ']');
+							});
+						});
+						rowIndex = rows.length;
+						updateReorderVisibility();
+					}
+
+					function updateReorderVisibility() {
+						var rows = tbody.querySelectorAll('tr.fs-language-row');
+						var table = document.getElementById('fs-languages-table');
+						if (rows.length >= 3) {
+							table.classList.remove('fs-hide-reorder');
+							rows.forEach(function(tr, i) {
+								var cell = tr.querySelector('.fs-reorder-cell');
+								if (!cell) return;
+								if (i === 0) {
+									cell.innerHTML = '<span class="fs-default-badge" style="color: #646970; font-size: 12px;"><?= esc_js(__('Default', 'fromscratch')) ?></span>';
+								} else {
+									var upLabel = '<?= esc_js(__('Move up', 'fromscratch')) ?>';
+									var downLabel = '<?= esc_js(__('Move down', 'fromscratch')) ?>';
+									var upDisabled = i === 1 ? ' disabled' : '';
+									var downDisabled = i === rows.length - 1 ? ' disabled' : '';
+									cell.innerHTML = '<button type="button" class="button button-small fs-move-up" aria-label="' + upLabel + '" title="' + upLabel + '"' + upDisabled + '>↑</button> ' +
+										'<button type="button" class="button button-small fs-move-down" aria-label="' + downLabel + '" title="' + downLabel + '"' + downDisabled + '>↓</button>';
+								}
+							});
+						} else {
+							table.classList.add('fs-hide-reorder');
+						}
+					}
+					addBtn.addEventListener('click', function() {
+						var tr = document.createElement('tr');
+						tr.className = 'fs-language-row';
+						tr.innerHTML = '<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][id]" value="" class="small-text" placeholder="en" maxlength="20" required></td>' +
+							'<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][nameEnglish]" value="" class="regular-text" required style="width: 140px;"></td>' +
+							'<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][nameOriginalLanguage]" value="" class="regular-text" required style="width: 140px;"></td>' +
+							'<td class="fs-reorder-cell" style="vertical-align: middle;"><button type="button" class="button button-small fs-move-up">↑</button> <button type="button" class="button button-small fs-move-down">↓</button></td>' +
+							'<td style="vertical-align: middle;"><button type="button" class="button button-small fs-remove-language" aria-label="<?= esc_js(__('Remove', 'fromscratch')) ?>"><?= esc_js(__('Remove', 'fromscratch')) ?></button></td>';
+						tbody.appendChild(tr);
+						reindexNames();
+					});
+					tbody.addEventListener('click', function(e) {
+						if (e.target.classList.contains('fs-remove-language')) {
+							e.target.closest('tr').remove();
+							reindexNames();
+							return;
+						}
+						var row = e.target.closest('tr.fs-language-row');
+						if (!row) return;
+						var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr.fs-language-row'));
+						var idx = rows.indexOf(row);
+						if (e.target.classList.contains('fs-move-up') && idx > 1) {
+							tbody.insertBefore(row, rows[idx - 1]);
+							reindexNames();
+						} else if (e.target.classList.contains('fs-move-down') && idx >= 1 && idx < rows.length - 1) {
+							var next = rows[idx + 1];
+							tbody.insertBefore(next, row);
+							reindexNames();
+						}
+					});
+				})();
 			</script>
 			<?php submit_button(); ?>
 		</form>
 	</div>
-	<?php
+<?php
 }
