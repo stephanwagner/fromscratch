@@ -53,7 +53,9 @@ hr {
   }
 }
 
-input.code {
+.code,
+input.code,
+textarea.code {
   &.fs-code-small {
     font-size: 12px;
   }

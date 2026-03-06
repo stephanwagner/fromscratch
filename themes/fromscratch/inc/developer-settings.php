@@ -8,10 +8,11 @@ defined('ABSPATH') || exit;
  */
 
 const FS_DEVELOPER_TABS_BASE = [
-	'general' => ['label' => 'General'],
-	'system'  => ['label' => 'System'],
+	'general'  => ['label' => 'General'],
+	'system'   => ['label' => 'System'],
+	'security' => ['label' => 'Security'],
 	'features' => ['label' => 'Features'],
-	'access'  => ['label' => 'User rights'],
+	'access'   => ['label' => 'User rights'],
 	'tools'    => ['label' => 'Tools'],
 ];
 
@@ -117,7 +118,7 @@ function fs_developer_settings_render_nav(): void
 		<?php
 		foreach ($tabs as $slug => $def) {
 			$icons = '';
-			if ($slug === 'system') {
+			if ($slug === 'security') {
 				if (get_option('fromscratch_site_password_protection') === '1' && get_option('fromscratch_site_password_hash', '') !== '') {
 					$icons .= '<div class="fs-tab-icon">' . $password_icon . '</div>';
 				}
@@ -141,6 +142,7 @@ function fs_developer_settings_render_nav(): void
 $fs_developer_settings_dir = __DIR__ . '/developer-settings/';
 require_once $fs_developer_settings_dir . 'general.php';
 require_once $fs_developer_settings_dir . 'system.php';
+require_once $fs_developer_settings_dir . 'security.php';
 require_once $fs_developer_settings_dir . 'features.php';
 require_once $fs_developer_settings_dir . 'access.php';
 require_once $fs_developer_settings_dir . 'tools.php';

@@ -64,6 +64,15 @@ return [
 	'site_password_cookie_days' => 14,
 
 	/**
+	 * Suspicious login attempts threshold
+	 * When an IP has at least this many attempts within the time window, it is shown as suspicious and can be blocked.
+	 */
+	'login_suspicious_attempts' => [
+		'attempts' => 10,
+		'minutes' => 30,
+	],
+
+	/**
 	 * HTTP response headers
 	 * Front-end only.
 	 */

@@ -69,7 +69,7 @@ function fs_render_developer_features(): void
 	$feat = function ($key) use ($features, $defaults) {
 		return isset($features[$key]) ? (int) $features[$key] : (int) ($defaults[$key] ?? 0);
 	};
-	?>
+?>
 	<div class="wrap">
 		<h1><?= esc_html(__('Developer settings', 'fromscratch')) ?></h1>
 		<?php if ($features_saved !== false) : ?>
@@ -169,6 +169,19 @@ function fs_render_developer_features(): void
 					</td>
 				</tr>
 			</table>
+
+			<hr class="fs-small">
+
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?= esc_html__('IP Blocking', 'fromscratch') ?></th>
+					<td>
+						<input type="hidden" name="fromscratch_features[enable_blocked_ips]" value="0">
+						<label><input type="checkbox" name="fromscratch_features[enable_blocked_ips]" value="1" <?= checked($feat('enable_blocked_ips'), 1, false) ?>> <?= esc_html__('Enable IP blocking', 'fromscratch') ?></label>
+						<p class="description fs-indent-checkbox"><?= esc_html__('Allows blocking specific IP addresses and detects suspicious login attempts.', 'fromscratch') ?></p>
+					</td>
+				</tr>
+			</table>
 			<?php submit_button(); ?>
 		</form>
 		<script>
@@ -184,5 +197,5 @@ function fs_render_developer_features(): void
 			})();
 		</script>
 	</div>
-	<?php
+<?php
 }

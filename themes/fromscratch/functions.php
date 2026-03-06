@@ -56,3 +56,6 @@ if (fs_theme_feature_enabled('post_expirator')) {
 if (fs_theme_feature_enabled('languages')) {
 	require_once 'inc/content-languages.php';
 }
+if (fs_theme_feature_enabled('blocked_ips')) {
+	require_once 'inc/ip-block.php';
+}
