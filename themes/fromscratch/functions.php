@@ -59,3 +59,6 @@ if (fs_theme_feature_enabled('languages')) {
 if (fs_theme_feature_enabled('blocked_ips')) {
 	require_once 'inc/ip-block.php';
 }
+if (fs_theme_feature_enabled('webp')) {
+	require_once 'inc/image-webp.php';
+}

@@ -50,6 +50,13 @@ return [
 	'svg_max_size' => 2, // Max file size in MB
 
 	/**
+	 * WebP conversion
+	 * JPEG → lossy WebP
+	 * PNG → lossless WebP
+	 */
+	'webp_quality' => 82, // Lossy WebP quality 1–100
+
+	/**
 	 * Login limit
 	 * Locks out IP after N failed attempts per minute for M minutes.
 	 */

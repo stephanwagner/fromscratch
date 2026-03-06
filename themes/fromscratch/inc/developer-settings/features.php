@@ -86,6 +86,8 @@ function fs_render_developer_features(): void
 
 		<form method="post" action="" class="page-settings-form">
 
+			<h3><?= esc_html__('Content', 'fromscratch') ?></h3>
+
 			<hr class="fs-small">
 
 			<?php settings_fields(FS_THEME_OPTION_GROUP_FEATURES); ?>
@@ -148,6 +150,23 @@ function fs_render_developer_features(): void
 
 			<table class="form-table" role="presentation">
 				<tr>
+					<th scope="row"><?= esc_html__('Languages', 'fromscratch') ?></th>
+					<td>
+						<input type="hidden" name="fromscratch_features[enable_languages]" value="0">
+						<label><input type="checkbox" name="fromscratch_features[enable_languages]" id="fromscratch_features_enable_languages" value="1" <?= checked($feat('enable_languages'), 1, false) ?>> <?= esc_html__('Enable languages', 'fromscratch') ?></label>
+						<p class="description fs-indent-checkbox"><?= esc_html__('Enables built-in support for multiple content languages.', 'fromscratch') ?></p>
+					</td>
+				</tr>
+			</table>
+
+			<hr class="fs-small">
+
+			<h3 style="margin-top: 32px;"><?= esc_html__('Media', 'fromscratch') ?></h3>
+
+			<hr class="fs-small">
+
+			<table class="form-table" role="presentation">
+				<tr>
 					<th scope="row"><?= esc_html__('SVG support', 'fromscratch') ?></th>
 					<td>
 						<input type="hidden" name="fromscratch_features[enable_svg]" value="0">
@@ -161,14 +180,23 @@ function fs_render_developer_features(): void
 
 			<table class="form-table" role="presentation">
 				<tr>
-					<th scope="row"><?= esc_html__('Languages', 'fromscratch') ?></th>
+					<th scope="row"><?= esc_html__('WebP images', 'fromscratch') ?></th>
 					<td>
-						<input type="hidden" name="fromscratch_features[enable_languages]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_languages]" id="fromscratch_features_enable_languages" value="1" <?= checked($feat('enable_languages'), 1, false) ?>> <?= esc_html__('Enable languages', 'fromscratch') ?></label>
-						<p class="description fs-indent-checkbox"><?= esc_html__('Enables built-in support for multiple content languages.', 'fromscratch') ?></p>
+						<input type="hidden" name="fromscratch_features[enable_webp]" value="0">
+						<label><input type="checkbox" name="fromscratch_features[enable_webp]" id="fromscratch_features_enable_webp" value="1" <?= checked($feat('enable_webp'), 1, false) ?>> <?= esc_html__('Convert images to WebP', 'fromscratch') ?></label>
+						<p class="description fs-indent-checkbox"><?= esc_html__('Convert generated JPEG and PNG image sizes to WebP. Requires GD or Imagick with WebP support.', 'fromscratch') ?></p>
+						<div class="fs-feature-sub" id="fs-feature-sub-webp" style="margin-top: 12px; <?= $feat('enable_webp') !== 1 ? 'display:none;' : '' ?>">
+							<input type="hidden" name="fromscratch_features[enable_webp_convert_original]" value="0">
+							<label><input type="checkbox" name="fromscratch_features[enable_webp_convert_original]" value="1" <?= checked($feat('enable_webp_convert_original'), 1, false) ?>> <?= esc_html__('Also convert the original image', 'fromscratch') ?></label>
+							<p class="description fs-indent-checkbox" style="margin-top: 4px;"><?= esc_html__('By default only generated sizes are converted; the original upload keeps its original format.', 'fromscratch') ?></p>
+						</div>
 					</td>
 				</tr>
 			</table>
+
+			<hr class="fs-small">
+
+			<h3 style="margin-top: 32px;"><?= esc_html__('Security', 'fromscratch') ?></h3>
 
 			<hr class="fs-small">
 
@@ -182,18 +210,24 @@ function fs_render_developer_features(): void
 					</td>
 				</tr>
 			</table>
+
+			<hr class="fs-small">
+
 			<?php submit_button(); ?>
 		</form>
 		<script>
 			(function() {
-				var blogs = document.getElementById('fromscratch_features_enable_blogs');
-				var sub = document.getElementById('fs-feature-sub-blogs');
-				if (!blogs || !sub) return;
-
-				function toggle() {
-					sub.style.display = blogs.checked ? '' : 'none';
+				function bindToggle(mainId, subId) {
+					var main = document.getElementById(mainId);
+					var sub = document.getElementById(subId);
+					if (!main || !sub) return;
+					function toggle() {
+						sub.style.display = main.checked ? '' : 'none';
+					}
+					main.addEventListener('change', toggle);
 				}
-				blogs.addEventListener('change', toggle);
+				bindToggle('fromscratch_features_enable_blogs', 'fs-feature-sub-blogs');
+				bindToggle('fromscratch_features_enable_webp', 'fs-feature-sub-webp');
 			})();
 		</script>
 	</div>

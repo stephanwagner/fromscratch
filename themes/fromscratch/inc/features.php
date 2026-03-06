@@ -19,6 +19,8 @@ function fs_theme_feature_defaults(): array
 		'enable_post_expirator'    => 1,
 		'enable_languages'         => 0,
 		'enable_blocked_ips'       => 0,
+		'enable_webp'              => 0,
+		'enable_webp_convert_original' => 0,
 	];
 }
 
@@ -29,7 +31,7 @@ function fs_theme_feature_defaults(): array
  */
 function fs_theme_feature_default_off_when_missing(): array
 {
-	return ['enable_remove_post_tags', 'enable_languages', 'enable_blocked_ips'];
+	return ['enable_remove_post_tags', 'enable_languages', 'enable_blocked_ips', 'enable_webp', 'enable_webp_convert_original'];
 }
 
 /**
@@ -59,6 +61,8 @@ function fs_theme_feature_enabled(string $feature): bool
 		'post_expirator'    => 'enable_post_expirator',
 		'languages'         => 'enable_languages',
 		'blocked_ips'       => 'enable_blocked_ips',
+		'webp'              => 'enable_webp',
+		'webp_convert_original' => 'enable_webp_convert_original',
 	];
 
 	$key = $map[$feature] ?? '';
