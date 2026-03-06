@@ -534,7 +534,7 @@ msgid "Adds an expiration date to pages and posts."
 msgstr "Fügt Seiten und Beiträgen ein Ablaufdatum hinzu."
 
 msgid "Add redirect"
-msgstr "Redirect hinzufügen"
+msgstr "Weiterleitung hinzufügen"
 
 msgid "Custom CSS"
 msgstr "Eigenes CSS"

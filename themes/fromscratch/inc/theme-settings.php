@@ -807,14 +807,14 @@ function theme_settings_page(): void
 								<option value="302" <?= selected($r['code'], 302, false) ?>><?= esc_html__('302 (Temporary)', 'fromscratch') ?></option>
 							</select>
 						</td>
-						<td><button type="button" class="button fs-redirect-remove"><?= esc_html__('Delete', 'fromscratch') ?></button></td>
+						<td><button type="button" class="button fs-redirect-remove"><?= esc_html__('Remove', 'fromscratch') ?></button></td>
 					</tr>
 					<?php endforeach; ?>
 					<tr class="fs-redirect-row fs-redirect-template" style="display: none;">
-						<td><input type="text" name="fs_redirects[__i__][from]" value="" class="regular-text" placeholder="<?= esc_attr__('/old-path', 'fromscratch') ?>" disabled></td>
-						<td><input type="text" name="fs_redirects[__i__][to]" value="" class="regular-text" placeholder="<?= esc_attr__('/new-path', 'fromscratch') ?>" disabled></td>
+						<td><input type="text" name="fs_redirects[__i__][from]" value="" class="regular-text" style="width: 100%;" placeholder="<?= esc_attr__('/old-path', 'fromscratch') ?>" disabled></td>
+						<td><input type="text" name="fs_redirects[__i__][to]" value="" class="regular-text" style="width: 100%;" placeholder="<?= esc_attr__('/new-path', 'fromscratch') ?>" disabled></td>
 						<td><select name="fs_redirects[__i__][code]" disabled><option value="301"><?= esc_html__('301 (Permanent)', 'fromscratch') ?></option><option value="302"><?= esc_html__('302 (Temporary)', 'fromscratch') ?></option></select></td>
-						<td><button type="button" class="button fs-redirect-remove"><?= esc_html__('Delete', 'fromscratch') ?></button></td>
+						<td><button type="button" class="button fs-redirect-remove"><?= esc_html__('Remove', 'fromscratch') ?></button></td>
 					</tr>
 				</tbody>
 			</table>
