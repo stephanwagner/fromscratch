@@ -85,6 +85,33 @@ function fs_dashboard_panel()
 				</div>
 			<?php endif; ?>
 
+			<?php
+			$is_developer = function_exists('fs_is_developer_user') && fs_is_developer_user((int) get_current_user_id());
+			$security_url = admin_url('options-general.php?page=fs-developer-security');
+
+			if ($is_developer && (int) get_option('blog_public', 1) === 0) :
+				$system_url = admin_url('options-general.php?page=fs-developer-system#fs-search-visibility');
+			?>
+				<div class="notice notice-warning inline" style="margin: 0 0 1em 0;">
+					<p><strong><?php esc_html_e('Search engines are asked not to index this site.', 'fromscratch'); ?></strong></p>
+					<p><a href="<?php echo esc_url($system_url); ?>"><?php esc_html_e('Enable search engine indexing in Developer → System', 'fromscratch'); ?></a></p>
+				</div>
+			<?php endif; ?>
+
+			<?php if ($is_developer && get_option('fromscratch_site_password_protection') === '1') : ?>
+				<div class="notice notice-info inline" style="margin: 0 0 1em 0;">
+					<p><strong><?php esc_html_e('Password protection is active.', 'fromscratch'); ?></strong></p>
+					<p><a href="<?php echo esc_url($security_url); ?>"><?php esc_html_e('Manage in Developer → Security', 'fromscratch'); ?></a></p>
+				</div>
+			<?php endif; ?>
+
+			<?php if ($is_developer && get_option('fromscratch_maintenance_mode') === '1') : ?>
+				<div class="notice notice-info inline" style="margin: 0 0 1em 0;">
+					<p><strong><?php esc_html_e('Maintenance mode is active.', 'fromscratch'); ?></strong></p>
+					<p><a href="<?php echo esc_url($security_url); ?>"><?php esc_html_e('Manage in Developer → Security', 'fromscratch'); ?></a></p>
+				</div>
+			<?php endif; ?>
+
 			<div class="welcome-panel-column-container">
 
 				<div class="welcome-panel-column">

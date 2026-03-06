@@ -57,6 +57,14 @@ function fs_can_use_htaccess_redirects(): bool
 }
 
 /**
+ * Paths that must never be overridden by the redirect router (WordPress internals).
+ */
+function fs_redirects_internal_paths(): array
+{
+	return ['wp-json', 'wp-sitemap', 'feed', 'sitemap.xml', 'robots.txt', 'favicon.ico'];
+}
+
+/**
  * Redirect manager: run redirects via WordPress when method is "wordpress".
  * When method is "htaccess", Apache handles redirects from .htaccess.
  */
@@ -72,6 +80,12 @@ add_action('template_redirect', function () {
 	$path = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '';
 	$path = trim((string) parse_url($path, PHP_URL_PATH), '/');
 	$request = $path === '' ? '/' : '/' . $path;
+
+	foreach (fs_redirects_internal_paths() as $internal) {
+		if (str_starts_with($path, $internal)) {
+			return;
+		}
+	}
 	if (!isset($redirects[$request])) {
 		return;
 	}

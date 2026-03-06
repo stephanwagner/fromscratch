@@ -41,6 +41,15 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 	}
 	$url = admin_url('options-general.php?page=fs-developer-system');
 
+	// Search engine visibility (blog_public)
+	if (!empty($_POST['fromscratch_save_search_visibility']) && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_system_search_visibility')) {
+		$discourage = !empty($_POST['blog_public_discourage']);
+		update_option('blog_public', $discourage ? '0' : '1');
+		set_transient('fromscratch_system_saved', '1', 30);
+		wp_safe_redirect($url . '#fs-search-visibility');
+		exit;
+	}
+
 	// Administrator email
 	if (!empty($_POST['option_page']) && $_POST['option_page'] === FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL . '-options')) {
 		$email = isset($_POST['admin_email']) ? sanitize_email(wp_unslash($_POST['admin_email'])) : '';
@@ -73,6 +82,34 @@ function fs_render_developer_system(): void
 		<?php endif; ?>
 
 		<?php fs_developer_settings_render_nav(); ?>
+
+		<?php if ((int) get_option('blog_public', 1) === 0) : ?>
+			<div class="notice notice-warning inline" style="margin: 0 0 1em 0;">
+				<p><strong><?= esc_html__('Search engines are asked not to index this site.', 'fromscratch') ?></strong></p>
+				<p><a href="#fs-search-visibility"><?= esc_html__('Enable search engine indexing below', 'fromscratch') ?></a></p>
+			</div>
+		<?php endif; ?>
+
+		<form method="post" action="" class="page-settings-form" id="fs-search-visibility">
+			<?php wp_nonce_field('fromscratch_system_search_visibility'); ?>
+			<input type="hidden" name="fromscratch_save_search_visibility" value="1">
+			<h2 class="title"><?= esc_html__('Search engine visibility', 'fromscratch') ?></h2>
+			<p class="description"><?= esc_html__('This setting matches Settings → Reading. When enabled, search engines are asked not to index this site.', 'fromscratch') ?></p>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?= esc_html__('Visibility', 'fromscratch') ?></th>
+					<td>
+						<label>
+							<input type="checkbox" name="blog_public_discourage" value="1" <?= checked((int) get_option('blog_public', 1), 0, false) ?>>
+							<?= esc_html__('Discourage search engines from indexing this site', 'fromscratch') ?>
+						</label>
+					</td>
+				</tr>
+			</table>
+			<?php submit_button(); ?>
+		</form>
+
+		<hr>
 
 		<form method="post" action="" class="page-settings-form">
 			<?php settings_fields(FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL); ?>
