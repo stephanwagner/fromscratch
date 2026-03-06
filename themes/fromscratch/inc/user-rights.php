@@ -294,7 +294,7 @@ add_action('admin_menu', function () {
   if (!fs_admin_can_access('options_privacy')) {
     remove_submenu_page('options-general.php', 'options-privacy.php');
   }
-}, 999);
+}, 30);
 
 /**
  * When Design (Themes) menu is disabled for the user, add no-customize-support so

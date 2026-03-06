@@ -7,7 +7,7 @@ defined('ABSPATH') || exit;
  */
 add_action('wp_dashboard_setup', function () {
 	remove_meta_box('dashboard_primary', 'dashboard', 'side');
-}, 999);
+}, 20);
 
 /**
  * Force welcome panel to be shown

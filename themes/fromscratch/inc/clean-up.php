@@ -47,7 +47,7 @@ function fs_clean_up_styles(): void
 {
 	wp_dequeue_style('classic-theme-styles');
 }
-add_action('wp_enqueue_scripts', 'fs_clean_up_styles', 999);
+add_action('wp_enqueue_scripts', 'fs_clean_up_styles', 100);
 
 /**
  * Disable and remove comments everywhere
@@ -58,7 +58,7 @@ add_filter('pings_open', '__return_false');
 add_action('admin_menu', function () {
 	remove_menu_page('edit-comments.php');
 	remove_submenu_page('options-general.php', 'options-discussion.php');
-}, 999);
+}, 20);
 
 add_action('admin_init', function () {
 	global $pagenow;

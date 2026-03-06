@@ -163,7 +163,7 @@ add_action('admin_menu', function () {
 			unset($submenu['options-general.php'][$i]);
 		}
 	}
-}, 999);
+}, 25);
 
 // When on any Developer page, highlight "Developer" in the Settings menu.
 add_filter('submenu_file', function ($submenu_file, $parent_file) {

@@ -104,7 +104,7 @@ add_action('admin_menu', function () {
     return;
   }
   remove_submenu_page('themes.php', 'fromscratch-install');
-}, 999);
+}, 20);
 
 /**
  * Show FromScratch installer notice (when not on the install page; redirect usually sends users there).
