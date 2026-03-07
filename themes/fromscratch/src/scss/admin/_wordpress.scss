@@ -1,3 +1,22 @@
+// Fix font rendering
+
+div#wpwrap {
+  -webkit-font-smoothing: antialiased;
+}
+
+// Tables
+
+table.widefat {
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+// Notices
+
+.notice {
+  border-radius: 6px;
+}
+
 // Separator
 
 hr {
@@ -13,12 +32,12 @@ hr {
 // Tab navigation
 
 .nav-tab {
-  border-radius: 3px 3px 0 0;
+  border-radius: 4px 4px 0 0;
   padding-top: 3px;
   padding-bottom: 3px;
 
   @media (max-width: 600px) {
-    border-radius: 3px;
+    border-radius: 4px;
   }
 
   &.has-icons {
@@ -57,6 +76,8 @@ hr {
   }
 }
 
+// Code
+
 code,
 .code,
 input.code,
@@ -73,6 +94,9 @@ code {
   margin-right: 2px;
   border-radius: 3px;
 }
+
+
+// TODO SORT
 
 // Mail delivery (Developer › System)
 
@@ -142,12 +166,15 @@ code {
     border-radius: 6px;
     background: #dcdcde;
     display: block;
+
     &[data-provider="php"] {
       background: linear-gradient(135deg, #8892bf 0%, #4f5b93 100%);
     }
+
     &[data-provider="smtp"] {
       background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
     }
+
     &[data-provider="sendgrid"] {
       background: linear-gradient(135deg, #1a82e2 0%, #0d5cad 100%);
     }

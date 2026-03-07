@@ -46,7 +46,7 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 		$discourage = !empty($_POST['blog_public_discourage']);
 		update_option('blog_public', $discourage ? '0' : '1');
 		set_transient('fromscratch_system_saved', '1', 30);
-		wp_safe_redirect($url . '#fs-search-visibility');
+		wp_safe_redirect($url);
 		exit;
 	}
 
@@ -92,22 +92,21 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 		}
 
 		set_transient('fromscratch_system_saved', '1', 30);
-		wp_safe_redirect($url . '#fs-mail-delivery');
+		wp_safe_redirect($url);
 		exit;
 	}
 
 	// Test mail: send to developer email using template from inc/email-templates
 	if (!empty($_POST['fromscratch_send_test_mail']) && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_system_test_mail')) {
-		$url_anchor = $url . '#fs-mail-delivery';
 		if (!function_exists('fs_developer_email')) {
 			set_transient('fromscratch_system_test_mail_error', __('Developer email is not configured.', 'fromscratch'), 30);
-			wp_safe_redirect($url_anchor);
+			wp_safe_redirect($url);
 			exit;
 		}
 		$to = fs_developer_email();
 		if ($to === '') {
 			set_transient('fromscratch_system_test_mail_error', __('Please enter a developer email above before sending a test.', 'fromscratch'), 30);
-			wp_safe_redirect($url_anchor);
+			wp_safe_redirect($url);
 			exit;
 		}
 		$site_name = get_bloginfo('name');
@@ -119,7 +118,7 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 		]);
 		if ($body === '') {
 			set_transient('fromscratch_system_test_mail_error', __('Test email template could not be loaded.', 'fromscratch'), 30);
-			wp_safe_redirect($url_anchor);
+			wp_safe_redirect($url);
 			exit;
 		}
 		$subject = sprintf(/* translators: %s: site name */ __('Test email from %s', 'fromscratch'), $site_name);
@@ -150,7 +149,7 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 			}
 			set_transient('fromscratch_system_test_mail_error', $base, 30);
 		}
-		wp_safe_redirect($url_anchor);
+		wp_safe_redirect($url);
 		exit;
 	}
 }, 1);
@@ -229,7 +228,7 @@ function fs_render_developer_system(): void
 			<?php submit_button(); ?>
 		</form>
 
-		<hr>
+		<hr class="fs-small">
 
 		<form method="post" action="" class="page-settings-form fs-mail-delivery-form" id="fs-mail-delivery">
 			<?php wp_nonce_field('fromscratch_system_mail_delivery'); ?>
@@ -364,7 +363,7 @@ function fs_render_developer_system(): void
 			<?php submit_button(__('Send test mail', 'fromscratch'), 'secondary', 'fromscratch_test_mail', false); ?>
 		</form>
 
-		<hr>
+		<hr class="fs-small">
 
 		<form method="post" action="" class="page-settings-form" id="fs-search-visibility">
 			<?php wp_nonce_field('fromscratch_system_search_visibility'); ?>
