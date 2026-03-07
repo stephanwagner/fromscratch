@@ -219,6 +219,17 @@ function fs_render_developer_security(): void
 				<h2 class="title"><?= esc_html__('Blocked IP addresses', 'fromscratch') ?></h2>
 				<p class="description"><?= esc_html__('One IP address per line. Supports single IPs, CIDR ranges, or wildcards.', 'fromscratch') ?></p>
 				<p class="description" style="color: #b32d2e;"><?= esc_html__('Be careful when blocking IP addresses. Incorrect rules may lock you out of your own site.', 'fromscratch') ?></p>
+				<?php
+				$current_ip = function_exists('fs_blocked_ips_visitor_ip') ? fs_blocked_ips_visitor_ip() : '';
+				?>
+				<?php if ($current_ip !== '' && filter_var($current_ip, FILTER_VALIDATE_IP)) : ?>
+					<p class="description" style="margin-top: 8px;">
+						<?= esc_html__('Your current IP address:', 'fromscratch') ?>
+						<code class="fs-code-small"><?= esc_html($current_ip) ?></code>
+					</p>
+				<?php else : ?>
+					<p class="description" style="margin-top: 8px;"><?= esc_html__('Your current IP address could not be detected.', 'fromscratch') ?></p>
+				<?php endif; ?>
 				<div style="display: block; margin-top: 16px; margin-bottom: -8px;">
 					<textarea name="fromscratch_blocked_ips" id="fromscratch_blocked_ips" rows="5" class="regular-text code fs-code-small"><?= esc_textarea(get_option('fromscratch_blocked_ips', '')) ?></textarea>
 				</div>
@@ -258,7 +269,7 @@ function fs_render_developer_security(): void
 							$show_block = $attempts >= $threshold_attempts && $within_window;
 						?>
 							<tr>
-								<td style="vertical-align: middle;"><code><?= esc_html($ip) ?></code></td>
+								<td style="vertical-align: middle;"><code class="fs-code-small"><?= esc_html($ip) ?></code></td>
 								<td style="vertical-align: middle;"><?= (int) $attempts ?> <?= esc_html(_n('attempt', 'attempts', $attempts, 'fromscratch')) ?></td>
 								<td style="vertical-align: middle;"><?= $last ? esc_html(sprintf(__('%s ago', 'fromscratch'), human_time_diff($last, time()))) : '—' ?></td>
 								<td style="vertical-align: middle;">
