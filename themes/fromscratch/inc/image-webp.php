@@ -16,16 +16,9 @@ defined('ABSPATH') || exit;
  */
 function fs_webp_supported(): bool
 {
-	if (extension_loaded('imagick')) {
-		$formats = \Imagick::queryFormats('WEBP');
-		if (!empty($formats)) {
-			return true;
-		}
-	}
-	if (extension_loaded('gd') && function_exists('imagewebp')) {
-		return true;
-	}
-	return false;
+	return wp_image_editor_supports([
+        'mime_type' => 'image/webp'
+    ]);
 }
 
 /**

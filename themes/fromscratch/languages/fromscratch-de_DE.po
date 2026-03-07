@@ -398,6 +398,12 @@ msgstr "Aktiviere die Funktionen, die dein Projekt benötigt."
 msgid "All features are modular and can be toggled at any time to keep the theme lean and maintainable."
 msgstr "Alle Features sind modular aufgebaut und können jederzeit ein- oder ausgeschaltet werden, um das Theme schlank und übersichtlich zu halten."
 
+msgid "WebP conversion is enabled but no suitable image library was detected."
+msgstr "WebP-Konvertierung ist aktiviert, es wurde jedoch keine geeignete Bildbibliothek gefunden."
+
+msgid "Convert images to WebP requires the PHP %1$s extension (with WebP support) or the %2$s extension. Neither is available on this server. New uploads will not be converted to WebP until you install one of them."
+msgstr "Die WebP-Konvertierung erfordert die PHP-%1$s-Erweiterung (mit WebP-Unterstützung) oder die %2$s-Erweiterung. Keine davon ist auf diesem Server verfügbar. Neue Uploads werden erst nach der Installation einer der Erweiterungen in WebP konvertiert."
+
 msgid "Clear all overrides"
 msgstr "Alle Overrides zurücksetzen"
 

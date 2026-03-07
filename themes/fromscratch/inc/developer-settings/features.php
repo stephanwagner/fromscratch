@@ -69,13 +69,35 @@ function fs_render_developer_features(): void
 	$feat = function ($key) use ($features, $defaults) {
 		return isset($features[$key]) ? (int) $features[$key] : (int) ($defaults[$key] ?? 0);
 	};
+
+	if (!function_exists('fs_webp_supported')) {
+		require_once get_template_directory() . '/inc/image-webp.php';
+	}
+	$webp_enabled_no_support = ($feat('enable_webp') === 1 && !fs_webp_supported());
 ?>
 	<div class="wrap">
 		<h1><?= esc_html(__('Developer settings', 'fromscratch')) ?></h1>
-		
+
 		<?php if ($features_saved !== false) : ?>
 			<div class="notice notice-success is-dismissible">
 				<p><strong><?= esc_html(__('Settings saved.', 'fromscratch')) ?></strong></p>
+			</div>
+		<?php endif; ?>
+
+		<?php if ($webp_enabled_no_support) : ?>
+			<div class="notice notice-warning is-dismissible">
+				<p><strong><?= esc_html__('WebP conversion is enabled but no suitable image library was detected.', 'fromscratch') ?></strong></p>
+				<p><?php
+					echo wp_kses(
+						sprintf(
+							/* translators: 1: link to PHP GD manual, 2: link to PHP Imagick manual */
+							__('Convert images to WebP requires the PHP %1$s extension (with WebP support) or the %2$s extension. Neither is available on this server. New uploads will not be converted to WebP until you install one of them.', 'fromscratch'),
+							'<a href="' . esc_url('https://www.php.net/manual/en/book.image.php') . '" target="_blank" rel="noopener noreferrer">GD</a>',
+							'<a href="' . esc_url('https://www.php.net/manual/en/book.imagick.php') . '" target="_blank" rel="noopener noreferrer">ImageMagick</a>'
+						),
+						['a' => ['href' => true, 'target' => true, 'rel' => true]]
+					);
+					?></p>
 			</div>
 		<?php endif; ?>
 
@@ -234,6 +256,7 @@ function fs_render_developer_features(): void
 					var main = document.getElementById(mainId);
 					var sub = document.getElementById(subId);
 					if (!main || !sub) return;
+
 					function toggle() {
 						sub.style.display = main.checked ? '' : 'none';
 					}
