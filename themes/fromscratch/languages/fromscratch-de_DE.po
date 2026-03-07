@@ -711,23 +711,11 @@ msgstr "Kopiert!"
 msgid "Protected Area"
 msgstr "Geschützter Bereich"
 
-msgid "Login attempts"
-msgstr "Anmeldeversuche"
+msgid "Access denied"
+msgstr "Zugriff verweigert"
 
-msgid "per minute"
-msgstr "pro Minute"
-
-msgid "After this many failed attempts per IP, login is blocked.<br>Allowed range: %d - %d."
-msgstr "Nach dieser Anzahl fehlgeschlagener Versuche pro IP wird die Anmeldung blockiert.<br>Erlaubter Bereich: %d - %d."
-
-msgid "Lockout duration"
-msgstr "Sperrdauer"
-
-msgid "minutes"
-msgstr "Minuten"
-
-msgid "How long to block login after the limit is reached.<br>Allowed range: %d - %d."
-msgstr "Wie lange die Anmeldung nach Erreichen des Limits blockiert wird.<br>Erlaubter Bereich: %d - %d."
+msgid "You do not have access to this site."
+msgstr "Du hast keinen Zugriff auf diese Website."
 
 # Theme settings: Maintenance mode (Security tab)
 msgid "Maintenance mode"
@@ -793,9 +781,9 @@ msgstr "(Kopie)"
 msgid "Failed to create duplicate."
 msgstr "Duplikat konnte nicht erstellt werden."
 
-# Site password form (front-end)
-msgid "This site is password protected. Enter the password to continue."
-msgstr "Diese Seite ist passwortgeschützt. Gib das Passwort ein, um fortzufahren."
+# Site password form
+msgid "This site is password protected."
+msgstr "Diese Seite ist passwortgeschützt."
 
 msgid "Log in"
 msgstr "Anmelden"

@@ -32,13 +32,18 @@ if (is_admin()) {
 	require_once 'inc/media-sizes.php';
 }
 
+// Helpers
+require_once 'inc/helpers/page-blocker.php';
+
 // Features
-require_once 'inc/login-limit.php';
 require_once 'inc/login-client-logo.php';
-require_once 'inc/site-password.php';
-require_once 'inc/maintenance.php';
 require_once 'inc/assets.php';
 require_once 'inc/cpt.php';
+
+// Security
+require_once 'inc/security/password-protection.php';
+require_once 'inc/security/maintenance-mode.php';
+require_once 'inc/security/login-limit.php';
 
 // Optional features (gated by Settings → Theme → General)
 if (fs_theme_feature_enabled('svg')) {
@@ -57,7 +62,7 @@ if (fs_theme_feature_enabled('languages')) {
 	require_once 'inc/content-languages.php';
 }
 if (fs_theme_feature_enabled('blocked_ips')) {
-	require_once 'inc/ip-block.php';
+	require_once 'inc/security/ip-blocker.php';
 }
 if (fs_theme_feature_enabled('webp')) {
 	require_once 'inc/image-webp.php';

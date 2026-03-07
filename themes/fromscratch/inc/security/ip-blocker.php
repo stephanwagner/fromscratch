@@ -116,11 +116,9 @@ function fs_blocked_ips_maybe_block(): void
 		if (!defined('DONOTCACHEPAGE')) {
 			define('DONOTCACHEPAGE', true);
 		}
-		status_header(403);
-		nocache_headers();
-		header('Content-Type: text/html; charset=utf-8');
-		echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Access denied</title></head><body><h1>Access denied</h1></body></html>';
-		exit;
+		$title = __('Access denied', 'fromscratch');
+		$body = '<div class="notice">' . esc_html(__('You do not have access to this site.', 'fromscratch')) . '</div>';
+		fs_block_page($title, $body, ['status' => 403]);
 	}
 }
 
