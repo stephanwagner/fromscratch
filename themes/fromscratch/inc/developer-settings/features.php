@@ -167,6 +167,19 @@ function fs_render_developer_features(): void
 
 			<table class="form-table" role="presentation">
 				<tr>
+					<th scope="row"><?= esc_html__('Media folders', 'fromscratch') ?></th>
+					<td>
+						<input type="hidden" name="fromscratch_features[enable_media_folders]" value="0">
+						<label><input type="checkbox" name="fromscratch_features[enable_media_folders]" value="1" <?= checked($feat('enable_media_folders'), 1, false) ?>> <?= esc_html__('Enable media folders', 'fromscratch') ?></label>
+						<p class="description fs-indent-checkbox"><?= esc_html__('Adds taxonomy-based folders in Media Library with a left sidebar and quick folder creation.', 'fromscratch') ?></p>
+					</td>
+				</tr>
+			</table>
+
+			<hr class="fs-small">
+
+			<table class="form-table" role="presentation">
+				<tr>
 					<th scope="row"><?= esc_html__('SVG support', 'fromscratch') ?></th>
 					<td>
 						<input type="hidden" name="fromscratch_features[enable_svg]" value="0">
@@ -190,19 +203,6 @@ function fs_render_developer_features(): void
 							<label><input type="checkbox" name="fromscratch_features[enable_webp_convert_original]" value="1" <?= checked($feat('enable_webp_convert_original'), 1, false) ?>> <?= esc_html__('Also convert the original image', 'fromscratch') ?></label>
 							<p class="description fs-indent-checkbox" style="margin-top: 4px;"><?= esc_html__('By default only generated sizes are converted; the original upload keeps its original format.', 'fromscratch') ?></p>
 						</div>
-					</td>
-				</tr>
-			</table>
-
-			<hr class="fs-small">
-
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><?= esc_html__('Media folders', 'fromscratch') ?></th>
-					<td>
-						<input type="hidden" name="fromscratch_features[enable_media_folders]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_media_folders]" value="1" <?= checked($feat('enable_media_folders'), 1, false) ?>> <?= esc_html__('Enable media folders', 'fromscratch') ?></label>
-						<p class="description fs-indent-checkbox"><?= esc_html__('Adds taxonomy-based folders in Media Library with a left sidebar and quick folder creation.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 			</table>

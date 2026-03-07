@@ -18,10 +18,10 @@ function fs_theme_feature_defaults(): array
 		'enable_seo'               => 1,
 		'enable_post_expirator'    => 1,
 		'enable_languages'         => 0,
-		'enable_blocked_ips'       => 0,
+		'enable_blocked_ips'       => 1,
 		'enable_webp'              => 0,
 		'enable_webp_convert_original' => 0,
-		'enable_media_folders'     => 0,
+		'enable_media_folders'     => 1,
 	];
 }
 
@@ -32,7 +32,7 @@ function fs_theme_feature_defaults(): array
  */
 function fs_theme_feature_default_off_when_missing(): array
 {
-	return ['enable_remove_post_tags', 'enable_languages', 'enable_blocked_ips', 'enable_webp', 'enable_webp_convert_original', 'enable_media_folders'];
+	return ['enable_remove_post_tags', 'enable_languages', 'enable_webp', 'enable_webp_convert_original'];
 }
 
 /**

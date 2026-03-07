@@ -7,14 +7,32 @@ defined('ABSPATH') || exit;
  */
 class FS_Walker_Nav_Menu extends Walker_Nav_Menu
 {
-	/** @var array<int, int> */
-	private array $submenu_parent_ids = [];
+	/** @var array<int, string> */
+	private array $submenu_ids_by_depth = [];
+
+	private function fs_menu_scope($args): string
+	{
+		$menu_id = '';
+		if (is_object($args) && isset($args->menu_id) && is_scalar($args->menu_id)) {
+			$menu_id = (string) $args->menu_id;
+		}
+		$menu_id = sanitize_html_class($menu_id);
+		return $menu_id !== '' ? $menu_id : 'menu';
+	}
+
+	private function fs_build_submenu_id($args, int $item_id): string
+	{
+		$scope = $this->fs_menu_scope($args);
+		if ($item_id > 0) {
+			return 'sub-menu-' . $scope . '-' . $item_id;
+		}
+		return 'sub-menu-' . $scope . '-' . uniqid();
+	}
 
 	public function start_lvl(&$output, $depth = 0, $args = null): void
 	{
 		$indent = str_repeat("\t", $depth);
-		$parent_id = isset($this->submenu_parent_ids[$depth]) ? (int) $this->submenu_parent_ids[$depth] : 0;
-		$submenu_id = $parent_id > 0 ? 'sub-menu-' . $parent_id : 'sub-menu-' . uniqid();
+		$submenu_id = $this->submenu_ids_by_depth[$depth] ?? $this->fs_build_submenu_id($args, 0);
 		$classes = ['sub-menu', 'menu-depth-' . ($depth + 1)];
 
 		$output .= "\n" . $indent . '<ul id="' . esc_attr($submenu_id) . '" class="' . esc_attr(implode(' ', $classes)) . '">' . "\n";
@@ -59,9 +77,10 @@ class FS_Walker_Nav_Menu extends Walker_Nav_Menu
 		$item_output .= '</a>';
 
 		$has_children = in_array('menu-item-has-children', $classes, true);
-		$this->submenu_parent_ids[$depth] = (int) $item->ID;
+		unset($this->submenu_ids_by_depth[$depth]);
 		if ($has_children) {
-			$submenu_id = 'sub-menu-' . (int) $item->ID;
+			$submenu_id = $this->fs_build_submenu_id($args, (int) $item->ID);
+			$this->submenu_ids_by_depth[$depth] = $submenu_id;
 			$toggle_label = sprintf(
 				/* translators: %s is menu item label. */
 				__('Toggle submenu for %s', 'fromscratch'),
@@ -81,6 +100,9 @@ class FS_Walker_Nav_Menu extends Walker_Nav_Menu
  */
 function fs_nav_menu(array $args = []): void
 {
+	static $menu_instance = 0;
+	$menu_instance++;
+
 	$defaults = [
 		'container' => 'nav',
 		'fallback_cb' => 'wp_page_menu',
@@ -88,6 +110,11 @@ function fs_nav_menu(array $args = []): void
 	];
 	$args = wp_parse_args($args, $defaults);
 	$theme_location = isset($args['theme_location']) ? (string) $args['theme_location'] : '';
+	if (empty($args['menu_id'])) {
+		$menu_id_base = $theme_location !== '' ? ('menu-' . $theme_location) : 'menu';
+		$menu_id_base = sanitize_html_class($menu_id_base);
+		$args['menu_id'] = $menu_id_base . '-' . $menu_instance;
+	}
 	if ($theme_location !== '' && function_exists('has_nav_menu') && !has_nav_menu($theme_location)) {
 		// No assigned menu for this location: show fallback navigation.
 		unset($args['walker']);

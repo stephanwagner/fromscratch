@@ -144,7 +144,18 @@ function fs_render_developer_general(): void
 			<table class="widefat striped" style="margin-top: 8px;">
 				<tbody>
 					<tr>
-						<td style="width: 220px; vertical-align: top;"><code>fs_get_page_id_by_slug( $slug )</code></td>
+						<td style="width: 220px; vertical-align: top;"><code>fs_nav_menu( $args )</code></td>
+						<td>
+							<?= esc_html__('Render a menu with the custom accessible walker from config/nav-walker.php.', 'fromscratch') ?>
+							<br><code>fs_nav_menu([ 'theme_location' =&gt; 'main_menu' ]);</code>
+						</td>
+					</tr>
+					<tr>
+						<td style="vertical-align: top;"><code>FS_Walker_Nav_Menu</code></td>
+						<td><?= esc_html__('Minimal custom walker for clean markup: menu-link, menu-label, menu-depth-* and accessible submenu toggle buttons.', 'fromscratch') ?></td>
+					</tr>
+					<tr>
+						<td style="vertical-align: top;"><code>fs_get_page_id_by_slug( $slug )</code></td>
 						<td><?= esc_html__('Get page ID by post slug. Returns null if not found.', 'fromscratch') ?></td>
 					</tr>
 					<tr>
