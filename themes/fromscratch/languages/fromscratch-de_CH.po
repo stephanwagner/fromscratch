@@ -742,6 +742,57 @@ msgstr "Kurzer Hinweistext unter der Überschrift. Leer lassen für den Standard
 msgid "We are currently performing scheduled maintenance. Please check back shortly."
 msgstr "Es werden planmäßige Wartungsarbeiten durchgeführt. Bitte in Kürze wieder vorbeischauen."
 
+# Blocked IP addresses & Failed login attempts (Security tab)
+msgid "Blocked IP addresses"
+msgstr "Blockierte IP-Adressen"
+
+msgid "One IP address per line. Supports single IPs, CIDR ranges, or wildcards."
+msgstr "Eine IP-Adresse pro Zeile. Unterstützt einzelne IPs, CIDR-Bereiche oder Wildcards."
+
+msgid "Be careful when blocking IP addresses. Incorrect rules may lock you out of your own site."
+msgstr "Vorsicht beim Blockieren von IP-Adressen. Falsche Regeln können dich von deiner eigenen Website aussperren."
+
+msgid "Your current IP address:"
+msgstr "Deine aktuelle IP-Adresse:"
+
+msgid "Your current IP address could not be detected."
+msgstr "Deine aktuelle IP-Adresse konnte nicht ermittelt werden."
+
+msgid "Failed login attempts"
+msgstr "Fehlgeschlagene Anmeldeversuche"
+
+msgid "Shows recent failed login attempts."
+msgstr "Zeigt die letzten fehlgeschlagenen Anmeldeversuche."
+
+msgid "IPs exceeding the configured threshold are listed as suspicious and can be blocked."
+msgstr "IPs über dem konfigurierten Schwellenwert werden als verdächtig aufgeführt und können blockiert werden."
+
+msgid "No failed login attempts recorded."
+msgstr "Keine fehlgeschlagenen Anmeldeversuche aufgezeichnet."
+
+msgid "IP address"
+msgstr "IP-Adresse"
+
+msgid "Attempts"
+msgstr "Versuche"
+
+msgid "Last attempt"
+msgstr "Letzter Versuch"
+
+msgid "attempt"
+msgid_plural "attempts"
+msgstr[0] "Versuch"
+msgstr[1] "Versuche"
+
+msgid "%s ago"
+msgstr "vor %s"
+
+msgid "Block IP"
+msgstr "IP blockieren"
+
+msgid "Clear list"
+msgstr "Liste leeren"
+
 msgid "Override SCSS design variables. Values are output as CSS custom properties (:root). Add new variables in config/theme.php under design.sections."
 msgstr "SCSS-Designvariablen überschreiben. Werte werden als CSS-Custom-Properties (:root) ausgegeben. Neue Variablen in config/theme.php unter design.sections hinzufügen."
 

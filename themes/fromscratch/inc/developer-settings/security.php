@@ -238,7 +238,8 @@ function fs_render_developer_security(): void
 
 			<hr>
 			<h2 class="title"><?= esc_html__('Failed login attempts', 'fromscratch') ?></h2>
-			<p class="description"><?= esc_html__('Shows recent failed login attempts. IPs exceeding the configured threshold are listed as suspicious and can be blocked.', 'fromscratch') ?></p>
+			<p class="description"><?= esc_html__('Shows recent failed login attempts.', 'fromscratch') ?></p>
+			<p class="description"><?= esc_html__('IPs exceeding the configured threshold are listed as suspicious and can be blocked.', 'fromscratch') ?></p>
 			<?php
 			$failed = function_exists('fs_blocked_ips_get_failed_attempts') ? fs_blocked_ips_get_failed_attempts(true) : [];
 			$suspicious_config = function_exists('fs_blocked_ips_suspicious_config') ? fs_blocked_ips_suspicious_config() : ['attempts' => 10, 'minutes' => 10];
@@ -246,7 +247,7 @@ function fs_render_developer_security(): void
 			$threshold_seconds = (int) $suspicious_config['minutes'] * 60;
 			?>
 			<?php if (empty($failed)) : ?>
-				<p class="description"><?= esc_html__('No failed login attempts recorded.', 'fromscratch') ?></p>
+				<p class="description" style="font-style: italic; color: #a7aaad; margin-top: 16px;"><?= esc_html__('No failed login attempts recorded.', 'fromscratch') ?></p>
 			<?php else : ?>
 				<table class="widefat striped" style="max-width: 720px; margin-top: 16px;">
 					<thead>
