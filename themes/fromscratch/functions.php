@@ -45,7 +45,7 @@ require_once 'inc/security/password-protection.php';
 require_once 'inc/security/maintenance-mode.php';
 require_once 'inc/security/login-limit.php';
 
-// Optional features (gated by Settings → Theme → General)
+// Optional features
 if (fs_theme_feature_enabled('svg')) {
 	require_once 'inc/svg-support.php';
 }
