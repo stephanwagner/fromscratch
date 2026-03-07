@@ -87,6 +87,11 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 	// Quick Block IP
 	if (!empty($_POST['fromscratch_do_block_ip']) && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_block_ip')) {
 		$ip = isset($_POST['fromscratch_block_ip']) ? sanitize_text_field(wp_unslash($_POST['fromscratch_block_ip'])) : '';
+		$current_ip = function_exists('fs_blocked_ips_visitor_ip') ? fs_blocked_ips_visitor_ip() : '';
+		if ($ip !== '' && filter_var($ip, FILTER_VALIDATE_IP) && $current_ip !== '' && $ip === $current_ip) {
+			wp_safe_redirect(add_query_arg('fs_blocked_ips_error', 'own_ip', $url));
+			exit;
+		}
 		if ($ip !== '' && filter_var($ip, FILTER_VALIDATE_IP) && function_exists('fs_blocked_ips_add_blocked') && function_exists('fs_blocked_ips_remove_failed')) {
 			fs_blocked_ips_add_blocked($ip);
 			fs_blocked_ips_remove_failed($ip);
@@ -117,6 +122,11 @@ function fs_render_developer_security(): void
 		<?php if ($security_saved !== false) : ?>
 			<div class="notice notice-success is-dismissible">
 				<p><strong><?= esc_html(__('Settings saved.', 'fromscratch')) ?></strong></p>
+			</div>
+		<?php endif; ?>
+		<?php if (isset($_GET['fs_blocked_ips_error']) && $_GET['fs_blocked_ips_error'] === 'own_ip') : ?>
+			<div class="notice notice-error is-dismissible">
+				<p><strong><?= esc_html(__('You cannot block your own IP address. That would lock you out of the site.', 'fromscratch')) ?></strong></p>
 			</div>
 		<?php endif; ?>
 
