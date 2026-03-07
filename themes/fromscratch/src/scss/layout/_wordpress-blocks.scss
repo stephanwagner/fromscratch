@@ -60,10 +60,7 @@
     
     &.has-black-background-color,
     &.has-off-black-background-color,
-    &.has-gray-600-background-color,
-    &.has-gray-700-background-color,
-    &.has-gray-800-background-color,
-    &.has-gray-900-background-color {
+    &.has-gray-600-background-color {
       color: #fff;
     }
   }
@@ -82,90 +79,9 @@
     @media (max-width: $breakpointS) {
       gap: 24px;
     }
-
-    &.-column-gap-xs {
-      gap: 16px;
-    }
-
-    &.-column-gap-s {
-      gap: 32px;
-
-      @media (max-width: $breakpointS) {
-        gap: 24px;
-      }
-    }
-
-    &.-column-gap-l {
-      gap: 48px 64px;
-
-      @media (max-width: $breakpointL) {
-        gap: 48px;
-      }
-
-      @media (max-width: $breakpointM) {
-        gap: 32px;
-      }
-
-      @media (max-width: $breakpointS) {
-        gap: 24px;
-      }
-    }
-
-    &.-column-gap-xl {
-      gap: 48px 96px;
-
-      @media (max-width: $breakpointL) {
-        gap: 48px 64px;
-      }
-
-      @media (max-width: $breakpointM) {
-        gap: 32px 48px;
-      }
-
-      @media (max-width: $breakpointS) {
-        gap: 24px 32px;
-      }
-    }
-
-    // Designs
-
-    &.-image-left-text-right {
-      .wp-block-column:first-child {
-        align-self: flex-start;
-      }
-
-      .wp-block-column:last-child {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-      }
-    }
-
-    &.-image-right-text-left {
-      .wp-block-column:first-child {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-      }
-
-      .wp-block-column:last-child {
-        align-self: flex-start;
-      }
-    }
-
-    // Reverse on mobile
-
-    &.-reverse-order-on-mobile {
-      @media (max-width: 782px) {
-        flex-direction: column-reverse;
-      }
-    }
   }
 
   .wp-block-column {
-    margin-top: 0;
-    margin-bottom: 0;
-
     &.-has-background-color {
       background-color: color('gray-3');
       border-radius: $defaultBorderRadius;
@@ -186,216 +102,19 @@
         }
       }
     }
-
-    &.-center-content {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
   }
 
   // Images
 
   figure {
-    margin-top: 0;
-    margin-bottom: 0;
     padding: 0;
 
     &.wp-block-image {
-      img {
-        height: auto;
-      }
-
       &.is-style-rounded {
         img {
           border-radius: $defaultBorderRadius;
         }
       }
-    }
-  }
-
-  // Content widths
-
-  .-narrow {
-    max-width: $narrowContentWidth;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .-very-narrow {
-    max-width: $veryNarrowContentWidth;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  // Margins
-
-  *.-content-margin-xl {
-    margin-top: 96px;
-    margin-bottom: 96px;
-
-    &:first-child {
-      margin-top: 0;
-    }
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-
-    @media (max-width: $breakpointL) {
-      margin-top: 64px;
-      margin-bottom: 64px;
-
-      &:first-child {
-        margin-top: 0;
-      }
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
-
-    @media (max-width: $breakpointM) {
-      margin-top: 48px;
-      margin-bottom: 48px;
-
-      &:first-child {
-        margin-top: 0;
-      }
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
-
-    @media (max-width: $breakpointXS) {
-      margin-top: 32px;
-      margin-bottom: 32px;
-
-      &:first-child {
-        margin-top: 0;
-      }
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
-  }
-
-  *.-content-margin-l {
-    margin-top: 64px;
-    margin-bottom: 64px;
-
-    &:first-child {
-      margin-top: 0;
-    }
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-
-    @media (max-width: $breakpointM) {
-      margin-top: 48px;
-      margin-bottom: 48px;
-
-      &:first-child {
-        margin-top: 0;
-      }
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
-
-    @media (max-width: $breakpointS) {
-      margin-top: 32px;
-      margin-bottom: 32px;
-
-      &:first-child {
-        margin-top: 0;
-      }
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
-  }
-
-  *.-content-margin-m {
-    margin-top: 48px;
-    margin-bottom: 48px;
-
-    &:first-child {
-      margin-top: 0;
-    }
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-
-    @media (max-width: $breakpointS) {
-      margin-top: 32px;
-      margin-bottom: 32px;
-
-      &:first-child {
-        margin-top: 0;
-      }
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
-
-    @media (max-width: $breakpointXS) {
-      margin-top: 24px;
-      margin-bottom: 24px;
-
-      &:first-child {
-        margin-top: 0;
-      }
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
-  }
-
-  *.-content-margin-s {
-    margin-top: 32px;
-    margin-bottom: 32px;
-
-    &:first-child {
-      margin-top: 0;
-    }
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-
-    @media (max-width: $breakpointS) {
-      margin-top: 24px;
-      margin-bottom: 24px;
-
-      &:first-child {
-        margin-top: 0;
-      }
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
-  }
-
-  *.-content-margin-xs {
-    margin-top: 16px;
-    margin-bottom: 16px;
-
-    &:first-child {
-      margin-top: 0;
-    }
-
-    &:last-child {
-      margin-bottom: 0;
     }
   }
 }
