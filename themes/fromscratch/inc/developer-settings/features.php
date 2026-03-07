@@ -72,6 +72,7 @@ function fs_render_developer_features(): void
 ?>
 	<div class="wrap">
 		<h1><?= esc_html(__('Developer settings', 'fromscratch')) ?></h1>
+		
 		<?php if ($features_saved !== false) : ?>
 			<div class="notice notice-success is-dismissible">
 				<p><strong><?= esc_html(__('Settings saved.', 'fromscratch')) ?></strong></p>
@@ -80,11 +81,10 @@ function fs_render_developer_features(): void
 
 		<?php fs_developer_settings_render_nav(); ?>
 
-		<h2 class="title"><?= esc_html__('Features', 'fromscratch') ?></h2>
-		<p class="description"><?= esc_html__('Enable the features your project needs.', 'fromscratch') ?></p>
-		<p class="description"><?= esc_html__('All features are modular and can be toggled at any time to keep the theme lean and maintainable.', 'fromscratch') ?></p>
-
 		<form method="post" action="" class="page-settings-form">
+			<h2 class="title"><?= esc_html__('Features', 'fromscratch') ?></h2>
+			<p class="description"><?= esc_html__('Enable the features your project needs.', 'fromscratch') ?></p>
+			<p class="description"><?= esc_html__('All features are modular and can be toggled at any time to keep the theme lean and maintainable.', 'fromscratch') ?></p>
 
 			<h3><?= esc_html__('Content', 'fromscratch') ?></h3>
 
