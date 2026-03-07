@@ -15,7 +15,7 @@
 			?>
 		</div>
 		<div class="footer-menu__wrapper">
-			<?php wp_nav_menu([
+			<?php fs_nav_menu([
 				'theme_location' => 'footer_menu',
 				'menu_class' => 'footer-menu__container',
 				'container' => 'nav'

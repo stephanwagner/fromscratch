@@ -23,7 +23,7 @@
 				<?= do_shortcode('[fs_language_switcher]') ?>
 
 				<div class="header-menu__wrapper">
-					<?php wp_nav_menu([
+					<?php fs_nav_menu([
 						'theme_location' => 'main_menu',
 						'menu_class' => 'header-menu__container',
 						'container' => 'nav'
