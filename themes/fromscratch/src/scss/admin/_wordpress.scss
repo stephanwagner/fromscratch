@@ -73,3 +73,97 @@ code {
   margin-right: 2px;
   border-radius: 3px;
 }
+
+// Mail delivery (Developer › System)
+
+.fs-mail-delivery-form {
+  .fs-mailer-th {
+    width: 160px;
+    vertical-align: top;
+    padding-top: 4px;
+  }
+
+  .fs-mailer-td {
+    vertical-align: top;
+  }
+
+  .fs-mailer-choices-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .fs-mailer-choice {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 2px solid #c3c4c7;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+
+    &:hover {
+      border-color: #8c8f94;
+      background: #f6f7f7;
+    }
+
+    input[type="radio"] {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    &.is-selected {
+      border-color: #2271b1;
+      background: #f0f6fc;
+    }
+  }
+
+  .fs-mailer-choice-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+
+  .fs-mailer-logo-placeholder {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    background: #dcdcde;
+    display: block;
+    &[data-provider="php"] {
+      background: linear-gradient(135deg, #8892bf 0%, #4f5b93 100%);
+    }
+    &[data-provider="smtp"] {
+      background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    }
+    &[data-provider="sendgrid"] {
+      background: linear-gradient(135deg, #1a82e2 0%, #0d5cad 100%);
+    }
+  }
+
+  .fs-mailer-choice-label {
+    font-weight: 500;
+    font-size: 13px;
+  }
+
+  .fs-mailer-td .fs-mailer-panel {
+    margin: 0;
+    padding: 0;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+}

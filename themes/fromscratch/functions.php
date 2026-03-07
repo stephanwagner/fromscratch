@@ -40,6 +40,9 @@ require_once 'inc/login-client-logo.php';
 require_once 'inc/assets.php';
 require_once 'inc/cpt.php';
 
+// Mail (SMTP / SendGrid from Developer › System)
+require_once 'inc/mail.php';
+
 // Security
 require_once 'inc/security/password-protection.php';
 require_once 'inc/security/maintenance-mode.php';
