@@ -50,12 +50,16 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 		exit;
 	}
 
-	// Administrator email
+	// Email addresses (admin, report, developer)
 	if (!empty($_POST['option_page']) && $_POST['option_page'] === FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL . '-options')) {
-		$email = isset($_POST['admin_email']) ? sanitize_email(wp_unslash($_POST['admin_email'])) : '';
-		if (is_email($email)) {
-			update_option('admin_email', $email);
+		$admin_email = isset($_POST['admin_email']) ? sanitize_email(wp_unslash($_POST['admin_email'])) : '';
+		if (is_email($admin_email)) {
+			update_option('admin_email', $admin_email);
 		}
+		$report_email = isset($_POST['fromscratch_report_email']) ? sanitize_email(wp_unslash($_POST['fromscratch_report_email'])) : '';
+		update_option('fromscratch_report_email', is_email($report_email) ? $report_email : '');
+		$developer_email = isset($_POST['fromscratch_developer_email']) ? sanitize_email(wp_unslash($_POST['fromscratch_developer_email'])) : '';
+		update_option('fromscratch_developer_email', is_email($developer_email) ? $developer_email : '');
 		set_transient('fromscratch_system_saved', '1', 30);
 		wp_safe_redirect($url);
 		exit;
@@ -84,17 +88,48 @@ function fs_render_developer_system(): void
 		<?php fs_developer_settings_render_nav(); ?>
 
 		<?php if ((int) get_option('blog_public', 1) === 0) : ?>
-			<div class="notice notice-warning inline" style="margin: 0 0 1em 0;">
+			<div class="notice notice-warning inline" style="margin: 16px 0 0;">
 				<p><strong><?= esc_html__('Search engines are asked not to index this site.', 'fromscratch') ?></strong></p>
-				<p><a href="#fs-search-visibility"><?= esc_html__('Enable search engine indexing below', 'fromscratch') ?></a></p>
 			</div>
 		<?php endif; ?>
+
+		<form method="post" action="" class="page-settings-form">
+			<?php settings_fields(FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL); ?>
+			<h2 class="title"><?= esc_html__('Email addresses', 'fromscratch') ?></h2>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><label for="admin_email"><?= esc_html__('Admin email', 'fromscratch') ?></label></th>
+					<td>
+						<input type="email" name="admin_email" id="admin_email" value="<?= esc_attr(get_option('admin_email')) ?>" class="regular-text" autocomplete="email">
+						<p class="description"><?= esc_html__('WordPress default admin email used for WordPress core notifications.', 'fromscratch') ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="fromscratch_report_email"><?= esc_html__('Report email', 'fromscratch') ?></label></th>
+					<td>
+						<input type="email" name="fromscratch_report_email" id="fromscratch_report_email" value="<?= esc_attr(get_option('fromscratch_report_email', '')) ?>" class="regular-text" autocomplete="email">
+						<p class="description"><?= esc_html__('Used for automated reports such as weekly analytics summaries.', 'fromscratch') ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="fromscratch_developer_email"><?= esc_html__('Developer email', 'fromscratch') ?></label></th>
+					<td>
+						<input type="email" name="fromscratch_developer_email" id="fromscratch_developer_email" value="<?= esc_attr(get_option('fromscratch_developer_email', '')) ?>" class="regular-text" autocomplete="email">
+						<p class="description"><?= esc_html__('Used for system alerts, error notifications and security warnings.', 'fromscratch') ?></p>
+					</td>
+				</tr>
+			</table>
+			<?php submit_button(); ?>
+		</form>
+		
+		<hr>
 
 		<form method="post" action="" class="page-settings-form" id="fs-search-visibility">
 			<?php wp_nonce_field('fromscratch_system_search_visibility'); ?>
 			<input type="hidden" name="fromscratch_save_search_visibility" value="1">
 			<h2 class="title"><?= esc_html__('Search engine visibility', 'fromscratch') ?></h2>
-			<p class="description"><?= esc_html__('This setting matches Settings → Reading. When enabled, search engines are asked not to index this site.', 'fromscratch') ?></p>
+			<p class="description"><?= esc_html__('This setting matches Settings → Reading.', 'fromscratch') ?></p>
+			<p class="description"><?= esc_html__('When enabled, search engines are asked not to index this site.', 'fromscratch') ?></p>
 			<table class="form-table" role="presentation">
 				<tr>
 					<th scope="row"><?= esc_html__('Visibility', 'fromscratch') ?></th>
@@ -103,23 +138,7 @@ function fs_render_developer_system(): void
 							<input type="checkbox" name="blog_public_discourage" value="1" <?= checked((int) get_option('blog_public', 1), 0, false) ?>>
 							<?= esc_html__('Discourage search engines from indexing this site', 'fromscratch') ?>
 						</label>
-					</td>
-				</tr>
-			</table>
-			<?php submit_button(); ?>
-		</form>
-
-		<hr>
-
-		<form method="post" action="" class="page-settings-form">
-			<?php settings_fields(FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL); ?>
-			<h2 class="title"><?= esc_html__('Administrator email', 'fromscratch') ?></h2>
-			<p class="description"><?= esc_html__('The administrator email address is used for system notifications and account recovery.', 'fromscratch') ?></p>
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><label for="admin_email"><?= esc_html__('Email address', 'fromscratch') ?></label></th>
-					<td>
-						<input type="email" name="admin_email" id="admin_email" value="<?= esc_attr(get_option('admin_email')) ?>" class="regular-text" autocomplete="email">
+						<p class="description fs-indent-checkbox"><?= esc_html__('It is up to search engines whether they follow this request.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 			</table>

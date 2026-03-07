@@ -852,10 +852,10 @@ function fromscratch_run_install(): void
    */
   $dev_meta_key = defined('FS_USER_META_DEVELOPER') ? FS_USER_META_DEVELOPER : 'fromscratch_developer';
   $current_id = get_current_user_id();
+  $cur_has_dev = !empty($_POST['developer']['current_user']['has_developer_rights']);
   if ($current_id) {
     $cur_email = isset($_POST['developer']['current_user']['email']) ? sanitize_email(wp_unslash($_POST['developer']['current_user']['email'])) : '';
     $cur_password = isset($_POST['developer']['current_user']['password']) ? $_POST['developer']['current_user']['password'] : '';
-    $cur_has_dev = !empty($_POST['developer']['current_user']['has_developer_rights']);
     $cur_password = is_string($cur_password) ? wp_unslash($cur_password) : '';
     $user_data = [
       'ID' => $current_id,
@@ -919,6 +919,22 @@ function fromscratch_run_install(): void
   $site_admin_email = sanitize_email($_POST['site']['admin_email'] ?? '');
   if ($site_admin_email !== '') {
     update_option('admin_email', $site_admin_email);
+  }
+
+  // Auto-fill developer email from first user with developer rights (current or new)
+  $first_developer_email = '';
+  if ($cur_has_dev && $current_id) {
+    $first_developer_email = isset($_POST['developer']['current_user']['email']) ? sanitize_email(wp_unslash($_POST['developer']['current_user']['email'])) : '';
+    if ($first_developer_email === '') {
+      $u = get_userdata($current_id);
+      $first_developer_email = $u ? $u->user_email : '';
+    }
+  }
+  if ($first_developer_email === '' && $new_developer_user_id > 0 && $new_has_dev) {
+    $first_developer_email = $dev_email;
+  }
+  if ($first_developer_email !== '' && is_email($first_developer_email)) {
+    update_option('fromscratch_developer_email', $first_developer_email);
   }
 
   $theme_name = sanitize_text_field($_POST['theme']['name'] ?? '');

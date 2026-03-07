@@ -44,6 +44,10 @@ hr {
     background-color: #72aee6;
     color: #fff;
 
+    &.-warning {
+      background-color: #e6a772;
+    }
+
     svg {
       display: block;
       fill: currentColor;

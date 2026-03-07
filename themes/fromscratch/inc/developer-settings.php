@@ -113,11 +113,15 @@ function fs_developer_settings_render_nav(): void
 
 	$password_icon = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M240-80q-33 0-56.5-23.5T160-160v-400q0-33 23.5-56.5T240-640h40v-80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720v80h40q33 0 56.5 23.5T800-560v400q0 33-23.5 56.5T720-80H240Zm296.5-223.5Q560-327 560-360t-23.5-56.5Q513-440 480-440t-56.5 23.5Q400-393 400-360t23.5 56.5Q447-280 480-280t56.5-23.5ZM360-640h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80Z"/></svg>';
 	$maintenance_icon = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M360-360q-100 0-170-70t-70-170q0-20 3-40t11-38q5-10 12.5-15t16.5-7q9-2 18.5.5T199-689l105 105 72-72-105-105q-8-8-10.5-17.5T260-797q2-9 7-16.5t15-12.5q18-8 38-11t40-3q100 0 170 70t70 170q0 23-4 43.5T584-516l202 200q29 29 29 71t-29 71q-29 29-71 29t-71-30L444-376q-20 8-40.5 12t-43.5 4Z"/></svg>';
+	$search_visibility_icon = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-62 17-117.5T146-701l-91-91q-12-12-12-28.5T55-849q12-12 28.5-12t28.5 12l736 736q12 12 12 28t-12 28q-12 12-28.5 12T791-57l-90-89q-48 32-103.5 49T480-80Zm-40-82v-78q-33 0-56.5-23.5T360-320v-40L168-552q-3 18-5.5 36t-2.5 36q0 121 79.5 212T440-162Zm440-318q0 45-10 86.5T843-314q-7 14-22.5 18.5T791-299q-14-8-19.5-24t1.5-31q13-30 20-61.5t7-64.5q0-98-54.5-179T600-776v16q0 33-23.5 56.5T520-680h-60v17q0 14-12 19t-22-5L308-767q-18-18-14.5-43t26.5-36q37-17 77-25.5t83-8.5q83 0 156 31.5T763-763q54 54 85.5 127T880-480Z"/></svg>';
 	?>
 	<nav class="nav-tab-wrapper wp-clearfix" aria-label="Secondary menu">
 		<?php
 		foreach ($tabs as $slug => $def) {
 			$icons = '';
+			if ($slug === 'system' && (int) get_option('blog_public', 1) === 0) {
+				$icons .= '<div class="fs-tab-icon -warning">' . $search_visibility_icon . '</div>';
+			}
 			if ($slug === 'security') {
 				if (get_option('fromscratch_site_password_protection') === '1' && get_option('fromscratch_site_password_hash', '') !== '') {
 					$icons .= '<div class="fs-tab-icon">' . $password_icon . '</div>';

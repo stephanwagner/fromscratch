@@ -11,10 +11,6 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: \n"
 
-# General
-msgid "Email address"
-msgstr "E-Mail-Adresse"
-
 # Install page
 msgid "Install theme"
 msgstr "Theme installieren"
@@ -333,11 +329,53 @@ msgstr "Sicherheit"
 msgid "Settings saved."
 msgstr "Einstellungen gespeichert."
 
+msgid "Search engines are asked not to index this site."
+msgstr "Suchmaschinen werden gebeten, diese Webseite nicht zu indexieren."
+
+msgid "Enable search engine indexing below"
+msgstr "Suchmaschinen-Indexierung unten aktivieren"
+
+msgid "Search engine visibility"
+msgstr "Suchmaschinen-Sichtbarkeit"
+
+msgid "This setting matches Settings → Reading."
+msgstr "Diese Einstellung entspricht Einstellungen → Lesen."
+
+msgid "When enabled, search engines are asked not to index this site."
+msgstr "Wenn aktiviert, werden Suchmaschinen gebeten, diese Webseite nicht zu indexieren."
+
+msgid "Visibility"
+msgstr "Sichtbarkeit"
+
+msgid "Discourage search engines from indexing this site"
+msgstr "Suchmaschinen davon abhalten, diese Webseite zu indexieren"
+
+msgid "It is up to search engines whether they follow this request."
+msgstr "Es liegt bei den Suchmaschinen, ob sie dieser Bitte folgen."
+
 msgid "Administrator email"
 msgstr "Administrator-E-Mail"
 
-msgid "Changes the Administrator email instantly without notifying."
-msgstr "Ändert die Administrator-E-Mail sofort ohne Benachrichtigung."
+msgid "Email addresses"
+msgstr "E-Mail-Adressen"
+
+msgid "Admin email"
+msgstr "Admin-E-Mail"
+
+msgid "WordPress default admin email used for WordPress core notifications."
+msgstr "Standard-Admin-E-Mail von WordPress für Systembenachrichtigungen."
+
+msgid "Report email"
+msgstr "Bericht-E-Mail"
+
+msgid "Used for automated reports such as weekly analytics summaries."
+msgstr "Wird für automatische Berichte wie wöchentliche Analyse-Zusammenfassungen verwendet."
+
+msgid "Developer email"
+msgstr "Entwickler-E-Mail"
+
+msgid "Used for system alerts, error notifications and security warnings."
+msgstr "Wird für Systemmeldungen, Fehlerbenachrichtigungen und Sicherheitshinweise verwendet."
 
 msgid "Asset Cache"
 msgstr "Asset Cache"

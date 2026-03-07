@@ -98,6 +98,20 @@ function fs_render_developer_general(): void
 				</tbody>
 			</table>
 
+			<h3 class="title" style="margin-top: 24px;"><?= esc_html__('Email', 'fromscratch') ?></h3>
+			<table class="widefat striped" style="margin-top: 8px;">
+				<tbody>
+					<tr>
+						<td style="width: 220px; vertical-align: top;"><code>fs_report_email()</code></td>
+						<td><?= esc_html__('Report email from Developer › System. Use for automated reports (e.g. weekly analytics).', 'fromscratch') ?></td>
+					</tr>
+					<tr>
+						<td style="vertical-align: top;"><code>fs_developer_email()</code></td>
+						<td><?= esc_html__('Developer email from Developer › System. Use for system alerts, error notifications and security warnings.', 'fromscratch') ?></td>
+					</tr>
+				</tbody>
+			</table>
+
 			<h3 class="title" style="margin-top: 24px;"><?= esc_html__('Features &amp; debug', 'fromscratch') ?></h3>
 			<table class="widefat striped" style="margin-top: 8px;">
 				<tbody>

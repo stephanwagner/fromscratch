@@ -192,7 +192,37 @@ add_action('admin_init', function () {
 		'type' => 'string',
 		'sanitize_callback' => 'sanitize_email',
 	]);
+	register_setting(FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL, 'fromscratch_report_email', [
+		'type' => 'string',
+		'sanitize_callback' => 'sanitize_email',
+	]);
+	register_setting(FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL, 'fromscratch_developer_email', [
+		'type' => 'string',
+		'sanitize_callback' => 'sanitize_email',
+	]);
 }, 5);
+
+/**
+ * Report email (Developer › System). Used for automated reports e.g. weekly analytics.
+ *
+ * @return string Sanitized email or empty string.
+ */
+function fs_report_email(): string
+{
+	$email = get_option('fromscratch_report_email', '');
+	return is_string($email) && is_email($email) ? $email : '';
+}
+
+/**
+ * Developer email (Developer › System). Used for system alerts, errors and security warnings.
+ *
+ * @return string Sanitized email or empty string.
+ */
+function fs_developer_email(): string
+{
+	$email = get_option('fromscratch_developer_email', '');
+	return is_string($email) && is_email($email) ? $email : '';
+}
 
 add_action('admin_init', function () {
 	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_asset_version', [
