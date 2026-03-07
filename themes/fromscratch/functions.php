@@ -62,3 +62,6 @@ if (fs_theme_feature_enabled('blocked_ips')) {
 if (fs_theme_feature_enabled('webp')) {
 	require_once 'inc/image-webp.php';
 }
+if (fs_theme_feature_enabled('media_folders')) {
+	require_once 'inc/media-library-folders.php';
+}

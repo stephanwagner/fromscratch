@@ -196,6 +196,19 @@ function fs_render_developer_features(): void
 
 			<hr class="fs-small">
 
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><?= esc_html__('Media folders', 'fromscratch') ?></th>
+					<td>
+						<input type="hidden" name="fromscratch_features[enable_media_folders]" value="0">
+						<label><input type="checkbox" name="fromscratch_features[enable_media_folders]" value="1" <?= checked($feat('enable_media_folders'), 1, false) ?>> <?= esc_html__('Enable media folders', 'fromscratch') ?></label>
+						<p class="description fs-indent-checkbox"><?= esc_html__('Adds taxonomy-based folders in Media Library with a left sidebar and quick folder creation.', 'fromscratch') ?></p>
+					</td>
+				</tr>
+			</table>
+
+			<hr class="fs-small">
+
 			<h3 style="margin-top: 32px;"><?= esc_html__('Security', 'fromscratch') ?></h3>
 
 			<hr class="fs-small">
