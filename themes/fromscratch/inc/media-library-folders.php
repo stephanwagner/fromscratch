@@ -37,7 +37,7 @@ add_action('init', function () {
  */
 function fs_media_folders_current_id(): int
 {
-	return isset($_GET['fs_media_folder']) ? absint($_GET['fs_media_folder']) : 0;
+	return isset($_GET['fs_media_folder_id']) ? absint($_GET['fs_media_folder_id']) : 0;
 }
 
 /**
@@ -55,12 +55,15 @@ function fs_media_folders_set_attachment_folder(int $attachment_id, $raw_folder_
 		$raw_folder_value = reset($raw_folder_value);
 	}
 
-	$folder_value = is_scalar($raw_folder_value) ? trim((string) $raw_folder_value) : '';
-	if ($folder_value === '' || $folder_value === '0') {
+	$folder_id = is_scalar($raw_folder_value) ? absint($raw_folder_value) : 0;
+
+
+	if ($folder_id <= 0) {
 		wp_set_object_terms($attachment_id, [], FS_MEDIA_FOLDER_TAXONOMY, false);
 		return;
 	}
-	wp_set_object_terms($attachment_id, [$folder_value], FS_MEDIA_FOLDER_TAXONOMY, false);
+
+	wp_set_object_terms($attachment_id, [$folder_id], FS_MEDIA_FOLDER_TAXONOMY, false);
 }
 
 /**
@@ -73,33 +76,33 @@ function fs_media_folders_get_ajax_folder_value(int $attachment_id)
 	$attachments = isset($request['attachments']) && is_array($request['attachments']) ? $request['attachments'] : [];
 	if (isset($attachments[$attachment_id]) && is_array($attachments[$attachment_id])) {
 		$row = $attachments[$attachment_id];
-		if (array_key_exists('fs_media_folder', $row)) {
-			return $row['fs_media_folder'];
+		if (array_key_exists('fs_media_folder_id', $row)) {
+			return $row['fs_media_folder_id'];
 		}
-		if (isset($row['compat']) && is_array($row['compat']) && array_key_exists('fs_media_folder', $row['compat'])) {
-			return $row['compat']['fs_media_folder'];
+		if (isset($row['compat']) && is_array($row['compat']) && array_key_exists('fs_media_folder_id', $row['compat'])) {
+			return $row['compat']['fs_media_folder_id'];
 		}
 	}
 	if (isset($attachments[(string) $attachment_id]) && is_array($attachments[(string) $attachment_id])) {
 		$row = $attachments[(string) $attachment_id];
-		if (array_key_exists('fs_media_folder', $row)) {
-			return $row['fs_media_folder'];
+		if (array_key_exists('fs_media_folder_id', $row)) {
+			return $row['fs_media_folder_id'];
 		}
-		if (isset($row['compat']) && is_array($row['compat']) && array_key_exists('fs_media_folder', $row['compat'])) {
-			return $row['compat']['fs_media_folder'];
+		if (isset($row['compat']) && is_array($row['compat']) && array_key_exists('fs_media_folder_id', $row['compat'])) {
+			return $row['compat']['fs_media_folder_id'];
 		}
 	}
 
-	if (isset($request['changes']) && is_array($request['changes']) && array_key_exists('fs_media_folder', $request['changes'])) {
-		return $request['changes']['fs_media_folder'];
+	if (isset($request['changes']) && is_array($request['changes']) && array_key_exists('fs_media_folder_id', $request['changes'])) {
+		return $request['changes']['fs_media_folder_id'];
 	}
 	if (isset($request['attachment']) && is_array($request['attachment'])) {
 		$attachment = $request['attachment'];
-		if (array_key_exists('fs_media_folder', $attachment)) {
-			return $attachment['fs_media_folder'];
+		if (array_key_exists('fs_media_folder_id', $attachment)) {
+			return $attachment['fs_media_folder_id'];
 		}
-		if (isset($attachment['compat']) && is_array($attachment['compat']) && array_key_exists('fs_media_folder', $attachment['compat'])) {
-			return $attachment['compat']['fs_media_folder'];
+		if (isset($attachment['compat']) && is_array($attachment['compat']) && array_key_exists('fs_media_folder_id', $attachment['compat'])) {
+			return $attachment['compat']['fs_media_folder_id'];
 		}
 	}
 
@@ -126,7 +129,14 @@ add_filter('media_view_settings', function (array $settings): array {
 	if (!isset($settings['library']) || !is_array($settings['library'])) {
 		$settings['library'] = [];
 	}
+	if (!isset($settings['query']) || !is_array($settings['query'])) {
+		$settings['query'] = [];
+	}
+	// Keep both keys for media-grid compatibility across request shapes.
 	$settings['library']['fs_media_folder'] = $folder_id;
+	$settings['library']['fs_media_folder_id'] = $folder_id;
+	$settings['query']['fs_media_folder'] = $folder_id;
+	$settings['query']['fs_media_folder_id'] = $folder_id;
 
 	return $settings;
 });
@@ -134,28 +144,42 @@ add_filter('media_view_settings', function (array $settings): array {
 /**
  * Filter media attachments in list/grid mode by selected folder.
  */
-add_filter('ajax_query_attachments_args', function (array $args, array $request = []): array {
+add_filter('ajax_query_attachments_args', function (array $args): array {
+
 	$folder_id = 0;
-	if (isset($request['query']) && is_array($request['query']) && !empty($request['query']['fs_media_folder'])) {
+	$request = wp_unslash($_REQUEST);
+	if (isset($request['query']) && is_array($request['query']) && !empty($request['query']['fs_media_folder_id'])) {
+		$folder_id = absint($request['query']['fs_media_folder_id']);
+	} elseif (isset($request['query']) && is_array($request['query']) && !empty($request['query']['fs_media_folder'])) {
 		$folder_id = absint($request['query']['fs_media_folder']);
+	} elseif (!empty($request['fs_media_folder_id'])) {
+		$folder_id = absint($request['fs_media_folder_id']);
 	} elseif (!empty($request['fs_media_folder'])) {
 		$folder_id = absint($request['fs_media_folder']);
+	} elseif (!empty($_GET['fs_media_folder_id'])) {
+		$folder_id = absint($_GET['fs_media_folder_id']);
 	} elseif (!empty($_GET['fs_media_folder'])) {
 		$folder_id = absint($_GET['fs_media_folder']);
 	}
+
 	if ($folder_id <= 0 || !taxonomy_exists(FS_MEDIA_FOLDER_TAXONOMY)) {
 		return $args;
 	}
-	$args['tax_query'] = [
-		[
-			'taxonomy' => FS_MEDIA_FOLDER_TAXONOMY,
-			'field' => 'term_id',
-			'terms' => [$folder_id],
-			'include_children' => true,
-		],
+
+	$tax_query = isset($args['tax_query']) ? (array)$args['tax_query'] : [];
+
+	$tax_query[] = [
+		'taxonomy' => FS_MEDIA_FOLDER_TAXONOMY,
+		'field' => 'term_id',
+		'terms' => [$folder_id],
+		'include_children' => true,
 	];
+
+	$args['tax_query'] = $tax_query;
+
 	return $args;
-}, 10, 2);
+
+}, 10);
 
 /**
  * Filter Media > Library list table by selected folder.
@@ -197,17 +221,18 @@ add_filter('attachment_fields_to_edit', function (array $form_fields, WP_Post $p
 	ob_start();
 	wp_dropdown_categories([
 		'taxonomy' => FS_MEDIA_FOLDER_TAXONOMY,
-		'name' => 'attachments[' . (int) $post->ID . '][fs_media_folder]',
+		'name' => 'attachments[' . (int) $post->ID . '][fs_media_folder_id]',
 		'orderby' => 'name',
 		'hide_empty' => false,
 		'hierarchical' => true,
 		'show_option_none' => __('No folder', 'fromscratch'),
 		'option_none_value' => '0',
 		'selected' => $current_id,
+		'value_field' => 'term_id',
 	]);
 	$field_html = (string) ob_get_clean();
 
-	$form_fields['fs_media_folder'] = [
+	$form_fields['fs_media_folder_id'] = [
 		'label' => __('Folder', 'fromscratch'),
 		'input' => 'html',
 		'html' => $field_html,
@@ -225,10 +250,10 @@ add_filter('attachment_fields_to_save', function (array $post, array $attachment
 	}
 	$attachment_id = (int) $post['ID'];
 	$raw_folder = null;
-	if (array_key_exists('fs_media_folder', $attachment)) {
-		$raw_folder = $attachment['fs_media_folder'];
-	} elseif (isset($attachment['compat']) && is_array($attachment['compat']) && array_key_exists('fs_media_folder', $attachment['compat'])) {
-		$raw_folder = $attachment['compat']['fs_media_folder'];
+	if (array_key_exists('fs_media_folder_id', $attachment)) {
+		$raw_folder = $attachment['fs_media_folder_id'];
+	} elseif (isset($attachment['compat']) && is_array($attachment['compat']) && array_key_exists('fs_media_folder_id', $attachment['compat'])) {
+		$raw_folder = $attachment['compat']['fs_media_folder_id'];
 	}
 	if ($raw_folder === null) {
 		return $post;
@@ -241,24 +266,6 @@ add_filter('attachment_fields_to_save', function (array $post, array $attachment
  * Fallback for media grid/modal save flow where custom compat fields are posted via AJAX.
  */
 add_action('wp_ajax_save_attachment_compat', function (): void {
-	if (!current_user_can('upload_files') || !taxonomy_exists(FS_MEDIA_FOLDER_TAXONOMY)) {
-		return;
-	}
-	$attachment_id = isset($_REQUEST['id']) ? absint($_REQUEST['id']) : 0;
-	if ($attachment_id <= 0) {
-		return;
-	}
-	$folder_value = fs_media_folders_get_ajax_folder_value($attachment_id);
-	if ($folder_value === null) {
-		return;
-	}
-	fs_media_folders_set_attachment_folder($attachment_id, $folder_value);
-}, 1);
-
-/**
- * Handle standard media save endpoint as well (used by some views/plugins).
- */
-add_action('wp_ajax_save_attachment', function (): void {
 	if (!current_user_can('upload_files') || !taxonomy_exists(FS_MEDIA_FOLDER_TAXONOMY)) {
 		return;
 	}
@@ -307,7 +314,7 @@ add_action('admin_post_fs_media_folder_create', function (): void {
 		$term_id = isset($insert['term_id']) ? (int) $insert['term_id'] : 0;
 	}
 
-	$url = add_query_arg('fs_media_folder', $term_id, $redirect_to);
+	$url = add_query_arg('fs_media_folder_id', $term_id, $redirect_to);
 	$url = add_query_arg('fs_media_folder_success', '1', $url);
 	wp_safe_redirect($url);
 	exit;
@@ -324,7 +331,7 @@ function fs_media_folders_render_list(array $terms, int $parent_id, int $depth, 
 		if ((int) $term->parent !== $parent_id) {
 			continue;
 		}
-		$url = add_query_arg('fs_media_folder', (int) $term->term_id, $base_url);
+		$url = add_query_arg('fs_media_folder_id', (int) $term->term_id, $base_url);
 		$classes = ['fs-media-folders-link'];
 		if ((int) $term->term_id === $current_id) {
 			$classes[] = 'is-active';
@@ -344,25 +351,95 @@ function fs_media_folders_render_list(array $terms, int $parent_id, int $depth, 
  * Sidebar styles for Media > Library.
  */
 add_action('admin_head-upload.php', function (): void {
-	?>
+?>
 	<style>
-		.upload-php .fs-media-folders-layout { display: flex; gap: 20px; align-items: flex-start; margin-top: 12px; }
-		.upload-php .fs-media-folders-sidebar { width: 260px; flex: 0 0 260px; background: #fff; border: 1px solid #dcdcde; border-radius: 6px; padding: 14px; position: sticky; top: 46px; }
-		.upload-php .fs-media-folders-content { min-width: 0; flex: 1 1 auto; }
-		.upload-php .fs-media-folders-sidebar h2 { margin: 0 0 10px; font-size: 14px; line-height: 1.4; }
-		.upload-php .fs-media-folders-list { margin: 0 0 14px; padding: 0; list-style: none; }
-		.upload-php .fs-media-folders-list li { margin: 0; }
-		.upload-php .fs-media-folders-link { display: block; padding: 5px 8px; border-radius: 4px; color: #1d2327; text-decoration: none; }
-		.upload-php .fs-media-folders-link:hover { background: #f6f7f7; }
-		.upload-php .fs-media-folders-link.is-active { background: #2271b1; color: #fff; }
-		.upload-php .fs-media-folders-link .count { opacity: 0.75; }
-		.upload-php .fs-media-folders-create p { margin: 0 0 8px; }
-		.upload-php .fs-media-folders-create .button { width: 100%; }
-		.upload-php .fs-media-folders-message { margin: 0 0 10px; padding: 8px 10px; border-radius: 4px; font-size: 12px; line-height: 1.35; }
-		.upload-php .fs-media-folders-message.is-error { background: #fcf0f1; color: #8a2424; }
-		.upload-php .fs-media-folders-message.is-success { background: #edfaef; color: #1a5f29; }
+		.upload-php .fs-media-folders-layout {
+			display: flex;
+			gap: 20px;
+			align-items: flex-start;
+			margin-top: 12px;
+		}
+
+		.upload-php .fs-media-folders-sidebar {
+			width: 260px;
+			flex: 0 0 260px;
+			background: #fff;
+			border: 1px solid #dcdcde;
+			border-radius: 6px;
+			padding: 14px;
+			position: sticky;
+			top: 46px;
+		}
+
+		.upload-php .fs-media-folders-content {
+			min-width: 0;
+			flex: 1 1 auto;
+		}
+
+		.upload-php .fs-media-folders-sidebar h2 {
+			margin: 0 0 10px;
+			font-size: 14px;
+			line-height: 1.4;
+		}
+
+		.upload-php .fs-media-folders-list {
+			margin: 0 0 14px;
+			padding: 0;
+			list-style: none;
+		}
+
+		.upload-php .fs-media-folders-list li {
+			margin: 0;
+		}
+
+		.upload-php .fs-media-folders-link {
+			display: block;
+			padding: 5px 8px;
+			border-radius: 4px;
+			color: #1d2327;
+			text-decoration: none;
+		}
+
+		.upload-php .fs-media-folders-link:hover {
+			background: #f6f7f7;
+		}
+
+		.upload-php .fs-media-folders-link.is-active {
+			background: #2271b1;
+			color: #fff;
+		}
+
+		.upload-php .fs-media-folders-link .count {
+			opacity: 0.75;
+		}
+
+		.upload-php .fs-media-folders-create p {
+			margin: 0 0 8px;
+		}
+
+		.upload-php .fs-media-folders-create .button {
+			width: 100%;
+		}
+
+		.upload-php .fs-media-folders-message {
+			margin: 0 0 10px;
+			padding: 8px 10px;
+			border-radius: 4px;
+			font-size: 12px;
+			line-height: 1.35;
+		}
+
+		.upload-php .fs-media-folders-message.is-error {
+			background: #fcf0f1;
+			color: #8a2424;
+		}
+
+		.upload-php .fs-media-folders-message.is-success {
+			background: #edfaef;
+			color: #1a5f29;
+		}
 	</style>
-	<?php
+<?php
 });
 
 /**
@@ -403,7 +480,7 @@ add_action('admin_footer-upload.php', function (): void {
 		$message_class = 'is-success';
 		$message = __('Folder created.', 'fromscratch');
 	}
-	?>
+?>
 	<aside id="fs-media-folders-sidebar" class="fs-media-folders-sidebar" style="display:none;">
 		<h2><?= esc_html__('Folders', 'fromscratch') ?></h2>
 		<?php if ($message !== '') : ?>
@@ -411,11 +488,11 @@ add_action('admin_footer-upload.php', function (): void {
 		<?php endif; ?>
 		<ul class="fs-media-folders-list">
 			<li>
-				<a class="fs-media-folders-link <?= $folder_id <= 0 ? 'is-active' : '' ?>" href="<?= esc_url(remove_query_arg(['fs_media_folder', 'fs_media_folder_error', 'fs_media_folder_success'], $base_url)) ?>">
+				<a class="fs-media-folders-link <?= $folder_id <= 0 ? 'is-active' : '' ?>" href="<?= esc_url(remove_query_arg(['fs_media_folder_id', 'fs_media_folder_error', 'fs_media_folder_success'], $base_url)) ?>">
 					<?= esc_html__('All files', 'fromscratch') ?>
 				</a>
 			</li>
-			<?php fs_media_folders_render_list($terms, 0, 0, $folder_id, remove_query_arg(['fs_media_folder', 'fs_media_folder_error', 'fs_media_folder_success'], $base_url)); ?>
+			<?php fs_media_folders_render_list($terms, 0, 0, $folder_id, remove_query_arg(['fs_media_folder_id', 'fs_media_folder_error', 'fs_media_folder_success'], $base_url)); ?>
 		</ul>
 		<form method="post" action="<?= esc_url(admin_url('admin-post.php')) ?>" class="fs-media-folders-create">
 			<input type="hidden" name="action" value="fs_media_folder_create">
@@ -478,5 +555,5 @@ add_action('admin_footer-upload.php', function (): void {
 			wrap.dataset.fsMediaFoldersReady = '1';
 		})();
 	</script>
-	<?php
+<?php
 });
