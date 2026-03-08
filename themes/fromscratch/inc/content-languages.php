@@ -59,7 +59,7 @@ add_action('init', function (): void {
 }, 5);
 
 /**
- * Sync fs_language terms from the configured language list (slug = id, name = nameEnglish).
+ * Sync fs_language terms from the configured language list (slug = id, name = label via fs_content_language_label).
  */
 add_action('init', function (): void {
 	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
@@ -72,7 +72,7 @@ add_action('init', function (): void {
 	$languages = fs_get_content_languages();
 	foreach ($languages as $lang) {
 		$slug = isset($lang['id']) ? (string) $lang['id'] : '';
-		$name = isset($lang['nameEnglish']) && $lang['nameEnglish'] !== '' ? $lang['nameEnglish'] : $slug;
+		$name = function_exists('fs_content_language_label') ? fs_content_language_label($lang, 'name') : $slug;
 		if ($slug === '') {
 			continue;
 		}
@@ -215,7 +215,7 @@ function fs_language_filter_links(string $post_type): string
 
 	foreach ($languages as $lang) {
 		$slug = $lang['id'] ?? '';
-		$name = !empty($lang['nameEnglish']) ? $lang['nameEnglish'] : $slug;
+		$name = function_exists('fs_content_language_label') ? fs_content_language_label($lang, 'name') : $slug;
 		if ($slug === '') {
 			continue;
 		}
@@ -991,7 +991,7 @@ add_shortcode('fs_language_switcher', function (): string {
 		if ($id === '') {
 			continue;
 		}
-		$label = isset($lang['nameEnglish']) && $lang['nameEnglish'] !== '' ? $lang['nameEnglish'] : $id;
+		$label = function_exists('fs_content_language_label') ? fs_content_language_label($lang, 'name') : $id;
 		$is_active = ($id === $current_lang);
 
 		$translation_id = isset($linked[$id]) ? (int) $linked[$id] : 0;

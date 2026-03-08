@@ -86,9 +86,10 @@ function fs_theme_feature_enabled(string $feature): bool
 
 /**
  * Get the effective content languages list (for Settings → Theme → Content translatable fields).
- * When Languages feature is off: returns config from theme-content.php. When on: returns the list from Developer → Languages.
+ * When Languages feature is off: returns config from theme-content.php (keys: id, name, nameNative).
+ * When on: returns the list from Developer → Languages (keys: id, nameEnglish, nameOriginalLanguage).
  *
- * @return list<array{id: string, nameEnglish: string, nameOriginalLanguage: string}>
+ * @return list<array{id: string, name?: string, nameNative?: string, nameEnglish?: string, nameOriginalLanguage?: string}>
  */
 function fs_get_content_languages(): array
 {
@@ -123,6 +124,49 @@ function fs_get_default_language(): string
 		return '';
 	}
 	return (string) ($config[0]['id'] ?? '');
+}
+
+/**
+ * Get a language label from a language array. Supports config shape (label) and option shape (nameEnglish, nameOriginalLanguage).
+ *
+ * @param array<string, string> $lang Language item from fs_get_content_languages().
+ * @param string $type 'native' for native/original name, 'name' for admin name; both use label when present.
+ * @return string
+ */
+function fs_content_language_label(array $lang, string $type = 'native'): string
+{
+	$v = $lang['label'] ?? $lang['nameNative'] ?? $lang['nameOriginalLanguage'] ?? $lang['name'] ?? $lang['nameEnglish'] ?? '';
+	return $v !== '' ? (string) $v : (string) ($lang['id'] ?? '');
+}
+
+/**
+ * Get a content option value with language fallback. Option IDs stay the same (base id without _en/_de).
+ * Resolves: current language key first, then default language key, then key without suffix (non-translated or legacy).
+ *
+ * @param string $option_id Full option name (e.g. FS_THEME_CONTENT_OPTION_PREFIX . 'footer_footer4_text'). Do not include _en/_de.
+ * @param mixed  $default    Value to return when no option is set.
+ * @return mixed
+ */
+function fs_get_content_option(string $option_id, $default = '')
+{
+	$sentinel = new \stdClass();
+	$current_lang = function_exists('fs_language_current_request_lang') ? fs_language_current_request_lang() : '';
+	$default_lang = fs_get_default_language();
+	$candidates = [];
+	if ($current_lang !== '') {
+		$candidates[] = $option_id . '_' . $current_lang;
+	}
+	if ($default_lang !== '' && $default_lang !== $current_lang) {
+		$candidates[] = $option_id . '_' . $default_lang;
+	}
+	$candidates[] = $option_id;
+	foreach ($candidates as $key) {
+		$val = get_option($key, $sentinel);
+		if ($val !== $sentinel) {
+			return $val;
+		}
+	}
+	return $default;
 }
 
 /**

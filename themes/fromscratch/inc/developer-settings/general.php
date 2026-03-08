@@ -146,7 +146,7 @@ function fs_render_developer_general(): void
 							</tr>
 							<tr>
 								<td style="vertical-align: top;"><code>fs_get_content_languages()</code></td>
-								<td><?= esc_html__('List of configured languages (id, nameEnglish, etc.).', 'fromscratch') ?></td>
+								<td><?= esc_html__('List of configured languages (id, label, etc.).', 'fromscratch') ?></td>
 							</tr>
 							<tr>
 								<td style="vertical-align: top;"><code>fs_get_default_language()</code></td>
@@ -169,6 +169,10 @@ function fs_render_developer_general(): void
 						<tr>
 							<td style="vertical-align: top;"><code>FS_Walker_Nav_Menu</code></td>
 							<td><?= esc_html__('Minimal custom walker for clean markup: menu-link, menu-label, menu-depth-* and accessible submenu toggle buttons.', 'fromscratch') ?></td>
+						</tr>
+						<tr>
+							<td style="vertical-align: top;"><code>fs_get_content_option( $option_id, $default )</code></td>
+							<td><?= esc_html__('Get a content option with language fallback: current language → default language → key without suffix. Use the base option id (no _en/_de).', 'fromscratch') ?></td>
 						</tr>
 						<tr>
 							<td style="vertical-align: top;"><code>fs_get_page_id_by_slug( $slug )</code></td>

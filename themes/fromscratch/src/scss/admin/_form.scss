@@ -12,6 +12,21 @@
   }
 }
 
+// Buttons
+
+.button.fs-button-can-toggle {
+
+  &.active,
+  &.active:hover,
+  &.active:focus {
+    background: #2271b1;
+    border-color: #2271b1;
+    color: #fff;
+    box-shadow: none;
+    outline: none;
+  }
+}
+
 // Labels
 
 .fs-input-label {

@@ -12,10 +12,16 @@
  * - description: help text shown below the field (optional).
  */
 return [
-	'languages' => [
-		['id' => 'en', 'nameEnglish' => 'English', 'nameOriginalLanguage' => 'English'],
-		['id' => 'de', 'nameEnglish' => 'German', 'nameOriginalLanguage' => 'Deutsch'],
-	],
+	/**
+	 * Content languages: used for the language toggle on Settings → Theme → Content and for translatable fields (variables with 'translate' => true).
+	 * When the Languages feature is disabled (Developer → Features): this config is the fallback; define your languages here.
+	 * When the Languages feature is enabled: languages are managed in Developer → Languages instead; this config is ignored.
+	 * Each item: id (e.g. 'en', 'de'), label (display name on the Content tab switcher and in admin).
+	 */
+	// 'languages' => [
+	// 	['id' => 'en', 'label' => 'English', 'default' => true],
+	// 	['id' => 'de', 'label' => 'German'],
+	// ],
 
 	/**
 	 * Content: tabs (left nav), each with sections (fields).

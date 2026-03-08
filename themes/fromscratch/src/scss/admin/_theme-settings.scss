@@ -1,5 +1,9 @@
 // Content fields (use global .fs-tabs from common.scss)
 
+.fs-content-lang-switcher {
+  margin: 0 0 24px;
+}
+
 .fs-tabs-panels .form-table {
   table-layout: fixed;
 }
@@ -51,7 +55,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 20px;
-  flex: 1;
   min-width: 0;
   margin: 0;
 }

@@ -762,6 +762,12 @@ function theme_settings_page(): void
 				$content_tabs = fs_config_settings('content.tabs');
 				$content_tabs = is_array($content_tabs) ? $content_tabs : [];
 				$content_developer_options_visible = function_exists('fs_is_developer_user') && fs_is_developer_user((int) get_current_user_id()) && (string) get_user_meta(get_current_user_id(), 'fromscratch_show_content_developer_options', true) === '1';
+				$content_languages = function_exists('fs_get_content_languages') ? fs_get_content_languages() : [];
+				$content_default_lang = function_exists('fs_get_default_language') ? fs_get_default_language() : '';
+				if ($content_default_lang === '' && !empty($content_languages)) {
+					$content_default_lang = (string) ($content_languages[0]['id'] ?? '');
+				}
+				$show_lang_switcher = count($content_languages) >= 2;
 				?>
 				<h2><?= esc_html__('Global Content', 'fromscratch') ?></h2>
 				<p class="description">
@@ -774,13 +780,25 @@ function theme_settings_page(): void
 				<hr>
 
 				<?php settings_fields(FS_THEME_OPTION_GROUP_TEXTE); ?>
+				
 				<div class="fs-tabs" data-fs-tabs>
 					<nav class="fs-tabs-nav" data-fs-tabs-nav role="tablist">
 						<?php foreach ($content_tabs as $i => $ct) : ?>
-							<button type="button" class="button fs-tabs-btn <?= ($i === 0) ? 'active' : '' ?>" role="tab" aria-selected="<?= ($i === 0) ? 'true' : 'false' ?>" aria-controls="fs-content-panel-<?= esc_attr($ct['id']) ?>" data-tab="<?= esc_attr($ct['id']) ?>"><?= esc_html($ct['title'] ?? $ct['id']) ?></button>
+							<button type="button" class="button fs-tabs-btn fs-button-can-toggle <?= ($i === 0) ? 'active' : '' ?>" role="tab" aria-selected="<?= ($i === 0) ? 'true' : 'false' ?>" aria-controls="fs-content-panel-<?= esc_attr($ct['id']) ?>" data-tab="<?= esc_attr($ct['id']) ?>"><?= esc_html($ct['title'] ?? $ct['id']) ?></button>
 						<?php endforeach; ?>
 					</nav>
 					<div class="fs-tabs-panels" data-fs-tabs-panels>
+					<?php if ($show_lang_switcher) : ?>
+						<div class="fs-content-lang-switcher" data-fs-content-lang-default="<?= esc_attr($content_default_lang) ?>">
+							<?php foreach ($content_languages as $lang) :
+								$lang_id = isset($lang['id']) ? (string) $lang['id'] : '';
+								$lang_label = function_exists('fs_content_language_label') ? fs_content_language_label($lang, 'native') : $lang_id;
+								$is_default = $lang_id === $content_default_lang;
+							?>
+								<button type="button" class="button fs-content-lang-btn fs-button-can-toggle <?= $is_default ? 'active' : '' ?>" data-fs-content-lang="<?= esc_attr($lang_id) ?>"><?= esc_html($lang_label) ?></button>
+							<?php endforeach; ?>
+						</div>
+					<?php endif; ?>
 						<?php foreach ($content_tabs as $i => $ct) : ?>
 							<div id="fs-content-panel-<?= esc_attr($ct['id']) ?>" class="fs-tabs-panel <?= $i === 0 ? 'fs-tabs-panel--active' : '' ?>" data-fs-tabs-panel role="tabpanel" data-tab="<?= esc_attr($ct['id']) ?>" <?= $i === 0 ? 'data-fs-tabs-panel-active="1"' : '' ?>>
 								<?php
@@ -845,6 +863,36 @@ function theme_settings_page(): void
 								}
 							});
 					});
+				})();
+			</script>
+			<script>
+				(function() {
+					var switcher = document.querySelector('.fs-content-lang-switcher');
+					if (!switcher) return;
+					var defaultLang = switcher.getAttribute('data-fs-content-lang-default') || '';
+					var form = document.getElementById('fs-content-form');
+					if (!form) return;
+
+					function setContentLang(langId) {
+						switcher.querySelectorAll('.fs-content-lang-btn').forEach(function(b) {
+							b.classList.toggle('active', b.getAttribute('data-fs-content-lang') === langId);
+						});
+						form.querySelectorAll('[class*="page-settings-language-container-"]').forEach(function(container) {
+							var match = container.className.match(/page-settings-language-container-([a-zA-Z0-9_-]+)/);
+							var tr = container.closest('tr');
+							if (tr) {
+								tr.style.display = match && match[1] === langId ? '' : 'none';
+							}
+						});
+					}
+
+					switcher.addEventListener('click', function(e) {
+						var btn = e.target.closest('.fs-content-lang-btn');
+						if (!btn) return;
+						setContentLang(btn.getAttribute('data-fs-content-lang') || '');
+					});
+
+					setContentLang(defaultLang);
 				})();
 			</script>
 		<?php elseif ($tab === 'redirects') : ?>
@@ -1008,8 +1056,31 @@ function theme_settings_page(): void
 }
 
 /**
- * Output option name row (for developers only): copy option name, copy get_option snippet, monospace option id.
- * Uses copy-from-source; no label on buttons.
+ * Base content option id (without language suffix) for display and fs_get_content_option snippet.
+ * When variableId is language-specific (e.g. fs_content_general_company_name_en), returns the base id; otherwise returns variableId.
+ */
+function fs_content_base_option_id(string $variableId): string
+{
+	if (!function_exists('fs_get_content_languages')) {
+		return $variableId;
+	}
+	$languages = fs_get_content_languages();
+	foreach ($languages as $lang) {
+		$lid = isset($lang['id']) ? (string) $lang['id'] : '';
+		if ($lid === '') {
+			continue;
+		}
+		$suffix = '_' . $lid;
+		if (str_ends_with($variableId, $suffix)) {
+			return substr($variableId, 0, -strlen($suffix));
+		}
+	}
+	return $variableId;
+}
+
+/**
+ * Output option name row (for developers only): copy option name, copy snippet (fs_get_content_option or get_option), monospace option id.
+ * For translatable fields shows base option id and fs_get_content_option() snippet.
  */
 function fs_content_field_option_name_row(string $variableId, array $variable = []): void
 {
@@ -1017,9 +1088,14 @@ function fs_content_field_option_name_row(string $variableId, array $variable = 
 		return;
 	}
 	$show = (string) get_user_meta(get_current_user_id(), 'fromscratch_show_content_developer_options', true) === '1';
+	$base_id = fs_content_base_option_id($variableId);
+	$is_translated = $base_id !== $variableId;
 	$type = $variable['type'] ?? 'textfield';
 	$default = ($type === 'multiselect') ? '[]' : (($type === 'image') ? '0' : "''");
-	$snippet = "get_option('" . $variableId . "', " . $default . ")";
+	$snippet = $is_translated
+		? "fs_get_content_option('" . $base_id . "', " . $default . ")"
+		: "get_option('" . $variableId . "', " . $default . ")";
+	$display_id = $base_id;
 	$id_attr = 'fs-opt-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', $variableId);
 	$id_snippet_attr = 'fs-opt-snippet-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', $variableId);
 	$hidden_class = $show ? '' : ' fs-content-developer-options-hidden';
@@ -1031,12 +1107,12 @@ function fs_content_field_option_name_row(string $variableId, array $variable = 
 					<path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360ZM200-80q-33 0-56.5-23.5T120-160v-520q0-17 11.5-28.5T160-720q17 0 28.5 11.5T200-680v520h400q17 0 28.5 11.5T640-120q0 17-11.5 28.5T600-80H200Z" />
 				</svg>
 			</button>
-			<button type="button" class="button fs-content-developer-options-button" data-fs-copy-from-source="<?= esc_attr($id_snippet_attr) ?>" title="<?= esc_attr__('Copy get_option snippet', 'fromscratch') ?>">
+			<button type="button" class="button fs-content-developer-options-button" data-fs-copy-from-source="<?= esc_attr($id_snippet_attr) ?>" title="<?= esc_attr__('Copy snippet', 'fromscratch') ?>">
 				<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
 					<path d="m353-480 59-59q12-12 12-28t-12-28q-12-12-28.5-12T355-595l-87 87q-6 6-8.5 13t-2.5 15q0 8 2.5 15t8.5 13l87 87q12 12 28.5 12t28.5-12q12-12 12-28t-12-28l-59-59Zm254 0-59 59q-12 12-12 28t12 28q12 12 28.5 12t28.5-12l87-87q6-6 8.5-13t2.5-15q0-8-2.5-15t-8.5-13l-87-87q-6-6-13.5-9t-15-3q-7.5 0-15 3t-13.5 9q-12 12-12 28t12 28l59 59ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Z" />
 				</svg>
 			</button>
-			<code id="<?= esc_attr($id_attr) ?>" class="fs-code-small fs-content-developer-options-code"><?= esc_html($variableId) ?></code>
+			<code id="<?= esc_attr($id_attr) ?>" class="fs-code-small fs-content-developer-options-code"><?= esc_html($display_id) ?></code>
 			<span id="<?= esc_attr($id_snippet_attr) ?>" style="display: none;"><?= esc_html($snippet) ?></span>
 		</div>
 	</div>

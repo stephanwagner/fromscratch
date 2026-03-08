@@ -32,11 +32,6 @@
 .fs-tabs-nav .fs-tabs-btn.active:hover, 
 .fs-tabs-nav .fs-tabs-btn.active:focus {
   position: relative;
-  background: #2271b1;
-  border-color: #2271b1;
-  color: #fff;
-  box-shadow: none;
-  outline: none;
   padding-right: calc(24px + 8px);
 
   &::after {
