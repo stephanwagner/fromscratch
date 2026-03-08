@@ -171,7 +171,7 @@ function fs_render_developer_general(): void
 							<td><?= esc_html__('Minimal custom walker for clean markup: menu-link, menu-label, menu-depth-* and accessible submenu toggle buttons.', 'fromscratch') ?></td>
 						</tr>
 						<tr>
-							<td style="vertical-align: top;"><code>fs_get_content_option( $option_id, $default )</code></td>
+							<td style="vertical-align: top;"><code>fs_content_option( $option_id, $default )</code></td>
 							<td><?= esc_html__('Get a content option with language fallback: current language → default language → key without suffix. Use the base option id (no _en/_de).', 'fromscratch') ?></td>
 						</tr>
 						<tr>

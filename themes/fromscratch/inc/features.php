@@ -147,7 +147,7 @@ function fs_content_language_label(array $lang, string $type = 'native'): string
  * @param mixed  $default    Value to return when no option is set.
  * @return mixed
  */
-function fs_get_content_option(string $option_id, $default = '')
+function fs_content_option(string $option_id, $default = '')
 {
 	$sentinel = new \stdClass();
 	$current_lang = function_exists('fs_language_current_request_lang') ? fs_language_current_request_lang() : '';

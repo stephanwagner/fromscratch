@@ -1056,7 +1056,7 @@ function theme_settings_page(): void
 }
 
 /**
- * Base content option id (without language suffix) for display and fs_get_content_option snippet.
+ * Base content option id (without language suffix) for display and fs_content_option snippet.
  * When variableId is language-specific (e.g. fs_content_general_company_name_en), returns the base id; otherwise returns variableId.
  */
 function fs_content_base_option_id(string $variableId): string
@@ -1079,8 +1079,8 @@ function fs_content_base_option_id(string $variableId): string
 }
 
 /**
- * Output option name row (for developers only): copy option name, copy snippet (fs_get_content_option or get_option), monospace option id.
- * For translatable fields shows base option id and fs_get_content_option() snippet.
+ * Output option name row (for developers only): copy option name, copy snippet (fs_content_option or get_option), monospace option id.
+ * For translatable fields shows base option id and fs_content_option() snippet.
  */
 function fs_content_field_option_name_row(string $variableId, array $variable = []): void
 {
@@ -1093,7 +1093,7 @@ function fs_content_field_option_name_row(string $variableId, array $variable = 
 	$type = $variable['type'] ?? 'textfield';
 	$default = ($type === 'multiselect') ? '[]' : (($type === 'image') ? '0' : "''");
 	$snippet = $is_translated
-		? "fs_get_content_option('" . $base_id . "', " . $default . ")"
+		? "fs_content_option('" . $base_id . "', " . $default . ")"
 		: "get_option('" . $variableId . "', " . $default . ")";
 	$display_id = $base_id;
 	$id_attr = 'fs-opt-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', $variableId);

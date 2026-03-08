@@ -1545,6 +1545,16 @@ add_action('template_redirect', function (): void {
 
 	$current_path = trim((string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH), '/');
 
+	// Never redirect the site root so the homepage is always reachable (avoids redirect loops when languages are just enabled).
+	if ($current_path === '') {
+		return;
+	}
+
+	// Skip canonical redirect when the post has no language assigned yet (e.g. right after enabling languages).
+	if ($lang === '') {
+		return;
+	}
+
 	$path = $post->post_type === 'page' ? get_page_uri($post->ID) : $post->post_name;
 	$path = trim($path, '/');
 
