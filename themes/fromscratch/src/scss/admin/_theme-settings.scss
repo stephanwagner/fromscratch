@@ -58,3 +58,75 @@
   min-width: 0;
   margin: 0;
 }
+
+// Design
+
+.fromscratch-design-section {
+
+  h3 {
+    margin-top: 24px;
+    margin-bottom: 12px;
+  }
+
+  &:first-child {
+    h3 {
+      margin-top: 0;
+    }
+  }
+}
+
+table.fs-design-section-table {
+
+  th {
+    font-weight: normal;
+    padding: 6px 0 6px 12px;
+    width: 240px;
+
+    code {
+      margin: 0;
+    }
+  }
+
+  td {
+    padding: 6px 0 6px 12px;
+  }
+
+  .fromscratch-design-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    .fromscratch-design-field-description {
+      color: #646970;
+      font-size: 13px;
+    }
+
+    // All inputs (text + color) default 85px
+    .fromscratch-design-input {
+      width: 85px;
+    }
+  }
+
+  .fromscratch-design-input--long-text {
+    width: 100%;
+    min-width: 240px;
+    max-width: 100%;
+  }
+
+  .fromscratch-design-field--color {
+    .fromscratch-design-color-preview {
+      flex-shrink: 0;
+      width: 30px;
+      height: 30px;
+      border-radius: 4px;
+      border: 0;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+
+    }
+
+    .fromscratch-design-color-preview--empty {
+      background-color: #ddd;
+    }
+  }
+}

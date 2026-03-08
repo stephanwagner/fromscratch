@@ -49,29 +49,36 @@ return [
 	],
 
 	/**
-	 * Design variables: overridable in Settings → Theme → Design.
-	 * IDs become CSS custom properties (e.g. "color-primary" → --color-primary).
-	 * Sections with 'from' => 'colors' etc. are derived from the arrays above.
+	 * Design tabs (Settings → Theme → Design). Each tab has title and sections.
+	 * Tab title: English, translated in languages/*.po (context: Design tab).
+	 * Section title: English, translated (context: Design section). Section needs 'id' for variable resolution.
 	 */
 	'design' => [
-		'sections' => [
-			'colors' => ['title' => 'Farben', 'from' => 'colors'],
-			'gradients' => ['title' => 'Verläufe', 'from' => 'gradients'],
-			'font_sizes' => ['title' => 'Schriftgrößen', 'from' => 'font_sizes'],
-			'typography' => [
-				'title' => 'Text',
-				'variables' => [
-					['id' => 'primary-font', 'title' => 'Schriftart', 'default' => 'Open Sans, sans-serif', 'type' => 'text'],
+		[
+			'title' => 'Colors',
+			'sections' => [
+				['id' => 'colors', 'title' => 'Colors', 'from' => 'colors'],
+				['id' => 'gradients', 'title' => 'Gradients', 'from' => 'gradients'],
+			],
+		],
+		[
+			'title' => 'Text',
+			'sections' => [
+				['id' => 'typography', 'title' => 'Text', 'variables' => [
+					['id' => 'primary-font', 'title' => 'Schriftart', 'default' => 'Open Sans, sans-serif', 'type' => 'long-text'],
 					['id' => 'default-text-color', 'title' => 'Standard Textfarbe', 'default' => '#222', 'type' => 'color'],
 					['id' => 'default-font-size', 'title' => 'Standard Schriftgröße', 'default' => '16px', 'type' => 'text'],
 					['id' => 'default-line-height', 'title' => 'Standard Zeilenhöhe', 'default' => '1.6', 'type' => 'text'],
 					['id' => 'link-color', 'title' => 'Linkfarbe', 'default' => '#00aaff', 'type' => 'color'],
 					['id' => 'link-hover-color', 'title' => 'Linkfarbe (hover)', 'default' => '#00ddff', 'type' => 'color'],
-				],
+				]],
+				['id' => 'font_sizes', 'title' => 'Font sizes', 'from' => 'font_sizes'],
 			],
-			'content' => [
-				'title' => 'Inhalt & Abstände',
-				'variables' => [
+		],
+		[
+			'title' => 'Scaffold',
+			'sections' => [
+				['id' => 'content', 'title' => 'Content & spacing', 'variables' => [
 					['id' => 'max-content-width', 'title' => 'Max. Inhaltsbreite', 'default' => '1200px', 'type' => 'text'],
 					['id' => 'narrow-content-width', 'title' => 'Schmale Inhaltsbreite', 'default' => '900px', 'type' => 'text'],
 					['id' => 'very-narrow-content-width', 'title' => 'Sehr schmale Breite', 'default' => '600px', 'type' => 'text'],
@@ -80,41 +87,44 @@ return [
 					['id' => 'content-padding-m', 'title' => 'Innenabstand M', 'default' => '48px', 'type' => 'text'],
 					['id' => 'content-padding-s', 'title' => 'Innenabstand S', 'default' => '32px', 'type' => 'text'],
 					['id' => 'content-padding-xs', 'title' => 'Innenabstand XS', 'default' => '24px', 'type' => 'text'],
-				],
+				]],
 			],
-			'dimensions' => [
-				'title' => 'Dimensionen',
-				'variables' => [
+		],
+		[
+			'title' => 'Dimensions',
+			'sections' => [
+				['id' => 'dimensions', 'title' => 'Dimensions', 'variables' => [
 					['id' => 'header-height', 'title' => 'Header-Höhe', 'default' => '120px', 'type' => 'text'],
 					['id' => 'header-height-mobile', 'title' => 'Header-Höhe (mobil)', 'default' => '80px', 'type' => 'text'],
 					['id' => 'header-height-scrolled', 'title' => 'Header-Höhe (gescrollt)', 'default' => '62px', 'type' => 'text'],
-					['id' => 'mobile-menu-width', 'title' => 'Breite mobilesMenü', 'default' => '280px', 'type' => 'text'],
-				],
+					['id' => 'mobile-menu-width', 'title' => 'Breite mobiles Menü', 'default' => '280px', 'type' => 'text'],
+				]],
 			],
-			'breakpoints' => [
-				'title' => 'Breakpoints',
-				'variables' => [
+		],
+		[
+			'title' => 'Breakpoints',
+			'sections' => [
+				['id' => 'breakpoints', 'title' => 'Breakpoints', 'variables' => [
 					['id' => 'mobile-breakpoint', 'title' => 'Mobil-Umschlag', 'default' => '900px', 'type' => 'text'],
 					['id' => 'breakpoint-xl', 'title' => 'Breakpoint XL', 'default' => '1400px', 'type' => 'text'],
 					['id' => 'breakpoint-l', 'title' => 'Breakpoint L', 'default' => '1200px', 'type' => 'text'],
 					['id' => 'breakpoint-m', 'title' => 'Breakpoint M', 'default' => '900px', 'type' => 'text'],
 					['id' => 'breakpoint-s', 'title' => 'Breakpoint S', 'default' => '600px', 'type' => 'text'],
 					['id' => 'breakpoint-xs', 'title' => 'Breakpoint XS', 'default' => '400px', 'type' => 'text'],
-				],
+				]],
 			],
-			'transitions' => [
-				'title' => 'Übergänge',
-				'variables' => [
+		],
+		[
+			'title' => 'Other',
+			'sections' => [
+				['id' => 'transitions', 'title' => 'Transitions', 'variables' => [
 					['id' => 'default-transition-speed', 'title' => 'Standard Übergangsdauer', 'default' => '280ms', 'type' => 'text'],
 					['id' => 'slow-transition-speed', 'title' => 'Langsame Übergangsdauer', 'default' => '460ms', 'type' => 'text'],
-				],
-			],
-			'border-radius' => [
-				'title' => 'Eckenradius',
-				'variables' => [
+				]],
+				['id' => 'border-radius', 'title' => 'Border radius', 'variables' => [
 					['id' => 'small-border-radius', 'title' => 'Klein', 'default' => '8px', 'type' => 'text'],
 					['id' => 'default-border-radius', 'title' => 'Standard', 'default' => '16px', 'type' => 'text'],
-				],
+				]],
 			],
 		],
 	],

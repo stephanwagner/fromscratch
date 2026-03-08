@@ -21,14 +21,40 @@ function fs_sanitize_css_custom_property_value(string $value): string
 }
 
 /**
+ * Get all design sections from config (design = array of tabs, each tab has sections with id).
+ * Returns section_id => section config for resolution.
+ *
+ * @return array<string, array>
+ */
+function fs_get_design_sections_from_config(): array
+{
+	$tabs = fs_config('design');
+	if (!is_array($tabs)) {
+		return [];
+	}
+	$sections = [];
+	foreach ($tabs as $tab) {
+		if (!isset($tab['sections']) || !is_array($tab['sections'])) {
+			continue;
+		}
+		foreach ($tab['sections'] as $section) {
+			if (isset($section['id']) && is_array($section)) {
+				$sections[$section['id']] = $section;
+			}
+		}
+	}
+	return $sections;
+}
+
+/**
  * Get all design variables as a flat list from config.
  *
  * @return array<int, array{id: string, title: string, default: string, type: string}>
  */
 function fs_get_design_variables_list(): array
 {
-	$sections = fs_config('design.sections');
-	if (!is_array($sections)) {
+	$sections = fs_get_design_sections_from_config();
+	if ($sections === []) {
 		return [];
 	}
 	$list = [];
@@ -60,7 +86,7 @@ function fs_get_design_variables_list(): array
 							'id' => 'gradient-' . (string) $tg['slug'],
 							'title' => isset($tg['name']) ? (string) $tg['name'] : (string) $tg['slug'],
 							'default' => (string) $tg['gradient'],
-							'type' => 'text',
+							'type' => 'long-text',
 						];
 					}
 				}
@@ -90,7 +116,7 @@ function fs_get_design_variables_list(): array
 						'id' => (string) $v['id'],
 						'title' => isset($v['title']) ? (string) $v['title'] : $v['id'],
 						'default' => (string) $v['default'],
-						'type' => isset($v['type']) && in_array($v['type'], ['color', 'text'], true) ? $v['type'] : 'text',
+						'type' => isset($v['type']) && in_array($v['type'], ['color', 'text', 'long-text'], true) ? $v['type'] : 'text',
 					];
 				}
 			}
@@ -110,8 +136,8 @@ function fs_get_design_variables_list(): array
  */
 function fs_get_design_sections_resolved(): array
 {
-	$sections = fs_config('design.sections');
-	if (!is_array($sections)) {
+	$sections = fs_get_design_sections_from_config();
+	if ($sections === []) {
 		return [];
 	}
 	$resolved = [];
@@ -143,7 +169,7 @@ function fs_get_design_sections_resolved(): array
 							'id' => 'gradient-' . (string) $tg['slug'],
 							'title' => isset($tg['name']) ? (string) $tg['name'] : (string) $tg['slug'],
 							'default' => (string) $tg['gradient'],
-							'type' => 'text',
+							'type' => 'long-text',
 						];
 					}
 				}
@@ -173,7 +199,7 @@ function fs_get_design_sections_resolved(): array
 						'id' => (string) $v['id'],
 						'title' => isset($v['title']) ? (string) $v['title'] : $v['id'],
 						'default' => (string) $v['default'],
-						'type' => isset($v['type']) && in_array($v['type'], ['color', 'text'], true) ? $v['type'] : 'text',
+						'type' => isset($v['type']) && in_array($v['type'], ['color', 'text', 'long-text'], true) ? $v['type'] : 'text',
 					];
 				}
 			}

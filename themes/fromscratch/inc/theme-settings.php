@@ -780,7 +780,7 @@ function theme_settings_page(): void
 				<hr>
 
 				<?php settings_fields(FS_THEME_OPTION_GROUP_TEXTE); ?>
-				
+
 				<div class="fs-tabs" data-fs-tabs>
 					<nav class="fs-tabs-nav" data-fs-tabs-nav role="tablist">
 						<?php foreach ($content_tabs as $i => $ct) : ?>
@@ -788,17 +788,17 @@ function theme_settings_page(): void
 						<?php endforeach; ?>
 					</nav>
 					<div class="fs-tabs-panels" data-fs-tabs-panels>
-					<?php if ($show_lang_switcher) : ?>
-						<div class="fs-content-lang-switcher" data-fs-content-lang-default="<?= esc_attr($content_default_lang) ?>">
-							<?php foreach ($content_languages as $lang) :
-								$lang_id = isset($lang['id']) ? (string) $lang['id'] : '';
-								$lang_label = function_exists('fs_content_language_label') ? fs_content_language_label($lang, 'native') : $lang_id;
-								$is_default = $lang_id === $content_default_lang;
-							?>
-								<button type="button" class="button fs-content-lang-btn fs-button-can-toggle <?= $is_default ? 'active' : '' ?>" data-fs-content-lang="<?= esc_attr($lang_id) ?>"><?= esc_html($lang_label) ?></button>
-							<?php endforeach; ?>
-						</div>
-					<?php endif; ?>
+						<?php if ($show_lang_switcher) : ?>
+							<div class="fs-content-lang-switcher" data-fs-content-lang-default="<?= esc_attr($content_default_lang) ?>">
+								<?php foreach ($content_languages as $lang) :
+									$lang_id = isset($lang['id']) ? (string) $lang['id'] : '';
+									$lang_label = function_exists('fs_content_language_label') ? fs_content_language_label($lang, 'native') : $lang_id;
+									$is_default = $lang_id === $content_default_lang;
+								?>
+									<button type="button" class="button fs-content-lang-btn fs-button-can-toggle <?= $is_default ? 'active' : '' ?>" data-fs-content-lang="<?= esc_attr($lang_id) ?>"><?= esc_html($lang_label) ?></button>
+								<?php endforeach; ?>
+							</div>
+						<?php endif; ?>
 						<?php foreach ($content_tabs as $i => $ct) : ?>
 							<div id="fs-content-panel-<?= esc_attr($ct['id']) ?>" class="fs-tabs-panel <?= $i === 0 ? 'fs-tabs-panel--active' : '' ?>" data-fs-tabs-panel role="tabpanel" data-tab="<?= esc_attr($ct['id']) ?>" <?= $i === 0 ? 'data-fs-tabs-panel-active="1"' : '' ?>>
 								<?php
@@ -816,7 +816,7 @@ function theme_settings_page(): void
 					</div>
 				</div>
 
-				<hr>
+				<hr class="fs-small">
 
 				<p class="submit" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
 					<?php submit_button(null, 'primary', 'submit', false); ?>
@@ -995,7 +995,7 @@ function theme_settings_page(): void
 				<h2 class="title"><?= esc_html__('Custom CSS', 'fromscratch') ?></h2>
 				<p class="description"><?= esc_html__('The CSS is output after the design variables (:root).', 'fromscratch') ?></p>
 				<p class="description"><?= esc_html__('You can use design variables, e.g. var(--color-primary).', 'fromscratch') ?></p>
-				
+
 				<table class="form-table" style="margin-top: 24px;" role="presentation">
 					<tr>
 						<td colspan="2" style="padding: 0;">
@@ -1009,45 +1009,82 @@ function theme_settings_page(): void
 				<?php submit_button(); ?>
 			</form>
 		<?php else : ?>
-			<p class="description" style="margin-bottom: 8px;"><?= esc_html__('Override SCSS design variables. Values are output as CSS custom properties (:root). Add new variables in config/theme-design.php under design.sections.', 'fromscratch') ?></p>
 			<form method="post" action="options.php" class="page-settings-form">
+				<h2 class="title"><?= esc_html__('Design', 'fromscratch') ?></h2>
+				<p class="description"><?= esc_html__('Define design values used across the website.', 'fromscratch') ?></p>
+				<p class="description"><?= esc_html__('Changes are automatically applied wherever they are used.', 'fromscratch') ?></p>
+				
+				<hr>
+
 				<?php settings_fields(FS_THEME_OPTION_GROUP_DESIGN); ?>
 				<?php
 				$design_sections = fs_get_design_sections_resolved();
-				foreach ($design_sections as $section_id => $section) :
-					$section_title = $section['title'];
+				$design_tabs = is_array(fs_config('design')) ? fs_config('design') : [];
 				?>
-					<div class="fromscratch-design-section" style="margin-bottom: 24px;">
-						<h2 class="title"><?= esc_html($section_title) ?></h2>
-						<table class="form-table" role="presentation">
-							<tbody>
-								<?php foreach ($section['variables'] as $v) :
-									$var_id = $v['id'] ?? '';
-									$var_title = $v['title'] ?? $var_id;
-									$var_type = (isset($v['type']) && $v['type'] === 'color') ? 'color' : 'text';
-									$override = fs_design_variable_override($var_id);
-									$default = $v['default'] ?? '';
-									$input_name = 'fromscratch_design[' . esc_attr($var_id) . ']';
+				<div class="fs-tabs" data-fs-tabs>
+					<nav class="fs-tabs-nav" data-fs-tabs-nav role="tablist">
+						<?php foreach ($design_tabs as $i => $dt) :
+							$tab_id = isset($dt['title']) ? sanitize_title($dt['title']) : 'tab-' . $i;
+						?>
+							<button type="button" class="button fs-tabs-btn fs-button-can-toggle <?= ($i === 0) ? 'active' : '' ?>" role="tab" aria-selected="<?= ($i === 0) ? 'true' : 'false' ?>" aria-controls="fs-design-panel-<?= esc_attr($tab_id) ?>" data-tab="<?= esc_attr($tab_id) ?>"><?= esc_html(_x($dt['title'] ?? $tab_id, 'Design tab', 'fromscratch')) ?></button>
+						<?php endforeach; ?>
+					</nav>
+					<div class="fs-tabs-panels" data-fs-tabs-panels>
+						<?php foreach ($design_tabs as $i => $dt) :
+							$tab_id = isset($dt['title']) ? sanitize_title($dt['title']) : 'tab-' . $i;
+							$tab_sections = isset($dt['sections']) && is_array($dt['sections']) ? $dt['sections'] : [];
+						?>
+							<div id="fs-design-panel-<?= esc_attr($tab_id) ?>" class="fs-tabs-panel <?= $i === 0 ? 'fs-tabs-panel--active' : '' ?>" data-fs-tabs-panel role="tabpanel" data-tab="<?= esc_attr($tab_id) ?>" <?= $i === 0 ? 'data-fs-tabs-panel-active="1"' : '' ?>>
+								<?php foreach ($tab_sections as $section_config) :
+									$section_id = $section_config['id'] ?? null;
+									if ($section_id === null || !isset($design_sections[$section_id])) {
+										continue;
+									}
+									$section = $design_sections[$section_id];
+									$section_title = $section['title'];
 								?>
-									<tr>
-										<th scope="row" style="font-weight: normal; width: 220px;">
-											<code style="font-size: 12px;">--<?= esc_html($var_id) ?></code>
-										</th>
-										<td>
-											<label for="fromscratch_design_<?= esc_attr($var_id) ?>" class="screen-reader-text"><?= esc_html($var_title) ?></label>
-											<?php if ($var_type === 'color') : ?>
-												<input type="text" name="<?= $input_name ?>" id="fromscratch_design_<?= esc_attr($var_id) ?>" value="<?= esc_attr($override) ?>" placeholder="<?= esc_attr($default) ?>" class="code" style="width: 120px;" maxlength="22">
-											<?php else : ?>
-												<input type="text" name="<?= $input_name ?>" id="fromscratch_design_<?= esc_attr($var_id) ?>" value="<?= esc_attr($override) ?>" placeholder="<?= esc_attr($default) ?>" class="regular-text" style="width: 200px;">
-											<?php endif; ?>
-											<span class="description" style="margin-left: 8px; color: #646970;"><?= esc_html($var_title) ?></span>
-										</td>
-									</tr>
+									<div class="fromscratch-design-section">
+										<h3 class="title"><?= esc_html(_x($section_title, 'Design section', 'fromscratch')) ?></h3>
+										<table class="widefat striped fs-design-section-table" role="presentation">
+											<tbody>
+												<?php foreach ($section['variables'] as $v) :
+													$var_id = $v['id'] ?? '';
+													$var_title = $v['title'] ?? $var_id;
+													$var_type = isset($v['type']) && is_string($v['type']) && $v['type'] !== '' ? $v['type'] : 'text';
+													$override = fs_design_variable_override($var_id);
+													$default = $v['default'] ?? '';
+													$input_name = 'fromscratch_design[' . esc_attr($var_id) . ']';
+													$type_class = 'fromscratch-design-input--' . sanitize_html_class($var_type);
+													$row_type_class = 'fromscratch-design-row--' . sanitize_html_class($var_type);
+													$preview_color = ($override !== '') ? $override : $default;
+												?>
+													<tr class="<?= esc_attr($row_type_class) ?>">
+														<th scope="row">
+															<code class="fs-code-small">--<?= esc_html($var_id) ?></code>
+														</th>
+														<td>
+															<div class="fromscratch-design-field <?= $var_type === 'color' ? 'fromscratch-design-field--color' : '' ?>">
+																<label for="fromscratch_design_<?= esc_attr($var_id) ?>" class="screen-reader-text"><?= esc_html($var_title) ?></label>
+																<input type="text" name="<?= $input_name ?>" id="fromscratch_design_<?= esc_attr($var_id) ?>" value="<?= esc_attr($override) ?>" placeholder="<?= esc_attr($default) ?>" class="code fs-code-small fromscratch-design-input <?= esc_attr($type_class) ?>" <?= $var_type === 'color' ? 'maxlength="22" data-design-color-input' : '' ?>>
+																<?php if ($var_type === 'color') : ?>
+																	<span class="fromscratch-design-color-preview <?= $preview_color === '' ? 'fromscratch-design-color-preview--empty' : '' ?>"<?= $preview_color !== '' ? ' style="background-color: ' . esc_attr($preview_color) . ';"' : '' ?> aria-hidden="true" data-design-color-preview></span>
+																<?php endif; ?>
+																<span class="fromscratch-design-field-description"><?= esc_html($var_title) ?></span>
+															</div>
+														</td>
+													</tr>
+												<?php endforeach; ?>
+											</tbody>
+										</table>
+									</div>
 								<?php endforeach; ?>
-							</tbody>
-						</table>
+							</div>
+						<?php endforeach; ?>
 					</div>
-				<?php endforeach; ?>
+				</div>
+
+				<hr class="fs-small">
+
 				<?php submit_button(); ?>
 			</form>
 		<?php endif; ?>
@@ -1089,12 +1126,9 @@ function fs_content_field_option_name_row(string $variableId, array $variable = 
 	}
 	$show = (string) get_user_meta(get_current_user_id(), 'fromscratch_show_content_developer_options', true) === '1';
 	$base_id = fs_content_base_option_id($variableId);
-	$is_translated = $base_id !== $variableId;
 	$type = $variable['type'] ?? 'textfield';
 	$default = ($type === 'multiselect') ? '[]' : (($type === 'image') ? '0' : "''");
-	$snippet = $is_translated
-		? "fs_content_option('" . $base_id . "', " . $default . ")"
-		: "get_option('" . $variableId . "', " . $default . ")";
+	$snippet = "fs_content_option('" . $base_id . "', " . $default . ")";
 	$display_id = $base_id;
 	$id_attr = 'fs-opt-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', $variableId);
 	$id_snippet_attr = 'fs-opt-snippet-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', $variableId);
