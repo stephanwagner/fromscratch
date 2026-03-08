@@ -242,8 +242,35 @@ add_action('admin_menu', function () {
     return;
   }
 
-  // Move Menus from Appearance to Settings for everyone (direct link to nav-menus.php), after Theme settings.
-  global $submenu;
+  global $menu, $submenu;
+
+  // Non-admins: hide Settings, Design (themes), Menus, and Tools entirely.
+  if (!current_user_can('manage_options')) {
+    remove_menu_page('options-general.php');
+    if (isset($submenu['options-general.php'])) {
+      unset($submenu['options-general.php']);
+    }
+    remove_submenu_page('themes.php', 'nav-menus.php');
+    remove_menu_page('themes.php');
+    if (isset($submenu['themes.php'])) {
+      unset($submenu['themes.php']);
+    }
+    remove_menu_page('tools.php');
+    if (isset($submenu['tools.php'])) {
+      unset($submenu['tools.php']);
+    }
+    // WordPress may keep parent visible when submenu exists; remove from $menu directly.
+    if (is_array($menu)) {
+      foreach ($menu as $i => $item) {
+        if (isset($item[2]) && in_array($item[2], ['options-general.php', 'themes.php', 'tools.php'], true)) {
+          unset($menu[$i]);
+        }
+      }
+    }
+    return;
+  }
+
+  // Admins only: move Menus from Appearance to Settings (after Theme settings).
   remove_submenu_page('themes.php', 'nav-menus.php');
   $menus_item = [
     __('Menus'),
