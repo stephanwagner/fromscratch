@@ -8,6 +8,9 @@ RESET="\033[0m"
 CHECK="✔"
 CROSS="✖"
 
+BACKUP_FOLDER="db"
+mkdir -p "$BACKUP_FOLDER"
+
 MYSQL="/Applications/MAMP/Library/bin/mysql80/bin/mysql"
 MYSQLDUMP="/Applications/MAMP/Library/bin/mysql57/bin/mysqldump"
 
@@ -15,7 +18,7 @@ DB_USER="root"
 DB_PASS="root"
 DB_HOST="127.0.0.1"
 DB_PORT="8889"
-DB_NAME="fromscratch2"
+DB_NAME="fromscratch3"
 
 COMMAND="$1"
 FILE="$2"
@@ -25,9 +28,9 @@ export_db() {
   read -p "Enter backup name (leave empty for timestamp): " NAME
 
   if [ -z "$NAME" ]; then
-    BACKUP_FILE="export-$(date +%Y-%m-%d_%H-%M-%S).sql"
+    BACKUP_FILE="${BACKUP_FOLDER}/export-$(date +%Y-%m-%d_%H-%M-%S).sql"
   else
-    BACKUP_FILE="${NAME}.sql"
+    BACKUP_FILE="${BACKUP_FOLDER}/export-${NAME}.sql"
   fi
 
   echo -e "${YELLOW}Exporting ${DB_NAME}...${RESET}"

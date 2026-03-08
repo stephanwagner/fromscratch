@@ -1,12 +1,15 @@
-# npm
-/node_modules
-
-# themes
+# Themes
 /themes/*
 !/themes/fromscratch
 
-# wordpress
+# DB exports
+/db
+
+# WordPress
 /wordpress
+
+# npm
+/node_modules
 
 # OS generated files #
 ######################

@@ -337,7 +337,7 @@ function fs_render_installer(): void
                   <?= esc_html__('Set permalink structure to “Post name”', 'fromscratch') ?>
                 </label>
               </p>
-              <p class="description"><?= esc_html__('Sets the permalink structure to “Post name” (/%postname%/), so URLs look like /about/ instead of ?p=123.', 'fromscratch') ?></p>
+              <p class="description"><?= esc_html__('Sets the permalink structure to “Post name” (/%postname%/), so URLs look like /about instead of ?p=123.', 'fromscratch') ?></p>
             </td>
           </tr>
 
@@ -965,7 +965,7 @@ Tags:
   /**
    * Media sizes (built-in only; set during install). Extra sizes are edited on Settings → Media.
    */
-  $installMedia = isset($_POST['install']['media']) && $_POST['install']['media'] === 'on';
+  $installMedia = !empty($_POST['install']['media']);
 
   if ($installMedia) {
     $install_media_defaults = [
@@ -1003,7 +1003,7 @@ Tags:
   /**
    * Permalinks
    */
-  $installPermalinks = isset($_POST['install']['permalinks']) && $_POST['install']['permalinks'] === 'on';
+  $installPermalinks = !empty($_POST['install']['permalinks']);
 
   if ($installPermalinks) {
     global $wp_rewrite;
@@ -1017,7 +1017,7 @@ Tags:
   /**
    * .htaccess (Apache only)
    */
-  $installHtaccess = isset($_POST['install']['htaccess']) && $_POST['install']['htaccess'] === 'on';
+  $installHtaccess = !empty($_POST['install']['htaccess']);
   if ($installHtaccess) {
     fs_write_htaccess();
   }
@@ -1025,7 +1025,7 @@ Tags:
   /**
    * Required pages
    */
-  $installPages = isset($_POST['install']['pages']) && $_POST['install']['pages'] === 'on';
+  $installPages = !empty($_POST['install']['pages']);
 
   if ($installPages) {
 
@@ -1115,7 +1115,7 @@ Tags:
   /**
    * Menus
    */
-  $installMenus = isset($_POST['install']['menus']) && $_POST['install']['menus'] === 'on';
+  $installMenus = !empty($_POST['install']['menus']);
 
   if ($installMenus) {
     $menuItems = [
