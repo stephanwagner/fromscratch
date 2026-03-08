@@ -15,20 +15,18 @@
     "build:css:prod": "sass themes/fromscratch/src/scss/min:themes/fromscratch/assets/css --style=compressed --no-source-map"
   },
   "dependencies": {
-    "countup.js": "^2.9.0",
-    "normalize.css": "^8.0.1",
-    "swiper": "^12.1.0"
+    "normalize.css": "^8.0.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.28.6",
-    "@babel/preset-env": "^7.28.6",
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.0",
     "@babel/preset-react": "^7.28.5",
-    "@rollup/plugin-babel": "^6.1.0",
+    "@rollup/plugin-babel": "^7.0.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
-    "@rollup/plugin-terser": "^0.4.4",
-    "baseline-browser-mapping": "^2.9.19",
+    "@rollup/plugin-terser": "^1.0.0",
+    "baseline-browser-mapping": "^2.10.0",
     "concurrently": "^9.2.1",
-    "rollup": "^4.57.0",
+    "rollup": "^4.59.0",
     "sass": "^1.97.3"
   }
 }
