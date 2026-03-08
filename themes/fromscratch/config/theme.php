@@ -23,6 +23,12 @@ return [
 	],
 
 	/**
+	 * WordPress image threshold
+	 * Set to false to disable the generation of the scaled 'full' image.
+	 */
+	'image_threshold' => false,
+
+	/**
 	 * Extra image sizes
 	 * Width and height can be overridden in Settings → Media.
 	 */

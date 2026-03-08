@@ -93,16 +93,25 @@ function fs_add_post_thumbnails(): void
 add_action('after_setup_theme', 'fs_add_post_thumbnails');
 
 /**
- * Remove medium_large image size from WordPress: do not generate it on upload and hide from image size dropdown.
+ * Setup image sizes
+ * 
+ * - Disable image threshold if set so in config theme.php
+ * - Remove medium_large and the 1536x1536, 2048x2048 image sizes
  */
-add_filter('intermediate_image_sizes', function (array $sizes): array {
-	return array_values(array_filter($sizes, function ($size): bool {
-		return $size !== 'medium_large';
-	}));
-});
+if (fs_config('image_threshold') === false) {
+	add_filter('big_image_size_threshold', '__return_false');
+}
 add_filter('image_size_names_choose', function (array $sizes): array {
 	unset($sizes['medium_large']);
+	unset($sizes['1536x1536']);
+	unset($sizes['2048x2048']);
 	return $sizes;
+});
+add_filter('intermediate_image_sizes_advanced', function ($sizes) {
+	unset($sizes['medium_large']);
+    unset($sizes['1536x1536']);
+    unset($sizes['2048x2048']);
+    return $sizes;
 });
 
 /**

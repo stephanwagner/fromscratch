@@ -1136,6 +1136,9 @@ function fs_theme_settings_has_any_access(): bool
 
 function add_theme_settings_menu_item(): void
 {
+	if (!current_user_can('manage_options')) {
+		return;
+	}
 	if (!fs_theme_settings_has_any_access()) {
 		return;
 	}
