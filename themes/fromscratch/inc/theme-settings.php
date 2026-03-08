@@ -666,11 +666,11 @@ function theme_settings_page(): void
 				<tr>
 					<th scope="row"><?= esc_html__('Image', 'fromscratch') ?></th>
 					<td>
-						<div data-fs-image-picker>
+						<div class="fs-image-picker" data-fs-image-picker>
 							<input type="hidden" name="fromscratch_client_logo" id="fromscratch_client_logo" value="<?= esc_attr($client_logo_id) ?>" data-fs-image-picker-input>
-							<div class="fs-client-logo-preview" style="margin-bottom: 8px;" data-fs-image-picker-preview>
+							<div class="fs-image-picker-preview" data-fs-image-picker-preview>
 								<?php if ($client_logo_url) : ?>
-									<img src="<?= esc_url($client_logo_url) ?>" alt="" style="max-width: 240px; height: auto; display: block;">
+									<img src="<?= esc_url($client_logo_url) ?>" alt="">
 								<?php endif; ?>
 							</div>
 							<p>
@@ -691,9 +691,9 @@ function theme_settings_page(): void
 				<tr>
 					<th scope="row"><?= esc_html__('Image', 'fromscratch') ?></th>
 					<td>
-						<div data-fs-image-picker>
+						<div class="fs-image-picker" data-fs-image-picker>
 							<input type="hidden" name="fromscratch_og_image_fallback" id="fromscratch_og_image_fallback" value="<?= esc_attr($og_fallback_id) ?>" data-fs-image-picker-input>
-							<div class="fs-og-fallback-preview" style="margin-bottom: 8px;" data-fs-image-picker-preview>
+							<div class="fs-image-picker-preview" data-fs-image-picker-preview>
 								<?php if ($og_fallback_url) : ?>
 									<img src="<?= esc_url($og_fallback_url) ?>" alt="" style="max-width: 240px; height: auto; display: block; border-radius: 3px;">
 								<?php endif; ?>
@@ -1037,11 +1037,11 @@ function display_custom_info_field($variable, $variableId, $languageId = null): 
 		case 'image':
 			$img_id = (int) $value;
 			$img_url = $img_id > 0 ? wp_get_attachment_image_url($img_id, 'medium') : '';
-			echo '<div data-fs-image-picker>';
+			echo '<div class="fs-image-picker" data-fs-image-picker>';
 			echo '<input type="hidden" name="' . esc_attr($variableId) . '" id="' . esc_attr($variableId) . '" value="' . esc_attr($img_id > 0 ? $img_id : '0') . '" data-fs-image-picker-input>';
-			echo '<div class="fs-image-picker-preview" style="margin-bottom: 8px;" data-fs-image-picker-preview>';
+			echo '<div class="fs-image-picker-preview" data-fs-image-picker-preview>';
 			if ($img_url) {
-				echo '<img src="' . esc_url($img_url) . '" alt="" style="max-width: 240px; height: auto; display: block;">';
+				echo '<img src="' . esc_url($img_url) . '" alt="">';
 			}
 			echo '</div>';
 			echo '<p><button type="button" class="button" data-fs-image-picker-select>' . esc_html__('Select image', 'fromscratch') . '</button> ';

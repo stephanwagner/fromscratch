@@ -12,17 +12,13 @@
   }
 }
 
-// Elements
+// Labels
 
 .fs-input-label {
   display: block;
   margin-bottom: 4px;
   font-size: 14px;
-}
-
-.fs-input-description {
-  margin-top: 4px;
-  font-size: 13px;
+  font-weight: 500;
 }
 
 // Checkboxes
@@ -36,8 +32,18 @@ input[type="checkbox"][data-fs-forced='1'] {
   opacity: 0.35;
 }
 
-// Languages table: hide Order column when fewer than 3 languages
-.fs-languages-table.fs-hide-reorder .fs-reorder-th,
-.fs-languages-table.fs-hide-reorder .fs-reorder-cell {
-  display: none;
+// Image picker
+
+.fs-image-picker {
+  img {
+    display: block;
+    max-width: 240px;
+    height: auto;
+    border-radius: 4px;
+    background: #fff;
+  }
+}
+
+.fs-image-picker-preview {
+  margin-bottom: 8px;
 }

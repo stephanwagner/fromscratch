@@ -147,8 +147,8 @@ msgstr "Permalinks"
 msgid "Set permalink structure to “Post name”"
 msgstr "Permalink-Struktur auf „Beitragsname“ setzen"
 
-msgid "Sets the permalink structure to “Post name” (/%postname%/), so URLs look like /about/ instead of ?p=123."
-msgstr "Setzt die Permalink-Struktur auf „Beitragsname“ (/%postname%/), sodass URLs wie /kontakt/ statt ?p=123 verwendet werden."
+msgid "Sets the permalink structure to “Post name” (/%postname%/), so URLs look like /about instead of ?p=123."
+msgstr "Setzt die Permalink-Struktur auf „Beitragsname“ (/%postname%/), sodass URLs wie /kontakt statt ?p=123 verwendet werden."
 
 msgid "Apache (.htaccess)"
 msgstr "Apache (.htaccess)"
@@ -680,7 +680,7 @@ msgstr "Legt fest, wie sich der Sprachumschalter verhält, wenn die aktuelle Sei
 msgid "Available languages"
 msgstr "Verfügbare Sprachen"
 
-msgid "Add and manage the languages available for your site's content."
+msgid "Add and manage the languages available for your site’s content."
 msgstr "Sprachen für die Inhalte deiner Website hinzufügen und verwalten."
 
 msgid "Language codes follow ISO-639-1 (e.g. en, de, fr)."

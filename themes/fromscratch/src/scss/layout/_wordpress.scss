@@ -3,7 +3,7 @@
 @mixin wordpress {
   // Admin bar
   
-  #wpadminbar {
+  body:not(.wp-admin) #wpadminbar {
     top: 0 !important;
     position: fixed !important;
   }

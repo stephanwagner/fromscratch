@@ -104,7 +104,7 @@ function fs_render_developer_access(): void
 				<?php if ($group['title']) : ?>
 					<h3 class="title" style="margin-top: 24px; margin-bottom: 12px;"><?= esc_html($group['title']) ?></h3>
 				<?php endif; ?>
-				<table class="widefat striped" role="presentation" style="margin-bottom: 0; width: auto;">
+				<table class="widefat striped fs-table-small-gaps" role="presentation" style="margin-bottom: 0; width: auto;">
 					<thead>
 						<tr>
 							<th scope="col" class="row-title"><?= esc_html__('Section', 'fromscratch') ?></th>
@@ -119,12 +119,12 @@ function fs_render_developer_access(): void
 							$dev_checked = !empty($val['developer']);
 						?>
 							<tr>
-								<td class="row-title" style="width: 200px;"><?= esc_html($label) ?></td>
-								<td style="width: 120px;">
+								<td class="row-title" style="width: 180px;"><?= esc_html($label) ?></td>
+								<td style="width: auto; min-width: 80px;">
 									<input type="hidden" name="fromscratch_admin_access[<?= esc_attr($key) ?>][admin]" value="0">
 									<label><input type="checkbox" name="fromscratch_admin_access[<?= esc_attr($key) ?>][admin]" value="1" <?= checked($admin_checked, true, false) ?>></label>
 								</td>
-								<td style="width: 120px;">
+								<td style="width: auto; min-width: 100px;">
 									<input type="hidden" name="fromscratch_admin_access[<?= esc_attr($key) ?>][developer]" value="0">
 									<label><input type="checkbox" name="fromscratch_admin_access[<?= esc_attr($key) ?>][developer]" value="1" <?= checked($dev_checked, true, false) ?>></label>
 								</td>

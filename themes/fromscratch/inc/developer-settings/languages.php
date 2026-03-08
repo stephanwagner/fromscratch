@@ -172,7 +172,7 @@ function fs_render_developer_languages(): void
 			<p class="description"><?= esc_html__('Language codes follow ISO-639-1 (e.g. en, de, fr).', 'fromscratch') ?></p>
 			<?php $lang_count = count($lang_list);
 			$show_reorder = $lang_count >= 3; ?>
-			<table class="widefat striped fs-languages-table <?= $show_reorder ? '' : 'fs-hide-reorder' ?>" id="fs-languages-table" style="width: auto; margin-top: 16px;">
+			<table class="widefat striped fs-languages-table fs-table-small-gaps <?= $show_reorder ? '' : 'fs-hide-reorder' ?>" id="fs-languages-table" style="width: auto; margin-top: 16px;">
 				<thead>
 					<tr>
 						<th><?= esc_html__('Code', 'fromscratch') ?></th>
@@ -186,8 +186,8 @@ function fs_render_developer_languages(): void
 					<?php foreach ($lang_list as $i => $l) : ?>
 						<tr class="fs-language-row" data-row-index="<?= (int) $i ?>">
 							<td><input type="text" name="fs_theme_languages[list][<?= (int) $i ?>][id]" value="<?= esc_attr($l['id']) ?>" class="small-text" placeholder="en" maxlength="20" required></td>
-							<td><input type="text" name="fs_theme_languages[list][<?= (int) $i ?>][nameEnglish]" value="<?= esc_attr($l['nameEnglish']) ?>" class="regular-text" required style="width: 140px;"></td>
-							<td><input type="text" name="fs_theme_languages[list][<?= (int) $i ?>][nameOriginalLanguage]" value="<?= esc_attr($l['nameOriginalLanguage']) ?>" class="regular-text" required style="width: 140px;"></td>
+							<td><input type="text" name="fs_theme_languages[list][<?= (int) $i ?>][nameEnglish]" value="<?= esc_attr($l['nameEnglish']) ?>" class="regular-text" required style="width: 160px;"></td>
+							<td><input type="text" name="fs_theme_languages[list][<?= (int) $i ?>][nameOriginalLanguage]" value="<?= esc_attr($l['nameOriginalLanguage']) ?>" class="regular-text" required style="width: 160px;"></td>
 							<td class="fs-reorder-cell" style="vertical-align: middle;">
 								<?php if ($i === 0) : ?>
 									<span class="fs-default-badge" style="color: #646970; font-size: 12px;"><?= esc_html__('Default', 'fromscratch') ?></span>
@@ -263,8 +263,8 @@ function fs_render_developer_languages(): void
 						var tr = document.createElement('tr');
 						tr.className = 'fs-language-row';
 						tr.innerHTML = '<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][id]" value="" class="small-text" placeholder="en" maxlength="20" required></td>' +
-							'<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][nameEnglish]" value="" class="regular-text" required style="width: 140px;"></td>' +
-							'<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][nameOriginalLanguage]" value="" class="regular-text" required style="width: 140px;"></td>' +
+							'<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][nameEnglish]" value="" class="regular-text" required style="width: 160px;"></td>' +
+							'<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][nameOriginalLanguage]" value="" class="regular-text" required style="width: 160px;"></td>' +
 							'<td class="fs-reorder-cell" style="vertical-align: middle;"><button type="button" class="button button-small fs-move-up">↑</button> <button type="button" class="button button-small fs-move-down">↓</button></td>' +
 							'<td style="vertical-align: middle;"><button type="button" class="button button-small fs-remove-language" aria-label="<?= esc_js(__('Remove', 'fromscratch')) ?>"><?= esc_js(__('Remove', 'fromscratch')) ?></button></td>';
 						tbody.appendChild(tr);
