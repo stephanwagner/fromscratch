@@ -193,7 +193,7 @@ function fs_render_developer_features(): void
 					<td>
 						<input type="hidden" name="fromscratch_features[enable_media_folders]" value="0">
 						<label><input type="checkbox" name="fromscratch_features[enable_media_folders]" value="1" <?= checked($feat('enable_media_folders'), 1, false) ?>> <?= esc_html__('Enable media folders', 'fromscratch') ?></label>
-						<p class="description fs-indent-checkbox"><?= esc_html__('Adds taxonomy-based folders in Media Library with a left sidebar and quick folder creation.', 'fromscratch') ?></p>
+						<p class="description fs-indent-checkbox"><?= esc_html__('Adds folders to the Media Library with a sidebar for organizing and creating folders.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 			</table>
@@ -219,11 +219,11 @@ function fs_render_developer_features(): void
 					<td>
 						<input type="hidden" name="fromscratch_features[enable_webp]" value="0">
 						<label><input type="checkbox" name="fromscratch_features[enable_webp]" id="fromscratch_features_enable_webp" value="1" <?= checked($feat('enable_webp'), 1, false) ?>> <?= esc_html__('Convert images to WebP', 'fromscratch') ?></label>
-						<p class="description fs-indent-checkbox"><?= esc_html__('Convert generated JPEG and PNG image sizes to WebP. Requires GD or Imagick with WebP support.', 'fromscratch') ?></p>
+						<p class="description fs-indent-checkbox"><?= esc_html__('Convert generated JPEG and PNG image to WebP. Requires GD or Imagick with WebP support.', 'fromscratch') ?></p>
 						<div class="fs-feature-sub" id="fs-feature-sub-webp" style="margin-top: 12px; <?= $feat('enable_webp') !== 1 ? 'display:none;' : '' ?>">
 							<input type="hidden" name="fromscratch_features[enable_webp_convert_original]" value="0">
 							<label><input type="checkbox" name="fromscratch_features[enable_webp_convert_original]" value="1" <?= checked($feat('enable_webp_convert_original'), 1, false) ?>> <?= esc_html__('Also convert the original image', 'fromscratch') ?></label>
-							<p class="description fs-indent-checkbox" style="margin-top: 4px;"><?= esc_html__('By default only generated sizes are converted; the original upload keeps its original format.', 'fromscratch') ?></p>
+							<p class="description fs-indent-checkbox"><?= esc_html__('By default, only resized versions of an image are converted. The original upload remains unchanged.', 'fromscratch') ?></p>
 						</div>
 					</td>
 				</tr>

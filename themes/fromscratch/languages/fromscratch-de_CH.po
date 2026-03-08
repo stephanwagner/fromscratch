@@ -419,6 +419,21 @@ msgstr "WebP-Konvertierung ist aktiviert, es wurde jedoch keine geeignete Bildbi
 msgid "Convert images to WebP requires the PHP %1$s extension (with WebP support) or the %2$s extension. Neither is available on this server. New uploads will not be converted to WebP until you install one of them."
 msgstr "Die WebP-Konvertierung erfordert die PHP-%1$s-Erweiterung (mit WebP-Unterstützung) oder die %2$s-Erweiterung. Keine davon ist auf diesem Server verfügbar. Neue Uploads werden erst nach der Installation einer der Erweiterungen in WebP konvertiert."
 
+msgid "WebP images"
+msgstr "WebP Bilder"
+
+msgid "Convert images to WebP"
+msgstr "Bilder in WebP konvertieren"
+
+msgid "Convert generated JPEG and PNG image to WebP. Requires GD or Imagick with WebP support."
+msgstr "Erzeugte JPEG- und PNG-Bilder in WebP konvertieren. Erfordert GD oder Imagick mit WebP-Unterstützung."
+
+msgid "Also convert the original image"
+msgstr "Auch das Originalbild konvertieren"
+
+msgid "By default, only resized versions of an image are converted. The original upload remains unchanged."
+msgstr "Standardmäßig werden nur verkleinerte Bildversionen konvertiert. Das hochgeladene Original bleibt unverändert."
+
 msgid "Clear all overrides"
 msgstr "Alle Overrides zurücksetzen"
 
@@ -630,6 +645,24 @@ msgstr "SVG-Uploads erlauben"
 
 msgid "Uploaded SVG files are automatically sanitized to remove potentially unsafe code."
 msgstr "SVG-Dateien werden beim Upload automatisch bereinigt, um potenziell schädlichen Code zu entfernen."
+
+msgid "IP Blocking"
+msgstr "IP-Sperre"
+
+msgid "Enable IP blocking"
+msgstr "IP-Sperre aktivieren"
+
+msgid "Allows blocking specific IP addresses and detects suspicious login attempts."
+msgstr "Ermöglicht das Sperren bestimmter IP-Adressen und erkennt verdächtige Anmeldeversuche."
+
+msgid "Media folders"
+msgstr "Medienordner"
+
+msgid "Enable media folders"
+msgstr "Medienordner aktivieren"
+
+msgid "Adds folders to the Media Library with a sidebar for organizing and creating folders."
+msgstr "Fügt der Mediathek Ordner hinzu, mit einer Seitenleiste zum Organisieren und Erstellen von Ordnern."
 
 msgid "Languages"
 msgstr "Sprachen"

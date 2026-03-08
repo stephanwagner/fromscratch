@@ -65,10 +65,9 @@ return [
 			'title' => 'Text',
 			'sections' => [
 				['id' => 'typography', 'title' => 'Text', 'variables' => [
-					['id' => 'primary-font', 'title' => 'Schriftart', 'default' => 'Open Sans, sans-serif', 'type' => 'long-text'],
-					['id' => 'default-text-color', 'title' => 'Standard Textfarbe', 'default' => '#222', 'type' => 'color'],
 					['id' => 'default-font-size', 'title' => 'Standard Schriftgröße', 'default' => '16px', 'type' => 'text'],
 					['id' => 'default-line-height', 'title' => 'Standard Zeilenhöhe', 'default' => '1.6', 'type' => 'text'],
+					['id' => 'default-text-color', 'title' => 'Standard Textfarbe', 'default' => '#222', 'type' => 'color'],
 					['id' => 'link-color', 'title' => 'Linkfarbe', 'default' => '#00aaff', 'type' => 'color'],
 					['id' => 'link-hover-color', 'title' => 'Linkfarbe (hover)', 'default' => '#00ddff', 'type' => 'color'],
 				]],
