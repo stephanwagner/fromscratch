@@ -3,3 +3,70 @@
 .fs-hidden {
   display: none !important;
 }
+
+// Tabs (global, reusable; [data-fs-tabs] etc. for JS, classes for styling)
+
+.fs-tabs {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+
+  @media (max-width: 782px) {
+    flex-direction: column;
+  }
+}
+
+.fs-tabs-nav {
+  flex-shrink: 0;
+  width: 180px;
+}
+
+.fs-tabs-nav .fs-tabs-btn {
+  display: block;
+  width: 100%;
+  margin-bottom: 4px;
+  text-align: left;
+}
+
+.fs-tabs-nav .fs-tabs-btn.active, 
+.fs-tabs-nav .fs-tabs-btn.active:hover, 
+.fs-tabs-nav .fs-tabs-btn.active:focus {
+  position: relative;
+  background: #2271b1;
+  border-color: #2271b1;
+  color: #fff;
+  box-shadow: none;
+  outline: none;
+  padding-right: calc(24px + 8px);
+
+  &::after {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 24px;
+    background: no-repeat center center / 24px;
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjZmZmIj48cGF0aCBkPSJNNTA0LTQ4MCAzNDgtNjM2cS0xMS0xMS0xMS0yOHQxMS0yOHExMS0xMSAyOC0xMXQyOCAxMWwxODQgMTg0cTYgNiA4LjUgMTN0Mi41IDE1cTAgOC0yLjUgMTV0LTguNSAxM0w0MDQtMjY4cS0xMSAxMS0yOCAxMXQtMjgtMTFxLTExLTExLTExLTI4dDExLTI4bDE1Ni0xNTZaIi8+PC9zdmc+');
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
+
+.fs-tabs-panels {
+  flex: 1;
+}
+
+.fs-tabs-panel:not(.fs-tabs-panel--active) {
+  display: none;
+}
+
+// Copy
+
+[data-fs-copy-from-source] {
+  transition: transform 180ms;
+
+  &.fs-copied {
+    transform: scale(1.08);
+  }
+}

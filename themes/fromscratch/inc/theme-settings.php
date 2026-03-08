@@ -97,6 +97,19 @@ add_action('admin_init', function () {
 	exit;
 }, 1);
 
+// AJAX: toggle "Show developer options" on Content tab (saved per user).
+add_action('wp_ajax_fromscratch_toggle_content_developer_options', function () {
+	if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'fromscratch_toggle_content_developer_options')) {
+		wp_send_json_error(['message' => 'Invalid nonce']);
+	}
+	if (!current_user_can('manage_options') || !function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
+		wp_send_json_error(['message' => 'Forbidden']);
+	}
+	$visible = isset($_POST['visible']) && $_POST['visible'] === '1';
+	update_user_meta(get_current_user_id(), 'fromscratch_show_content_developer_options', $visible ? '1' : '0');
+	wp_send_json_success(['visible' => $visible]);
+});
+
 // Ensure media modal is available on General tab (client logo, OG image) and Content tab (image fields).
 add_action('admin_enqueue_scripts', function ($hook_suffix) {
 	if ($hook_suffix !== 'settings_page_fs-theme-settings') {
@@ -640,159 +653,202 @@ function theme_settings_page(): void
 			$notices[] = __('Settings saved.', 'fromscratch');
 		}
 		foreach ($notices as $msg) : ?>
-			<div class="notice notice-success is-dismissible"><p><strong><?= esc_html($msg) ?></strong></p></div>
+			<div class="notice notice-success is-dismissible">
+				<p><strong><?= esc_html($msg) ?></strong></p>
+			</div>
 		<?php endforeach; ?>
 
 		<?php if (count($available_tabs) > 1) : ?>
-		<nav class="nav-tab-wrapper wp-clearfix" aria-label="Secondary menu">
-			<?php foreach ($available_tabs as $slug => $label) : ?>
-				<a href="<?= esc_url(add_query_arg('tab', $slug, $base_url)) ?>" class="nav-tab <?= $tab === $slug ? 'nav-tab-active' : '' ?>"><?= esc_html(__($label, 'fromscratch')) ?></a>
-			<?php endforeach; ?>
-		</nav>
+			<nav class="nav-tab-wrapper wp-clearfix" aria-label="Secondary menu">
+				<?php foreach ($available_tabs as $slug => $label) : ?>
+					<a href="<?= esc_url(add_query_arg('tab', $slug, $base_url)) ?>" class="nav-tab <?= $tab === $slug ? 'nav-tab-active' : '' ?>"><?= esc_html(__($label, 'fromscratch')) ?></a>
+				<?php endforeach; ?>
+			</nav>
 		<?php endif; ?>
 
 		<?php if ($tab === 'general') : ?>
-		<?php
+			<?php
 			$client_logo_id = (int) get_option('fromscratch_client_logo', 0);
 			$client_logo_url = $client_logo_id > 0 ? wp_get_attachment_image_url($client_logo_id, 'medium') : '';
 			$og_fallback_id = (int) get_option('fromscratch_og_image_fallback', 0);
 			$og_fallback_url = $og_fallback_id > 0 ? wp_get_attachment_image_url($og_fallback_id, 'medium') : '';
-		?>
-		<form method="post" action="options.php" class="page-settings-form">
-			<?php settings_fields(FS_THEME_OPTION_GROUP_GENERAL); ?>
-			<h2 class="title"><?= esc_html__('Client logo', 'fromscratch') ?></h2>
-			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Shown on the login page instead of the WordPress logo.', 'fromscratch') ?></p>
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><?= esc_html__('Image', 'fromscratch') ?></th>
-					<td>
-						<div class="fs-image-picker" data-fs-image-picker>
-							<input type="hidden" name="fromscratch_client_logo" id="fromscratch_client_logo" value="<?= esc_attr($client_logo_id) ?>" data-fs-image-picker-input>
-							<div class="fs-image-picker-preview" data-fs-image-picker-preview>
-								<?php if ($client_logo_url) : ?>
-									<img src="<?= esc_url($client_logo_url) ?>" alt="">
-								<?php endif; ?>
+			?>
+			<form method="post" action="options.php" class="page-settings-form">
+				<?php settings_fields(FS_THEME_OPTION_GROUP_GENERAL); ?>
+				<h2 class="title"><?= esc_html__('Client logo', 'fromscratch') ?></h2>
+				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Shown on the login page instead of the WordPress logo.', 'fromscratch') ?></p>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><?= esc_html__('Image', 'fromscratch') ?></th>
+						<td>
+							<div class="fs-image-picker" data-fs-image-picker>
+								<input type="hidden" name="fromscratch_client_logo" id="fromscratch_client_logo" value="<?= esc_attr($client_logo_id) ?>" data-fs-image-picker-input>
+								<div class="fs-image-picker-preview" data-fs-image-picker-preview>
+									<?php if ($client_logo_url) : ?>
+										<img src="<?= esc_url($client_logo_url) ?>" alt="">
+									<?php endif; ?>
+								</div>
+								<p>
+									<button type="button" class="button" data-fs-image-picker-select><?= esc_html__('Select image', 'fromscratch') ?></button>
+									<button type="button" class="button" data-fs-image-picker-remove<?= $client_logo_id <= 0 ? ' style="display:none;"' : '' ?>><?= esc_html__('Remove', 'fromscratch') ?></button>
+								</p>
 							</div>
-							<p>
-								<button type="button" class="button" data-fs-image-picker-select><?= esc_html__('Select image', 'fromscratch') ?></button>
-								<button type="button" class="button" data-fs-image-picker-remove<?= $client_logo_id <= 0 ? ' style="display:none;"' : '' ?>><?= esc_html__('Remove', 'fromscratch') ?></button>
-							</p>
-						</div>
-					</td>
-				</tr>
-			</table>
+						</td>
+					</tr>
+				</table>
 
-			<hr>
+				<hr>
 
-			<h2 class="title"><?= esc_html__('Fallback OG image', 'fromscratch') ?></h2>
-			<p class="description"><?= esc_html__('Used as the social preview image (og:image) when a page or post has no SEO image and no featured image.', 'fromscratch') ?></p>
-			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Best size: 1200 × 630 px.', 'fromscratch') ?></p>
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><?= esc_html__('Image', 'fromscratch') ?></th>
-					<td>
-						<div class="fs-image-picker" data-fs-image-picker>
-							<input type="hidden" name="fromscratch_og_image_fallback" id="fromscratch_og_image_fallback" value="<?= esc_attr($og_fallback_id) ?>" data-fs-image-picker-input>
-							<div class="fs-image-picker-preview" data-fs-image-picker-preview>
-								<?php if ($og_fallback_url) : ?>
-									<img src="<?= esc_url($og_fallback_url) ?>" alt="" style="max-width: 240px; height: auto; display: block; border-radius: 3px;">
-								<?php endif; ?>
+				<h2 class="title"><?= esc_html__('Fallback OG image', 'fromscratch') ?></h2>
+				<p class="description"><?= esc_html__('Used as the social preview image (og:image) when a page or post has no SEO image and no featured image.', 'fromscratch') ?></p>
+				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Best size: 1200 × 630 px.', 'fromscratch') ?></p>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><?= esc_html__('Image', 'fromscratch') ?></th>
+						<td>
+							<div class="fs-image-picker" data-fs-image-picker>
+								<input type="hidden" name="fromscratch_og_image_fallback" id="fromscratch_og_image_fallback" value="<?= esc_attr($og_fallback_id) ?>" data-fs-image-picker-input>
+								<div class="fs-image-picker-preview" data-fs-image-picker-preview>
+									<?php if ($og_fallback_url) : ?>
+										<img src="<?= esc_url($og_fallback_url) ?>" alt="" style="max-width: 240px; height: auto; display: block; border-radius: 3px;">
+									<?php endif; ?>
+								</div>
+								<p>
+									<button type="button" class="button" data-fs-image-picker-select><?= esc_html__('Select image', 'fromscratch') ?></button>
+									<button type="button" class="button" data-fs-image-picker-remove<?= $og_fallback_id <= 0 ? ' style="display:none;"' : '' ?>><?= esc_html__('Remove', 'fromscratch') ?></button>
+								</p>
 							</div>
-							<p>
-								<button type="button" class="button" data-fs-image-picker-select><?= esc_html__('Select image', 'fromscratch') ?></button>
-								<button type="button" class="button" data-fs-image-picker-remove<?= $og_fallback_id <= 0 ? ' style="display:none;"' : '' ?>><?= esc_html__('Remove', 'fromscratch') ?></button>
-							</p>
-						</div>
-					</td>
-				</tr>
-			</table>
+						</td>
+					</tr>
+				</table>
 
-			<hr>
+				<hr>
 
-			<h2 class="title"><?= esc_html__('Excerpt', 'fromscratch') ?></h2>
-			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Defines how automatically generated excerpts are shortened.', 'fromscratch') ?></p>
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row">
-						<label for="fromscratch_excerpt_length"><?= esc_html__('Excerpt length', 'fromscratch') ?></label>
-					</th>
-					<td>
-						<?php
-						$excerpt_length_opt = get_option('fromscratch_excerpt_length', '');
-						$excerpt_length_val = $excerpt_length_opt !== '' ? $excerpt_length_opt : '60';
-						?>
-						<input type="number" name="fromscratch_excerpt_length" id="fromscratch_excerpt_length" value="<?= esc_attr($excerpt_length_val) ?>" min="1" max="999" step="1" class="small-text">
-						<p class="description"><?= esc_html__('Number of words used when trimming excerpts.', 'fromscratch') ?></p>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row">
-						<label for="fromscratch_excerpt_more"><?= esc_html__('Excerpt "more" text', 'fromscratch') ?></label>
-					</th>
-					<td>
-						<?php
-						$excerpt_more_opt = get_option('fromscratch_excerpt_more');
-						$excerpt_more_val = $excerpt_more_opt !== false ? $excerpt_more_opt : '…';
-						?>
-						<input type="text" name="fromscratch_excerpt_more" id="fromscratch_excerpt_more" value="<?= esc_attr($excerpt_more_val) ?>" class="small-text" maxlength="20">
-						<p class="description"><?= esc_html__('Text shown after the excerpt when it is truncated (e.g. …). Leave blank for none.', 'fromscratch') ?></p>
-					</td>
-				</tr>
-			</table>
-			<?php submit_button(); ?>
-		</form>
-		<?php elseif ($tab === 'texts') : ?>
-		<?php
-			$content_tabs = fs_config_settings('content.tabs');
-			$content_tabs = is_array($content_tabs) ? $content_tabs : [];
-		?>
-		<form method="post" action="options.php" class="page-settings-form" id="fs-content-form">
-			<?php settings_fields(FS_THEME_OPTION_GROUP_TEXTE); ?>
-			<div class="fs-content-tabs-wrap" style="display: flex; gap: 24px; margin-bottom: 24px;">
-				<nav class="fs-content-tabs-nav" role="tablist" style="flex-shrink: 0; width: 180px;">
-					<?php foreach ($content_tabs as $i => $ct) : ?>
-						<button type="button" class="button fs-content-tab-btn <?= ($i === 0) ? 'active' : '' ?>" role="tab" aria-selected="<?= ($i === 0) ? 'true' : 'false' ?>" aria-controls="fs-content-panel-<?= esc_attr($ct['id']) ?>" data-tab="<?= esc_attr($ct['id']) ?>" style="display: block; width: 100%; margin-bottom: 4px; text-align: left;"><?= esc_html($ct['title'] ?? $ct['id']) ?></button>
-					<?php endforeach; ?>
-				</nav>
-				<div class="fs-content-tabs-panels" style="flex: 1;">
-					<?php foreach ($content_tabs as $i => $ct) : ?>
-						<div id="fs-content-panel-<?= esc_attr($ct['id']) ?>" class="fs-content-tab-panel" role="tabpanel" data-tab="<?= esc_attr($ct['id']) ?>" style="display: <?= $i === 0 ? 'block' : 'none' ?>;">
+				<h2 class="title"><?= esc_html__('Excerpt', 'fromscratch') ?></h2>
+				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Defines how automatically generated excerpts are shortened.', 'fromscratch') ?></p>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row">
+							<label for="fromscratch_excerpt_length"><?= esc_html__('Excerpt length', 'fromscratch') ?></label>
+						</th>
+						<td>
 							<?php
-							if (!empty($ct['sections']) && is_array($ct['sections'])) {
-								foreach ($ct['sections'] as $section) {
-									do_settings_sections(FS_THEME_CONTENT_OPTION_PREFIX . $ct['id'] . '_' . $section['id']);
-								}
-							}
+							$excerpt_length_opt = get_option('fromscratch_excerpt_length', '');
+							$excerpt_length_val = $excerpt_length_opt !== '' ? $excerpt_length_opt : '60';
 							?>
-						</div>
-					<?php endforeach; ?>
+							<input type="number" name="fromscratch_excerpt_length" id="fromscratch_excerpt_length" value="<?= esc_attr($excerpt_length_val) ?>" min="1" max="999" step="1" class="small-text">
+							<p class="description"><?= esc_html__('Number of words used when trimming excerpts.', 'fromscratch') ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row">
+							<label for="fromscratch_excerpt_more"><?= esc_html__('Excerpt "more" text', 'fromscratch') ?></label>
+						</th>
+						<td>
+							<?php
+							$excerpt_more_opt = get_option('fromscratch_excerpt_more');
+							$excerpt_more_val = $excerpt_more_opt !== false ? $excerpt_more_opt : '…';
+							?>
+							<input type="text" name="fromscratch_excerpt_more" id="fromscratch_excerpt_more" value="<?= esc_attr($excerpt_more_val) ?>" class="small-text" maxlength="20">
+							<p class="description"><?= esc_html__('Text shown after the excerpt when it is truncated (e.g. …). Leave blank for none.', 'fromscratch') ?></p>
+						</td>
+					</tr>
+				</table>
+				<?php submit_button(); ?>
+			</form>
+		<?php elseif ($tab === 'texts') : ?>
+			<form method="post" action="options.php" class="page-settings-form" id="fs-content-form">
+				<?php
+				$content_tabs = fs_config_settings('content.tabs');
+				$content_tabs = is_array($content_tabs) ? $content_tabs : [];
+				$content_developer_options_visible = function_exists('fs_is_developer_user') && fs_is_developer_user((int) get_current_user_id()) && (string) get_user_meta(get_current_user_id(), 'fromscratch_show_content_developer_options', true) === '1';
+				?>
+				<h2><?= esc_html__('Global Content', 'fromscratch') ?></h2>
+				<p class="description">
+					<?= esc_html__('Define content that is used across the website.', 'fromscratch') ?>
+				</p>
+				<p class="description">
+					<?= esc_html__('Updating these values will automatically update them wherever they are used.', 'fromscratch') ?>
+				</p>
+
+				<hr>
+
+				<?php settings_fields(FS_THEME_OPTION_GROUP_TEXTE); ?>
+				<div class="fs-tabs" data-fs-tabs>
+					<nav class="fs-tabs-nav" data-fs-tabs-nav role="tablist">
+						<?php foreach ($content_tabs as $i => $ct) : ?>
+							<button type="button" class="button fs-tabs-btn <?= ($i === 0) ? 'active' : '' ?>" role="tab" aria-selected="<?= ($i === 0) ? 'true' : 'false' ?>" aria-controls="fs-content-panel-<?= esc_attr($ct['id']) ?>" data-tab="<?= esc_attr($ct['id']) ?>"><?= esc_html($ct['title'] ?? $ct['id']) ?></button>
+						<?php endforeach; ?>
+					</nav>
+					<div class="fs-tabs-panels" data-fs-tabs-panels>
+						<?php foreach ($content_tabs as $i => $ct) : ?>
+							<div id="fs-content-panel-<?= esc_attr($ct['id']) ?>" class="fs-tabs-panel <?= $i === 0 ? 'fs-tabs-panel--active' : '' ?>" data-fs-tabs-panel role="tabpanel" data-tab="<?= esc_attr($ct['id']) ?>" <?= $i === 0 ? 'data-fs-tabs-panel-active="1"' : '' ?>>
+								<?php
+								if (!empty($ct['sections']) && is_array($ct['sections'])) {
+									foreach ($ct['sections'] as $index => $section) {
+										if ($index > 0) {
+											echo '<hr class="fs-small">';
+										}
+										do_settings_sections(FS_THEME_CONTENT_OPTION_PREFIX . $ct['id'] . '_' . $section['id']);
+									}
+								}
+								?>
+							</div>
+						<?php endforeach; ?>
+					</div>
 				</div>
-			</div>
-			<?php submit_button(); ?>
-		</form>
-		<style>.fs-content-tabs-wrap .fs-content-tab-btn.active { background: #2271b1; color: #fff; border-color: #2271b1; }</style>
-		<script>
-		(function() {
-			var form = document.getElementById('fs-content-form');
-			if (!form) return;
-			var nav = form.querySelector('.fs-content-tabs-nav');
-			var panels = form.querySelectorAll('.fs-content-tab-panel');
-			nav.addEventListener('click', function(e) {
-				var btn = e.target.closest('.fs-content-tab-btn');
-				if (!btn) return;
-				var tabId = btn.getAttribute('data-tab');
-				nav.querySelectorAll('.fs-content-tab-btn').forEach(function(b) { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
-				btn.classList.add('active');
-				btn.setAttribute('aria-selected', 'true');
-				panels.forEach(function(p) {
-					var show = p.getAttribute('data-tab') === tabId;
-					p.style.display = show ? 'block' : 'none';
-				});
-			});
-		})();
-		</script>
+
+				<hr>
+
+				<p class="submit" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+					<?php submit_button(null, 'primary', 'submit', false); ?>
+
+					<?php if (function_exists('fs_is_developer_user') && fs_is_developer_user((int) get_current_user_id())) : ?>
+						<button type="button"
+							class="button"
+							id="fs-content-developer-options-toggle"
+							data-fs-content-developer-options-visible="<?= $content_developer_options_visible ? '1' : '0' ?>"
+							data-nonce="<?= esc_attr(wp_create_nonce('fromscratch_toggle_content_developer_options')) ?>">
+							<?= $content_developer_options_visible
+								? esc_html__('Hide developer options', 'fromscratch')
+								: esc_html__('Show developer options', 'fromscratch') ?>
+						</button>
+					<?php endif; ?>
+				</p>
+			</form>
+			<script>
+				(function() {
+					var btn = document.getElementById('fs-content-developer-options-toggle');
+					if (!btn) return;
+					btn.addEventListener('click', function() {
+						var visible = btn.getAttribute('data-fs-content-developer-options-visible') === '1';
+						var newVisible = !visible;
+						var formData = new FormData();
+						formData.append('action', 'fromscratch_toggle_content_developer_options');
+						formData.append('nonce', btn.getAttribute('data-nonce'));
+						formData.append('visible', newVisible ? '1' : '0');
+						fetch(typeof ajaxurl !== 'undefined' ? ajaxurl : '<?= esc_url(admin_url('admin-ajax.php')) ?>', {
+								method: 'POST',
+								body: formData,
+								credentials: 'same-origin'
+							})
+							.then(function(r) {
+								return r.json();
+							})
+							.then(function(data) {
+								if (data.success) {
+									btn.setAttribute('data-fs-content-developer-options-visible', newVisible ? '1' : '0');
+									btn.textContent = newVisible ? '<?= esc_js(__('Hide developer options', 'fromscratch')) ?>' : '<?= esc_js(__('Show developer options', 'fromscratch')) ?>';
+									document.querySelectorAll('.fs-content-developer-options-container').forEach(function(el) {
+										el.classList.toggle('fs-content-developer-options-hidden', !newVisible);
+									});
+								}
+							});
+					});
+				})();
+			</script>
 		<?php elseif ($tab === 'redirects') : ?>
-		<?php
+			<?php
 			$redirects_raw = get_option('fs_redirects', []);
 			$redirects_list = [];
 			foreach ($redirects_raw as $from => $item) {
@@ -802,146 +858,150 @@ function theme_settings_page(): void
 					'code' => is_array($item) ? (int) ($item['code'] ?? 301) : 301,
 				];
 			}
-		?>
-		<form method="post" action="<?= esc_url(admin_url('options-general.php?page=fs-theme-settings&tab=redirects')) ?>" class="page-settings-form" id="fs-redirects-form">
-			<?php wp_nonce_field('fromscratch_save_redirects'); ?>
-			<input type="hidden" name="fromscratch_save_redirects" value="1">
-			<?php
-			$redirect_method = function_exists('fs_config_redirects') ? fs_config_redirects('method') : 'wordpress';
-			if (
-				function_exists('fs_can_use_htaccess_redirects') && fs_can_use_htaccess_redirects() &&
-				$redirect_method === 'wordpress'
-			) : ?>
-				<div class="notice notice-info inline">
-					<p><?= esc_html__('You are running Apache. For better performance, you can set the redirect method to htaccess in config/theme.php under redirects.', 'fromscratch') ?></p>
-				</div>
-			<?php endif; ?>
-			<h2 class="title"><?= esc_html__('Redirects', 'fromscratch') ?></h2>
-			<p class="description"><?= esc_html__('Enter paths without the domain (e.g. /old-path).', 'fromscratch') ?></p>
-			<p class="description"><?= esc_html__('The source URL represents the requested path.', 'fromscratch') ?></p>
-			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('The target URL can be an internal path or a full URL.', 'fromscratch') ?></p>
-			<table class="wp-list-table widefat fixed striped" id="fs-redirects-table" style="width: auto;">
-				<thead>
-					<tr>
-						<th scope="col" class="column-from" style="width: 50%;"><?= esc_html__('From URL', 'fromscratch') ?></th>
-						<th scope="col" class="column-to" style="width: 50%;"><?= esc_html__('To URL', 'fromscratch') ?></th>
-						<th scope="col" class="column-code"><?= esc_html__('Code', 'fromscratch') ?></th>
-						<th scope="col" class="column-delete"></th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php foreach ($redirects_list as $i => $r) : ?>
-					<tr class="fs-redirect-row">
-						<td><input type="text" name="fs_redirects[<?= (int) $i ?>][from]" value="<?= esc_attr($r['from']) ?>" class="regular-text" style="width: 100%;" placeholder="<?= esc_attr__('/old-path', 'fromscratch') ?>"></td>
-						<td><input type="text" name="fs_redirects[<?= (int) $i ?>][to]" value="<?= esc_attr($r['to']) ?>" class="regular-text" style="width: 100%;" placeholder="<?= esc_attr__('/new-path', 'fromscratch') ?>"></td>
-						<td>
-							<select name="fs_redirects[<?= (int) $i ?>][code]">
-								<option value="301" <?= selected($r['code'], 301, false) ?>><?= esc_html__('301 (Permanent)', 'fromscratch') ?></option>
-								<option value="302" <?= selected($r['code'], 302, false) ?>><?= esc_html__('302 (Temporary)', 'fromscratch') ?></option>
-							</select>
-						</td>
-						<td><button type="button" class="button fs-redirect-remove"><?= esc_html__('Remove', 'fromscratch') ?></button></td>
-					</tr>
-					<?php endforeach; ?>
-					<tr class="fs-redirect-row fs-redirect-template" style="display: none;">
-						<td><input type="text" name="fs_redirects[__i__][from]" value="" class="regular-text" style="width: 100%;" placeholder="<?= esc_attr__('/old-path', 'fromscratch') ?>" disabled></td>
-						<td><input type="text" name="fs_redirects[__i__][to]" value="" class="regular-text" style="width: 100%;" placeholder="<?= esc_attr__('/new-path', 'fromscratch') ?>" disabled></td>
-						<td><select name="fs_redirects[__i__][code]" disabled><option value="301"><?= esc_html__('301 (Permanent)', 'fromscratch') ?></option><option value="302"><?= esc_html__('302 (Temporary)', 'fromscratch') ?></option></select></td>
-						<td><button type="button" class="button fs-redirect-remove"><?= esc_html__('Remove', 'fromscratch') ?></button></td>
-					</tr>
-				</tbody>
-			</table>
-			<p style="margin-top: 12px;">
-				<button type="button" class="button" id="fs-redirect-add"><?= esc_html__('Add redirect', 'fromscratch') ?></button>
-			</p>
-			<?php submit_button(); ?>
-		</form>
-		<script>
-		(function() {
-			var form = document.getElementById('fs-redirects-form');
-			if (!form) return;
-			var tbody = form.querySelector('#fs-redirects-table tbody');
-			var template = form.querySelector('.fs-redirect-template');
-			var index = tbody.querySelectorAll('.fs-redirect-row:not(.fs-redirect-template)').length;
-			form.querySelector('#fs-redirect-add').addEventListener('click', function() {
-				var tr = template.cloneNode(true);
-				tr.classList.remove('fs-redirect-template');
-				tr.style.display = '';
-				tr.querySelectorAll('[name]').forEach(function(inp) {
-					inp.name = inp.name.replace(/__i__/g, index);
-					inp.removeAttribute('disabled');
-				});
-				tbody.insertBefore(tr, template);
-				index++;
-			});
-			tbody.addEventListener('click', function(e) {
-				if (e.target.classList.contains('fs-redirect-remove')) {
-					e.target.closest('tr').remove();
-				}
-			});
-		})();
-		</script>
-		<?php elseif ($tab === 'css') : ?>
-		<form method="post" action="<?= esc_url(admin_url('options-general.php?page=fs-theme-settings&tab=css')) ?>" class="page-settings-form">
-			<?php wp_nonce_field('fromscratch_save_css'); ?>
-			<input type="hidden" name="fromscratch_save_css" value="1">
-			<h2 class="title"><?= esc_html__('Custom CSS', 'fromscratch') ?></h2>
-			<p class="description"><?= esc_html__('The CSS is output after the design variables (:root).', 'fromscratch') ?></p>
-			<p class="description" style="margin-bottom: 12px;"><?= esc_html__('You can use design variables, e.g. var(--color-primary).', 'fromscratch') ?></p>
-			<table class="form-table" role="presentation">
-				<tr>
-					<td colspan="2" style="padding: 0;">
-						<div class="fs-custom-css-editor-wrap">
-							<label for="fromscratch_custom_css" class="screen-reader-text"><?= esc_html__('Custom CSS', 'fromscratch') ?></label>
-							<textarea name="fromscratch_custom_css" id="fromscratch_custom_css" rows="16" class="large-text code" style="width: 100%; font-family: Consolas, Monaco, monospace;"><?= esc_textarea(get_option('fromscratch_custom_css', '')) ?></textarea>
-						</div>
-					</td>
-				</tr>
-			</table>
-			<?php submit_button(); ?>
-		</form>
-		<?php else : ?>
-		<p class="description" style="margin-bottom: 8px;"><?= esc_html__('Override SCSS design variables. Values are output as CSS custom properties (:root). Add new variables in config/theme-design.php under design.sections.', 'fromscratch') ?></p>
-		<form method="post" action="options.php" class="page-settings-form">
-			<?php settings_fields(FS_THEME_OPTION_GROUP_DESIGN); ?>
-			<?php
-			$design_sections = fs_get_design_sections_resolved();
-			foreach ($design_sections as $section_id => $section) :
-				$section_title = $section['title'];
 			?>
-			<div class="fromscratch-design-section" style="margin-bottom: 24px;">
-				<h2 class="title"><?= esc_html($section_title) ?></h2>
-				<table class="form-table" role="presentation">
-					<tbody>
-					<?php foreach ($section['variables'] as $v) :
-						$var_id = $v['id'] ?? '';
-						$var_title = $v['title'] ?? $var_id;
-						$var_type = (isset($v['type']) && $v['type'] === 'color') ? 'color' : 'text';
-						$override = fs_design_variable_override($var_id);
-						$default = $v['default'] ?? '';
-						$input_name = 'fromscratch_design[' . esc_attr($var_id) . ']';
-					?>
+			<form method="post" action="<?= esc_url(admin_url('options-general.php?page=fs-theme-settings&tab=redirects')) ?>" class="page-settings-form" id="fs-redirects-form">
+				<?php wp_nonce_field('fromscratch_save_redirects'); ?>
+				<input type="hidden" name="fromscratch_save_redirects" value="1">
+				<?php
+				$redirect_method = function_exists('fs_config_redirects') ? fs_config_redirects('method') : 'wordpress';
+				if (
+					function_exists('fs_can_use_htaccess_redirects') && fs_can_use_htaccess_redirects() &&
+					$redirect_method === 'wordpress'
+				) : ?>
+					<div class="notice notice-info inline">
+						<p><?= esc_html__('You are running Apache. For better performance, you can set the redirect method to htaccess in config/theme.php under redirects.', 'fromscratch') ?></p>
+					</div>
+				<?php endif; ?>
+				<h2 class="title"><?= esc_html__('Redirects', 'fromscratch') ?></h2>
+				<p class="description"><?= esc_html__('Enter paths without the domain (e.g. /old-path).', 'fromscratch') ?></p>
+				<p class="description"><?= esc_html__('The source URL represents the requested path.', 'fromscratch') ?></p>
+				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('The target URL can be an internal path or a full URL.', 'fromscratch') ?></p>
+				<table class="wp-list-table widefat fixed striped" id="fs-redirects-table" style="width: auto;">
+					<thead>
 						<tr>
-							<th scope="row" style="font-weight: normal; width: 220px;">
-								<code style="font-size: 12px;">--<?= esc_html($var_id) ?></code>
-							</th>
-							<td>
-								<label for="fromscratch_design_<?= esc_attr($var_id) ?>" class="screen-reader-text"><?= esc_html($var_title) ?></label>
-								<?php if ($var_type === 'color') : ?>
-								<input type="text" name="<?= $input_name ?>" id="fromscratch_design_<?= esc_attr($var_id) ?>" value="<?= esc_attr($override) ?>" placeholder="<?= esc_attr($default) ?>" class="code" style="width: 120px;" maxlength="22">
-								<?php else : ?>
-								<input type="text" name="<?= $input_name ?>" id="fromscratch_design_<?= esc_attr($var_id) ?>" value="<?= esc_attr($override) ?>" placeholder="<?= esc_attr($default) ?>" class="regular-text" style="width: 200px;">
-								<?php endif; ?>
-								<span class="description" style="margin-left: 8px; color: #646970;"><?= esc_html($var_title) ?></span>
-							</td>
+							<th scope="col" class="column-from" style="width: 50%;"><?= esc_html__('From URL', 'fromscratch') ?></th>
+							<th scope="col" class="column-to" style="width: 50%;"><?= esc_html__('To URL', 'fromscratch') ?></th>
+							<th scope="col" class="column-code"><?= esc_html__('Code', 'fromscratch') ?></th>
+							<th scope="col" class="column-delete"></th>
 						</tr>
-					<?php endforeach; ?>
+					</thead>
+					<tbody>
+						<?php foreach ($redirects_list as $i => $r) : ?>
+							<tr class="fs-redirect-row">
+								<td><input type="text" name="fs_redirects[<?= (int) $i ?>][from]" value="<?= esc_attr($r['from']) ?>" class="regular-text" style="width: 100%;" placeholder="<?= esc_attr__('/old-path', 'fromscratch') ?>"></td>
+								<td><input type="text" name="fs_redirects[<?= (int) $i ?>][to]" value="<?= esc_attr($r['to']) ?>" class="regular-text" style="width: 100%;" placeholder="<?= esc_attr__('/new-path', 'fromscratch') ?>"></td>
+								<td>
+									<select name="fs_redirects[<?= (int) $i ?>][code]">
+										<option value="301" <?= selected($r['code'], 301, false) ?>><?= esc_html__('301 (Permanent)', 'fromscratch') ?></option>
+										<option value="302" <?= selected($r['code'], 302, false) ?>><?= esc_html__('302 (Temporary)', 'fromscratch') ?></option>
+									</select>
+								</td>
+								<td><button type="button" class="button fs-redirect-remove"><?= esc_html__('Remove', 'fromscratch') ?></button></td>
+							</tr>
+						<?php endforeach; ?>
+						<tr class="fs-redirect-row fs-redirect-template" style="display: none;">
+							<td><input type="text" name="fs_redirects[__i__][from]" value="" class="regular-text" style="width: 100%;" placeholder="<?= esc_attr__('/old-path', 'fromscratch') ?>" disabled></td>
+							<td><input type="text" name="fs_redirects[__i__][to]" value="" class="regular-text" style="width: 100%;" placeholder="<?= esc_attr__('/new-path', 'fromscratch') ?>" disabled></td>
+							<td><select name="fs_redirects[__i__][code]" disabled>
+									<option value="301"><?= esc_html__('301 (Permanent)', 'fromscratch') ?></option>
+									<option value="302"><?= esc_html__('302 (Temporary)', 'fromscratch') ?></option>
+								</select></td>
+							<td><button type="button" class="button fs-redirect-remove"><?= esc_html__('Remove', 'fromscratch') ?></button></td>
+						</tr>
 					</tbody>
 				</table>
-			</div>
-			<?php endforeach; ?>
-			<?php submit_button(); ?>
-		</form>
+				<p style="margin-top: 12px;">
+					<button type="button" class="button" id="fs-redirect-add"><?= esc_html__('Add redirect', 'fromscratch') ?></button>
+				</p>
+				<?php submit_button(); ?>
+			</form>
+			<script>
+				(function() {
+					var form = document.getElementById('fs-redirects-form');
+					if (!form) return;
+					var tbody = form.querySelector('#fs-redirects-table tbody');
+					var template = form.querySelector('.fs-redirect-template');
+					var index = tbody.querySelectorAll('.fs-redirect-row:not(.fs-redirect-template)').length;
+					form.querySelector('#fs-redirect-add').addEventListener('click', function() {
+						var tr = template.cloneNode(true);
+						tr.classList.remove('fs-redirect-template');
+						tr.style.display = '';
+						tr.querySelectorAll('[name]').forEach(function(inp) {
+							inp.name = inp.name.replace(/__i__/g, index);
+							inp.removeAttribute('disabled');
+						});
+						tbody.insertBefore(tr, template);
+						index++;
+					});
+					tbody.addEventListener('click', function(e) {
+						if (e.target.classList.contains('fs-redirect-remove')) {
+							e.target.closest('tr').remove();
+						}
+					});
+				})();
+			</script>
+		<?php elseif ($tab === 'css') : ?>
+			<form method="post" action="<?= esc_url(admin_url('options-general.php?page=fs-theme-settings&tab=css')) ?>" class="page-settings-form">
+				<?php wp_nonce_field('fromscratch_save_css'); ?>
+				<input type="hidden" name="fromscratch_save_css" value="1">
+				<h2 class="title"><?= esc_html__('Custom CSS', 'fromscratch') ?></h2>
+				<p class="description"><?= esc_html__('The CSS is output after the design variables (:root).', 'fromscratch') ?></p>
+				<p class="description"><?= esc_html__('You can use design variables, e.g. var(--color-primary).', 'fromscratch') ?></p>
+				
+				<table class="form-table" style="margin-top: 24px;" role="presentation">
+					<tr>
+						<td colspan="2" style="padding: 0;">
+							<div class="fs-custom-css-editor-wrap">
+								<label for="fromscratch_custom_css" class="screen-reader-text"><?= esc_html__('Custom CSS', 'fromscratch') ?></label>
+								<textarea name="fromscratch_custom_css" id="fromscratch_custom_css" rows="16" class="large-text code" style="width: 100%; font-family: Consolas, Monaco, monospace;"><?= esc_textarea(get_option('fromscratch_custom_css', '')) ?></textarea>
+							</div>
+						</td>
+					</tr>
+				</table>
+				<?php submit_button(); ?>
+			</form>
+		<?php else : ?>
+			<p class="description" style="margin-bottom: 8px;"><?= esc_html__('Override SCSS design variables. Values are output as CSS custom properties (:root). Add new variables in config/theme-design.php under design.sections.', 'fromscratch') ?></p>
+			<form method="post" action="options.php" class="page-settings-form">
+				<?php settings_fields(FS_THEME_OPTION_GROUP_DESIGN); ?>
+				<?php
+				$design_sections = fs_get_design_sections_resolved();
+				foreach ($design_sections as $section_id => $section) :
+					$section_title = $section['title'];
+				?>
+					<div class="fromscratch-design-section" style="margin-bottom: 24px;">
+						<h2 class="title"><?= esc_html($section_title) ?></h2>
+						<table class="form-table" role="presentation">
+							<tbody>
+								<?php foreach ($section['variables'] as $v) :
+									$var_id = $v['id'] ?? '';
+									$var_title = $v['title'] ?? $var_id;
+									$var_type = (isset($v['type']) && $v['type'] === 'color') ? 'color' : 'text';
+									$override = fs_design_variable_override($var_id);
+									$default = $v['default'] ?? '';
+									$input_name = 'fromscratch_design[' . esc_attr($var_id) . ']';
+								?>
+									<tr>
+										<th scope="row" style="font-weight: normal; width: 220px;">
+											<code style="font-size: 12px;">--<?= esc_html($var_id) ?></code>
+										</th>
+										<td>
+											<label for="fromscratch_design_<?= esc_attr($var_id) ?>" class="screen-reader-text"><?= esc_html($var_title) ?></label>
+											<?php if ($var_type === 'color') : ?>
+												<input type="text" name="<?= $input_name ?>" id="fromscratch_design_<?= esc_attr($var_id) ?>" value="<?= esc_attr($override) ?>" placeholder="<?= esc_attr($default) ?>" class="code" style="width: 120px;" maxlength="22">
+											<?php else : ?>
+												<input type="text" name="<?= $input_name ?>" id="fromscratch_design_<?= esc_attr($var_id) ?>" value="<?= esc_attr($override) ?>" placeholder="<?= esc_attr($default) ?>" class="regular-text" style="width: 200px;">
+											<?php endif; ?>
+											<span class="description" style="margin-left: 8px; color: #646970;"><?= esc_html($var_title) ?></span>
+										</td>
+									</tr>
+								<?php endforeach; ?>
+							</tbody>
+						</table>
+					</div>
+				<?php endforeach; ?>
+				<?php submit_button(); ?>
+			</form>
 		<?php endif; ?>
 	</div>
 <?php
@@ -956,19 +1016,31 @@ function fs_content_field_option_name_row(string $variableId, array $variable = 
 	if (!function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
 		return;
 	}
+	$show = (string) get_user_meta(get_current_user_id(), 'fromscratch_show_content_developer_options', true) === '1';
 	$type = $variable['type'] ?? 'textfield';
 	$default = ($type === 'multiselect') ? '[]' : (($type === 'image') ? '0' : "''");
 	$snippet = "get_option('" . $variableId . "', " . $default . ")";
 	$id_attr = 'fs-opt-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', $variableId);
 	$id_snippet_attr = 'fs-opt-snippet-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', $variableId);
-	?>
-	<div class="fs-content-option-name-row" style="display: flex; align-items: center; gap: 6px; margin: 4px 0 0 4px;">
-		<button type="button" class="button button-small" style="padding: 0 6px; min-height: 28px;" data-fs-copy-from-source="<?= esc_attr($id_attr) ?>" aria-label="<?= esc_attr__('Copy option name', 'fromscratch') ?>"><span class="dashicons dashicons-clipboard" style="font-size: 16px; width: 16px; height: 16px;"></span></button>
-		<button type="button" class="button button-small" style="padding: 0 6px; min-height: 28px;" data-fs-copy-from-source="<?= esc_attr($id_snippet_attr) ?>" aria-label="<?= esc_attr__('Copy get_option snippet', 'fromscratch') ?>"><span class="dashicons dashicons-media-code" style="font-size: 16px; width: 16px; height: 16px;"></span></button>
-		<span id="<?= esc_attr($id_attr) ?>" style="color: #999; font-size: 12px; font-family: monospace;"><?= esc_html($variableId) ?></span>
-		<span id="<?= esc_attr($id_snippet_attr) ?>" style="display: none;"><?= esc_html($snippet) ?></span>
+	$hidden_class = $show ? '' : ' fs-content-developer-options-hidden';
+?>
+	<div class="fs-content-developer-options-container<?= esc_attr($hidden_class) ?>">
+		<div class="fs-content-developer-options">
+			<button type="button" class="button fs-content-developer-options-button" data-fs-copy-from-source="<?= esc_attr($id_attr) ?>" title="<?= esc_attr__('Copy option name', 'fromscratch') ?>">
+				<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+					<path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360ZM200-80q-33 0-56.5-23.5T120-160v-520q0-17 11.5-28.5T160-720q17 0 28.5 11.5T200-680v520h400q17 0 28.5 11.5T640-120q0 17-11.5 28.5T600-80H200Z" />
+				</svg>
+			</button>
+			<button type="button" class="button fs-content-developer-options-button" data-fs-copy-from-source="<?= esc_attr($id_snippet_attr) ?>" title="<?= esc_attr__('Copy get_option snippet', 'fromscratch') ?>">
+				<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+					<path d="m353-480 59-59q12-12 12-28t-12-28q-12-12-28.5-12T355-595l-87 87q-6 6-8.5 13t-2.5 15q0 8 2.5 15t8.5 13l87 87q12 12 28.5 12t28.5-12q12-12 12-28t-12-28l-59-59Zm254 0-59 59q-12 12-12 28t12 28q12 12 28.5 12t28.5-12l87-87q6-6 8.5-13t2.5-15q0-8-2.5-15t-8.5-13l-87-87q-6-6-13.5-9t-15-3q-7.5 0-15 3t-13.5 9q-12 12-12 28t12 28l59 59ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Z" />
+				</svg>
+			</button>
+			<code id="<?= esc_attr($id_attr) ?>" class="fs-code-small fs-content-developer-options-code"><?= esc_html($variableId) ?></code>
+			<span id="<?= esc_attr($id_snippet_attr) ?>" style="display: none;"><?= esc_html($snippet) ?></span>
+		</div>
 	</div>
-	<?php
+<?php
 }
 
 function display_custom_info_field($variable, $variableId, $languageId = null): void
@@ -978,21 +1050,25 @@ function display_custom_info_field($variable, $variableId, $languageId = null): 
 	}
 	$value = get_option($variableId, '');
 	$type = $variable['type'] ?? 'textfield';
+	echo '<div class="fs-content-field-wrap">';
 	switch ($type) {
 		case 'textfield':
 			$tw = isset($variable['width']) ? (int) $variable['width'] : 0;
-			$tw_style = $tw > 0 ? 'width: ' . $tw . 'px' : 'width: 100%';
+			$tw_style = $tw > 0 ? 'width: 100%; max-width: ' . $tw . 'px' : 'width: 100%';
 			echo '<input class="settings-page-textfield" type="text" name="' . esc_attr($variableId) . '" value="' . esc_attr($value) . '" style="' . $tw_style . '"' . (isset($variable['placeholder']) ? ' placeholder="' . esc_attr($variable['placeholder']) . '"' : '') . '>';
 			break;
 		case 'textarea':
 			$taw = isset($variable['width']) ? (int) $variable['width'] : 0;
-			$taw_style = $taw > 0 ? 'width: ' . $taw . 'px' : 'width: 100%';
+			$taw_style = $taw > 0 ? 'width: 100%; max-width: ' . $taw . 'px;' : 'width: 100%;';
+			$taw_style .= ' display: block;';
 			$textarea_placeholder = isset($variable['placeholder']) ? ' placeholder="' . esc_attr($variable['placeholder']) . '"' : '';
 			echo '<textarea class="settings-page-textfield" name="' . esc_attr($variableId) . '" rows="' . (int) ($variable['rows'] ?? 4) . '" style="' . $taw_style . '"' . $textarea_placeholder . '>' . esc_textarea($value) . '</textarea>';
 			break;
 		case 'select':
 			$options = $variable['options'] ?? [];
-			echo '<select name="' . esc_attr($variableId) . '" class="settings-page-select" style="min-width: ' . (int) ($variable['width'] ?? 200) . 'px">';
+			$sw = isset($variable['width']) ? (int) $variable['width'] : 0;
+			$sw_style = $sw > 0 ? 'width: 100%; max-width: ' . $sw . 'px' : 'min-width: 200px;';
+			echo '<select name="' . esc_attr($variableId) . '" class="settings-page-select" style="' . $sw_style . '">';
 			if (!empty($variable['placeholder'])) {
 				echo '<option value="">' . esc_html($variable['placeholder']) . '</option>';
 			}
@@ -1010,14 +1086,14 @@ function display_custom_info_field($variable, $variableId, $languageId = null): 
 			echo '<label class="fs-content-toggle-wrap">';
 			echo '<input type="hidden" name="' . esc_attr($variableId) . '" value="0">';
 			echo '<input type="checkbox" name="' . esc_attr($variableId) . '" value="1" class="settings-page-toggle"' . ($checked ? ' checked' : '') . '>';
-			echo '<span class="fs-content-toggle-label">' . esc_html(!empty($variable['toggle_label']) ? $variable['toggle_label'] : __('On', 'fromscratch')) . '</span>';
+			echo '<span class="fs-content-toggle-label">' . esc_html(!empty($variable['label']) ? $variable['label'] : __('On', 'fromscratch')) . '</span>';
 			echo '</label>';
 			break;
 		case 'multiselect':
 			$options = $variable['options'] ?? [];
 			$selected = is_array($value) ? $value : (array) json_decode((string) $value, true);
 			$selected = array_map('strval', $selected);
-			echo '<div class="fs-content-multiselect" style="display: flex; flex-direction: column; gap: 6px;">';
+			echo '<div class="fs-content-multiselect">';
 			echo '<input type="hidden" name="' . esc_attr($variableId) . '[]" value="">';
 			foreach ($options as $opt_value => $opt_label) {
 				if (is_int($opt_value) && is_array($opt_label)) {
@@ -1027,7 +1103,7 @@ function display_custom_info_field($variable, $variableId, $languageId = null): 
 				$opt_value = (string) $opt_value;
 				$checked = in_array($opt_value, $selected, true);
 				$cb_id = esc_attr($variableId . '_' . preg_replace('/[^a-z0-9_-]/i', '_', $opt_value));
-				echo '<label style="display: flex; align-items: center; gap: 8px;">';
+				echo '<label>';
 				echo '<input type="checkbox" name="' . esc_attr($variableId) . '[]" id="' . $cb_id . '" value="' . esc_attr($opt_value) . '"' . ($checked ? ' checked' : '') . '>';
 				echo '<span>' . esc_html($opt_label) . '</span>';
 				echo '</label>';
@@ -1055,8 +1131,9 @@ function display_custom_info_field($variable, $variableId, $languageId = null): 
 			echo '<input class="settings-page-textfield" type="text" name="' . esc_attr($variableId) . '" value="' . esc_attr($value) . '" style="' . $defw_style . '"' . $def_placeholder . '>';
 			break;
 	}
+	echo '</div>';
 	if (!empty($variable['description'])) {
-		echo '<p class="description" style="margin-top: 6px; margin-bottom: 0;">' . esc_html($variable['description']) . '</p>';
+		echo '<p class="description">' . esc_html($variable['description']) . '</p>';
 	}
 	fs_content_field_option_name_row($variableId, $variable);
 	if ($languageId) {

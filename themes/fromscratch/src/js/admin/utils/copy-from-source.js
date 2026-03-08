@@ -34,7 +34,7 @@ function initCopyFromSource(root = document) {
           trigger.classList.add('fs-copied');
           setTimeout(() => {
             trigger.classList.remove('fs-copied');
-          }, 600);
+          }, 180);
         }
       });
     });

@@ -180,6 +180,21 @@ msgstr "Kopieren"
 msgid "Content"
 msgstr "Inhalt"
 
+msgid "Global Content"
+msgstr "Globale Inhalte"
+
+msgid "Define content that is used across the website."
+msgstr "Definiere Inhalte, die websiteweit verwendet werden."
+
+msgid "Updating these values will automatically update them wherever they are used."
+msgstr "Änderungen werden automatisch überall übernommen, wo sie genutzt werden."
+
+msgid "Show developer options"
+msgstr "Entwickleroptionen anzeigen"
+
+msgid "Hide developer options"
+msgstr "Entwickleroptionen ausblenden"
+
 msgid "Pages"
 msgstr "Seiten"
 
