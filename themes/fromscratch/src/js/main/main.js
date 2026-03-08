@@ -6,7 +6,8 @@ import './menu';
 import './scrolled';
 
 // Blocks
-import '../blocks/all-blocks';
+// TODO find solution to sunc with blocks plugin
+// import '../blocks/all-blocks';
 
 // Page init
 document.addEventListener('DOMContentLoaded', () => {

@@ -2,9 +2,6 @@
 @forward '../../../../../node_modules/normalize.css/normalize';
 @forward '../lib/reset';
 
-// Swiper
-@forward '../../../../../node_modules/swiper/swiper-bundle.min.css';
-
 // Fonts
 @forward '../fonts/fonts';
 
@@ -37,7 +34,8 @@
 @forward '../layout/page-not-found';
 
 // Blocks
-@forward '../blocks/all-blocks';
+// TODO find solution to sunc with blocks plugin
+// @forward '../blocks/all-blocks';
 
 // Print
 @forward '../lib/print';
