@@ -405,24 +405,6 @@ add_filter('post_class', function ($classes, $class, $post_id) {
 }, 10, 3);
 
 /**
- * Admin CSS: indent translation rows in the list table (row class, no HTML in title).
- */
-add_action('admin_enqueue_scripts', function (string $hook_suffix): void {
-	if ($hook_suffix !== 'edit.php') {
-		return;
-	}
-	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
-		return;
-	}
-	$screen = get_current_screen();
-	if (!$screen || !in_array($screen->post_type ?? '', fs_language_post_types(), true)) {
-		return;
-	}
-	$css = '.fs-list-translation-row .column-title { padding-left: 1.5em; }';
-	wp_add_inline_style('main-admin-styles', $css);
-}, 20);
-
-/**
  * Pass language panel data to the block editor (same sidebar as SEO / Expirator).
  */
 add_action('enqueue_block_editor_assets', function (): void {

@@ -3,8 +3,18 @@
 // Page list table
 
 .fixed .column-fs_language {
-    width: 10%;
-    max-width: 120px;
+  width: 10%;
+  max-width: 120px;
+}
+
+.fs-list-translation-row .column-title {
+  padding-left: 24px;
+
+  .row-title {
+    &::before {
+      content: '→ ';
+    }
+  }
 }
 
 // Page list filters
