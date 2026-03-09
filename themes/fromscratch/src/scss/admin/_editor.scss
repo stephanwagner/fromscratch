@@ -76,3 +76,21 @@ div.fromscratch-editor-panel {
     align-self: stretch;
   }
 }
+
+// Languages
+
+.fromscratch-languages-readonly-label {
+  font-weight: 600;
+}
+
+.fromscratch-languages-create-translation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 4px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}

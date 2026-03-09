@@ -483,7 +483,7 @@ add_action('enqueue_block_editor_assets', function (): void {
 
 	wp_localize_script('fromscratch-editor', 'fromscratchLanguages', [
 		'postTypes'             => fs_language_post_types(),
-		'panelTitle'            => __('Language & translations', 'fromscratch'),
+		'panelTitle'            => __('Language', 'fromscratch'),
 		'languages'             => $languages,
 		'slugToTermId'          => $slug_to_term_id,
 		'linked'                => $linked,
@@ -493,8 +493,8 @@ add_action('enqueue_block_editor_assets', function (): void {
 		'translations'          => __('Translations', 'fromscratch'),
 		'current'               => __('current', 'fromscratch'),
 		'linkedLabel'           => __('linked', 'fromscratch'),
-		'languageSetOnCreate'   => __('Language is set when you first create the content and cannot be changed.', 'fromscratch'),
-		'createTranslation'     => __('Create translation', 'fromscratch'),
+		'languageSetOnCreate'   => __('Language is set when the content is created and cannot be changed.', 'fromscratch'),
+		'createTranslation'     => __('Add', 'fromscratch'),
 	]);
 }, 11);
 

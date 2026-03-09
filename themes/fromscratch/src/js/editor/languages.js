@@ -10,7 +10,7 @@
   const { PluginDocumentSettingPanel } = wp.editPost;
   const { useSelect, useDispatch } = wp.data;
   const { useEntityProp } = wp.coreData;
-  const { SelectControl, PanelRow } = wp.components;
+  const { PanelRow } = wp.components;
   const { useEffect } = wp.element;
 
   const TAXONOMY = 'fs_language';
@@ -98,8 +98,8 @@
       }
       const createUrl = createUrls[id];
       if (createUrl && postId) {
-        return el('div', { key: id, style: { marginBottom: '8px' } },
-          el('a', { href: createUrl, className: 'button button-small' }, labels.createTranslation || 'Create translation'),
+        return el('div', { key: id, className: 'fromscratch-languages-create-translation' },
+          el('a', { href: createUrl, className: 'button button-small' }, labels.createTranslation || 'Add'),
           ' ',
           el('span', { style: { color: '#646970' } }, label)
         );
@@ -113,21 +113,29 @@
             el('span', { className: 'fromscratch-languages-readonly-label' }, (labels.thisContentIsIn || 'This content is in') + ': '),
             el('span', { className: 'fromscratch-languages-readonly-value' }, currentLanguageLabel)
           ),
-          el('p', { className: 'description', style: { marginTop: '4px', marginBottom: 0 } }, labels.languageSetOnCreate || 'Language is set when you first create the content and cannot be changed.')
+          el('p', { className: 'components-base-control__help', style: { marginTop: '4px', marginBottom: 0 } }, labels.languageSetOnCreate || 'Language is set when the content is created and cannot be changed.')
         )
-      : el(SelectControl, {
-          label: labels.thisContentIsIn || 'This content is in',
-          value: effectiveSlug,
-          options: options,
-          onChange: setLanguage
-        });
+      : el('div', { className: 'fromscratch-languages-select-wrap' },
+          el('label', { className: 'components-base-control__label', htmlFor: 'fromscratch-language-select' }, labels.thisContentIsIn || 'This content is in'),
+          el('select', {
+            id: 'fromscratch-language-select',
+            className: 'components-select-control__input',
+            value: effectiveSlug,
+            onChange: function (e) {
+              setLanguage(e.target.value);
+            },
+            style: { width: '100%', minHeight: '30px' }
+          }, options.map(function (opt) {
+            return el('option', { key: opt.value, value: opt.value }, opt.label);
+          }))
+        );
 
     return el(
       'div',
       { className: 'fromscratch-editor-panel fromscratch-languages-panel' },
       el(PanelRow, null, languageControl),
-      el('div', { style: { marginTop: '12px' } },
-        el('strong', null, labels.translations || 'Translations'),
+      el('div', { style: { marginTop: '16px' } },
+        el('label', { className: 'components-base-control__label', style: { fontWeight: '600' } }, labels.translations || 'Translations'),
         el('div', { style: { marginTop: '8px' } }, rows)
       )
     );
@@ -145,7 +153,7 @@
       PluginDocumentSettingPanel,
       {
         name: 'fromscratch-languages',
-        title: labels.panelTitle || 'Language & translations',
+        title: labels.panelTitle || 'Language',
         className: 'fromscratch-languages-document-panel',
         order: 15
       },
