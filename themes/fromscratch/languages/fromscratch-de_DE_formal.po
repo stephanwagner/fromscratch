@@ -392,6 +392,108 @@ msgstr "Entwickler-E-Mail"
 msgid "Used for system alerts, error notifications and security warnings."
 msgstr "Wird für Systemmeldungen, Fehlerbenachrichtigungen und Sicherheitshinweise verwendet."
 
+msgid "Mail delivery"
+msgstr "E-Mail-Zustellung"
+
+msgid "From address is used for all outgoing mail."
+msgstr "Die Absenderadresse wird für alle ausgehenden E-Mails verwendet."
+
+msgid "From email"
+msgstr "Absender-E-Mail"
+
+msgid "Leave empty to use the Admin email."
+msgstr "Leer lassen, um die Admin-E-Mail zu verwenden."
+
+msgid "From name"
+msgstr "Absendername"
+
+msgid "Leave empty to use the site name."
+msgstr "Leer lassen, um den Namen der Website zu verwenden."
+
+msgid "Choose how WordPress sends email. Delivery depends on your server."
+msgstr "Wähle, wie WordPress E-Mails sendet. Die Zustellung ist abhängig von deinem Server."
+
+msgid "WordPress default"
+msgstr "WordPress-Standard"
+
+msgid "SMTP"
+msgstr "SMTP"
+
+msgid "SendGrid"
+msgstr "SendGrid"
+
+msgid "Uses the WordPress default mail function (PHP mail())."
+msgstr "Verwendet die Standard-Mailfunktion von WordPress (PHP mail())."
+
+msgid "No mail configuration is applied by the theme, so SMTP or mail plugins can override delivery."
+msgstr "Es wird keine E-Mail-Konfiguration vom Theme angewendet, SMTP- oder E-Mail-Plugins können die Zustellung überschreiben."
+
+msgid "SMTP host"
+msgstr "SMTP-Host"
+
+msgid "Port"
+msgstr "Port"
+
+msgid "Common: 587 (TLS), 465 (SSL), 25 (none)."
+msgstr "Häufig: 587 (TLS), 465 (SSL), 25 (keine)."
+
+msgid "Encryption"
+msgstr "Verschlüsselung"
+
+msgid "None"
+msgstr "Keine"
+
+msgid "TLS"
+msgstr "TLS"
+
+msgid "SSL"
+msgstr "SSL"
+
+msgid "Leave blank to keep current."
+msgstr "Leer lassen, um aktuelles Passwort beizubehalten."
+
+msgid "API key"
+msgstr "API-Schlüssel"
+
+msgid "Create an API key in the SendGrid dashboard with send permissions."
+msgstr "Erstelle einen API-Schlüssel im SendGrid-Dashboard mit Sendeberechtigungen."
+
+msgid "Test email"
+msgstr "Test-E-Mail"
+
+msgid "Send to"
+msgstr "Senden an"
+
+msgid "Leave empty to use the developer email."
+msgstr "Leer lassen, um die Entwickler-E-Mail zu verwenden."
+
+msgid "Send test mail"
+msgstr "Test-E-Mail senden"
+
+msgid "Please enter a valid email address before sending a test."
+msgstr "Bitte gib eine gültige E-Mail-Adresse ein, bevor du einen Test sendest."
+
+msgid "Test email template could not be loaded."
+msgstr "Test-E-Mail-Vorlage konnte nicht geladen werden."
+
+msgid "Test email from %s"
+msgstr "Test-E-Mail von %s"
+
+msgid "The test email could not be sent."
+msgstr "Die Test-E-Mail konnte nicht gesendet werden."
+
+msgid "Reason: %s"
+msgstr "Grund: %s"
+
+msgid "Check your mail delivery settings or try SMTP / SendGrid."
+msgstr "Überprüfe deine Einstellungen für die E-Mail-Zustellung oder probiere SMTP / SendGrid."
+
+msgid "Test email sent to %s."
+msgstr "Test-E-Mail an %s gesendet."
+
+msgid "the address"
+msgstr "die Adresse"
+
 msgid "Asset Cache"
 msgstr "Asset Cache"
 
