@@ -784,18 +784,18 @@ function theme_settings_page(): void
 				<div class="fs-tabs" data-fs-tabs>
 					<nav class="fs-tabs-nav" data-fs-tabs-nav role="tablist">
 						<?php foreach ($content_tabs as $i => $ct) : ?>
-							<button type="button" class="button fs-tabs-btn fs-button-can-toggle <?= ($i === 0) ? 'active' : '' ?>" role="tab" aria-selected="<?= ($i === 0) ? 'true' : 'false' ?>" aria-controls="fs-content-panel-<?= esc_attr($ct['id']) ?>" data-tab="<?= esc_attr($ct['id']) ?>"><?= esc_html($ct['title'] ?? $ct['id']) ?></button>
+							<button type="button" class="button fs-tabs-btn fs-button-can-toggle <?= ($i === 0) ? 'active' : '' ?>" role="tab" aria-selected="<?= ($i === 0) ? 'true' : 'false' ?>" aria-controls="fs-content-panel-<?= esc_attr($ct['id']) ?>" data-fs-tabs-btn data-tab="<?= esc_attr($ct['id']) ?>"><?= esc_html($ct['title'] ?? $ct['id']) ?></button>
 						<?php endforeach; ?>
 					</nav>
 					<div class="fs-tabs-panels" data-fs-tabs-panels>
 						<?php if ($show_lang_switcher) : ?>
-							<div class="fs-content-lang-switcher" data-fs-content-lang-default="<?= esc_attr($content_default_lang) ?>">
+							<div class="fs-content-lang-switcher" data-fs-content-lang-switcher data-fs-content-lang-default="<?= esc_attr($content_default_lang) ?>">
 								<?php foreach ($content_languages as $lang) :
 									$lang_id = isset($lang['id']) ? (string) $lang['id'] : '';
 									$lang_label = function_exists('fs_content_language_label') ? fs_content_language_label($lang, 'native') : $lang_id;
 									$is_default = $lang_id === $content_default_lang;
 								?>
-									<button type="button" class="button fs-content-lang-btn fs-button-can-toggle <?= $is_default ? 'active' : '' ?>" data-fs-content-lang="<?= esc_attr($lang_id) ?>"><?= esc_html($lang_label) ?></button>
+									<button type="button" class="button fs-content-lang-btn fs-button-can-toggle <?= $is_default ? 'active' : '' ?>" data-fs-content-lang-btn data-fs-content-lang="<?= esc_attr($lang_id) ?>"><?= esc_html($lang_label) ?></button>
 								<?php endforeach; ?>
 							</div>
 						<?php endif; ?>
@@ -857,9 +857,9 @@ function theme_settings_page(): void
 								if (data.success) {
 									btn.setAttribute('data-fs-content-developer-options-visible', newVisible ? '1' : '0');
 									btn.textContent = newVisible ? '<?= esc_js(__('Hide developer options', 'fromscratch')) ?>' : '<?= esc_js(__('Show developer options', 'fromscratch')) ?>';
-									document.querySelectorAll('.fs-content-developer-options-container').forEach(function(el) {
-										el.classList.toggle('fs-content-developer-options-hidden', !newVisible);
-									});
+document.querySelectorAll('[data-fs-content-developer-options-container]').forEach(function(el) {
+									el.classList.toggle('fs-content-developer-options-hidden', !newVisible);
+								});
 								}
 							});
 					});
@@ -867,27 +867,27 @@ function theme_settings_page(): void
 			</script>
 			<script>
 				(function() {
-					var switcher = document.querySelector('.fs-content-lang-switcher');
+					var switcher = document.querySelector('[data-fs-content-lang-switcher]');
 					if (!switcher) return;
 					var defaultLang = switcher.getAttribute('data-fs-content-lang-default') || '';
 					var form = document.getElementById('fs-content-form');
 					if (!form) return;
 
 					function setContentLang(langId) {
-						switcher.querySelectorAll('.fs-content-lang-btn').forEach(function(b) {
+						switcher.querySelectorAll('[data-fs-content-lang-btn]').forEach(function(b) {
 							b.classList.toggle('active', b.getAttribute('data-fs-content-lang') === langId);
 						});
-						form.querySelectorAll('[class*="page-settings-language-container-"]').forEach(function(container) {
-							var match = container.className.match(/page-settings-language-container-([a-zA-Z0-9_-]+)/);
+						form.querySelectorAll('[data-fs-content-lang]').forEach(function(container) {
+							var containerLang = container.getAttribute('data-fs-content-lang');
 							var tr = container.closest('tr');
 							if (tr) {
-								tr.style.display = match && match[1] === langId ? '' : 'none';
+								tr.style.display = containerLang === langId ? '' : 'none';
 							}
 						});
 					}
 
 					switcher.addEventListener('click', function(e) {
-						var btn = e.target.closest('.fs-content-lang-btn');
+						var btn = e.target.closest('[data-fs-content-lang-btn]');
 						if (!btn) return;
 						setContentLang(btn.getAttribute('data-fs-content-lang') || '');
 					});
@@ -1026,7 +1026,7 @@ function theme_settings_page(): void
 						<?php foreach ($design_tabs as $i => $dt) :
 							$tab_id = isset($dt['title']) ? sanitize_title($dt['title']) : 'tab-' . $i;
 						?>
-							<button type="button" class="button fs-tabs-btn fs-button-can-toggle <?= ($i === 0) ? 'active' : '' ?>" role="tab" aria-selected="<?= ($i === 0) ? 'true' : 'false' ?>" aria-controls="fs-design-panel-<?= esc_attr($tab_id) ?>" data-tab="<?= esc_attr($tab_id) ?>"><?= esc_html(_x($dt['title'] ?? $tab_id, 'Design tab', 'fromscratch')) ?></button>
+							<button type="button" class="button fs-tabs-btn fs-button-can-toggle <?= ($i === 0) ? 'active' : '' ?>" role="tab" aria-selected="<?= ($i === 0) ? 'true' : 'false' ?>" aria-controls="fs-design-panel-<?= esc_attr($tab_id) ?>" data-fs-tabs-btn data-tab="<?= esc_attr($tab_id) ?>"><?= esc_html(_x($dt['title'] ?? $tab_id, 'Design tab', 'fromscratch')) ?></button>
 						<?php endforeach; ?>
 					</nav>
 					<div class="fs-tabs-panels" data-fs-tabs-panels>
@@ -1054,8 +1054,8 @@ function theme_settings_page(): void
 													$override = fs_design_variable_override($var_id);
 													$default = $v['default'] ?? '';
 													$input_name = 'fromscratch_design[' . esc_attr($var_id) . ']';
-													$type_class = 'fromscratch-design-input--' . sanitize_html_class($var_type);
-													$row_type_class = 'fromscratch-design-row--' . sanitize_html_class($var_type);
+													$type_class = '-' . sanitize_html_class($var_type);
+													$row_type_class = 'fromscratch-design-row -' . sanitize_html_class($var_type);
 													$preview_color = ($override !== '') ? $override : $default;
 												?>
 													<tr class="<?= esc_attr($row_type_class) ?>">
@@ -1063,11 +1063,11 @@ function theme_settings_page(): void
 															<code class="fs-code-small">--<?= esc_html($var_id) ?></code>
 														</th>
 														<td>
-															<div class="fromscratch-design-field <?= $var_type === 'color' ? 'fromscratch-design-field--color' : '' ?>">
+															<div class="fromscratch-design-field <?= $type_class ?>">
 																<label for="fromscratch_design_<?= esc_attr($var_id) ?>" class="screen-reader-text"><?= esc_html($var_title) ?></label>
 																<input type="text" name="<?= $input_name ?>" id="fromscratch_design_<?= esc_attr($var_id) ?>" value="<?= esc_attr($override) ?>" placeholder="<?= esc_attr($default) ?>" class="code fs-code-small fromscratch-design-input <?= esc_attr($type_class) ?>" <?= $var_type === 'color' ? 'maxlength="22" data-design-color-input' : '' ?>>
 																<?php if ($var_type === 'color') : ?>
-																	<span class="fromscratch-design-color-preview <?= $preview_color === '' ? 'fromscratch-design-color-preview--empty' : '' ?>"<?= $preview_color !== '' ? ' style="background-color: ' . esc_attr($preview_color) . ';"' : '' ?> aria-hidden="true" data-design-color-preview></span>
+																	<span class="fromscratch-design-color-preview<?= $preview_color === '' ? ' -empty' : '' ?>"<?= $preview_color !== '' ? ' style="background-color: ' . esc_attr($preview_color) . ';"' : '' ?> aria-hidden="true" data-design-color-preview></span>
 																<?php endif; ?>
 																<span class="fromscratch-design-field-description"><?= esc_html($var_title) ?></span>
 															</div>
@@ -1134,7 +1134,7 @@ function fs_content_field_option_name_row(string $variableId, array $variable = 
 	$id_snippet_attr = 'fs-opt-snippet-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', $variableId);
 	$hidden_class = $show ? '' : ' fs-content-developer-options-hidden';
 ?>
-	<div class="fs-content-developer-options-container<?= esc_attr($hidden_class) ?>">
+	<div class="fs-content-developer-options-container<?= esc_attr($hidden_class) ?>" data-fs-content-developer-options-container>
 		<div class="fs-content-developer-options">
 			<button type="button" class="button fs-content-developer-options-button" data-fs-copy-from-source="<?= esc_attr($id_attr) ?>" title="<?= esc_attr__('Copy option name', 'fromscratch') ?>">
 				<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
@@ -1156,7 +1156,7 @@ function fs_content_field_option_name_row(string $variableId, array $variable = 
 function display_custom_info_field($variable, $variableId, $languageId = null): void
 {
 	if ($languageId) {
-		echo '<div class="page-settings-language-container page-settings-language-container-' . $languageId . '">';
+		echo '<div class="fs-content-lang-container -lang-' . esc_attr($languageId) . '" data-fs-content-lang="' . esc_attr($languageId) . '">';
 	}
 	$value = get_option($variableId, '');
 	$type = $variable['type'] ?? 'textfield';
@@ -1288,7 +1288,7 @@ function display_custom_info_fields(): void
 						$variableIdLang = $variableId . '_' . $language['id'];
 						add_settings_field($variableIdLang, $variable_title, function () use ($variable, $variableIdLang, $language) {
 							display_custom_info_field($variable, $variableIdLang, $language['id']);
-						}, $content_page, 'section');
+						}, $content_page, 'section', ['class' => '-is-translatable']);
 						register_setting(FS_THEME_OPTION_GROUP_TEXTE, $variableIdLang, $register_args);
 					}
 				} else {

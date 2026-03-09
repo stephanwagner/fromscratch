@@ -33,7 +33,7 @@ return [
 	'gradients' => [
 		[
 			'slug' => 'primary',
-			'name' => 'Primär-Verlauf',
+			'name' => 'Primärer Verlauf',
 			'gradient' => 'linear-gradient(to right, #00aaff, #00ddff)',
 		],
 	],

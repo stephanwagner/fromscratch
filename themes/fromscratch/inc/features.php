@@ -11,17 +11,17 @@ defined('ABSPATH') || exit;
 function fs_theme_feature_defaults(): array
 {
 	return [
-		'enable_blogs'             => 1,
+		'enable_blogs'              => 1,
 		'enable_remove_post_tags'   => 1,
-		'enable_svg'               => 1,
-		'enable_duplicate_post'    => 1,
-		'enable_seo'               => 1,
-		'enable_post_expirator'    => 1,
-		'enable_languages'         => 0,
-		'enable_blocked_ips'       => 1,
-		'enable_webp'              => 0,
+		'enable_svg'                => 1,
+		'enable_duplicate_post'     => 1,
+		'enable_seo'                => 1,
+		'enable_post_expirator'     => 1,
+		'enable_languages'          => 0,
+		'enable_blocked_ips'        => 1,
+		'enable_webp'               => 1,
 		'enable_webp_convert_original' => 0,
-		'enable_media_folders'     => 1,
+		'enable_media_folders'      => 1,
 	];
 }
 

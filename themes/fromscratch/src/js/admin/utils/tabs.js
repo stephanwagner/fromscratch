@@ -1,6 +1,6 @@
 /**
  * Tabs: binds tab switching for [data-fs-tabs] containers.
- * Structure: [data-fs-tabs] > [data-fs-tabs-nav] > .fs-tabs-btn[data-tab],
+ * Structure: [data-fs-tabs] > [data-fs-tabs-nav] > [data-fs-tabs-btn][data-tab],
  *            [data-fs-tabs] > [data-fs-tabs-panels] > [data-fs-tabs-panel][data-tab]
  * Button and panel are matched by data-tab value. Active state: .active on btn, data-fs-tabs-panel-active on panel.
  */
@@ -12,12 +12,12 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!nav || !panels.length) return;
 
     nav.addEventListener('click', function (e) {
-      const btn = e.target.closest('.fs-tabs-btn');
+      const btn = e.target.closest('[data-fs-tabs-btn]');
       if (!btn) return;
       const tabId = btn.getAttribute('data-tab');
       if (!tabId) return;
 
-      nav.querySelectorAll('.fs-tabs-btn').forEach(function (b) {
+      nav.querySelectorAll('[data-fs-tabs-btn]').forEach(function (b) {
         b.classList.remove('active');
         b.setAttribute('aria-selected', 'false');
       });

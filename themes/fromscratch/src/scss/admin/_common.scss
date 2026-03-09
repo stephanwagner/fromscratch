@@ -4,7 +4,7 @@
   display: none !important;
 }
 
-// Tabs (global, reusable; [data-fs-tabs] etc. for JS, classes for styling)
+// Tabs
 
 .fs-tabs {
   display: flex;
@@ -28,8 +28,8 @@
   text-align: left;
 }
 
-.fs-tabs-nav .fs-tabs-btn.active, 
-.fs-tabs-nav .fs-tabs-btn.active:hover, 
+.fs-tabs-nav .fs-tabs-btn.active,
+.fs-tabs-nav .fs-tabs-btn.active:hover,
 .fs-tabs-nav .fs-tabs-btn.active:focus {
   position: relative;
   padding-right: calc(24px + 8px);
@@ -50,10 +50,18 @@
 
 .fs-tabs-panels {
   flex: 1;
+
+  .form-table {
+    table-layout: fixed;
+  }
 }
 
 .fs-tabs-panel:not(.fs-tabs-panel--active) {
   display: none;
+}
+
+.fs-tabs-panel h2:first-child {
+  margin-top: 0;
 }
 
 // Copy
