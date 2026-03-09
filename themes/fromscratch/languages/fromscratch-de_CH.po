@@ -378,7 +378,7 @@ msgid "Admin email"
 msgstr "Admin-E-Mail"
 
 msgid "WordPress default admin email used for WordPress core notifications."
-msgstr "Standard-Admin-E-Mail von WordPress für Systembenachrichtigungen."
+msgstr "Standard Admin-E-Mail von WordPress für Systembenachrichtigungen."
 
 msgid "Report email"
 msgstr "Bericht-E-Mail"
@@ -661,8 +661,8 @@ msgstr "Medienordner"
 msgid "Enable media folders"
 msgstr "Medienordner aktivieren"
 
-msgid "Adds folders to the Media Library with a sidebar for organizing and creating folders."
-msgstr "Fügt der Mediathek Ordner hinzu, mit einer Seitenleiste zum Organisieren und Erstellen von Ordnern."
+msgid "Adds folders to the Media Library with a sidebar for organizing."
+msgstr "Fügt der Mediathek Ordner hinzu, mit einer Seitenleiste zum Organisieren."
 
 msgid "Languages"
 msgstr "Sprachen"

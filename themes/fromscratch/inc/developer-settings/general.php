@@ -40,7 +40,7 @@ function fs_render_developer_general(): void
 
 		<div class="page-settings-form">
 			<h2 class="title"><?= esc_html__('Cheat sheet', 'fromscratch') ?></h2>
-			<p class="description"><?= esc_html__('Common functions for use in templates and theme code. Bump the asset version in the Tools tab when you change static files.', 'fromscratch') ?></p>
+			<p class="description"><?= esc_html__('Common functions for use in templates and theme code.', 'fromscratch') ?></p>
 
 			<div class="fs-cheatsheet" style="max-width: 720px;">
 				<h3 class="title" style="margin-top: 20px;"><?= esc_html__('Assets', 'fromscratch') ?></h3>

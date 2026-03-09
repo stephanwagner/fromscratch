@@ -193,7 +193,7 @@ function fs_render_developer_features(): void
 					<td>
 						<input type="hidden" name="fromscratch_features[enable_media_folders]" value="0">
 						<label><input type="checkbox" name="fromscratch_features[enable_media_folders]" value="1" <?= checked($feat('enable_media_folders'), 1, false) ?>> <?= esc_html__('Enable media folders', 'fromscratch') ?></label>
-						<p class="description fs-indent-checkbox"><?= esc_html__('Adds folders to the Media Library with a sidebar for organizing and creating folders.', 'fromscratch') ?></p>
+						<p class="description fs-indent-checkbox"><?= esc_html__('Adds folders to the Media Library with a sidebar for organizing.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 			</table>
