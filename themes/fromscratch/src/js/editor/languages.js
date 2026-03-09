@@ -109,7 +109,7 @@
     const options = languages.map(function (lang) {
       const id = lang.id || '';
       const label =
-        lang.nameEnglish && lang.nameEnglish !== '' ? lang.nameEnglish : id;
+        lang.name && lang.name !== '' ? lang.name : id;
       return { label: label, value: id };
     });
 
@@ -117,13 +117,13 @@
     const currentLanguageLabel = effectiveSlug
       ? languages.find(function (l) {
           return (l.id || '') === effectiveSlug;
-        })?.nameEnglish || effectiveSlug
+        })?.name || effectiveSlug
       : '';
 
     const rows = languages.map(function (lang) {
       const id = lang.id || '';
       const label =
-        lang.nameEnglish && lang.nameEnglish !== '' ? lang.nameEnglish : id;
+        lang.name && lang.name !== '' ? lang.name : id;
       if (id === currentSlug) {
         const wordCountStr =
           labels.currentWordCount !== undefined

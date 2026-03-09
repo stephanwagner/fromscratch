@@ -316,10 +316,10 @@ add_action('admin_init', function () {
 }, 5);
 
 /**
- * Sanitize Languages tab data: list of { id, nameEnglish, nameOriginalLanguage }, plus default id.
+ * Sanitize Languages tab data: list of { id, name, nameNative }, plus default id.
  *
  * @param mixed $value Raw POST value.
- * @return array{list: array<int, array{id: string, nameEnglish: string, nameOriginalLanguage: string}>, default: string}
+ * @return array{list: array<int, array{id: string, name: string, nameNative: string}>, default: string}
  */
 function fs_sanitize_theme_languages($value): array
 {
@@ -341,8 +341,8 @@ function fs_sanitize_theme_languages($value): array
 			$seen_ids[$id_lower] = true;
 			$list[] = [
 				'id' => $id,
-				'nameEnglish' => isset($row['nameEnglish']) ? sanitize_text_field((string) $row['nameEnglish']) : '',
-				'nameOriginalLanguage' => isset($row['nameOriginalLanguage']) ? sanitize_text_field((string) $row['nameOriginalLanguage']) : '',
+				'name' => isset($row['name']) ? sanitize_text_field((string) $row['name']) : '',
+				'nameNative' => isset($row['nameNative']) ? sanitize_text_field((string) $row['nameNative']) : '',
 			];
 		}
 	}

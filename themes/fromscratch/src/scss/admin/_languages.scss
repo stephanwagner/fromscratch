@@ -1,0 +1,21 @@
+@use '../core' as *;
+
+// Page list table
+
+.fixed .column-fs_language {
+    width: 10%;
+    max-width: 120px;
+}
+
+// Page list filters
+
+.subsubsub {
+  .fs_language {
+    display: block;
+    margin: 4px 0 8px;
+  }
+}
+
+.fs-language-filters {
+  display: block;
+}

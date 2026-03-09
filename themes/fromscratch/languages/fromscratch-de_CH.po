@@ -796,6 +796,9 @@ msgstr "Fügt der Mediathek Ordner hinzu, mit einer Seitenleiste zum Organisiere
 msgid "Languages"
 msgstr "Sprachen"
 
+msgid "All languages"
+msgstr "Alle Sprachen"
+
 msgid "Enable languages"
 msgstr "Mehrsprachigkeit aktivieren"
 

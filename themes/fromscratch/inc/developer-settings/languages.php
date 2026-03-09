@@ -126,7 +126,7 @@ function fs_render_developer_languages(): void
 						<?php if (!empty($lang_list)) : ?>
 							<select name="fs_theme_languages[default]" id="fs_theme_languages_default" class="regular-text">
 								<?php foreach ($lang_list as $l) : ?>
-									<option value="<?= esc_attr($l['id']) ?>" <?= selected($lang_default, $l['id'], false) ?>><?= esc_html($l['nameEnglish'] !== '' ? $l['nameEnglish'] : $l['id']) ?></option>
+									<option value="<?= esc_attr($l['id']) ?>" <?= selected($lang_default, $l['id'], false) ?>><?= esc_html($l['name'] !== '' ? $l['name'] : $l['id']) ?></option>
 								<?php endforeach; ?>
 							</select>
 						<?php else : ?>
@@ -186,8 +186,8 @@ function fs_render_developer_languages(): void
 					<?php foreach ($lang_list as $i => $l) : ?>
 						<tr class="fs-language-row" data-row-index="<?= (int) $i ?>">
 							<td><input type="text" name="fs_theme_languages[list][<?= (int) $i ?>][id]" value="<?= esc_attr($l['id']) ?>" class="small-text" placeholder="en" maxlength="20" required></td>
-							<td><input type="text" name="fs_theme_languages[list][<?= (int) $i ?>][nameEnglish]" value="<?= esc_attr($l['nameEnglish']) ?>" class="regular-text" required style="width: 160px;"></td>
-							<td><input type="text" name="fs_theme_languages[list][<?= (int) $i ?>][nameOriginalLanguage]" value="<?= esc_attr($l['nameOriginalLanguage']) ?>" class="regular-text" required style="width: 160px;"></td>
+							<td><input type="text" name="fs_theme_languages[list][<?= (int) $i ?>][name]" value="<?= esc_attr($l['name'] ?? '') ?>" class="regular-text" required style="width: 160px;"></td>
+							<td><input type="text" name="fs_theme_languages[list][<?= (int) $i ?>][nameNative]" value="<?= esc_attr($l['nameNative'] ?? '') ?>" class="regular-text" required style="width: 160px;"></td>
 							<td class="fs-reorder-cell" style="vertical-align: middle;">
 								<?php if ($i === 0) : ?>
 									<span class="fs-default-badge" style="color: #646970; font-size: 12px;"><?= esc_html__('Default', 'fromscratch') ?></span>
@@ -263,8 +263,8 @@ function fs_render_developer_languages(): void
 						var tr = document.createElement('tr');
 						tr.className = 'fs-language-row';
 						tr.innerHTML = '<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][id]" value="" class="small-text" placeholder="en" maxlength="20" required></td>' +
-							'<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][nameEnglish]" value="" class="regular-text" required style="width: 160px;"></td>' +
-							'<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][nameOriginalLanguage]" value="" class="regular-text" required style="width: 160px;"></td>' +
+							'<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][name]" value="" class="regular-text" required style="width: 160px;"></td>' +
+							'<td><input type="text" name="fs_theme_languages[list][' + rowIndex + '][nameNative]" value="" class="regular-text" required style="width: 160px;"></td>' +
 							'<td class="fs-reorder-cell" style="vertical-align: middle;"><button type="button" class="button button-small fs-move-up">↑</button> <button type="button" class="button button-small fs-move-down">↓</button></td>' +
 							'<td style="vertical-align: middle;"><button type="button" class="button button-small fs-remove-language" aria-label="<?= esc_js(__('Remove', 'fromscratch')) ?>"><?= esc_js(__('Remove', 'fromscratch')) ?></button></td>';
 						tbody.appendChild(tr);

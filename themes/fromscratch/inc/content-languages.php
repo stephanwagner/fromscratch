@@ -161,7 +161,7 @@ function fs_language_views_row(array $views): array
 	$post_type = $screen && isset($screen->post_type) ? $screen->post_type : 'post';
 	$html = fs_language_filter_links($post_type);
 	if ($html !== '') {
-		$views['fs_language'] = '<span class="fs-language-filters" style="display:block;margin-top:0.5em;">' . $html . '</span>';
+		$views['fs_language'] = '<span class="fs-language-filters">' . $html . '</span>';
 	}
 	return $views;
 }
@@ -209,9 +209,7 @@ function fs_language_filter_links(string $post_type): string
 
 	$links = [];
 	$all_label = __('All languages', 'fromscratch');
-	$links[] = $current === ''
-		? '<span class="current">' . esc_html($all_label) . '</span>'
-		: '<a href="' . esc_url($base_url) . '">' . esc_html($all_label) . '</a>';
+	$links[] = '<a href="' . esc_url($base_url) . '" class="' . ($current === '' ? 'current' : '') . '">' . esc_html($all_label) . '</a>';
 
 	foreach ($languages as $lang) {
 		$slug = $lang['id'] ?? '';
@@ -220,9 +218,7 @@ function fs_language_filter_links(string $post_type): string
 			continue;
 		}
 		$url = add_query_arg('fs_language', $slug, $base_url);
-		$links[] = $current === $slug
-			? '<span class="current">' . esc_html($name) . '</span>'
-			: '<a href="' . esc_url($url) . '">' . esc_html($name) . '</a>';
+		$links[] = '<a href="' . esc_url($url) . '" class="' . ($current === $slug ? 'current' : '') . '">' . esc_html($name) . '</a>';
 	}
 
 	return implode(' | ', $links);
@@ -849,7 +845,7 @@ function fs_language_show_page_menu_item(int $page_id): bool
 // 	foreach ($languages as $l) {
 // 		$id = isset($l['id']) ? (string) $l['id'] : '';
 // 		if ($id !== '') {
-// 			$lang_names[$id] = isset($l['nameEnglish']) && $l['nameEnglish'] !== '' ? $l['nameEnglish'] : $id;
+// 			$lang_names[$id] = isset($l['name']) && $l['name'] !== '' ? $l['name'] : $id;
 // 		}
 // 	}
 

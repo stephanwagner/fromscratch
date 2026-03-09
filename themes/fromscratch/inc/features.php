@@ -87,9 +87,9 @@ function fs_theme_feature_enabled(string $feature): bool
 /**
  * Get the effective content languages list (for Settings → Theme → Content translatable fields).
  * When Languages feature is off: returns config from theme-content.php (keys: id, name, nameNative).
- * When on: returns the list from Developer → Languages (keys: id, nameEnglish, nameOriginalLanguage).
+ * When on: returns the list from Developer → Languages (keys: id, name, nameNative).
  *
- * @return list<array{id: string, name?: string, nameNative?: string, nameEnglish?: string, nameOriginalLanguage?: string}>
+ * @return list<array{id: string, name?: string, nameNative?: string}>
  */
 function fs_get_content_languages(): array
 {
@@ -127,7 +127,7 @@ function fs_get_default_language(): string
 }
 
 /**
- * Get a language label from a language array. Supports config shape (label) and option shape (nameEnglish, nameOriginalLanguage).
+ * Get a language label from a language array. Supports config shape (label) and option shape (name, nameNative).
  *
  * @param array<string, string> $lang Language item from fs_get_content_languages().
  * @param string $type 'native' for native/original name, 'name' for admin name; both use label when present.
@@ -135,7 +135,11 @@ function fs_get_default_language(): string
  */
 function fs_content_language_label(array $lang, string $type = 'native'): string
 {
-	$v = $lang['label'] ?? $lang['nameNative'] ?? $lang['nameOriginalLanguage'] ?? $lang['name'] ?? $lang['nameEnglish'] ?? '';
+	if ($type === 'name') {
+		$v = $lang['name'] ?? $lang['label'] ?? $lang['nameNative'] ?? '';
+	} else {
+		$v = $lang['nameNative'] ?? $lang['label'] ?? $lang['name'] ?? '';
+	}
 	return $v !== '' ? (string) $v : (string) ($lang['id'] ?? '');
 }
 
