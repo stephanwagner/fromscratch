@@ -1582,3 +1582,40 @@ add_action('template_redirect', function (): void {
 		exit;
 	}
 });
+
+// Add hreflang links to head for posts that have linked translations
+add_action('wp_head', function () {
+	if (!is_singular()) {
+		return;
+	}
+
+	$post_id = get_queried_object_id();
+	$post_type = get_post_type($post_id);
+
+	if (!in_array($post_type, fs_language_post_types(), true)) {
+		return;
+	}
+
+	$group_id = (int) get_post_meta($post_id, FS_TRANSLATION_GROUP_META, true);
+	if ($group_id <= 0) {
+		$group_id = $post_id;
+	}
+
+	$linked = fs_language_get_linked_translations($post_id, $group_id);
+
+	$current_term = fs_language_get_post_language($post_id);
+	$default_lang = fs_get_default_language();
+	$current_slug = $current_term ? $current_term->slug : $default_lang;
+
+	echo '<link rel="alternate" hreflang="' . esc_attr($current_slug) . '" href="' . esc_url(get_permalink($post_id)) . '">' . "\n";
+
+	foreach ($linked as $slug => $other_id) {
+		echo '<link rel="alternate" hreflang="' . esc_attr($slug) . '" href="' . esc_url(get_permalink($other_id)) . '">' . "\n";
+	}
+
+	if ($current_slug === $default_lang) {
+		echo '<link rel="alternate" hreflang="x-default" href="' . esc_url(get_permalink($post_id)) . '">' . "\n";
+	} elseif (isset($linked[$default_lang])) {
+		echo '<link rel="alternate" hreflang="x-default" href="' . esc_url(get_permalink($linked[$default_lang])) . '">' . "\n";
+	}
+}, 5);

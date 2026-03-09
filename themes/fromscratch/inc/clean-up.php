@@ -26,6 +26,9 @@ function fs_clean_up_head(): void
 	remove_action('wp_head', 'wlwmanifest_link');
 	remove_action('wp_head', 'rsd_link');
 	remove_action('wp_head', 'wp_shortlink_wp_head');
+	remove_action('wp_head', 'wp_oembed_add_discovery_links');
+	remove_action('wp_head', 'wp_oembed_add_host_js');
+	remove_filter('embed_oembed_discover', '__return_false');
 
 	// Emoji
 	remove_action('wp_print_styles', 'print_emoji_styles');
