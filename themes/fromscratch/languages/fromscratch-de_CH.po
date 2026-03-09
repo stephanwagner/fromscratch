@@ -494,6 +494,33 @@ msgstr "Test-E-Mail an %s gesendet."
 msgid "the address"
 msgstr "die Adresse"
 
+msgid "words"
+msgstr "Wörter"
+
+msgid "word"
+msgstr "Wort"
+
+msgid "Language"
+msgstr "Sprache"
+
+msgid "This content is in"
+msgstr "Dieser Inhalt ist auf"
+
+msgid "Translations"
+msgstr "Übersetzungen"
+
+msgid "current"
+msgstr "aktuell"
+
+msgid "linked"
+msgstr "verknüpft"
+
+msgid "Language is set when the content is created and cannot be changed."
+msgstr "Die Sprache wird beim Erstellen festgelegt und kann nicht geändert werden."
+
+msgid "Add"
+msgstr "Hinzufügen"
+
 msgid "Asset Cache"
 msgstr "Asset Cache"
 

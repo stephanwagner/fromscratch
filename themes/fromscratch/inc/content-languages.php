@@ -456,11 +456,17 @@ add_action('enqueue_block_editor_assets', function (): void {
 		if ($group_id <= 0) {
 			$group_id = $post_id;
 		}
+		
+		$current_content = get_post_field('post_content', $post_id);
+		$current_word_count = str_word_count(wp_strip_all_tags($current_content));
+
 		$linked_raw = fs_language_get_linked_translations($post_id, $group_id);
 		foreach ($linked_raw as $slug => $other_id) {
+			$other_content = get_post_field('post_content', $other_id);
 			$linked[$slug] = [
-				'postId'  => $other_id,
-				'editLink' => get_edit_post_link($other_id, 'raw'),
+				'postId'    => $other_id,
+				'editLink'  => get_edit_post_link($other_id, 'raw'),
+				'wordCount' => str_word_count(wp_strip_all_tags($other_content)),
 			];
 		}
 		foreach ($languages as $lang) {
@@ -487,6 +493,7 @@ add_action('enqueue_block_editor_assets', function (): void {
 		'languages'             => $languages,
 		'slugToTermId'          => $slug_to_term_id,
 		'linked'                => $linked,
+		'currentWordCount'      => $current_word_count ?? 0,
 		'createTranslationUrls' => $create_translation_urls,
 		'defaultLanguage'       => $default_lang,
 		'thisContentIsIn'       => __('This content is in', 'fromscratch'),
@@ -495,6 +502,8 @@ add_action('enqueue_block_editor_assets', function (): void {
 		'linkedLabel'           => __('linked', 'fromscratch'),
 		'languageSetOnCreate'   => __('Language is set when the content is created and cannot be changed.', 'fromscratch'),
 		'createTranslation'     => __('Add', 'fromscratch'),
+		'words'                 => __('words', 'fromscratch'),
+		'word'                  => __('word', 'fromscratch'),
 	]);
 }, 11);
 
