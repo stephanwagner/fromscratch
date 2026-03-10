@@ -15,7 +15,7 @@ const FS_THEME_LANGUAGES_OPTION = 'fs_theme_languages';
  * Flush rewrite rules when language options are updated so URL prefix rules stay in sync and 404s are avoided.
  */
 add_action('update_option_' . FS_THEME_LANGUAGES_OPTION, function (): void {
-	flush_rewrite_rules(true);
+	flush_rewrite_rules(false);
 }, 10, 0);
 const FS_TRANSLATION_GROUP_META = 'fs_translation_group';
 /** Post meta key for language slug (synced from taxonomy for fast permalink lookups). */
@@ -434,7 +434,7 @@ add_action('enqueue_block_editor_assets', function (): void {
 		if ($group_id <= 0) {
 			$group_id = $post_id;
 		}
-		
+
 		$current_content = get_post_field('post_content', $post_id);
 		$current_word_count = str_word_count(wp_strip_all_tags($current_content));
 
@@ -499,6 +499,34 @@ function fs_language_get_post_language(int $post_id): ?\WP_Term
 		return null;
 	}
 	return $terms[0];
+}
+
+/**
+ * Get the post ID for a given language from the same translation group.
+ * Returns the given post_id if it is already in that language, or a linked translation.
+ *
+ * @param int $post_id Any post in the translation group.
+ * @param string $lang_slug Target language slug (e.g. 'en', 'de').
+ * @return int|null Post ID for that language, or null if not found.
+ */
+function fs_language_get_translation(int $post_id, string $lang_slug): ?int
+{
+	if ($lang_slug === '') {
+		return $post_id;
+	}
+	$group_id = (int) get_post_meta($post_id, FS_TRANSLATION_GROUP_META, true);
+	if ($group_id <= 0) {
+		$group_id = $post_id;
+	}
+	$linked = fs_language_get_linked_translations($post_id, $group_id);
+	$term = fs_language_get_post_language($post_id);
+	$current_slug = $term ? $term->slug : '';
+	$linked[$current_slug] = $post_id;
+	$default_lang = function_exists('fs_get_default_language') ? fs_get_default_language() : '';
+	if ($current_slug === '' && $default_lang !== '') {
+		$linked[$default_lang] = $post_id;
+	}
+	return isset($linked[$lang_slug]) ? (int) $linked[$lang_slug] : null;
 }
 
 /**
@@ -607,11 +635,15 @@ function fs_language_home_url(string $lang_slug): string
 		return home_url('/');
 	}
 	if (function_exists('fs_use_language_url_prefix') && fs_use_language_url_prefix()) {
+		$default = function_exists('fs_get_default_language') ? fs_get_default_language() : '';
+		$prefix_default = function_exists('fs_prefix_default_language') && fs_prefix_default_language();
+		if ($lang_slug === $default && !$prefix_default) {
+			return home_url('/');
+		}
 		return trailingslashit(home_url('/' . $lang_slug . '/'));
 	}
 	return home_url('/');
 }
-
 
 /**
  * Menu editor: list default-language pages and pages that have no linked page (standalone).
@@ -755,6 +787,18 @@ function fs_language_menu_page_for_current_lang(int $page_id): int
 	if (!function_exists('fs_get_default_language') || !in_array('page', fs_language_post_types(), true)) {
 		return $page_id;
 	}
+	$front_id = (int) get_option('page_on_front');
+
+	if ($front_id > 0) {
+
+		$post_group = (int) get_post_meta($page_id, FS_TRANSLATION_GROUP_META, true) ?: $page_id;
+		$front_group = (int) get_post_meta($front_id, FS_TRANSLATION_GROUP_META, true) ?: $front_id;
+
+		if ($post_group === $front_group) {
+			return fs_language_get_translation($front_id, fs_language_current_request_lang()) ?: $front_id;
+		}
+	}
+
 	$current = fs_language_current_request_lang();
 	$default_lang = fs_get_default_language();
 	$group_id = (int) get_post_meta($page_id, FS_TRANSLATION_GROUP_META, true);
@@ -923,7 +967,27 @@ add_filter('wp_nav_menu_objects', function (array $items, \stdClass $args): arra
 		$page_id = (int) $item->object_id;
 		// When viewing this page, always show its menu item (avoids hiding when current-language detection falls back to default).
 		if ($queried_id > 0 && $page_id === $queried_id) {
-			$item->url = get_permalink($page_id);
+
+			$front_id = (int) get_option('page_on_front');
+
+			$post_group  = (int) get_post_meta($page_id, FS_TRANSLATION_GROUP_META, true) ?: $page_id;
+			$front_group = (int) get_post_meta($front_id, FS_TRANSLATION_GROUP_META, true) ?: $front_id;
+
+			if ($post_group === $front_group) {
+
+				$lang = get_post_meta($page_id, FS_LANGUAGE_META, true);
+
+				if (!$lang) {
+					$term = fs_language_get_post_language($page_id);
+					$lang = $term ? $term->slug : fs_get_default_language();
+				}
+
+				$item->url = fs_language_home_url($lang);
+			} else {
+
+				$item->url = get_permalink($page_id);
+			}
+
 			$item->title = get_the_title($page_id);
 			continue;
 		}
@@ -932,7 +996,27 @@ add_filter('wp_nav_menu_objects', function (array $items, \stdClass $args): arra
 			continue;
 		}
 		$show_id = fs_language_menu_page_for_current_lang($page_id);
-		$item->url = get_permalink($show_id);
+
+		$front_id = (int) get_option('page_on_front');
+
+		$post_group  = (int) get_post_meta($show_id, FS_TRANSLATION_GROUP_META, true) ?: $show_id;
+		$front_group = (int) get_post_meta($front_id, FS_TRANSLATION_GROUP_META, true) ?: $front_id;
+
+		if ($post_group === $front_group) {
+
+			$lang = get_post_meta($show_id, FS_LANGUAGE_META, true);
+
+			if (!$lang) {
+				$term = fs_language_get_post_language($show_id);
+				$lang = $term ? $term->slug : fs_get_default_language();
+			}
+
+			$item->url = fs_language_home_url($lang);
+		} else {
+
+			$item->url = get_permalink($show_id);
+		}
+
 		$item->title = get_the_title($show_id);
 	}
 	return array_values($items);
@@ -998,7 +1082,16 @@ add_shortcode('fs_language_switcher', function (): string {
 			continue;
 		}
 
-		$url = get_permalink($translation_id);
+		$front_id = (int) get_option('page_on_front');
+		$group_id = (int) get_post_meta($translation_id, FS_TRANSLATION_GROUP_META, true) ?: $translation_id;
+		$front_group = (int) get_post_meta($front_id, FS_TRANSLATION_GROUP_META, true) ?: $front_id;
+
+		$is_home_translation = ($group_id === $front_group);
+
+		$url = $is_home_translation
+			? fs_language_home_url($id)
+			: get_permalink($translation_id);
+
 		$items[] = '<a class="fs-lang-item' . ($is_active ? ' active' : '') . '" href="' . esc_url($url) . '" aria-current="' . ($is_active ? 'true' : 'false') . '">' . esc_html($label) . '</a>';
 	}
 
@@ -1287,37 +1380,26 @@ function fs_language_resolve_request(string $lang, string $path): ?array
 	$default_lang = fs_get_default_language();
 
 	if ($path === '') {
-		// Language root: show front page in that language.
-		$front_page_id = (int) get_option('page_on_front', 0);
-		if ($front_page_id > 0) {
-			$post = get_post($front_page_id);
-			if ($post && $post->post_type === 'page' && in_array($post->post_type, fs_language_post_types(), true)) {
-				$group_id = (int) get_post_meta($front_page_id, FS_TRANSLATION_GROUP_META, true);
-				if ($group_id <= 0) {
-					$group_id = $front_page_id;
-				}
-				$linked = fs_language_get_linked_translations($front_page_id, $group_id);
-				$page_lang = fs_language_get_post_language($front_page_id);
-				$page_slug = $page_lang ? $page_lang->slug : '';
-				$linked[$page_slug] = $front_page_id;
-				if ($page_slug === '' && $default_lang !== '') {
-					$linked[$default_lang] = $front_page_id;
-				}
-				if (isset($linked[$lang])) {
-					$id = (int) $linked[$lang];
-					$p = get_post($id);
-					if ($p && $p->post_status === 'publish') {
-						return ['id' => $id, 'post_type' => 'page'];
-					}
-				}
-				// Default-language front page requested in its own language (no prefix) or same lang
-				if ($page_slug === $lang || ($page_slug === '' && $default_lang === $lang)) {
-					return ['id' => $front_page_id, 'post_type' => 'page'];
-				}
-			}
+
+		$front_id = (int) get_option('page_on_front');
+
+		if (!$front_id) {
+			return null;
 		}
-		// Blog as front: no specific post for language root; let WordPress show home (handled in parse_request).
-		return null;
+
+		$translation = fs_language_get_translation($front_id, $lang);
+
+		if ($translation) {
+			return [
+				'id' => $translation,
+				'post_type' => 'page'
+			];
+		}
+
+		return [
+			'id' => $front_id,
+			'post_type' => 'page'
+		];
 	}
 
 	// Try page by path (supports hierarchical path).
@@ -1451,15 +1533,14 @@ if (!is_admin()) {
 function fs_language_permalink(string $url, $post_id, bool $sample): string
 {
 	$post_id = $post_id instanceof \WP_Post ? $post_id->ID : (int) $post_id;
-	if ($post_id <= 0) {
+	if ($post_id <= 0 || $sample) {
 		return $url;
 	}
-	if ($sample) {
-		return $url;
-	}
+
 	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
 		return $url;
 	}
+
 	if (!function_exists('fs_use_language_url_prefix') || !fs_use_language_url_prefix()) {
 		return $url;
 	}
@@ -1494,9 +1575,14 @@ function fs_language_permalink(string $url, $post_id, bool $sample): string
 		return $url;
 	}
 
-	// Use this post's own slug (WordPress path), not the default-language version's path.
-	$path = $post_type === 'page' ? get_page_uri($post_id) : get_post_field('post_name', $post_id);
-	if ($path === '' || $path === null) {
+	// Homepage special case
+	$front_id = (int) get_option('page_on_front');
+	if ($post_type === 'page' && $post_id === $front_id) {
+		return fs_language_home_url($post_lang);
+	}
+
+	$path = trim(str_replace(home_url('/'), '', $url), '/');
+	if ($path === '') {
 		return $url;
 	}
 
@@ -1505,7 +1591,7 @@ function fs_language_permalink(string $url, $post_id, bool $sample): string
 		$home = trailingslashit(home_url('/'));
 	}
 
-	return $home . $post_lang . '/' . trim($path, '/');
+	return $home . $post_lang . '/' . $path;
 }
 
 /**
@@ -1517,6 +1603,9 @@ add_action('template_redirect', function (): void {
 		return;
 	}
 	if (!function_exists('fs_use_language_url_prefix') || !fs_use_language_url_prefix()) {
+		return;
+	}
+	if (get_query_var('fs_lang')) {
 		return;
 	}
 	if (is_admin() || is_preview() || is_feed()) {
@@ -1557,17 +1646,31 @@ add_action('template_redirect', function (): void {
 	$path = $post->post_type === 'page' ? get_page_uri($post->ID) : $post->post_name;
 	$path = trim($path, '/');
 
-	if ($path !== '') {
-		if ($lang !== $default) {
-			$canonical = $lang . '/' . $path;
-		} else {
-			$canonical = $prefix_default ? $lang . '/' . $path : $path;
-		}
+	// TODO function that checks if any page is a frontpage
+	$front_id = (int) get_option('page_on_front');
+	$post_group  = (int) get_post_meta($post->ID, FS_TRANSLATION_GROUP_META, true) ?: $post->ID;
+	$front_group = (int) get_post_meta($front_id, FS_TRANSLATION_GROUP_META, true) ?: $front_id;
+	$is_homepage = ($post->post_type === 'page' && $post_group === $front_group);
+
+	if ($is_homepage) {
+		$canonical = $lang !== $default ? $lang : ($prefix_default ? $lang : '');
+	} elseif ($path !== '') {
+		$canonical = $lang !== $default ? $lang . '/' . $path : ($prefix_default ? $lang . '/' . $path : $path);
 	} else {
-		$canonical = $lang;
+		$canonical = $lang !== $default ? $lang : ($prefix_default ? $lang : '');
 	}
 
 	if ($current_path !== $canonical) {
+		// Never redirect a language root (e.g. /de/) to / — the user is on a valid URL for that language.
+		if ($canonical === '' && $current_path !== '') {
+			$languages = fs_get_content_languages();
+			foreach ($languages as $l) {
+				$id = $l['id'] ?? '';
+				if ($id !== '' && $current_path === $id) {
+					return;
+				}
+			}
+		}
 		wp_safe_redirect(home_url('/' . $canonical . '/'), 301);
 		exit;
 	}
@@ -1592,20 +1695,69 @@ add_action('wp_head', function () {
 	}
 
 	$linked = fs_language_get_linked_translations($post_id, $group_id);
-
 	$current_term = fs_language_get_post_language($post_id);
 	$default_lang = fs_get_default_language();
 	$current_slug = $current_term ? $current_term->slug : $default_lang;
+	$linked[$current_slug] = $post_id;
+	if ($current_slug === '' && $default_lang !== '') {
+		$linked[$default_lang] = $post_id;
+	}
+	if (empty($linked)) {
+		return;
+	}
 
-	echo '<link rel="alternate" hreflang="' . esc_attr($current_slug) . '" href="' . esc_url(get_permalink($post_id)) . '">' . "\n";
+	$front_id = (int) get_option('page_on_front', 0);
+	$post_group = (int) get_post_meta($post_id, FS_TRANSLATION_GROUP_META, true) ?: $post_id;
+	$front_group = $front_id > 0 ? ((int) get_post_meta($front_id, FS_TRANSLATION_GROUP_META, true) ?: $front_id) : 0;
+	$is_homepage_group = ($front_id > 0 && $post_group === $front_group);
 
 	foreach ($linked as $slug => $other_id) {
-		echo '<link rel="alternate" hreflang="' . esc_attr($slug) . '" href="' . esc_url(get_permalink($other_id)) . '">' . "\n";
+		$url = $is_homepage_group ? fs_language_home_url($slug) : get_permalink($other_id);
+		echo '<link rel="alternate" hreflang="' . esc_attr($slug) . '" href="' . esc_url($url) . '">' . "\n";
 	}
 
-	if ($current_slug === $default_lang) {
-		echo '<link rel="alternate" hreflang="x-default" href="' . esc_url(get_permalink($post_id)) . '">' . "\n";
-	} elseif (isset($linked[$default_lang])) {
-		echo '<link rel="alternate" hreflang="x-default" href="' . esc_url(get_permalink($linked[$default_lang])) . '">' . "\n";
+	$x_default_url = $is_homepage_group ? fs_language_home_url($default_lang) : (isset($linked[$default_lang]) ? get_permalink($linked[$default_lang]) : null);
+	if ($x_default_url !== null) {
+		echo '<link rel="alternate" hreflang="x-default" href="' . esc_url($x_default_url) . '">' . "\n";
 	}
 }, 5);
+
+
+
+
+
+// TODO TEST
+
+// Shouldnt we rather when we save a page make sure that it is the frontpage?
+
+add_action('init', function () {
+
+	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
+		return;
+	}
+
+	if (get_option('show_on_front') !== 'page') {
+		return;
+	}
+
+	$front_id = (int) get_option('page_on_front');
+	if (!$front_id) {
+		return;
+	}
+
+	$default_lang = fs_get_default_language();
+	if (!$default_lang) {
+		return;
+	}
+
+	$term = fs_language_get_post_language($front_id);
+
+	if ($term && $term->slug !== $default_lang) {
+
+		$default_home = fs_language_get_translation($front_id, $default_lang);
+
+		if ($default_home) {
+			update_option('page_on_front', $default_home);
+		}
+	}
+});
