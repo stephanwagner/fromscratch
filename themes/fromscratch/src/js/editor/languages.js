@@ -160,13 +160,14 @@
       }
       const createUrl = createUrls[id];
       if (createUrl && postId) {
+        const buttonLabel = !currentSlug ? (labels.assignLanguage || 'Assign') : (labels.createTranslation || 'Add');
         return el(
           'div',
           { key: id, className: 'fromscratch-languages-create-translation' },
           el(
             'a',
             { href: createUrl, className: 'button button-small' },
-            labels.createTranslation || 'Add'
+            buttonLabel
           ),
           ' ',
           el('span', { style: { color: '#646970' } }, label)

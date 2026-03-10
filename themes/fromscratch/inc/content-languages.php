@@ -480,6 +480,7 @@ add_action('enqueue_block_editor_assets', function (): void {
 		'linkedLabel'           => __('linked', 'fromscratch'),
 		'languageSetOnCreate'   => __('Language is set when the content is created and cannot be changed.', 'fromscratch'),
 		'createTranslation'     => __('Add', 'fromscratch'),
+		'assignLanguage'        => __('Assign', 'fromscratch'),
 		'words'                 => __('words', 'fromscratch'),
 		'word'                  => __('word', 'fromscratch'),
 	]);
@@ -1176,6 +1177,17 @@ add_action('admin_post_fs_create_translation', function (): void {
 	$term = get_term_by('slug', $lang_slug, FS_LANGUAGE_TAXONOMY);
 	if (!$term) {
 		wp_die(esc_html__('Language not found.', 'fromscratch'));
+	}
+
+	$current_lang = fs_language_get_post_language($post_id);
+
+	// If the page has no language assigned yet, just assign the selected language instead of creating a copy.
+	if (!$current_lang) {
+		wp_set_object_terms($post_id, (int) $term->term_id, FS_LANGUAGE_TAXONOMY);
+		update_post_meta($post_id, FS_TRANSLATION_GROUP_META, $post_id);
+		update_post_meta($post_id, FS_LANGUAGE_META, $lang_slug);
+		wp_safe_redirect(admin_url('post.php?post=' . $post_id . '&action=edit'));
+		exit;
 	}
 
 	$group_id = (int) get_post_meta($post_id, FS_TRANSLATION_GROUP_META, true);

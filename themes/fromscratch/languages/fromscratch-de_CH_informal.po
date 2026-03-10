@@ -521,6 +521,9 @@ msgstr "Die Sprache wird beim Erstellen festgelegt und kann nicht geändert werd
 msgid "Add"
 msgstr "Hinzufügen"
 
+msgid "Assign"
+msgstr "Zuweisen"
+
 msgid "Asset Cache"
 msgstr "Asset Cache"
 
