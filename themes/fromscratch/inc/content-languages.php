@@ -22,6 +22,95 @@ const FS_TRANSLATION_GROUP_META = 'fs_translation_group';
 const FS_LANGUAGE_META = '_fs_lang';
 
 /**
+ * Get the translation group for a post.
+ *
+ * @param int $post_id Post ID.
+ * @return int Translation group ID.
+ */
+function fs_translation_group(int $post_id): int
+{
+	static $cache = [];
+
+	if (isset($cache[$post_id])) {
+		return $cache[$post_id];
+	}
+
+	$group = (int) get_post_meta($post_id, FS_TRANSLATION_GROUP_META, true);
+	$cache[$post_id] = $group > 0 ? $group : $post_id;
+
+	return $cache[$post_id];
+}
+
+/**
+ * Get the language slug for a post.
+ *
+ * @param int $post_id Post ID.
+ * @return string Language slug.
+ */
+function fs_post_language_slug(int $post_id): string
+{
+	static $cache = [];
+
+	if (isset($cache[$post_id])) {
+		return $cache[$post_id];
+	}
+
+	$lang = get_post_meta($post_id, FS_LANGUAGE_META, true);
+	$cache[$post_id] = $lang ?: '';
+
+	return $cache[$post_id];
+}
+
+/**
+ * Get the translation group map for a post type.
+ *
+ * @param int $group_id Translation group ID.
+ * @param string $post_type Post type.
+ * @return array<string, int> Language slug => post ID.
+ */
+function fs_translation_group_map(int $group_id, string $post_type): array
+{
+	static $cache = [];
+
+	$cache_key = $group_id . '|' . $post_type;
+	if (isset($cache[$cache_key])) {
+		return $cache[$cache_key];
+	}
+
+	global $wpdb;
+
+	$sql = $wpdb->prepare(
+		"
+		SELECT p.ID, pm.meta_value AS lang
+		FROM {$wpdb->posts} p
+		JOIN {$wpdb->postmeta} g 
+			ON g.post_id = p.ID 
+			AND g.meta_key = %s
+		LEFT JOIN {$wpdb->postmeta} pm 
+			ON pm.post_id = p.ID 
+			AND pm.meta_key = %s
+		WHERE g.meta_value = %s
+		AND p.post_type = %s
+	",
+		FS_TRANSLATION_GROUP_META,
+		FS_LANGUAGE_META,
+		(string)$group_id,
+		$post_type
+	);
+
+	$rows = $wpdb->get_results($sql);
+
+	$map = [];
+
+	foreach ($rows as $row) {
+		$lang = $row->lang ?: fs_get_default_language();
+		$map[$lang] = (int)$row->ID;
+	}
+
+	return $cache[$cache_key] = $map;
+}
+
+/**
  * Post types that get the language taxonomy and translation panel.
  *
  * @return string[]
@@ -332,7 +421,7 @@ add_filter('posts_clauses', function (array $clauses, \WP_Query $query): array {
  */
 function fs_language_is_default_in_group(int $post_id): bool
 {
-	$group_id = (int) get_post_meta($post_id, FS_TRANSLATION_GROUP_META, true);
+	$group_id = fs_translation_group($post_id);
 	if ($group_id <= 0) {
 		return true;
 	}
@@ -353,7 +442,7 @@ function fs_language_should_indent_in_list(int $post_id): bool
 	if (fs_language_is_default_in_group($post_id)) {
 		return false;
 	}
-	$group_id = (int) get_post_meta($post_id, FS_TRANSLATION_GROUP_META, true);
+	$group_id = fs_translation_group($post_id);
 	if ($group_id <= 0) {
 		return false;
 	}
@@ -430,7 +519,7 @@ add_action('enqueue_block_editor_assets', function (): void {
 	}
 
 	if ($post_id > 0) {
-		$group_id = (int) get_post_meta($post_id, FS_TRANSLATION_GROUP_META, true);
+		$group_id = fs_translation_group($post_id);
 		if ($group_id <= 0) {
 			$group_id = $post_id;
 		}
@@ -494,11 +583,21 @@ add_action('enqueue_block_editor_assets', function (): void {
  */
 function fs_language_get_post_language(int $post_id): ?\WP_Term
 {
-	$terms = wp_get_object_terms($post_id, FS_LANGUAGE_TAXONOMY);
-	if (is_wp_error($terms) || empty($terms)) {
-		return null;
+	static $cache = [];
+
+	if (array_key_exists($post_id, $cache)) {
+		return $cache[$post_id];
 	}
-	return $terms[0];
+
+	$terms = wp_get_object_terms($post_id, FS_LANGUAGE_TAXONOMY);
+
+	if (is_wp_error($terms) || empty($terms)) {
+		$cache[$post_id] = null;
+	} else {
+		$cache[$post_id] = $terms[0];
+	}
+
+	return $cache[$post_id];
 }
 
 /**
@@ -514,7 +613,7 @@ function fs_language_get_translation(int $post_id, string $lang_slug): ?int
 	if ($lang_slug === '') {
 		return $post_id;
 	}
-	$group_id = (int) get_post_meta($post_id, FS_TRANSLATION_GROUP_META, true);
+	$group_id = fs_translation_group($post_id);
 	if ($group_id <= 0) {
 		$group_id = $post_id;
 	}
@@ -543,32 +642,16 @@ function fs_language_get_linked_translations(int $post_id, int $group_id): array
 	}
 
 	$post_type = get_post_type($post_id);
-	$out = [];
 
-	$query = new \WP_Query([
-		'post_type'              => $post_type,
-		'post_status'            => 'any',
-		'post__not_in'           => [$post_id],
-		'posts_per_page'         => -1,
-		'fields'                 => 'ids',
-		'fs_translation_lookup'  => true,
-		'meta_query'             => [
-			[
-				'key'     => FS_TRANSLATION_GROUP_META,
-				'value'   => (string) $group_id,
-				'compare' => '=',
-			],
-		],
-	]);
+	$map = fs_translation_group_map($group_id, $post_type);
 
-	foreach ($query->posts as $other_id) {
-		$term = fs_language_get_post_language((int) $other_id);
-		if ($term) {
-			$out[$term->slug] = (int) $other_id;
+	foreach ($map as $slug => $id) {
+		if ($id === $post_id) {
+			unset($map[$slug]);
 		}
 	}
 
-	return $out;
+	return $map;
 }
 
 /**
@@ -945,80 +1028,65 @@ function fs_language_show_page_menu_item(int $page_id): bool
  * - Page linked to default (or default itself): always show; use translation for current language or default-language fallback for URL/title.
  * Backend menu builder uses pre_get_posts and posts_results on the nav-menus screen only.
  */
-add_filter('wp_nav_menu_objects', function (array $items, \stdClass $args): array {
-	if (is_admin()) {
+add_filter('wp_nav_menu_objects', function (array $items, stdClass $args): array {
+
+	if (is_admin() || !fs_theme_feature_enabled('languages')) {
 		return $items;
-	}
-	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
-		return $items;
-	}
-	$queried_id = 0;
-	if (is_singular()) {
-		$queried = get_queried_object();
-		if ($queried && isset($queried->ID)) {
-			$queried_id = (int) $queried->ID;
-		}
 	}
 
+	$current_lang = fs_language_current_request_lang();
+	$default_lang = fs_get_default_language();
+
+	// 1️⃣ collect groups used in menu
+	$groups = [];
+
+	foreach ($items as $item) {
+		if ($item->object !== 'page') {
+			continue;
+		}
+
+		$post_id = (int)$item->object_id;
+		$group = (int)get_post_meta($post_id, FS_TRANSLATION_GROUP_META, true) ?: $post_id;
+
+		$groups[$group] = $post_id;
+	}
+
+	// 2️⃣ preload translation maps
+	$maps = [];
+
+	foreach ($groups as $group => $post_id) {
+		$post_type = get_post_type($post_id);
+		$maps[$group] = fs_translation_group_map($group, $post_type);
+	}
+
+	// 3️⃣ resolve menu items
 	foreach ($items as $key => $item) {
-		if (!isset($item->object, $item->object_id) || $item->object !== 'page') {
+
+		if ($item->object !== 'page') {
 			continue;
 		}
-		$page_id = (int) $item->object_id;
-		// When viewing this page, always show its menu item (avoids hiding when current-language detection falls back to default).
-		if ($queried_id > 0 && $page_id === $queried_id) {
 
-			$front_id = (int) get_option('page_on_front');
+		$page_id = (int)$item->object_id;
+		$group = (int)get_post_meta($page_id, FS_TRANSLATION_GROUP_META, true) ?: $page_id;
 
-			$post_group  = (int) get_post_meta($page_id, FS_TRANSLATION_GROUP_META, true) ?: $page_id;
-			$front_group = (int) get_post_meta($front_id, FS_TRANSLATION_GROUP_META, true) ?: $front_id;
+		$map = $maps[$group] ?? [];
 
-			if ($post_group === $front_group) {
-
-				$lang = get_post_meta($page_id, FS_LANGUAGE_META, true);
-
-				if (!$lang) {
-					$term = fs_language_get_post_language($page_id);
-					$lang = $term ? $term->slug : fs_get_default_language();
-				}
-
-				$item->url = fs_language_home_url($lang);
-			} else {
-
-				$item->url = get_permalink($page_id);
-			}
-
-			$item->title = get_the_title($page_id);
-			continue;
+		// translation exists
+		if (isset($map[$current_lang])) {
+			$show_id = $map[$current_lang];
 		}
-		if (!fs_language_show_page_menu_item($page_id)) {
+		// fallback to default
+		elseif (isset($map[$default_lang])) {
+			$show_id = $map[$default_lang];
+		} else {
 			unset($items[$key]);
 			continue;
 		}
-		$show_id = fs_language_menu_page_for_current_lang($page_id);
 
-		$front_id = (int) get_option('page_on_front');
-
-		$post_group  = (int) get_post_meta($show_id, FS_TRANSLATION_GROUP_META, true) ?: $show_id;
-		$front_group = (int) get_post_meta($front_id, FS_TRANSLATION_GROUP_META, true) ?: $front_id;
-
-		if ($post_group === $front_group) {
-
-			$lang = get_post_meta($show_id, FS_LANGUAGE_META, true);
-
-			if (!$lang) {
-				$term = fs_language_get_post_language($show_id);
-				$lang = $term ? $term->slug : fs_get_default_language();
-			}
-
-			$item->url = fs_language_home_url($lang);
-		} else {
-
-			$item->url = get_permalink($show_id);
-		}
-
+		$item->url   = get_permalink($show_id);
 		$item->title = get_the_title($show_id);
 	}
+
 	return array_values($items);
 }, 10, 2);
 
@@ -1119,7 +1187,7 @@ add_action('save_post', function (int $post_id): void {
 		return;
 	}
 
-	$group = (int) get_post_meta($post_id, FS_TRANSLATION_GROUP_META, true);
+	$group = fs_translation_group($post_id);
 	if ($group <= 0) {
 		update_post_meta($post_id, FS_TRANSLATION_GROUP_META, $post_id);
 	}
@@ -1283,7 +1351,7 @@ add_action('admin_post_fs_create_translation', function (): void {
 		exit;
 	}
 
-	$group_id = (int) get_post_meta($post_id, FS_TRANSLATION_GROUP_META, true);
+	$group_id = fs_translation_group($post_id);
 	if ($group_id <= 0) {
 		$group_id = $post_id;
 	}
@@ -1564,7 +1632,7 @@ function fs_language_permalink(string $url, $post_id, bool $sample): string
 		$prefix_default = function_exists('fs_prefix_default_language') && fs_prefix_default_language();
 	}
 
-	$post_lang = get_post_meta($post_id, FS_LANGUAGE_META, true);
+	$post_lang = fs_post_language_slug($post_id);
 
 	if ($post_lang === '' || $post_lang === false) {
 		$term = fs_language_get_post_language($post_id);
@@ -1689,7 +1757,7 @@ add_action('wp_head', function () {
 		return;
 	}
 
-	$group_id = (int) get_post_meta($post_id, FS_TRANSLATION_GROUP_META, true);
+	$group_id = fs_translation_group($post_id);
 	if ($group_id <= 0) {
 		$group_id = $post_id;
 	}
@@ -1707,7 +1775,7 @@ add_action('wp_head', function () {
 	}
 
 	$front_id = (int) get_option('page_on_front', 0);
-	$post_group = (int) get_post_meta($post_id, FS_TRANSLATION_GROUP_META, true) ?: $post_id;
+	$post_group = fs_translation_group($post_id) ?: $post_id;
 	$front_group = $front_id > 0 ? ((int) get_post_meta($front_id, FS_TRANSLATION_GROUP_META, true) ?: $front_id) : 0;
 	$is_homepage_group = ($front_id > 0 && $post_group === $front_group);
 
