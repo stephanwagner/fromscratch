@@ -53,6 +53,21 @@ function fs_clean_up_styles(): void
 add_action('wp_enqueue_scripts', 'fs_clean_up_styles', 100);
 
 /**
+ * Hide options on WordPress General Settings page.
+ */
+add_action('load-options-general.php', function (): void {
+	add_action('admin_head', function (): void { 
+		echo '<style>';
+		echo '.form-table tr:has(#siteurl),';
+		echo '.form-table tr:has(#home), ';
+		echo '.form-table tr:has(#users_can_register), ';
+		echo '.form-table tr:has(#default_role) ';
+		echo '{ display: none !important; }';
+		echo '</style>';
+	}, 1);
+}, 20);
+
+/**
  * Disable and remove comments everywhere
  */
 add_filter('comments_open', '__return_false');
