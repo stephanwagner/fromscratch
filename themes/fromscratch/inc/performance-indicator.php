@@ -64,16 +64,21 @@ function fs_developer_perf_scale_config(string $metric): array
  */
 function fs_developer_perf_metrics(): array
 {
+	static $snapshot = null;
+	if (is_array($snapshot)) {
+		return $snapshot;
+	}
 	global $wpdb, $wp_actions;
 	$time = function_exists('timer_stop') ? timer_stop(0, 3) : 0;
 	$queries = $wpdb instanceof \wpdb ? (int) $wpdb->num_queries : 0;
-	return [
+	$snapshot = [
 		'time'    => (float) $time,
 		'memory'  => round(memory_get_peak_usage(true) / 1024 / 1024, 2),
 		'queries' => $queries,
 		'hooks'   => is_array($wp_actions) ? count($wp_actions) : 0,
 		'score'   => round((float) $time * $queries, 1),
 	];
+	return $snapshot;
 }
 
 /**
