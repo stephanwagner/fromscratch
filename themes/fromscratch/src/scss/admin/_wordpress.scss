@@ -4,6 +4,12 @@ div#wpwrap {
   -webkit-font-smoothing: antialiased;
 }
 
+#wpadminbar {
+  * {
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
 // Title
 
 h2.title + p.description {
