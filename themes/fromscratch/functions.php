@@ -19,15 +19,17 @@ require_once 'inc/menu.php';
 require_once 'inc/design.php';
 require_once 'inc/redirects.php';
 
-// Admin
+// User rights + theme settings + developer settings (needed on frontend for admin bar performance node)
+require_once 'inc/user-rights.php';
+require_once 'inc/theme-settings.php';
+require_once 'inc/developer-settings.php';
+
+// Admin-only
 if (is_admin()) {
 	// Install wizard (when setup not completed or viewing success page)
 	if (!fs_setup_completed() || isset($_GET['fromscratch_success'])) {
 		require_once 'inc/install.php';
 	}
-	require_once 'inc/user-rights.php';
-	require_once 'inc/theme-settings.php';
-	require_once 'inc/developer-settings.php';
 	require_once 'inc/dashboard.php';
 	require_once 'inc/media-sizes.php';
 }

@@ -32,11 +32,58 @@ function fs_render_developer_general(): void
 		wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'fromscratch'));
 	}
 
+	global $wpdb;
+	$wp_perf_time = function_exists('timer_stop') ? timer_stop(0, 3) : 0;
+	$wp_perf_memory = round(memory_get_peak_usage(true) / 1024 / 1024, 2);
+	$wp_perf_queries = $wpdb instanceof \wpdb ? (int) $wpdb->num_queries : 0;
+	global $wp_actions;
+	$wp_perf_hooks = is_array($wp_actions) ? count($wp_actions) : 0;
+	$wp_perf_score = $wp_perf_time * $wp_perf_queries;
+
+	$scale_html = function ($value, $metric, $unit = '', $aria_name = '') {
+		return function_exists('fs_developer_perf_scale_html')
+			? fs_developer_perf_scale_html((float) $value, $metric, [
+				'compact' => true,
+				'show_min_max' => true,
+				'unit' => $unit,
+				'aria_label_metric' => $aria_name,
+			])
+			: '';
+	};
 ?>
 	<div class="wrap">
 		<h1><?= esc_html(__('Developer settings', 'fromscratch')) ?></h1>
 
 		<?php fs_developer_settings_render_nav(); ?>
+
+		<div class="page-settings-form" style="margin-bottom: 24px;">
+			<h2 class="title"><?= esc_html__('WordPress resources', 'fromscratch') ?></h2>
+			<p class="description"><?= esc_html__('Current request metrics (this page load). Lower is better for time, queries and score.', 'fromscratch') ?></p>
+			<table class="widefat striped fs-perf-table" style="max-width: 720px; margin-top: 8px;">
+				<tbody>
+					<tr>
+						<td style="width: 160px;"><?= esc_html__('Execution time', 'fromscratch') ?></td>
+						<td><strong><?= esc_html((string) $wp_perf_time) ?>s</strong> <?= $scale_html($wp_perf_time, 'time', 's', __('Execution time', 'fromscratch')) ?></td>
+					</tr>
+					<tr>
+						<td><?= esc_html__('Peak memory', 'fromscratch') ?></td>
+						<td><strong><?= esc_html((string) $wp_perf_memory) ?> MB</strong> <?= $scale_html($wp_perf_memory, 'memory', ' MB', __('Peak memory', 'fromscratch')) ?></td>
+					</tr>
+					<tr>
+						<td><?= esc_html__('DB queries', 'fromscratch') ?></td>
+						<td><strong><?= esc_html((string) $wp_perf_queries) ?></strong> <?= $scale_html($wp_perf_queries, 'queries', '', __('DB queries', 'fromscratch')) ?></td>
+					</tr>
+					<tr>
+						<td><?= esc_html__('Hooks fired', 'fromscratch') ?></td>
+						<td><strong><?= esc_html((string) $wp_perf_hooks) ?></strong> <?= $scale_html($wp_perf_hooks, 'hooks', '', __('Hooks fired', 'fromscratch')) ?></td>
+					</tr>
+					<tr>
+						<td><?= esc_html__('Score (time × queries)', 'fromscratch') ?></td>
+						<td><strong><?= esc_html(round($wp_perf_score, 1)) ?></strong> <?= $scale_html($wp_perf_score, 'score', '', __('Score', 'fromscratch')) ?></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
 
 		<div class="page-settings-form">
 			<h2 class="title"><?= esc_html__('Cheat sheet', 'fromscratch') ?></h2>
