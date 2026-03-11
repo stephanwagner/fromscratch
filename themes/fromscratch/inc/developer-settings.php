@@ -289,32 +289,17 @@ function fs_developer_perf_scale_html(float $value, $metric_or_config, array $op
 	}
 
 	$compact = !empty($opts['compact']);
-	$show_min_max = isset($opts['show_min_max']) ? (bool) $opts['show_min_max'] : true;
 	$unit = isset($opts['unit']) ? (string) $opts['unit'] : '';
 	$aria_metric = isset($opts['aria_label_metric']) ? (string) $opts['aria_label_metric'] : '';
-
-	$min_label = '0';
-	$max_label = (string) $max;
-	if ($unit === 's') {
-		$max_label .= 's';
-	} elseif ($unit === ' MB') {
-		$max_label .= ' MB';
-	}
 
 	$aria = $aria_metric
 		? sprintf(/* translators: 1: metric name, 2: value, 3: band label */__('%1$s %2$s: %3$s', 'fromscratch'), $aria_metric, $value . $unit, $label)
 		: '';
 
 	$bar_style = "--fs-perf-pct: {$pct}; --fs-perf-s1: {$stops[0]}; --fs-perf-s2: {$stops[1]}; --fs-perf-s3: {$stops[2]}; --fs-perf-s4: {$stops[3]};";
-	$out = '<span class="fs-perf-scale' . ($compact ? ' fs-perf-scale--compact' : '') . '" style="' . esc_attr($bar_style) . '"' . ($aria ? ' role="img" aria-label="' . esc_attr($aria) . '"' : '') . '>';
+	$out = '<span class="fs-perf-scale' . ($compact ? ' -compact' : '') . '" style="' . esc_attr($bar_style) . '"' . ($aria ? ' role="img" aria-label="' . esc_attr($aria) . '"' : '') . '>';
 	$out .= '<span class="fs-perf-scale__inner">';
-	if ($show_min_max) {
-		$out .= '<span class="fs-perf-scale__min" aria-hidden="true">' . esc_html($min_label) . '</span>';
-	}
 	$out .= '<span class="fs-perf-scale__bar-wrap" aria-hidden="true"><span class="fs-perf-scale__bar"></span><span class="fs-perf-scale__indicator"></span></span>';
-	if ($show_min_max) {
-		$out .= '<span class="fs-perf-scale__max" aria-hidden="true">' . esc_html($max_label) . '</span>';
-	}
 	$out .= ' <span class="fs-perf-scale__label">' . esc_html($label) . '</span>';
 	$out .= '</span></span>';
 	return $out;
@@ -331,9 +316,44 @@ add_filter('show_admin_bar', function ($show): bool {
 });
 
 /**
- * Show performance metrics in the admin bar for developer users (backend and frontend). Summary in the bar; click to expand details.
+ * Whether the performance block is shown in the admin bar. Default on.
+ */
+function fs_developer_perf_show_in_admin_bar(): bool {
+	return get_option('fromscratch_perf_admin_bar', '1') === '1';
+}
+
+/**
+ * Enqueue inline CSS for the performance scale inside the admin bar (frontend and backend).
+ */
+add_action('wp_enqueue_scripts', function (): void {
+	if (!fs_developer_perf_show_in_admin_bar()) {
+		return;
+	}
+	if (!is_user_logged_in() || !function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
+		return;
+	}
+	if (!is_admin_bar_showing()) {
+		return;
+	}
+	$css = '
+		#wpadminbar .fs-perf-scale { --fs-perf-s1: 8%; --fs-perf-s2: 20%; --fs-perf-s3: 40%; --fs-perf-s4: 80%; display: inline-block; margin-left: 8px; vertical-align: middle; }
+		#wpadminbar .fs-perf-scale__inner { display: inline-flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+		#wpadminbar .fs-perf-scale__min, #wpadminbar .fs-perf-scale__max { font-size: 11px; color: #72aee6; white-space: nowrap; }
+		#wpadminbar .fs-perf-scale__bar-wrap { position: relative; display: inline-block; width: 72px; height: 12px; }
+		#wpadminbar .fs-perf-scale__bar { position: absolute; inset: 0; height: 8px; top: 2px; border-radius: 4px; background: linear-gradient(to right, #22c55e 0%, #22c55e var(--fs-perf-s1), #84cc16 var(--fs-perf-s1), #84cc16 var(--fs-perf-s2), #f97316 var(--fs-perf-s2), #f97316 var(--fs-perf-s3), #ef4444 var(--fs-perf-s3), #ef4444 var(--fs-perf-s4), #b91c1c var(--fs-perf-s4), #b91c1c 100%); }
+		#wpadminbar .fs-perf-scale__indicator { position: absolute; top: 0; left: calc(var(--fs-perf-pct, 0) * 1%); transform: translateX(-50%); width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 6px solid #fff; pointer-events: none; }
+		#wpadminbar .fs-perf-scale__label { font-weight: 600; font-size: 12px; white-space: nowrap; }
+	';
+	wp_add_inline_style('admin-bar', $css);
+}, 20);
+
+/**
+ * Show performance metrics in the admin bar for developer users (backend and frontend). Summary in the bar; click to expand details with scale per metric.
  */
 add_action('admin_bar_menu', function ($admin_bar): void {
+	if (!fs_developer_perf_show_in_admin_bar()) {
+		return;
+	}
 	if (!$admin_bar instanceof \WP_Admin_Bar || !is_user_logged_in()) {
 		return;
 	}
@@ -347,6 +367,12 @@ add_action('admin_bar_menu', function ($admin_bar): void {
 	$hooks = is_array($wp_actions) ? count($wp_actions) : 0;
 	$score = round((float) $time * $queries, 1);
 
+	$scale = function ($value, $metric, $unit = '', $aria = '') {
+		return function_exists('fs_developer_perf_scale_html')
+			? fs_developer_perf_scale_html((float) $value, $metric, ['compact' => true, 'show_min_max' => true, 'unit' => $unit, 'aria_label_metric' => $aria])
+			: '';
+	};
+
 	$perf_icon = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m471-197 166-324q5-10-1-19.5t-17-9.5H512v-209q0-8-7.5-9.5T493-763L327-439q-5 10 1 19.5t17 9.5h107v209q0 8 7.5 9.5T471-197Zm9 117q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/></svg>';
 	$admin_bar->add_node([
 		'id'    => 'fs_wp_perf',
@@ -357,28 +383,27 @@ add_action('admin_bar_menu', function ($admin_bar): void {
 	$admin_bar->add_node([
 		'parent' => 'fs_wp_perf',
 		'id'     => 'fs_wp_perf_time',
-		'title'  => __('Execution time', 'fromscratch') . ': ' . esc_html((string) $time) . 's',
+		'title'  => __('Execution time', 'fromscratch') . ': ' . esc_html((string) $time) . 's ' . $scale($time, 'time', 's', __('Execution time', 'fromscratch')),
 	]);
 	$admin_bar->add_node([
 		'parent' => 'fs_wp_perf',
 		'id'     => 'fs_wp_perf_memory',
-		'title'  => __('Peak memory', 'fromscratch') . ': ' . esc_html((string) $memory) . ' MB',
+		'title'  => __('Peak memory', 'fromscratch') . ': ' . esc_html((string) $memory) . ' MB ' . $scale($memory, 'memory', ' MB', __('Peak memory', 'fromscratch')),
 	]);
 	$admin_bar->add_node([
 		'parent' => 'fs_wp_perf',
 		'id'     => 'fs_wp_perf_queries',
-		'title'  => __('DB queries', 'fromscratch') . ': ' . esc_html((string) $queries),
+		'title'  => __('DB queries', 'fromscratch') . ': ' . esc_html((string) $queries) . ' ' . $scale($queries, 'queries', '', __('DB queries', 'fromscratch')),
 	]);
 	$admin_bar->add_node([
 		'parent' => 'fs_wp_perf',
 		'id'     => 'fs_wp_perf_hooks',
-		'title'  => __('Hooks fired', 'fromscratch') . ': ' . esc_html((string) $hooks),
+		'title'  => __('Hooks fired', 'fromscratch') . ': ' . esc_html((string) $hooks) . ' ' . $scale($hooks, 'hooks', '', __('Hooks fired', 'fromscratch')),
 	]);
-	$score_band_label = function_exists('fs_developer_perf_band') ? fs_developer_perf_band((float) $score, fs_developer_perf_scale_config('score')['boundaries']) : '';
 	$admin_bar->add_node([
 		'parent' => 'fs_wp_perf',
 		'id'     => 'fs_wp_perf_score',
-		'title'  => __('Score (time × queries)', 'fromscratch') . ': ' . esc_html((string) $score) . ($score_band_label ? ' (' . esc_html($score_band_label) . ')' : ''),
+		'title'  => __('Score', 'fromscratch') . ': ' . esc_html((string) $score) . ' ' . $scale($score, 'score', '', __('Score', 'fromscratch')),
 		'meta'   => ['title' => __('Lower is better.', 'fromscratch')],
 	]);
 }, 999);

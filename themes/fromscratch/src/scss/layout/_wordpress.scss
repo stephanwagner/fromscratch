@@ -2,10 +2,14 @@
 
 @mixin wordpress {
   // Admin bar
-  
+
   body:not(.wp-admin) #wpadminbar {
     top: 0 !important;
     position: fixed !important;
+
+    * {
+      -webkit-font-smoothing: antialiased;
+    }
   }
 
   // Wordpress colors

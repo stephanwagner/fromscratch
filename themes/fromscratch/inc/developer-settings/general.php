@@ -25,11 +25,30 @@ add_action('admin_menu', function () use ($fs_developer_tab, $fs_developer_page_
 	);
 }, 20);
 
+// Save admin bar performance toggle on load (before any output) so redirect works.
+add_action(fs_developer_settings_load_hook($fs_developer_page_slug), function (): void {
+	if (!current_user_can('manage_options')) {
+		return;
+	}
+	if (empty($_POST['fromscratch_save_perf_admin_bar']) || empty($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_perf_admin_bar')) {
+		return;
+	}
+	$on = isset($_POST['fromscratch_perf_admin_bar']) && $_POST['fromscratch_perf_admin_bar'] === '1';
+	update_option('fromscratch_perf_admin_bar', $on ? '1' : '0');
+	set_transient('fromscratch_perf_admin_bar_saved', '1', 30);
+	wp_safe_redirect(add_query_arg('page', 'fs-developer', admin_url('options-general.php')));
+	exit;
+});
 
 function fs_render_developer_general(): void
 {
 	if (!current_user_can('manage_options')) {
 		wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'fromscratch'));
+	}
+
+	$perf_admin_bar_saved = get_transient('fromscratch_perf_admin_bar_saved');
+	if ($perf_admin_bar_saved) {
+		delete_transient('fromscratch_perf_admin_bar_saved');
 	}
 
 	global $wpdb;
@@ -56,33 +75,52 @@ function fs_render_developer_general(): void
 
 		<?php fs_developer_settings_render_nav(); ?>
 
+		<?php if ($perf_admin_bar_saved) : ?>
+			<div class="notice notice-success is-dismissible"><p><?= esc_html__('Settings saved.', 'fromscratch') ?></p></div>
+		<?php endif; ?>
+
 		<div class="page-settings-form" style="margin-bottom: 24px;">
 			<h2 class="title"><?= esc_html__('WordPress resources', 'fromscratch') ?></h2>
-			<p class="description"><?= esc_html__('Current request metrics (this page load). Lower is better for time, queries and score.', 'fromscratch') ?></p>
-			<table class="widefat striped fs-perf-table" style="max-width: 720px; margin-top: 8px;">
+			<p class="description"><?= esc_html__('Current request metrics (this page load).', 'fromscratch') ?></p>
+			<table class="widefat striped fs-perf-table" style="width: auto; margin: 16px 0 12px;">
 				<tbody>
 					<tr>
-						<td style="width: 160px;"><?= esc_html__('Execution time', 'fromscratch') ?></td>
-						<td><strong><?= esc_html((string) $wp_perf_time) ?>s</strong> <?= $scale_html($wp_perf_time, 'time', 's', __('Execution time', 'fromscratch')) ?></td>
+						<td><?= esc_html__('Execution time', 'fromscratch') ?></td>
+						<td><strong><?= esc_html((string) $wp_perf_time) ?>s</strong></td>
+						<td><?= $scale_html($wp_perf_time, 'time', 's', __('Execution time', 'fromscratch')) ?></td>
 					</tr>
 					<tr>
 						<td><?= esc_html__('Peak memory', 'fromscratch') ?></td>
-						<td><strong><?= esc_html((string) $wp_perf_memory) ?> MB</strong> <?= $scale_html($wp_perf_memory, 'memory', ' MB', __('Peak memory', 'fromscratch')) ?></td>
+						<td><strong><?= esc_html((string) $wp_perf_memory) ?> MB</strong></td>
+						<td><?= $scale_html($wp_perf_memory, 'memory', ' MB', __('Peak memory', 'fromscratch')) ?></td>
 					</tr>
 					<tr>
 						<td><?= esc_html__('DB queries', 'fromscratch') ?></td>
-						<td><strong><?= esc_html((string) $wp_perf_queries) ?></strong> <?= $scale_html($wp_perf_queries, 'queries', '', __('DB queries', 'fromscratch')) ?></td>
+						<td><strong><?= esc_html((string) $wp_perf_queries) ?></strong></td>
+						<td><?= $scale_html($wp_perf_queries, 'queries', '', __('DB queries', 'fromscratch')) ?></td>
 					</tr>
 					<tr>
 						<td><?= esc_html__('Hooks fired', 'fromscratch') ?></td>
-						<td><strong><?= esc_html((string) $wp_perf_hooks) ?></strong> <?= $scale_html($wp_perf_hooks, 'hooks', '', __('Hooks fired', 'fromscratch')) ?></td>
+						<td><strong><?= esc_html((string) $wp_perf_hooks) ?></strong></td>
+						<td><?= $scale_html($wp_perf_hooks, 'hooks', '', __('Hooks fired', 'fromscratch')) ?></td>
 					</tr>
 					<tr>
 						<td><?= esc_html__('Score (time × queries)', 'fromscratch') ?></td>
-						<td><strong><?= esc_html(round($wp_perf_score, 1)) ?></strong> <?= $scale_html($wp_perf_score, 'score', '', __('Score', 'fromscratch')) ?></td>
+						<td><strong><?= esc_html(round($wp_perf_score, 1)) ?></strong></td>
+						<td><?= $scale_html($wp_perf_score, 'score', '', __('Score', 'fromscratch')) ?></td>
 					</tr>
 				</tbody>
 			</table>
+			<form method="post" action="" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+				<?php wp_nonce_field('fromscratch_perf_admin_bar'); ?>
+				<input type="hidden" name="fromscratch_save_perf_admin_bar" value="1">
+				<label>
+					<input type="hidden" name="fromscratch_perf_admin_bar" value="0">
+					<input type="checkbox" name="fromscratch_perf_admin_bar" value="1" <?= checked(get_option('fromscratch_perf_admin_bar', '1'), '1', false) ?>>
+					<?= esc_html__('Show performance in admin bar', 'fromscratch') ?>
+				</label>
+				<button type="submit" class="button button-small" style="margin-left: 8px;"><?= esc_html__('Save', 'fromscratch') ?></button>
+			</form>
 		</div>
 
 		<div class="page-settings-form">
