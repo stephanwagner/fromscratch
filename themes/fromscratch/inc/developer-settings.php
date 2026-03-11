@@ -322,29 +322,34 @@ function fs_developer_perf_show_in_admin_bar(): bool {
 	return get_option('fromscratch_perf_admin_bar', '1') === '1';
 }
 
+/** Inline CSS for the performance scale inside #wpadminbar (frontend and admin). !important so wp-admin.css cannot override. */
+function fs_developer_perf_admin_bar_inline_css(): string {
+	return '
+		#wpadminbar .fs-perf-scale { --fs-perf-s1: 8%; --fs-perf-s2: 20%; --fs-perf-s3: 40%; --fs-perf-s4: 80%; display: inline-block !important; margin-left: 8px; vertical-align: middle !important; line-height: 1 !important; }
+		#wpadminbar .fs-perf-scale__inner { display: inline-flex !important; align-items: center; gap: 6px; flex-wrap: nowrap; }
+		#wpadminbar .fs-perf-scale__min, #wpadminbar .fs-perf-scale__max { font-size: 11px !important; color: #72aee6 !important; white-space: nowrap; line-height: 1 !important; }
+		#wpadminbar .fs-perf-scale__bar-wrap { position: relative; display: inline-block !important; width: 72px !important; height: 12px !important; }
+		#wpadminbar .fs-perf-scale__bar { position: absolute; inset: 0; height: 8px !important; top: 2px; border-radius: 4px; background: linear-gradient(to right, #22c55e 0%, #22c55e var(--fs-perf-s1), #84cc16 var(--fs-perf-s1), #84cc16 var(--fs-perf-s2), #f97316 var(--fs-perf-s2), #f97316 var(--fs-perf-s3), #ef4444 var(--fs-perf-s3), #ef4444 var(--fs-perf-s4), #b91c1c var(--fs-perf-s4), #b91c1c 100%) !important; }
+		#wpadminbar .fs-perf-scale__indicator { position: absolute; top: 0; left: calc(var(--fs-perf-pct, 0) * 1%); transform: translateX(-50%); width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 6px solid #fff !important; pointer-events: none; }
+		#wpadminbar .fs-perf-scale__label { font-weight: 600 !important; font-size: 12px !important; white-space: nowrap; line-height: 1 !important; color: inherit; }
+	';
+}
+
 /**
- * Enqueue inline CSS for the performance scale inside the admin bar (frontend and backend).
+ * Enqueue inline CSS for the performance scale in the admin bar. Frontend uses wp_enqueue_scripts; admin uses admin_enqueue_scripts.
  */
 add_action('wp_enqueue_scripts', function (): void {
-	if (!fs_developer_perf_show_in_admin_bar()) {
+	if (!fs_developer_perf_show_in_admin_bar() || !is_user_logged_in() || !function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id()) || !is_admin_bar_showing()) {
 		return;
 	}
-	if (!is_user_logged_in() || !function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
+	wp_add_inline_style('admin-bar', fs_developer_perf_admin_bar_inline_css());
+}, 20);
+
+add_action('admin_enqueue_scripts', function (): void {
+	if (!fs_developer_perf_show_in_admin_bar() || !function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
 		return;
 	}
-	if (!is_admin_bar_showing()) {
-		return;
-	}
-	$css = '
-		#wpadminbar .fs-perf-scale { --fs-perf-s1: 8%; --fs-perf-s2: 20%; --fs-perf-s3: 40%; --fs-perf-s4: 80%; display: inline-block; margin-left: 8px; vertical-align: middle; }
-		#wpadminbar .fs-perf-scale__inner { display: inline-flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
-		#wpadminbar .fs-perf-scale__min, #wpadminbar .fs-perf-scale__max { font-size: 11px; color: #72aee6; white-space: nowrap; }
-		#wpadminbar .fs-perf-scale__bar-wrap { position: relative; display: inline-block; width: 72px; height: 12px; }
-		#wpadminbar .fs-perf-scale__bar { position: absolute; inset: 0; height: 8px; top: 2px; border-radius: 4px; background: linear-gradient(to right, #22c55e 0%, #22c55e var(--fs-perf-s1), #84cc16 var(--fs-perf-s1), #84cc16 var(--fs-perf-s2), #f97316 var(--fs-perf-s2), #f97316 var(--fs-perf-s3), #ef4444 var(--fs-perf-s3), #ef4444 var(--fs-perf-s4), #b91c1c var(--fs-perf-s4), #b91c1c 100%); }
-		#wpadminbar .fs-perf-scale__indicator { position: absolute; top: 0; left: calc(var(--fs-perf-pct, 0) * 1%); transform: translateX(-50%); width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 6px solid #fff; pointer-events: none; }
-		#wpadminbar .fs-perf-scale__label { font-weight: 600; font-size: 12px; white-space: nowrap; }
-	';
-	wp_add_inline_style('admin-bar', $css);
+	wp_add_inline_style('admin-bar', fs_developer_perf_admin_bar_inline_css());
 }, 20);
 
 /**
