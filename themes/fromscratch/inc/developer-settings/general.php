@@ -50,6 +50,27 @@ add_action(fs_developer_settings_load_hook($fs_developer_page_slug), function ()
 		wp_safe_redirect(add_query_arg('page', 'fs-developer', admin_url('options-general.php')));
 		exit;
 	}
+	// Enable/disable expensive query logging; install or uninstall db.php when toggled.
+	if (!empty($_POST['fromscratch_save_perf_slow_queries']) && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_perf_slow_queries')) {
+		$on = isset($_POST['fromscratch_perf_slow_queries_enabled']) && $_POST['fromscratch_perf_slow_queries_enabled'] === '1';
+		update_option('fromscratch_perf_slow_queries_enabled', $on ? '1' : '0');
+		if (isset($_POST['fromscratch_perf_slow_queries_threshold']) && function_exists('fs_developer_perf_slow_queries_threshold_option')) {
+			$thresh = max(0.0, (float) sanitize_text_field(wp_unslash($_POST['fromscratch_perf_slow_queries_threshold'])));
+			update_option(fs_developer_perf_slow_queries_threshold_option(), (string) $thresh);
+		}
+		if ($on && function_exists('fs_developer_perf_slow_queries_install_db_dropin')) {
+			$installed = fs_developer_perf_slow_queries_install_db_dropin();
+			set_transient('fromscratch_perf_slow_queries_install_result', $installed ? '1' : '0', 30);
+		} else {
+			if (function_exists('fs_developer_perf_slow_queries_uninstall_db_dropin')) {
+				fs_developer_perf_slow_queries_uninstall_db_dropin();
+			}
+			delete_transient('fromscratch_perf_slow_queries_install_result');
+		}
+		set_transient('fromscratch_perf_admin_bar_saved', '1', 30);
+		wp_safe_redirect(add_query_arg('page', 'fs-developer', admin_url('options-general.php')));
+		exit;
+	}
 });
 
 function fs_render_developer_general(): void
@@ -163,6 +184,50 @@ function fs_render_developer_general(): void
 				</table>
 				<p><button type="submit" class="button button-primary"><?= esc_html__('Save', 'fromscratch') ?></button></p>
 			</form>
+
+			<h3 class="title" style="margin-top: 24px;"><?= esc_html__('Expensive query log', 'fromscratch') ?></h3>
+			<?php
+			$slow_queries_enabled = function_exists('fs_developer_perf_slow_queries_enabled') && fs_developer_perf_slow_queries_enabled();
+			$show_slow_list = isset($_GET['fs_slow_queries']) && $_GET['fs_slow_queries'] === '1';
+			$slow_data = function_exists('fs_developer_perf_slow_queries_get') ? fs_developer_perf_slow_queries_get() : null;
+			$install_result = get_transient('fromscratch_perf_slow_queries_install_result');
+			if ($install_result !== false) {
+				delete_transient('fromscratch_perf_slow_queries_install_result');
+			}
+			?>
+			<?php
+			$slow_threshold = function_exists('fs_developer_perf_slow_queries_threshold') ? fs_developer_perf_slow_queries_threshold() : 0.05;
+			?>
+			<form method="post" action="" style="margin-top: 8px;">
+				<?php wp_nonce_field('fromscratch_perf_slow_queries'); ?>
+				<input type="hidden" name="fromscratch_save_perf_slow_queries" value="1">
+				<p style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+					<label>
+						<input type="hidden" name="fromscratch_perf_slow_queries_enabled" value="0">
+						<input type="checkbox" name="fromscratch_perf_slow_queries_enabled" value="1" <?= checked($slow_queries_enabled, true, false) ?>>
+						<?= esc_html__('Enable expensive query logging', 'fromscratch') ?>
+					</label>
+					<button type="submit" class="button button-small" style="margin-left: 8px;"><?= esc_html__('Save', 'fromscratch') ?></button>
+				</p>
+				<p style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+					<label for="fromscratch_perf_slow_queries_threshold"><?= esc_html__('Threshold (seconds)', 'fromscratch') ?></label>
+					<input type="number" name="fromscratch_perf_slow_queries_threshold" id="fromscratch_perf_slow_queries_threshold" value="<?= esc_attr((string) $slow_threshold) ?>" step="any" min="0" style="width: 120px;">
+					<span class="description"><?= esc_html__('Queries slower than this are recorded. Use e.g. 0.00001 to log almost all.', 'fromscratch') ?></span>
+				</p>
+			</form>
+			<p class="description" style="margin-top: 4px;"><?= esc_html__('When enabled, queries above the threshold are recorded for requests where you are logged in as a developer or your IP is in the performance panel allowlist. No impact when disabled.', 'fromscratch') ?></p>
+			<?php if ($install_result === '0') : ?>
+				<p class="description" style="margin-top: 8px; color: #d63638;"><?= esc_html__('Recorder could not be installed (wp-content may not be writable). Create wp-content/db.php manually or fix permissions.', 'fromscratch') ?></p>
+			<?php endif; ?>
+			<?php if ($slow_queries_enabled) : ?>
+				<p class="description" style="margin-top: 12px;"><?= esc_html__('Queries are recorded on each page load; view the list below.', 'fromscratch') ?></p>
+				<?php if ($slow_data !== null) : ?>
+					<p style="margin-top: 8px;"><a href="<?= esc_url(add_query_arg('fs_slow_queries', '1', admin_url('options-general.php?page=fs-developer'))) ?>" class="button button-secondary"><?= esc_html__('View last recorded slow queries', 'fromscratch') ?></a></p>
+				<?php endif; ?>
+			<?php endif; ?>
+			<?php if ($show_slow_list && $slow_data !== null && function_exists('fs_developer_perf_slow_queries_render_list')) : ?>
+				<?= fs_developer_perf_slow_queries_render_list($slow_data) ?>
+			<?php endif; ?>
 		</div>
 
 		<div class="page-settings-form">
