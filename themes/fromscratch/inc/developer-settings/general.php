@@ -101,7 +101,7 @@ function fs_render_developer_general(): void
 
 		<?php fs_developer_settings_render_nav(); ?>
 
-		<?php if ($perf_admin_bar_saved) : ?>
+		<?php /* if ($perf_admin_bar_saved) : ?>
 			<div class="notice notice-success is-dismissible"><p><?= esc_html__('Settings saved.', 'fromscratch') ?></p></div>
 		<?php endif; ?>
 
@@ -229,6 +229,8 @@ function fs_render_developer_general(): void
 				<?= fs_developer_perf_slow_queries_render_list($slow_data) ?>
 			<?php endif; ?>
 		</div>
+		*/
+		?>
 
 		<div class="page-settings-form">
 			<h2 class="title"><?= esc_html__('Cheat sheet', 'fromscratch') ?></h2>
