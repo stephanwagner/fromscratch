@@ -109,6 +109,27 @@ function fs_admin_styles(string $hook_suffix): void
 add_action('admin_enqueue_scripts', 'fs_admin_styles');
 
 /**
+ * Enqueue admin-bar styles used in backend and frontend when the bar is visible.
+ */
+function fs_admin_bar_styles(): void
+{
+	if (!is_admin_bar_showing()) {
+		return;
+	}
+
+	$min = fs_is_debug() ? '' : '.min';
+	$file = '/assets/css/admin-bar' . $min . '.css';
+	wp_enqueue_style(
+		'fromscratch-admin-bar-styles',
+		get_template_directory_uri() . $file,
+		['admin-bar'],
+		fs_asset_hash($file)
+	);
+}
+add_action('wp_enqueue_scripts', 'fs_admin_bar_styles', 20);
+add_action('admin_enqueue_scripts', 'fs_admin_bar_styles', 20);
+
+/**
  * Enqueue front-end scripts (main.js).
  *
  * @return void

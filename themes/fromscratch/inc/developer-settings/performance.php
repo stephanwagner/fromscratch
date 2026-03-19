@@ -46,7 +46,6 @@ function fs_developer_perf_scale_defaults(): array
 		'memory'  => ['boundaries' => [32, 64, 128, 256, 256 + 32]],
 		'queries' => ['boundaries' => [30, 60, 100, 150, 150 + 30]],
 		'hooks'   => ['boundaries' => [120, 200, 350, 600, 600 + 120]],
-		'score'   => ['boundaries' => [20, 50, 100, 200, 200 + 20]],
 	];
 }
 
@@ -135,7 +134,7 @@ function fs_developer_perf_xdebug_enabled(): bool
 /**
  * Current request performance metrics. Use in Developer → General, admin bar, and pinned panel.
  *
- * @return array{time: float, memory: float, queries: int, hooks: int, score: float}
+ * @return array{time: float, memory: float, queries: int, hooks: int}
  */
 function fs_developer_perf_metrics(): array
 {
@@ -157,9 +156,29 @@ function fs_developer_perf_metrics(): array
 		'memory'  => round(memory_get_peak_usage(true) / 1024 / 1024, 2),
 		'queries' => $queries,
 		'hooks'   => is_array($wp_actions) ? count($wp_actions) : 0,
-		'score'   => round((float) $time * $queries, 1),
 	];
 	return $snapshot;
+}
+
+/**
+ * Format execution time for display. Shows ms for values < 1s.
+ *
+ * @return array{value: string, unit: string}
+ */
+function fs_developer_perf_format_time(float $seconds): array
+{
+	if ($seconds > 0 && $seconds < 1) {
+		$ms = (int) round($seconds * 1000);
+		return [
+			'value' => (string) $ms,
+			'unit'  => ' ms',
+		];
+	}
+
+	return [
+		'value' => (string) $seconds,
+		'unit'  => ' s',
+	];
 }
 
 /**
@@ -218,7 +237,7 @@ function fs_developer_perf_scale_html(float $value, $metric_or_config, array $op
 	}
 
 	$aria = $aria_metric
-		? sprintf(/* translators: 1: metric name, 2: value, 3: band label */ __('%1$s %2$s: %3$s', 'fromscratch'), $aria_metric, $value . $unit, $label)
+		? sprintf(/* translators: 1: metric name, 2: value, 3: band label */__('%1$s %2$s: %3$s', 'fromscratch'), $aria_metric, $value . $unit, $label)
 		: '';
 
 	$bar_style = "--fs-perf-pct: {$pct}; --fs-perf-s1: {$stops[0]}; --fs-perf-s2: {$stops[1]}; --fs-perf-s3: {$stops[2]}; --fs-perf-s4: {$stops[3]};";
@@ -338,7 +357,7 @@ add_action('admin_bar_menu', function ($admin_bar): void {
 	$admin_bar->add_node([
 		'id'    => 'fs_wp_perf',
 		'title' => $perf_icon,
-		'href'  => admin_url('options-general.php?page=fs-developer'),
+		'href'  => admin_url('options-general.php?page=fs-developer-system'),
 		'meta'  => ['title' => __('WordPress resources (Developer settings)', 'fromscratch')],
 	]);
 	$admin_bar->add_node([
@@ -351,7 +370,10 @@ add_action('admin_bar_menu', function ($admin_bar): void {
 	$admin_bar->add_node([
 		'parent' => 'fs_wp_perf',
 		'id'     => 'fs_wp_perf_time',
-		'title'  => __('Execution time', 'fromscratch') . ': ' . esc_html((string) $perf['time']) . 's ' . $scale($perf['time'], 'time', 's', __('Execution time', 'fromscratch')),
+		'title'  => (function () use ($perf, $scale): string {
+			$t = fs_developer_perf_format_time((float) $perf['time']);
+			return __('Execution time', 'fromscratch') . ': ' . esc_html($t['value']) . esc_html($t['unit']) . ' ' . $scale($perf['time'], 'time', 's', __('Execution time', 'fromscratch'));
+		})(),
 	]);
 	$admin_bar->add_node([
 		'parent' => 'fs_wp_perf',
@@ -367,12 +389,6 @@ add_action('admin_bar_menu', function ($admin_bar): void {
 		'parent' => 'fs_wp_perf',
 		'id'     => 'fs_wp_perf_hooks',
 		'title'  => __('Hooks fired', 'fromscratch') . ': ' . esc_html((string) $perf['hooks']) . ' ' . $scale($perf['hooks'], 'hooks', '', __('Hooks fired', 'fromscratch')),
-	]);
-	$admin_bar->add_node([
-		'parent' => 'fs_wp_perf',
-		'id'     => 'fs_wp_perf_score',
-		'title'  => __('Score', 'fromscratch') . ': ' . esc_html((string) $perf['score']) . ' ' . $scale($perf['score'], 'score', '', __('Score', 'fromscratch')),
-		'meta'   => ['title' => __('Lower is better.', 'fromscratch')],
 	]);
 }, 999);
 
@@ -414,7 +430,6 @@ function fs_developer_perf_pinned_panel_render(): void
 		'memory'  => fs_developer_perf_scale_config('memory'),
 		'queries' => fs_developer_perf_scale_config('queries'),
 		'hooks'   => fs_developer_perf_scale_config('hooks'),
-		'score'   => fs_developer_perf_scale_config('score'),
 		'labels'  => fs_developer_perf_band_labels(),
 		'i18n'    => [
 			'pages_one'       => __('1 page', 'fromscratch'),
@@ -426,14 +441,17 @@ function fs_developer_perf_pinned_panel_render(): void
 			'peak_memory'     => __('Peak memory', 'fromscratch'),
 			'db_queries'      => __('DB queries', 'fromscratch'),
 			'hooks_fired'     => __('Hooks fired', 'fromscratch'),
-			'score'           => __('Score', 'fromscratch'),
 		],
 	];
-	$perf_data_attr = ' data-perf-time="' . esc_attr((string) $perf['time']) . '" data-perf-memory="' . esc_attr((string) $perf['memory']) . '" data-perf-queries="' . esc_attr((string) $perf['queries']) . '" data-perf-hooks="' . esc_attr((string) $perf['hooks']) . '" data-perf-score="' . esc_attr((string) $perf['score']) . '"';
-	?>
-	<div id="fs-perf-pinned-panel" class="fs-perf-pinned-panel" style="display: none; position: fixed; bottom: 12px; left: 12px; z-index: 999999; max-width: 320px; background: #fff; border: 1px solid #c3c4c7; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.15); font-size: 12px; line-height: 1.4;"<?= $guest_attr ?><?= $perf_data_attr ?>>
-		<script type="application/json" id="fs-perf-scale-config"><?= wp_json_encode($scale_config) ?></script>
-		<style><?= $panel_css ?></style>
+	$perf_data_attr = ' data-perf-time="' . esc_attr((string) $perf['time']) . '" data-perf-memory="' . esc_attr((string) $perf['memory']) . '" data-perf-queries="' . esc_attr((string) $perf['queries']) . '" data-perf-hooks="' . esc_attr((string) $perf['hooks']) . '"';
+?>
+	<div id="fs-perf-pinned-panel" class="fs-perf-pinned-panel" style="display: none; position: fixed; bottom: 12px; left: 12px; z-index: 999999; max-width: 320px; background: #fff; border: 1px solid #c3c4c7; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.15); font-size: 12px; line-height: 1.4;" <?= $guest_attr ?><?= $perf_data_attr ?>>
+		<script type="application/json" id="fs-perf-scale-config">
+			<?= wp_json_encode($scale_config) ?>
+		</script>
+		<style>
+			<?= $panel_css ?>
+		</style>
 		<div class="fs-perf-pinned-panel__content">
 			<div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; border-bottom: 1px solid #c3c4c7; background: #f0f0f1;">
 				<strong><?= esc_html__('Performance', 'fromscratch') ?></strong>
@@ -444,11 +462,11 @@ function fs_developer_perf_pinned_panel_render(): void
 				<?php endif; ?>
 			</div>
 			<div style="padding: 8px 10px;">
-				<div style="margin-bottom: 4px;"><?= esc_html__('Execution time', 'fromscratch') ?>: <strong><?= esc_html((string) $perf['time']) ?>s</strong> <?= $scale($perf['time'], 'time', 's') ?></div>
+				<?php $t = fs_developer_perf_format_time((float) $perf['time']); ?>
+				<div style="margin-bottom: 4px;"><?= esc_html__('Execution time', 'fromscratch') ?>: <strong><?= esc_html($t['value']) ?><?= esc_html($t['unit']) ?></strong> <?= $scale($perf['time'], 'time', 's') ?></div>
 				<div style="margin-bottom: 4px;"><?= esc_html__('Peak memory', 'fromscratch') ?>: <strong><?= esc_html((string) $perf['memory']) ?> MB</strong> <?= $scale($perf['memory'], 'memory', ' MB') ?></div>
 				<div style="margin-bottom: 4px;"><?= esc_html__('DB queries', 'fromscratch') ?>: <strong><?= esc_html((string) $perf['queries']) ?></strong> <?= $scale($perf['queries'], 'queries', '') ?></div>
 				<div style="margin-bottom: 4px;"><?= esc_html__('Hooks fired', 'fromscratch') ?>: <strong><?= esc_html((string) $perf['hooks']) ?></strong> <?= $scale($perf['hooks'], 'hooks', '') ?></div>
-				<div style="margin-bottom: 8px;"><?= esc_html__('Score', 'fromscratch') ?>: <strong><?= esc_html((string) $perf['score']) ?></strong> <?= $scale($perf['score'], 'score', '') ?></div>
 			</div>
 			<div id="fs-perf-average-section" style="padding: 0 10px 8px; border-top: 1px solid #c3c4c7; margin-top: 4px; padding-top: 8px;"></div>
 		</div>
@@ -457,128 +475,170 @@ function fs_developer_perf_pinned_panel_render(): void
 		<?php endif; ?>
 	</div>
 	<script>
-	(function() {
-		var panel = document.getElementById('fs-perf-pinned-panel');
-		if (!panel) return;
+		(function() {
+			var panel = document.getElementById('fs-perf-pinned-panel');
+			if (!panel) return;
 
-		var HISTORY_KEY = 'fs_perf_history';
-		var MAX_HISTORY = 50;
+			var HISTORY_KEY = 'fs_perf_history';
+			var MAX_HISTORY = 50;
 
-		var current = {
-			time: parseFloat(panel.getAttribute('data-perf-time')) || 0,
-			memory: parseFloat(panel.getAttribute('data-perf-memory')) || 0,
-			queries: parseInt(panel.getAttribute('data-perf-queries'), 10) || 0,
-			hooks: parseInt(panel.getAttribute('data-perf-hooks'), 10) || 0,
-			score: parseFloat(panel.getAttribute('data-perf-score')) || 0
-		};
+			var current = {
+				time: parseFloat(panel.getAttribute('data-perf-time')) || 0,
+				memory: parseFloat(panel.getAttribute('data-perf-memory')) || 0,
+				queries: parseInt(panel.getAttribute('data-perf-queries'), 10) || 0,
+				hooks: parseInt(panel.getAttribute('data-perf-hooks'), 10) || 0
+			};
 
-		var raw = null;
-		try { raw = document.getElementById('fs-perf-scale-config'); } catch (e) {}
-		var config = raw && raw.textContent ? JSON.parse(raw.textContent) : null;
+			var raw = null;
+			try {
+				raw = document.getElementById('fs-perf-scale-config');
+			} catch (e) {}
+			var config = raw && raw.textContent ? JSON.parse(raw.textContent) : null;
 
-		var history = [];
-		try { history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch (e) {}
-		if (!Array.isArray(history)) history = [];
-		history.push(current);
-		history = history.slice(-MAX_HISTORY);
-		try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch (e) {}
+			var history = [];
+			try {
+				history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+			} catch (e) {}
+			if (!Array.isArray(history)) history = [];
+			history.push(current);
+			history = history.slice(-MAX_HISTORY);
+			try {
+				localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+			} catch (e) {}
 
-		var avgSection = document.getElementById('fs-perf-average-section');
-		if (config && avgSection) {
-			var labels = config.labels || ['Excellent', 'Good', 'Acceptable', 'Heavy', 'Problematic'];
-			function bandLabel(value, boundaries) {
-				for (var i = 0; i < boundaries.length; i++) { if (value <= boundaries[i]) return labels[i] || labels[4]; }
-				return labels[4];
-			}
-			function scaleHtml(value, metric) {
-				var c = config[metric];
-				if (!c || !c.boundaries) return '';
-				var max = parseFloat(c.max) || 100;
-				var b = c.boundaries;
-				var pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
-				var s1 = max > 0 ? (b[0] / max * 100).toFixed(2) + '%' : '0%';
-				var s2 = max > 0 ? (b[1] / max * 100).toFixed(2) + '%' : '0%';
-				var s3 = max > 0 ? (b[2] / max * 100).toFixed(2) + '%' : '0%';
-				var s4 = max > 0 ? (b[3] / max * 100).toFixed(2) + '%' : '0%';
-				var label = bandLabel(value, b);
-				var maxLabel = metric === 'time' ? max + 's' : metric === 'memory' ? max + ' MB' : String(max);
-				return '<span class="fs-perf-scale" style="--fs-perf-pct:' + pct + ';--fs-perf-s1:' + s1 + ';--fs-perf-s2:' + s2 + ';--fs-perf-s3:' + s3 + ';--fs-perf-s4:' + s4 + ';display:inline-block!important;margin-left:6px;vertical-align:middle!important;line-height:1!important">' +
-					'<span class="fs-perf-scale__inner" style="display:inline-flex!important;align-items:center;gap:4px;flex-wrap:nowrap">' +
-					'<span class="fs-perf-scale__min" style="font-size:10px!important;color:#646970;white-space:nowrap">0</span>' +
-					'<span class="fs-perf-scale__bar-wrap" style="position:relative;display:inline-block!important;width:64px!important;height:10px!important">' +
-					'<span class="fs-perf-scale__bar" style="position:absolute;inset:0;height:6px!important;top:2px;border-radius:3px;background:linear-gradient(to right,#22c55e 0%,#22c55e var(--fs-perf-s1),#84cc16 var(--fs-perf-s1),#84cc16 var(--fs-perf-s2),#f97316 var(--fs-perf-s2),#f97316 var(--fs-perf-s3),#ef4444 var(--fs-perf-s3),#ef4444 var(--fs-perf-s4),#b91c1c var(--fs-perf-s4),#b91c1c 100%)!important"></span>' +
-					'<span class="fs-perf-scale__indicator" style="position:absolute;top:0;left:calc(var(--fs-perf-pct,0)*1%);transform:translateX(-50%);width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:5px solid #1d2327;pointer-events:none"></span></span>' +
-					'<span class="fs-perf-scale__max" style="font-size:10px!important;color:#646970;white-space:nowrap">' + maxLabel + '</span> ' +
-					'<span class="fs-perf-scale__label" style="font-weight:600!important;font-size:11px!important;white-space:nowrap">' + label + '</span></span></span>';
-			}
-			function renderAverageSection(data) {
-				var count = Array.isArray(data) ? data.length : 0;
-				var i18n = config.i18n || {};
-				var pagesLabel = count === 1 ? (i18n.pages_one || '1 page') : (i18n.pages_many || '%s pages').replace('%s', count);
-				var avgTitle = i18n.average || 'Average';
-				var clearLabel = i18n.clear || 'Clear';
-				var noDataLabel = i18n.no_data || 'No data yet.';
-				var m = i18n;
-				var avg = count ? {
-					time: data.reduce(function(s, p) { return s + p.time; }, 0) / count,
-					memory: data.reduce(function(s, p) { return s + p.memory; }, 0) / count,
-					queries: data.reduce(function(s, p) { return s + p.queries; }, 0) / count,
-					hooks: data.reduce(function(s, p) { return s + p.hooks; }, 0) / count,
-					score: data.reduce(function(s, p) { return s + p.score; }, 0) / count
-				} : null;
-				var headerRow = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px"><div style="font-weight:600">' + avgTitle + '</div>' +
-					(count > 0 ? '<button type="button" class="fs-perf-clear-history button button-small" style="padding:2px 6px;font-size:10px">' + clearLabel + '</button>' : '') + '</div>';
-				var body = count > 0 && avg
-					? '<div style="font-size:11px;color:#646970;margin-bottom:6px">(' + pagesLabel + ')</div>' +
-						'<div style="margin-bottom:4px">' + (m.execution_time || 'Execution time') + ': <strong>' + avg.time.toFixed(3) + 's</strong> ' + scaleHtml(avg.time, 'time') + '</div>' +
-						'<div style="margin-bottom:4px">' + (m.peak_memory || 'Peak memory') + ': <strong>' + avg.memory.toFixed(2) + ' MB</strong> ' + scaleHtml(avg.memory, 'memory') + '</div>' +
-						'<div style="margin-bottom:4px">' + (m.db_queries || 'DB queries') + ': <strong>' + Math.round(avg.queries) + '</strong> ' + scaleHtml(avg.queries, 'queries') + '</div>' +
-						'<div style="margin-bottom:4px">' + (m.hooks_fired || 'Hooks fired') + ': <strong>' + Math.round(avg.hooks) + '</strong> ' + scaleHtml(avg.hooks, 'hooks') + '</div>' +
-						'<div>' + (m.score || 'Score') + ': <strong>' + avg.score.toFixed(1) + '</strong> ' + scaleHtml(avg.score, 'score') + '</div>'
-					: '<div style="font-size:11px;color:#646970;margin-bottom:4px">(' + pagesLabel + ')</div><div style="font-size:11px;color:#646970">' + noDataLabel + '</div>';
-				avgSection.innerHTML = headerRow + body;
-				var clearBtn = avgSection.querySelector('.fs-perf-clear-history');
-				if (clearBtn) {
-					clearBtn.addEventListener('click', function() {
-						try { localStorage.setItem(HISTORY_KEY, '[]'); } catch (e) {}
-						renderAverageSection([]);
-					});
+			var avgSection = document.getElementById('fs-perf-average-section');
+			if (config && avgSection) {
+				var labels = config.labels || ['Excellent', 'Good', 'Acceptable', 'Heavy', 'Problematic'];
+
+				function bandLabel(value, boundaries) {
+					for (var i = 0; i < boundaries.length; i++) {
+						if (value <= boundaries[i]) return labels[i] || labels[4];
+					}
+					return labels[4];
 				}
-			}
-			renderAverageSection(history);
-		}
 
-		var isGuest = panel.getAttribute('data-fs-perf-guest') === '1';
-		var content = panel.querySelector('.fs-perf-pinned-panel__content');
-		var tab = panel.querySelector('.fs-perf-pinned-panel__tab');
-		var MINIMIZED_KEY = 'fs_perf_minimized';
-		function show() { panel.style.display = 'block'; }
-		function hide() { panel.style.display = 'none'; }
-		function setExpanded(expanded) {
-			if (content) content.style.display = expanded ? 'block' : 'none';
-			if (tab) tab.style.display = expanded ? 'none' : 'block';
-			if (isGuest) try { sessionStorage.setItem(MINIMIZED_KEY, expanded ? '0' : '1'); } catch (e) {}
-		}
-		if (isGuest) {
-			show();
-			var startMinimized = false;
-			try { startMinimized = sessionStorage.getItem(MINIMIZED_KEY) === '1'; } catch (e) {}
-			setExpanded(!startMinimized);
-			var minBtn = panel.querySelector('.fs-perf-minimize');
-			if (minBtn) minBtn.addEventListener('click', function() { setExpanded(false); });
-			if (tab) tab.addEventListener('click', function() { setExpanded(true); });
-		} else {
-			if (localStorage.getItem('fs_perf_pinned') === '1') show();
-			var unpin = panel.querySelector('.fs-perf-unpin');
-			if (unpin) unpin.addEventListener('click', function() { localStorage.removeItem('fs_perf_pinned'); hide(); });
-			document.addEventListener('click', function(e) {
-				var t = e.target.closest && e.target.closest('.fs-perf-pin-trigger');
-				if (t && t.querySelector('a')) { e.preventDefault(); localStorage.setItem('fs_perf_pinned', '1'); show(); }
-			});
-		}
-	})();
+				function scaleHtml(value, metric) {
+					var c = config[metric];
+					if (!c || !c.boundaries) return '';
+					var max = parseFloat(c.max) || 100;
+					var b = c.boundaries;
+					var pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
+					var s1 = max > 0 ? (b[0] / max * 100).toFixed(2) + '%' : '0%';
+					var s2 = max > 0 ? (b[1] / max * 100).toFixed(2) + '%' : '0%';
+					var s3 = max > 0 ? (b[2] / max * 100).toFixed(2) + '%' : '0%';
+					var s4 = max > 0 ? (b[3] / max * 100).toFixed(2) + '%' : '0%';
+					var label = bandLabel(value, b);
+					var maxLabel = metric === 'time' ? max + 's' : metric === 'memory' ? max + ' MB' : String(max);
+					return '<span class="fs-perf-scale" style="--fs-perf-pct:' + pct + ';--fs-perf-s1:' + s1 + ';--fs-perf-s2:' + s2 + ';--fs-perf-s3:' + s3 + ';--fs-perf-s4:' + s4 + ';display:inline-block!important;margin-left:6px;vertical-align:middle!important;line-height:1!important">' +
+						'<span class="fs-perf-scale__inner" style="display:inline-flex!important;align-items:center;gap:4px;flex-wrap:nowrap">' +
+						'<span class="fs-perf-scale__min" style="font-size:10px!important;color:#646970;white-space:nowrap">0</span>' +
+						'<span class="fs-perf-scale__bar-wrap" style="position:relative;display:inline-block!important;width:64px!important;height:10px!important">' +
+						'<span class="fs-perf-scale__bar" style="position:absolute;inset:0;height:6px!important;top:2px;border-radius:3px;background:linear-gradient(to right,#22c55e 0%,#22c55e var(--fs-perf-s1),#84cc16 var(--fs-perf-s1),#84cc16 var(--fs-perf-s2),#f97316 var(--fs-perf-s2),#f97316 var(--fs-perf-s3),#ef4444 var(--fs-perf-s3),#ef4444 var(--fs-perf-s4),#b91c1c var(--fs-perf-s4),#b91c1c 100%)!important"></span>' +
+						'<span class="fs-perf-scale__indicator" style="position:absolute;top:0;left:calc(var(--fs-perf-pct,0)*1%);transform:translateX(-50%);width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:5px solid #1d2327;pointer-events:none"></span></span>' +
+						'<span class="fs-perf-scale__max" style="font-size:10px!important;color:#646970;white-space:nowrap">' + maxLabel + '</span> ' +
+						'<span class="fs-perf-scale__label" style="font-weight:600!important;font-size:11px!important;white-space:nowrap">' + label + '</span></span></span>';
+				}
+
+				function renderAverageSection(data) {
+					var count = Array.isArray(data) ? data.length : 0;
+					var i18n = config.i18n || {};
+					var pagesLabel = count === 1 ? (i18n.pages_one || '1 page') : (i18n.pages_many || '%s pages').replace('%s', count);
+					var avgTitle = i18n.average || 'Average';
+					var clearLabel = i18n.clear || 'Clear';
+					var noDataLabel = i18n.no_data || 'No data yet.';
+					var m = i18n;
+					var avg = count ? {
+						time: data.reduce(function(s, p) {
+							return s + p.time;
+						}, 0) / count,
+						memory: data.reduce(function(s, p) {
+							return s + p.memory;
+						}, 0) / count,
+						queries: data.reduce(function(s, p) {
+							return s + p.queries;
+						}, 0) / count,
+						hooks: data.reduce(function(s, p) {
+							return s + p.hooks;
+						}, 0) / count
+					} : null;
+					var headerRow = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px"><div style="font-weight:600">' + avgTitle + '</div>' +
+						(count > 0 ? '<button type="button" class="fs-perf-clear-history button button-small" style="padding:2px 6px;font-size:10px">' + clearLabel + '</button>' : '') + '</div>';
+					var body = count > 0 && avg
+						? (
+							'<div style="font-size:11px;color:#646970;margin-bottom:6px">(' + pagesLabel + ')</div>' +
+							'<div style="margin-bottom:4px">' + (m.execution_time || 'Execution time') + ': <strong>' + (avg.time < 1 ? Math.round(avg.time * 1000) + 'ms' : avg.time.toFixed(3) + 's') + '</strong> ' + scaleHtml(avg.time, 'time') + '</div>' +
+							'<div style="margin-bottom:4px">' + (m.peak_memory || 'Peak memory') + ': <strong>' + avg.memory.toFixed(2) + ' MB</strong> ' + scaleHtml(avg.memory, 'memory') + '</div>' +
+							'<div style="margin-bottom:4px">' + (m.db_queries || 'DB queries') + ': <strong>' + Math.round(avg.queries) + '</strong> ' + scaleHtml(avg.queries, 'queries') + '</div>' +
+							'<div style="margin-bottom:4px">' + (m.hooks_fired || 'Hooks fired') + ': <strong>' + Math.round(avg.hooks) + '</strong> ' + scaleHtml(avg.hooks, 'hooks') + '</div>'
+						)
+						: '<div style="font-size:11px;color:#646970">' + noDataLabel + '</div>';
+					avgSection.innerHTML = headerRow + body;
+					var clearBtn = avgSection.querySelector('.fs-perf-clear-history');
+					if (clearBtn) {
+						clearBtn.addEventListener('click', function() {
+							try {
+								localStorage.setItem(HISTORY_KEY, '[]');
+							} catch (e) {}
+							renderAverageSection([]);
+						});
+					}
+				}
+				renderAverageSection(history);
+			}
+
+			var isGuest = panel.getAttribute('data-fs-perf-guest') === '1';
+			var content = panel.querySelector('.fs-perf-pinned-panel__content');
+			var tab = panel.querySelector('.fs-perf-pinned-panel__tab');
+			var MINIMIZED_KEY = 'fs_perf_minimized';
+
+			function show() {
+				panel.style.display = 'block';
+			}
+
+			function hide() {
+				panel.style.display = 'none';
+			}
+
+			function setExpanded(expanded) {
+				if (content) content.style.display = expanded ? 'block' : 'none';
+				if (tab) tab.style.display = expanded ? 'none' : 'block';
+				if (isGuest) try {
+					sessionStorage.setItem(MINIMIZED_KEY, expanded ? '0' : '1');
+				} catch (e) {}
+			}
+			if (isGuest) {
+				show();
+				var startMinimized = false;
+				try {
+					startMinimized = sessionStorage.getItem(MINIMIZED_KEY) === '1';
+				} catch (e) {}
+				setExpanded(!startMinimized);
+				var minBtn = panel.querySelector('.fs-perf-minimize');
+				if (minBtn) minBtn.addEventListener('click', function() {
+					setExpanded(false);
+				});
+				if (tab) tab.addEventListener('click', function() {
+					setExpanded(true);
+				});
+			} else {
+				if (localStorage.getItem('fs_perf_pinned') === '1') show();
+				var unpin = panel.querySelector('.fs-perf-unpin');
+				if (unpin) unpin.addEventListener('click', function() {
+					localStorage.removeItem('fs_perf_pinned');
+					hide();
+				});
+				document.addEventListener('click', function(e) {
+					var t = e.target.closest && e.target.closest('.fs-perf-pin-trigger');
+					if (t && t.querySelector('a')) {
+						e.preventDefault();
+						localStorage.setItem('fs_perf_pinned', '1');
+						show();
+					}
+				});
+			}
+		})();
 	</script>
-	<?php
+<?php
 }
 
 add_action('wp_footer', 'fs_developer_perf_pinned_panel_render', 20);
