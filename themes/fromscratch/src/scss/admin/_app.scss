@@ -12,7 +12,6 @@
 
 // Forms
 @forward 'form';
-@forward 'performance';
 
 // Common
 @forward 'common';
@@ -25,3 +24,5 @@
 @forward 'theme-settings';
 @forward 'languages';
 @forward 'developer-settings';
+@forward 'performance';
+@forward 'redis';

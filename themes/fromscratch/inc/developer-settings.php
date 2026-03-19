@@ -150,7 +150,7 @@ require_once $fs_developer_settings_dir . 'security.php';
 require_once $fs_developer_settings_dir . 'features.php';
 require_once $fs_developer_settings_dir . 'access.php';
 require_once $fs_developer_settings_dir . 'tools.php';
-// require_once $fs_developer_settings_dir . 'performance.php';
+require_once $fs_developer_settings_dir . 'performance.php';
 if (function_exists('fs_theme_feature_enabled') && fs_theme_feature_enabled('languages')) {
 	require_once $fs_developer_settings_dir . 'languages.php';
 }

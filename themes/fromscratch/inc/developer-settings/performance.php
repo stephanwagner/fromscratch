@@ -70,6 +70,69 @@ function fs_developer_perf_scale_config(string $metric): array
 }
 
 /**
+ * Whether OPcache is available and enabled.
+ */
+function fs_developer_perf_opcache_enabled(): bool
+{
+	if (!function_exists('opcache_get_status')) {
+		return false;
+	}
+	$status = opcache_get_status(false);
+	return is_array($status) && !empty($status['opcache_enabled']);
+}
+
+/**
+ * Database server type and version (MySQL vs MariaDB). Returns ['type' => 'MariaDB'|'MySQL', 'version' => string] or null.
+ */
+function fs_developer_perf_db_server(): ?array
+{
+	global $wpdb;
+	if (!$wpdb instanceof \wpdb) {
+		return null;
+	}
+	$version = $wpdb->db_version();
+	if ($version === null || $version === '') {
+		return null;
+	}
+	$version = (string) $version;
+	$is_mariadb = (stripos($version, 'mariadb') !== false);
+	return [
+		'type'    => $is_mariadb ? 'MariaDB' : 'MySQL',
+		'version' => $version,
+	];
+}
+
+/**
+ * Human-readable object cache type (Redis, Memcached, external, or none).
+ */
+function fs_developer_perf_object_cache_label(): string
+{
+	if (!function_exists('wp_using_ext_object_cache') || !wp_using_ext_object_cache()) {
+		return '';
+	}
+	$obj = $GLOBALS['wp_object_cache'] ?? null;
+	if (!$obj || !is_object($obj)) {
+		return 'external';
+	}
+	$class = get_class($obj);
+	if (stripos($class, 'Redis') !== false) {
+		return 'Redis';
+	}
+	if (stripos($class, 'Memcached') !== false) {
+		return 'Memcached';
+	}
+	return 'external';
+}
+
+/**
+ * Whether Xdebug extension is loaded.
+ */
+function fs_developer_perf_xdebug_enabled(): bool
+{
+	return extension_loaded('xdebug');
+}
+
+/**
  * Current request performance metrics. Use in Developer → General, admin bar, and pinned panel.
  *
  * @return array{time: float, memory: float, queries: int, hooks: int, score: float}
@@ -81,7 +144,13 @@ function fs_developer_perf_metrics(): array
 		return $snapshot;
 	}
 	global $wpdb, $wp_actions;
-	$time = function_exists('timer_stop') ? timer_stop(0, 3) : 0;
+	$time = 0;
+	if (function_exists('timer_stop')) {
+		$time = (float) timer_stop(0, 3);
+	}
+	if ($time <= 0 && isset($_SERVER['REQUEST_TIME_FLOAT'])) {
+		$time = round(microtime(true) - (float) $_SERVER['REQUEST_TIME_FLOAT'], 3);
+	}
 	$queries = $wpdb instanceof \wpdb ? (int) $wpdb->num_queries : 0;
 	$snapshot = [
 		'time'    => (float) $time,
@@ -406,7 +475,12 @@ function fs_developer_perf_slow_queries_render_list(?array $slow_data): string
 		$out .= '<p class="description">' . esc_html__('Enable the feature above, save (to install db.php), then load another page while logged in as a developer.', 'fromscratch') . '</p>';
 	}
 
-	$out .= '<p style="margin-top: 12px;"><a href="' . esc_url(admin_url('options-general.php?page=fs-developer')) . '">' . esc_html__('Back to Developer settings', 'fromscratch') . '</a></p>';
+	$out .= '<form method="post" action="' . esc_url(add_query_arg('fs_slow_queries', '1', admin_url('options-general.php?page=fs-developer'))) . '" style="margin-top: 12px;">';
+	$out .= wp_nonce_field('fromscratch_clear_slow_queries', '_wpnonce', true, false);
+	$out .= '<input type="hidden" name="fromscratch_clear_slow_queries" value="1">';
+	$out .= '<button type="submit" class="button button-secondary">' . esc_html__('Clear', 'fromscratch') . '</button>';
+	$out .= ' <a href="' . esc_url(admin_url('options-general.php?page=fs-developer')) . '">' . esc_html__('Back to Developer settings', 'fromscratch') . '</a>';
+	$out .= '</form>';
 	$out .= '</div>';
 	return $out;
 }

@@ -1,0 +1,7 @@
+@use '../core' as *;
+
+#rediscache {
+  .sidebar-column {
+    display: none !important;
+  }
+}

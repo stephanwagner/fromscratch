@@ -30,6 +30,14 @@ add_action(fs_developer_settings_load_hook($fs_developer_page_slug), function ()
 	if (!current_user_can('manage_options')) {
 		return;
 	}
+	if (function_exists('fs_is_developer_user') && !fs_is_developer_user((int) get_current_user_id())) {
+		return;
+	}
+	// phpinfo() in new window: output and exit before any HTML.
+	if (!empty($_GET['phpinfo']) && $_GET['phpinfo'] === '1') {
+		phpinfo();
+		exit;
+	}
 	if (!empty($_POST['fromscratch_save_perf_admin_bar']) && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_perf_admin_bar')) {
 		$on = isset($_POST['fromscratch_perf_admin_bar']) && $_POST['fromscratch_perf_admin_bar'] === '1';
 		update_option('fromscratch_perf_admin_bar', $on ? '1' : '0');
@@ -46,27 +54,6 @@ add_action(fs_developer_settings_load_hook($fs_developer_page_slug), function ()
 			return filter_var($ip, FILTER_VALIDATE_IP) !== false;
 		});
 		update_option('fromscratch_perf_panel_guest_ips', implode(', ', $ips));
-		set_transient('fromscratch_perf_admin_bar_saved', '1', 30);
-		wp_safe_redirect(add_query_arg('page', 'fs-developer', admin_url('options-general.php')));
-		exit;
-	}
-	// Enable/disable expensive query logging; install or uninstall db.php when toggled.
-	if (!empty($_POST['fromscratch_save_perf_slow_queries']) && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_perf_slow_queries')) {
-		$on = isset($_POST['fromscratch_perf_slow_queries_enabled']) && $_POST['fromscratch_perf_slow_queries_enabled'] === '1';
-		update_option('fromscratch_perf_slow_queries_enabled', $on ? '1' : '0');
-		if (isset($_POST['fromscratch_perf_slow_queries_threshold']) && function_exists('fs_developer_perf_slow_queries_threshold_option')) {
-			$thresh = max(0.0, (float) sanitize_text_field(wp_unslash($_POST['fromscratch_perf_slow_queries_threshold'])));
-			update_option(fs_developer_perf_slow_queries_threshold_option(), (string) $thresh);
-		}
-		if ($on && function_exists('fs_developer_perf_slow_queries_install_db_dropin')) {
-			$installed = fs_developer_perf_slow_queries_install_db_dropin();
-			set_transient('fromscratch_perf_slow_queries_install_result', $installed ? '1' : '0', 30);
-		} else {
-			if (function_exists('fs_developer_perf_slow_queries_uninstall_db_dropin')) {
-				fs_developer_perf_slow_queries_uninstall_db_dropin();
-			}
-			delete_transient('fromscratch_perf_slow_queries_install_result');
-		}
 		set_transient('fromscratch_perf_admin_bar_saved', '1', 30);
 		wp_safe_redirect(add_query_arg('page', 'fs-developer', admin_url('options-general.php')));
 		exit;
@@ -101,13 +88,67 @@ function fs_render_developer_general(): void
 
 		<?php fs_developer_settings_render_nav(); ?>
 
-		<?php /* if ($perf_admin_bar_saved) : ?>
+		<?php if ($perf_admin_bar_saved) : ?>
 			<div class="notice notice-success is-dismissible"><p><?= esc_html__('Settings saved.', 'fromscratch') ?></p></div>
 		<?php endif; ?>
 
 		<div class="page-settings-form" style="margin-bottom: 24px;">
 			<h2 class="title"><?= esc_html__('Performance', 'fromscratch') ?></h2>
-			<p class="description"><?= esc_html__('Current request metrics (this page load).', 'fromscratch') ?></p>
+			<?php
+			$check = '✔';
+			$cross = '✖';
+			$opcache_on = fs_developer_perf_opcache_enabled();
+			$opcache_available = function_exists('opcache_get_status');
+			$object_cache = fs_developer_perf_object_cache_label();
+			$xdebug_on = fs_developer_perf_xdebug_enabled();
+			$memory_limit = ini_get('memory_limit');
+			$db_server = function_exists('fs_developer_perf_db_server') ? fs_developer_perf_db_server() : null;
+			?>
+			<table class="fs-perf-table fs-perf-summary-table" style="width: auto; margin: 16px 0 12px; border-collapse: collapse;" role="presentation">
+				<tbody>
+					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('OPcache', 'fromscratch') ?></td>
+						<td style="padding: 2px 0;"><?php
+							if (!$opcache_available) {
+								echo $cross . ' ' . esc_html__('not installed', 'fromscratch');
+							} else {
+								echo $opcache_on ? $check . ' ' . esc_html__('enabled', 'fromscratch') : $cross . ' ' . esc_html__('disabled', 'fromscratch');
+							}
+						?></td></tr>
+					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Object cache', 'fromscratch') ?></td>
+						<td style="padding: 2px 0;"><?= $object_cache !== '' ? $check . ' ' . esc_html($object_cache) : $cross . ' ' . esc_html__('none', 'fromscratch') ?></td></tr>
+					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('wp_using_ext_object_cache()', 'fromscratch') ?></td>
+						<td style="padding: 2px 0;"><?php
+							if (!function_exists('wp_using_ext_object_cache')) {
+								echo '—';
+							} else {
+								echo wp_using_ext_object_cache() ? $check . ' ' . esc_html__('true', 'fromscratch') : $cross . ' ' . esc_html__('false', 'fromscratch');
+							}
+						?></td></tr>
+					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Xdebug', 'fromscratch') ?></td>
+						<td style="padding: 2px 0;"><?= $xdebug_on ? $check . ' ' . esc_html__('enabled', 'fromscratch') : $cross . ' ' . esc_html__('disabled', 'fromscratch') ?></td></tr>
+					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('PHP version', 'fromscratch') ?></td>
+						<td style="padding: 2px 0;"><?= esc_html(PHP_VERSION) ?></td></tr>
+					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Memory limit', 'fromscratch') ?></td>
+						<td style="padding: 2px 0;"><?= esc_html($memory_limit !== false && $memory_limit !== '' ? $memory_limit : '—') ?></td></tr>
+					<?php
+					$upload_max = ini_get('upload_max_filesize');
+					$post_max = ini_get('post_max_size');
+					?>
+					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Max upload size', 'fromscratch') ?></td>
+						<td style="padding: 2px 0;"><?= $upload_max !== false && $upload_max !== '' ? esc_html($upload_max) : '—' ?></td></tr>
+					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Max post size', 'fromscratch') ?></td>
+						<td style="padding: 2px 0;"><?= $post_max !== false && $post_max !== '' ? esc_html($post_max) : '—' ?></td></tr>
+					<?php if ($db_server !== null) : ?>
+					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Database', 'fromscratch') ?></td>
+						<td style="padding: 2px 0;"><?= esc_html($db_server['type']) ?></td></tr>
+					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Database version', 'fromscratch') ?></td>
+						<td style="padding: 2px 0;"><?= esc_html($db_server['version']) ?></td></tr>
+					<?php endif; ?>
+					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('phpinfo()', 'fromscratch') ?></td>
+						<td style="padding: 2px 0;"><a href="<?= esc_url(add_query_arg('phpinfo', '1', admin_url('options-general.php?page=fs-developer'))) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html__('Open in new window', 'fromscratch') ?></a></td></tr>
+				</tbody>
+			</table>
+			<p class="description" style="margin-top: 0;"><?= esc_html__('Current request metrics (this page load).', 'fromscratch') ?></p>
 			<table class="widefat striped fs-perf-table" style="width: auto; margin: 16px 0 12px;">
 				<tbody>
 					<tr>
@@ -184,53 +225,7 @@ function fs_render_developer_general(): void
 				</table>
 				<p><button type="submit" class="button button-primary"><?= esc_html__('Save', 'fromscratch') ?></button></p>
 			</form>
-
-			<h3 class="title" style="margin-top: 24px;"><?= esc_html__('Expensive query log', 'fromscratch') ?></h3>
-			<?php
-			$slow_queries_enabled = function_exists('fs_developer_perf_slow_queries_enabled') && fs_developer_perf_slow_queries_enabled();
-			$show_slow_list = isset($_GET['fs_slow_queries']) && $_GET['fs_slow_queries'] === '1';
-			$slow_data = function_exists('fs_developer_perf_slow_queries_get') ? fs_developer_perf_slow_queries_get() : null;
-			$install_result = get_transient('fromscratch_perf_slow_queries_install_result');
-			if ($install_result !== false) {
-				delete_transient('fromscratch_perf_slow_queries_install_result');
-			}
-			?>
-			<?php
-			$slow_threshold = function_exists('fs_developer_perf_slow_queries_threshold') ? fs_developer_perf_slow_queries_threshold() : 0.05;
-			?>
-			<form method="post" action="" style="margin-top: 8px;">
-				<?php wp_nonce_field('fromscratch_perf_slow_queries'); ?>
-				<input type="hidden" name="fromscratch_save_perf_slow_queries" value="1">
-				<p style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-					<label>
-						<input type="hidden" name="fromscratch_perf_slow_queries_enabled" value="0">
-						<input type="checkbox" name="fromscratch_perf_slow_queries_enabled" value="1" <?= checked($slow_queries_enabled, true, false) ?>>
-						<?= esc_html__('Enable expensive query logging', 'fromscratch') ?>
-					</label>
-					<button type="submit" class="button button-small" style="margin-left: 8px;"><?= esc_html__('Save', 'fromscratch') ?></button>
-				</p>
-				<p style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
-					<label for="fromscratch_perf_slow_queries_threshold"><?= esc_html__('Threshold (seconds)', 'fromscratch') ?></label>
-					<input type="number" name="fromscratch_perf_slow_queries_threshold" id="fromscratch_perf_slow_queries_threshold" value="<?= esc_attr((string) $slow_threshold) ?>" step="any" min="0" style="width: 120px;">
-					<span class="description"><?= esc_html__('Queries slower than this are recorded. Use e.g. 0.00001 to log almost all.', 'fromscratch') ?></span>
-				</p>
-			</form>
-			<p class="description" style="margin-top: 4px;"><?= esc_html__('When enabled, queries above the threshold are recorded for requests where you are logged in as a developer or your IP is in the performance panel allowlist. No impact when disabled.', 'fromscratch') ?></p>
-			<?php if ($install_result === '0') : ?>
-				<p class="description" style="margin-top: 8px; color: #d63638;"><?= esc_html__('Recorder could not be installed (wp-content may not be writable). Create wp-content/db.php manually or fix permissions.', 'fromscratch') ?></p>
-			<?php endif; ?>
-			<?php if ($slow_queries_enabled) : ?>
-				<p class="description" style="margin-top: 12px;"><?= esc_html__('Queries are recorded on each page load; view the list below.', 'fromscratch') ?></p>
-				<?php if ($slow_data !== null) : ?>
-					<p style="margin-top: 8px;"><a href="<?= esc_url(add_query_arg('fs_slow_queries', '1', admin_url('options-general.php?page=fs-developer'))) ?>" class="button button-secondary"><?= esc_html__('View last recorded slow queries', 'fromscratch') ?></a></p>
-				<?php endif; ?>
-			<?php endif; ?>
-			<?php if ($show_slow_list && $slow_data !== null && function_exists('fs_developer_perf_slow_queries_render_list')) : ?>
-				<?= fs_developer_perf_slow_queries_render_list($slow_data) ?>
-			<?php endif; ?>
 		</div>
-		*/
-		?>
 
 		<div class="page-settings-form">
 			<h2 class="title"><?= esc_html__('Cheat sheet', 'fromscratch') ?></h2>
