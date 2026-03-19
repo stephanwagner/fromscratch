@@ -110,6 +110,37 @@ function fs_developer_settings_render_nav(): void
 	$current = fs_developer_settings_current_tab_from_page();
 	$tabs = fs_developer_settings_available_tabs();
 	$base_url = admin_url('options-general.php');
+	$current_page = isset($_GET['page']) ? sanitize_key($_GET['page']) : '';
+
+	// Add Redis settings as an external tab when the Redis Object Cache plugin is available.
+	if (
+		class_exists('\RedisCache\Plugin')
+		|| defined('WP_REDIS_VERSION')
+		|| function_exists('redis_cache_enable')
+	) {
+		$out = [];
+		$inserted = false;
+		foreach ($tabs as $key => $def) {
+			$out[$key] = $def;
+			if ($key === 'tools' && !$inserted) {
+				$out['redis'] = ['label' => 'Redis', 'external_page' => 'redis-cache'];
+				$inserted = true;
+			}
+			if ($key === 'system' && !$inserted) {
+				$out['redis'] = ['label' => 'Redis', 'external_page' => 'redis-cache'];
+				$inserted = true;
+			}
+		}
+		if (!$inserted) {
+			$out['redis'] = ['label' => 'Redis', 'external_page' => 'redis-cache'];
+		}
+		$tabs = $out;
+
+		// When on the Redis plugin page, ensure only the Redis tab is marked active.
+		if ($current_page === 'redis-cache') {
+			$current = 'redis';
+		}
+	}
 
 	$password_icon = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M240-80q-33 0-56.5-23.5T160-160v-400q0-33 23.5-56.5T240-640h40v-80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720v80h40q33 0 56.5 23.5T800-560v400q0 33-23.5 56.5T720-80H240Zm296.5-223.5Q560-327 560-360t-23.5-56.5Q513-440 480-440t-56.5 23.5Q400-393 400-360t23.5 56.5Q447-280 480-280t56.5-23.5ZM360-640h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80Z"/></svg>';
 	$maintenance_icon = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M360-360q-100 0-170-70t-70-170q0-20 3-40t11-38q5-10 12.5-15t16.5-7q9-2 18.5.5T199-689l105 105 72-72-105-105q-8-8-10.5-17.5T260-797q2-9 7-16.5t15-12.5q18-8 38-11t40-3q100 0 170 70t70 170q0 23-4 43.5T584-516l202 200q29 29 29 71t-29 71q-29 29-71 29t-71-30L444-376q-20 8-40.5 12t-43.5 4Z"/></svg>';
@@ -130,8 +161,14 @@ function fs_developer_settings_render_nav(): void
 					$icons .= '<div class="fs-tab-icon">' . $maintenance_icon . '</div>';
 				}
 			}
-			$url = add_query_arg('page', fs_developer_settings_page_slug($slug), $base_url);
-			echo '<a href="' . esc_url($url) . '" class="nav-tab ' . ($current === $slug ? 'nav-tab-active' : '') . ($icons !== '' ? ' has-icons' : '') . '">';
+			$is_external = !empty($def['external_page']);
+			$url = $is_external
+				? add_query_arg('page', sanitize_key((string) $def['external_page']), $base_url)
+				: add_query_arg('page', fs_developer_settings_page_slug($slug), $base_url);
+			$is_active = $is_external
+				? ($current_page === sanitize_key((string) $def['external_page']))
+				: ($current === $slug);
+			echo '<a href="' . esc_url($url) . '" class="nav-tab ' . ($is_active ? 'nav-tab-active' : '') . ($icons !== '' ? ' has-icons' : '') . '">';
 			echo '<span>' . esc_html(__($def['label'], 'fromscratch')) . '</span>';
 			if ($icons !== '') {
 				echo '<span class="fs-tab-icons">' . $icons . '</span>';
@@ -172,6 +209,55 @@ add_action('admin_menu', function () {
 	}
 }, 25);
 
+/**
+ * Redis Object Cache: hide its Settings submenu entry and show it as a Developer tab instead.
+ * The page remains accessible directly; we just remove the duplicate menu link.
+ */
+add_action('admin_menu', function (): void {
+	if (!current_user_can('manage_options')) {
+		return;
+	}
+	if (!function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
+		return;
+	}
+	if (
+		!class_exists('\RedisCache\Plugin')
+		&& !defined('WP_REDIS_VERSION')
+		&& !function_exists('redis_cache_enable')
+	) {
+		return;
+	}
+	remove_submenu_page('options-general.php', 'redis-cache');
+}, 999);
+
+// Avoid WP core deprecation notices when the plugin page doesn't set $title.
+add_action('load-settings_page_redis-cache', function (): void {
+	global $title;
+	if (!is_string($title) || $title === '') {
+		$title = __('Developer › Redis', 'fromscratch');
+	}
+}, 1);
+
+/**
+ * When viewing Redis Object Cache settings, render the Developer tabs above the page content.
+ */
+add_action('admin_notices', function (): void {
+	if (!current_user_can('manage_options')) {
+		return;
+	}
+	if (!function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
+		return;
+	}
+	$page = isset($_GET['page']) ? sanitize_key($_GET['page']) : '';
+	if ($page !== 'redis-cache') {
+		return;
+	}
+	echo '<div class="wrap">';
+	echo '<h1>' . esc_html(__('Developer settings', 'fromscratch')) . '</h1>';
+	fs_developer_settings_render_nav();
+	echo '</div>';
+}, 5);
+
 // When on any Developer page, highlight "Developer" in the Settings menu.
 add_filter('submenu_file', function ($submenu_file, $parent_file) {
 	if ($parent_file !== 'options-general.php' || !isset($_GET['page'])) {
@@ -179,6 +265,15 @@ add_filter('submenu_file', function ($submenu_file, $parent_file) {
 	}
 	$page = sanitize_key($_GET['page']);
 	if (in_array($page, fs_developer_settings_page_slugs(), true)) {
+		return 'fs-developer';
+	}
+	if (
+		$page === 'redis-cache'
+		&& current_user_can('manage_options')
+		&& function_exists('fs_is_developer_user')
+		&& fs_is_developer_user((int) get_current_user_id())
+		&& (class_exists('\RedisCache\Plugin') || defined('WP_REDIS_VERSION') || function_exists('redis_cache_enable'))
+	) {
 		return 'fs-developer';
 	}
 	return $submenu_file;
