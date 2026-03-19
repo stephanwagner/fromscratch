@@ -334,6 +334,40 @@ add_action('admin_enqueue_scripts', function (): void {
 }, 20);
 
 /**
+ * Handle page-cache purge endpoint: /?fs-purge-cache=1&_wpnonce=...
+ */
+add_action('init', function (): void {
+	if (empty($_GET['fs-purge-cache']) || $_GET['fs-purge-cache'] !== '1') {
+		return;
+	}
+	if (!is_user_logged_in() || !current_user_can('manage_options')) {
+		return;
+	}
+	$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
+	if ($nonce === '' || !wp_verify_nonce($nonce, 'fs_purge_cache')) {
+		return;
+	}
+
+	/**
+	 * Allow integrations to purge page/full-page caches.
+	 */
+	do_action('fromscratch_purge_page_cache');
+
+	// Reasonable default: flush object cache if available.
+	if (function_exists('wp_cache_flush')) {
+		wp_cache_flush();
+	}
+
+	$redirect = wp_get_referer();
+	if (!$redirect) {
+		$redirect = home_url('/');
+	}
+	$redirect = remove_query_arg(['fs-purge-cache', '_wpnonce'], $redirect);
+	wp_safe_redirect($redirect);
+	exit;
+}, 1);
+
+/**
  * Show performance metrics in the admin bar for developer users (backend and frontend). Click to expand details with scale per metric.
  */
 add_action('admin_bar_menu', function ($admin_bar): void {
@@ -358,14 +392,33 @@ add_action('admin_bar_menu', function ($admin_bar): void {
 		'id'    => 'fs_wp_perf',
 		'title' => $perf_icon,
 		'href'  => admin_url('options-general.php?page=fs-developer-system'),
-		'meta'  => ['title' => __('WordPress resources (Developer settings)', 'fromscratch')],
 	]);
+
+	// Purge cache icon (top-level).
+	if (current_user_can('manage_options')) {
+		if (get_option('fromscratch_purge_cache_admin_bar', '0') !== '1') {
+			return;
+		}
+		$purge_url = wp_nonce_url(add_query_arg('fs-purge-cache', '1', home_url('/')), 'fs_purge_cache');
+		$purge_icon = '<svg xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 100%;" width="24px" height="24px" viewBox="0 -960 960 960" fill="currentColor"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-70q0-17 11.5-28.5T760-800q17 0 28.5 11.5T800-760v200q0 17-11.5 28.5T760-520H560q-17 0-28.5-11.5T520-560q0-17 11.5-28.5T560-600h128q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q68 0 124.5-34.5T692-367q8-14 22.5-19.5t29.5-.5q16 5 23 21t-1 30q-41 80-117 128t-169 48Z"/></svg>';
+		$admin_bar->add_node([
+			'id'    => 'fs-purge-cache',
+			'title' => $purge_icon,
+			'href'  => '#',
+		]);
+		$admin_bar->add_node([
+			'parent' => 'fs-purge-cache',
+			'id'     => 'fs-purge-cache-page',
+			'title'  => __('Purge page cache', 'fromscratch'),
+			'href'   => $purge_url,
+		]);
+	}
 	$admin_bar->add_node([
 		'parent' => 'fs_wp_perf',
 		'id'     => 'fs_wp_perf_pin',
 		'title'  => __('Pin to bottom-left', 'fromscratch'),
 		'href'   => '#',
-		'meta'   => ['class' => 'fs-perf-pin-trigger', 'title' => __('Keep performance panel visible while navigating', 'fromscratch')],
+		'meta'   => ['class' => 'fs-perf-pin-trigger'],
 	]);
 	$admin_bar->add_node([
 		'parent' => 'fs_wp_perf',
@@ -471,7 +524,7 @@ function fs_developer_perf_pinned_panel_render(): void
 			<div id="fs-perf-average-section" style="padding: 0 10px 8px; border-top: 1px solid #c3c4c7; margin-top: 4px; padding-top: 8px;"></div>
 		</div>
 		<?php if ($is_guest) : ?>
-			<button type="button" class="fs-perf-pinned-panel__tab" style="display: none; padding: 6px 12px; background: #f0f0f1; border: 1px solid #c3c4c7; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,.1); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;" title="<?= esc_attr__('Show performance panel', 'fromscratch') ?>"><?= esc_html__('Performance', 'fromscratch') ?> ▲</button>
+			<button type="button" class="fs-perf-pinned-panel__tab" style="display: none; padding: 6px 12px; background: #f0f0f1; border: 1px solid #c3c4c7; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,.1); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;"><?= esc_html__('Performance', 'fromscratch') ?> ▲</button>
 		<?php endif; ?>
 	</div>
 	<script>
@@ -563,15 +616,15 @@ function fs_developer_perf_pinned_panel_render(): void
 					} : null;
 					var headerRow = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px"><div style="font-weight:600">' + avgTitle + '</div>' +
 						(count > 0 ? '<button type="button" class="fs-perf-clear-history button button-small" style="padding:2px 6px;font-size:10px">' + clearLabel + '</button>' : '') + '</div>';
-					var body = count > 0 && avg
-						? (
+					var body = count > 0 && avg ?
+						(
 							'<div style="font-size:11px;color:#646970;margin-bottom:6px">(' + pagesLabel + ')</div>' +
 							'<div style="margin-bottom:4px">' + (m.execution_time || 'Execution time') + ': <strong>' + (avg.time < 1 ? Math.round(avg.time * 1000) + 'ms' : avg.time.toFixed(3) + 's') + '</strong> ' + scaleHtml(avg.time, 'time') + '</div>' +
 							'<div style="margin-bottom:4px">' + (m.peak_memory || 'Peak memory') + ': <strong>' + avg.memory.toFixed(2) + ' MB</strong> ' + scaleHtml(avg.memory, 'memory') + '</div>' +
 							'<div style="margin-bottom:4px">' + (m.db_queries || 'DB queries') + ': <strong>' + Math.round(avg.queries) + '</strong> ' + scaleHtml(avg.queries, 'queries') + '</div>' +
 							'<div style="margin-bottom:4px">' + (m.hooks_fired || 'Hooks fired') + ': <strong>' + Math.round(avg.hooks) + '</strong> ' + scaleHtml(avg.hooks, 'hooks') + '</div>'
-						)
-						: '<div style="font-size:11px;color:#646970">' + noDataLabel + '</div>';
+						) :
+						'<div style="font-size:11px;color:#646970">' + noDataLabel + '</div>';
 					avgSection.innerHTML = headerRow + body;
 					var clearBtn = avgSection.querySelector('.fs-perf-clear-history');
 					if (clearBtn) {

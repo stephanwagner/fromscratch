@@ -1,6 +1,7 @@
 #wpadminbar {
   .quicklinks {
     >ul {
+      li#wp-admin-bar-fs-purge-cache,
       li#wp-admin-bar-fs_wp_perf {
         >a.ab-item {
           text-align: center;

@@ -60,6 +60,9 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 		$on = isset($_POST['fromscratch_perf_admin_bar']) && $_POST['fromscratch_perf_admin_bar'] === '1';
 		update_option('fromscratch_perf_admin_bar', $on ? '1' : '0');
 
+		$purge_on = isset($_POST['fromscratch_purge_cache_admin_bar']) && $_POST['fromscratch_purge_cache_admin_bar'] === '1';
+		update_option('fromscratch_purge_cache_admin_bar', $purge_on ? '1' : '0');
+
 		$guest_on = isset($_POST['fromscratch_perf_panel_guest']) && $_POST['fromscratch_perf_panel_guest'] === '1';
 		update_option('fromscratch_perf_panel_guest', $guest_on ? '1' : '0');
 		$raw = isset($_POST['fromscratch_perf_panel_guest_ips']) ? sanitize_text_field(wp_unslash($_POST['fromscratch_perf_panel_guest_ips'])) : '';
@@ -273,13 +276,22 @@ function fs_render_developer_system(): void
 							}
 						?></td></tr>
 					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Object cache', 'fromscratch') ?></td>
-						<td style="padding: 2px 0;"><?= $object_cache !== '' ? $check . ' ' . esc_html($object_cache) : $cross . ' ' . esc_html__('none', 'fromscratch') ?></td></tr>
-					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('wp_using_ext_object_cache()', 'fromscratch') ?></td>
 						<td style="padding: 2px 0;"><?php
-							if (!function_exists('wp_using_ext_object_cache')) {
-								echo '—';
+							$object_cache_active = function_exists('wp_using_ext_object_cache') && wp_using_ext_object_cache();
+							$is_redis_installed = defined('WP_REDIS_VERSION')
+								|| class_exists('\RedisCache\Plugin')
+								|| function_exists('redis_cache_enable');
+
+							if ($object_cache_active) {
+								$active_label = $object_cache !== '' ? $object_cache : ($is_redis_installed ? 'Redis' : __('Object cache drop-in', 'fromscratch'));
+								if ($active_label === 'external') {
+									$active_label = __('Object cache drop-in', 'fromscratch');
+								}
+								echo esc_html($active_label) . ' ' . $check . ' ' . esc_html__('(active)', 'fromscratch');
+							} elseif ($is_redis_installed) {
+								echo esc_html__('Redis', 'fromscratch') . ' ' . $cross . ' ' . esc_html__('(installed, inactive)', 'fromscratch');
 							} else {
-								echo wp_using_ext_object_cache() ? $check . ' ' . esc_html__('true', 'fromscratch') : $cross . ' ' . esc_html__('false', 'fromscratch');
+								echo esc_html__('None', 'fromscratch') . ' ' . $cross;
 							}
 						?></td></tr>
 					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Xdebug', 'fromscratch') ?></td>
@@ -312,11 +324,18 @@ function fs_render_developer_system(): void
 						<?= esc_html__('Show performance in admin bar', 'fromscratch') ?>
 					</label>
 				</p>
+				<p style="margin-bottom: 8px;">
+					<label>
+						<input type="hidden" name="fromscratch_purge_cache_admin_bar" value="0">
+						<input type="checkbox" name="fromscratch_purge_cache_admin_bar" value="1" <?= checked(get_option('fromscratch_purge_cache_admin_bar', '0'), '1', false) ?>>
+						<?= esc_html__('Show purge page cache in admin bar', 'fromscratch') ?>
+					</label>
+				</p>
 				<p style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
 					<label>
 						<input type="hidden" name="fromscratch_perf_panel_guest" value="0">
 						<input type="checkbox" name="fromscratch_perf_panel_guest" id="fromscratch_perf_panel_guest" value="1" <?= checked($guest_panel_on, true, false) ?>>
-						<?= esc_html__('Show performance panel for logged out users.', 'fromscratch') ?>
+						<?= esc_html__('Enable performance panel for logged out users.', 'fromscratch') ?>
 					</label>
 				</p>
 				<div id="fs-perf-guest-ips-wrap" class="fs-perf-guest-ips-wrap" style="margin-top: 12px; <?= $guest_panel_on ? '' : 'display: none;' ?>">
