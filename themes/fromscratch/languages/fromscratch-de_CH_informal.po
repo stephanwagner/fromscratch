@@ -410,8 +410,8 @@ msgstr "Absendername"
 msgid "Leave empty to use the site name."
 msgstr "Leer lassen, um den Namen der Website zu verwenden."
 
-msgid "Choose how WordPress sends email. Delivery depends on your server."
-msgstr "Wähle, wie WordPress E-Mails sendet. Die Zustellung ist abhängig von deinem Server."
+msgid "Choose how WordPress sends email."
+msgstr "Wähle, wie WordPress E-Mails sendet."
 
 msgid "WordPress default"
 msgstr "WordPress-Standard"

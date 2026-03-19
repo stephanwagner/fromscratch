@@ -189,42 +189,42 @@ function fs_render_developer_general(): void
 				<button type="submit" class="button button-small" style="margin-left: 8px;"><?= esc_html__('Save', 'fromscratch') ?></button>
 			</form>
 
-			<h3 class="title" style="margin-top: 20px;"><?= esc_html__('Performance panel for guests (by IP)', 'fromscratch') ?></h3>
-			<p class="description"><?= esc_html__('Show the sticky performance panel to visitors who are not logged in, only for the IP addresses listed below.', 'fromscratch') ?></p>
 			<?php
 			$current_ip = function_exists('fs_developer_perf_current_ip') ? fs_developer_perf_current_ip() : '';
 			$guest_ips = get_option('fromscratch_perf_panel_guest_ips', '');
+			$guest_panel_on = get_option('fromscratch_perf_panel_guest', '0') === '1';
 			?>
-			<form method="post" action="" style="margin-top: 8px;">
+			<form method="post" action="" style="margin-top: 12px;">
 				<?php wp_nonce_field('fromscratch_perf_guest'); ?>
 				<input type="hidden" name="fromscratch_save_perf_guest" value="1">
-				<table class="form-table" role="presentation" style="max-width: 480px;">
-					<tr>
-						<th scope="row"><?= esc_html__('Your current IP', 'fromscratch') ?></th>
-						<td>
-							<code id="fs-perf-current-ip"><?= $current_ip !== '' ? esc_html($current_ip) : esc_html__('—', 'fromscratch') ?></code>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><label for="fromscratch_perf_panel_guest"><?= esc_html__('Enable for guests', 'fromscratch') ?></label></th>
-						<td>
-							<label>
-								<input type="hidden" name="fromscratch_perf_panel_guest" value="0">
-								<input type="checkbox" name="fromscratch_perf_panel_guest" id="fromscratch_perf_panel_guest" value="1" <?= checked(get_option('fromscratch_perf_panel_guest', '0'), '1', false) ?>>
-								<?= esc_html__('Show performance panel to guests at allowed IPs', 'fromscratch') ?>
-							</label>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><label for="fromscratch_perf_panel_guest_ips"><?= esc_html__('Allowed IP addresses', 'fromscratch') ?></label></th>
-						<td>
-							<input type="text" name="fromscratch_perf_panel_guest_ips" id="fromscratch_perf_panel_guest_ips" value="<?= esc_attr($guest_ips) ?>" class="regular-text" placeholder="192.168.1.1, 10.0.0.1">
-							<p class="description"><?= esc_html__('Comma-separated. Only these IPs will see the panel when not logged in.', 'fromscratch') ?></p>
-						</td>
-					</tr>
-				</table>
-				<p><button type="submit" class="button button-primary"><?= esc_html__('Save', 'fromscratch') ?></button></p>
+				<p style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+					<label>
+						<input type="hidden" name="fromscratch_perf_panel_guest" value="0">
+						<input type="checkbox" name="fromscratch_perf_panel_guest" id="fromscratch_perf_panel_guest" value="1" <?= checked($guest_panel_on, true, false) ?>>
+						<?= esc_html__('Show performance panel for logged out users.', 'fromscratch') ?>
+					</label>
+					<button type="submit" class="button button-small"><?= esc_html__('Save', 'fromscratch') ?></button>
+				</p>
+				<div id="fs-perf-guest-ips-wrap" class="fs-perf-guest-ips-wrap" style="margin-top: 12px; <?= $guest_panel_on ? '' : 'display: none;' ?>">
+					<p style="margin-bottom: 6px;">
+						<?= esc_html__('Your current IP:', 'fromscratch') ?> <code id="fs-perf-current-ip"><?= $current_ip !== '' ? esc_html($current_ip) : esc_html__('—', 'fromscratch') ?></code>
+					</p>
+					<p style="margin-bottom: 0;">
+						<label for="fromscratch_perf_panel_guest_ips"><?= esc_html__('Allowed IP addresses', 'fromscratch') ?></label><br>
+						<input type="text" name="fromscratch_perf_panel_guest_ips" id="fromscratch_perf_panel_guest_ips" value="<?= esc_attr($guest_ips) ?>" class="regular-text" placeholder="192.168.1.1, 10.0.0.1" style="margin-top: 4px; max-width: 320px;">
+						<span class="description" style="display: block; margin-top: 4px;"><?= esc_html__('Comma-separated. Only these IPs will see the panel when logged out.', 'fromscratch') ?></span>
+					</p>
+				</div>
 			</form>
+			<script>
+			(function() {
+				var cb = document.getElementById('fromscratch_perf_panel_guest');
+				var wrap = document.getElementById('fs-perf-guest-ips-wrap');
+				if (cb && wrap) {
+					cb.addEventListener('change', function() { wrap.style.display = this.checked ? '' : 'none'; });
+				}
+			})();
+			</script>
 		</div>
 
 		<div class="page-settings-form">

@@ -271,7 +271,7 @@ function fs_render_developer_system(): void
 			</table>
 
 			<h3 class="title" style="margin-top: 20px;"><?= esc_html__('Method', 'fromscratch') ?></h3>
-			<p class="description"><?= esc_html__('Choose how WordPress sends email. Delivery depends on your server.', 'fromscratch') ?></p>
+			<p class="description"><?= esc_html__('Choose how WordPress sends email.', 'fromscratch') ?></p>
 			<input type="hidden" name="fromscratch_mailer" id="fromscratch_mailer_input" value="<?= esc_attr($current_mailer) ?>">
 			<div class="fs-tabs -form-table" data-fs-tabs style="margin-top: 20px;">
 				<nav class="fs-tabs-nav" data-fs-tabs-nav role="tablist">
