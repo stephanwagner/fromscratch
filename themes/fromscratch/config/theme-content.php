@@ -82,7 +82,7 @@ return [
 				'sections' => [
 					[
 						'id' => 'text',
-						'title' => 'Textfield',
+						'title' => 'Text',
 						'variables' => [
 							[
 								'id' => 'textfield',
