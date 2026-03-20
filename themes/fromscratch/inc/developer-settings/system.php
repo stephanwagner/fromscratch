@@ -141,7 +141,7 @@ function fs_render_developer_system(): void
 		$system_url = admin_url('options-general.php?page=' . fs_developer_settings_page_slug('system'));
 		?>
 		<div class="page-settings-form" style="margin-bottom: 24px;">
-			<h2 class="title"><?= esc_html__('Performance', 'fromscratch') ?></h2>
+			<h2 class="title"><?= esc_html__('System info', 'fromscratch') ?></h2>
 			<table class="fs-perf-table fs-perf-summary-table" style="width: auto; margin: 16px 0 12px; border-collapse: collapse;" role="presentation">
 				<tbody>
 					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('OPcache', 'fromscratch') ?></td>
@@ -193,6 +193,7 @@ function fs_render_developer_system(): void
 						<td style="padding: 2px 0;"><a href="<?= esc_url(add_query_arg('phpinfo', '1', $system_url)) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html__('Open in new window', 'fromscratch') ?></a></td></tr>
 				</tbody>
 			</table>
+			<h2 class="title" style="margin-top: 28px;"><?= esc_html__('Performance', 'fromscratch') ?></h2>
 			<form method="post" action="" style="margin-top: 12px;">
 				<?php wp_nonce_field('fromscratch_perf'); ?>
 				<input type="hidden" name="fromscratch_save_perf" value="1">

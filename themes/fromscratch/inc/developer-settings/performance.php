@@ -470,7 +470,6 @@ add_action('admin_bar_menu', function ($admin_bar): void {
 			'id'    => 'fs-purge-cache',
 			'title' => $purge_icon,
 			'href'  => '#',
-			'meta'  => ['title' => __('Purge page cache', 'fromscratch')],
 		]);
 		$admin_bar->add_node([
 			'parent' => 'fs-purge-cache',
