@@ -81,7 +81,6 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 		wp_safe_redirect($url);
 		exit;
 	}
-
 }, 1);
 
 function fs_render_developer_system(): void
@@ -98,7 +97,7 @@ function fs_render_developer_system(): void
 	if ($perf_saved !== false) {
 		delete_transient('fromscratch_perf_admin_bar_saved');
 	}
-	?>
+?>
 	<div class="wrap">
 		<h1><?= esc_html(__('Developer settings', 'fromscratch')) ?></h1>
 		<?php if ($system_saved !== false) : ?>
@@ -139,58 +138,266 @@ function fs_render_developer_system(): void
 		$guest_ips = get_option('fromscratch_perf_panel_guest_ips', '');
 		$guest_panel_on = get_option('fromscratch_perf_panel_guest', '0') === '1';
 		$system_url = admin_url('options-general.php?page=' . fs_developer_settings_page_slug('system'));
+
+		$fs_parse_bytes = function ($value): ?int {
+			if ($value === false || $value === null) {
+				return null;
+			}
+			$value = trim((string) $value);
+			if ($value === '' || $value === '-1') {
+				return null; // Treat as unknown/unlimited.
+			}
+			if (preg_match('/^(\d+(?:\.\d+)?)\s*([KMG])$/i', $value, $m) !== 1) {
+				return null;
+			}
+			$amount = (float) $m[1];
+			$unit = strtoupper($m[2]);
+			$multiplier = match ($unit) {
+				'K' => 1024,
+				'M' => 1024 * 1024,
+				'G' => 1024 * 1024 * 1024,
+				default => 1,
+			};
+			return (int) floor($amount * $multiplier);
+		};
+
+		$fs_render_warning = function (?string $message): string {
+			if ($message === null || $message === '') {
+				return '';
+			}
+
+			$warning_label = esc_html(__('Warning', 'fromscratch'));
+			$warning_text = esc_html($message);
+
+			return '<div style="margin-top: 4px; font-size: 12px; color: #92400e;">'
+				. '<span style="display:inline-block; padding: 0 6px; border-radius: 999px; font-weight: 700; background: #fef3c7; border: 1px solid #f59e0b; margin-right: 8px;">'
+				. $warning_label
+				. '</span>'
+				. $warning_text
+				. '</div>';
+		};
+
+		// PHP recommendations: based on latest stable PHP from GitHub releases (cached).
+		$fs_latest_php_major = 8;
+		$fs_latest_php_minor = 5;
+
+		$fs_latest_php_version = get_transient('fs_latest_stable_php_version');
+		// WordPress returns `false` when the transient is not set.
+		if ($fs_latest_php_version === false) {
+			$fs_latest_php_version = null;
+			if (function_exists('wp_remote_get')) {
+				$resp = wp_remote_get('https://api.github.com/repos/php/php-src/releases?per_page=100', [
+					'timeout' => 8,
+					'headers' => [
+						'Accept' => 'application/vnd.github+json',
+						'User-Agent' => 'fromscratch-php-version-check',
+					],
+				]);
+				if (!is_wp_error($resp)) {
+					$data = json_decode(wp_remote_retrieve_body($resp), true);
+					if (is_array($data)) {
+						$best = null;
+						foreach ($data as $r) {
+							$tag_name = isset($r['tag_name']) ? (string) $r['tag_name'] : '';
+							if ($tag_name === '') {
+								continue;
+							}
+							if (!empty($r['prerelease']) || !empty($r['draft'])) {
+								continue;
+							}
+							if (preg_match('/(\d+\.\d+\.\d+)/', $tag_name, $m) !== 1) {
+								continue;
+							}
+							$ver = (string) $m[1];
+							if ($best === null || version_compare($ver, (string) $best, '>')) {
+								$best = $ver;
+							}
+						}
+						$fs_latest_php_version = is_string($best) ? $best : null;
+					}
+				}
+			}
+
+			// Cache even failures briefly to avoid repeated calls.
+			set_transient('fs_latest_stable_php_version', (string) ($fs_latest_php_version ?? ''), 12 * HOUR_IN_SECONDS);
+		}
+
+		if (is_string($fs_latest_php_version) && $fs_latest_php_version !== '' && preg_match('/^(\d+)\.(\d+)\./', $fs_latest_php_version, $m) === 1) {
+			$fs_latest_php_major = (int) $m[1];
+			$fs_latest_php_minor = (int) $m[2];
+		}
+
+		$fs_php_min_minor = max(0, $fs_latest_php_minor - 2);
+		$php_parts = explode('.', PHP_VERSION);
+		$php_major = (int) ($php_parts[0] ?? 0);
+		$php_minor = (int) ($php_parts[1] ?? 0);
+		$php_version_warning = null;
+		if ($php_major < $fs_latest_php_major || ($php_major === $fs_latest_php_major && $php_minor < $fs_php_min_minor)) {
+			$php_version_warning = sprintf(
+				/* translators: 1: current PHP version, 2: recommended minimum PHP version, 3: latest stable PHP major.minor */
+				__('Your PHP version (%1$s) is older than recommended. Consider upgrading to at least %2$s (latest stable is %3$s).', 'fromscratch'),
+				PHP_VERSION,
+				$fs_latest_php_major . '.' . $fs_php_min_minor,
+				$fs_latest_php_major . '.' . $fs_latest_php_minor
+			);
+		}
+
+		$memory_warning = null;
+		$memory_limit_bytes = $fs_parse_bytes($memory_limit);
+		if ($memory_limit_bytes !== null && $memory_limit_bytes < 256 * 1024 * 1024) {
+			$memory_warning = __('Consider increasing `memory_limit` to at least 256M.', 'fromscratch');
+		}
+
+		$upload_warning = null;
+		$upload_bytes = $fs_parse_bytes($upload_max);
+		if ($upload_bytes !== null && $upload_bytes < 16 * 1024 * 1024) {
+			$upload_warning = __('Consider increasing `upload_max_filesize` to at least 16M.', 'fromscratch');
+		}
+
+		$post_warning = null;
+		$post_bytes = $fs_parse_bytes($post_max);
+		if ($post_bytes !== null && $post_bytes < 16 * 1024 * 1024) {
+			$post_warning = __('Consider increasing `post_max_size` to at least 16M.', 'fromscratch');
+		}
+
+		$upload_post_warning = null;
+		if ($upload_bytes !== null && $post_bytes !== null && $post_bytes < $upload_bytes) {
+			$upload_post_warning = __('`post_max_size` is smaller than `upload_max_filesize`. Some uploads may fail. Increase `post_max_size`.', 'fromscratch');
+		}
+
+		$debug_enabled = function_exists('fs_is_debug') && fs_is_debug();
+		$debugmode_warning = $debug_enabled ? __('Debug mode is enabled. Disable it in production.', 'fromscratch') : null;
+		$xdebug_warning = $xdebug_on ? __('Xdebug is enabled. Disable it in production for better performance.', 'fromscratch') : null;
+
+		$opcache_warning = null;
+		if (!$opcache_available) {
+			$opcache_warning = __('OPcache is not installed.', 'fromscratch');
+		} elseif (!$opcache_on) {
+			$opcache_warning = __('OPcache is disabled. Enable it for significantly better performance.', 'fromscratch');
+		}
+
+		$object_cache_active = function_exists('wp_using_ext_object_cache') && wp_using_ext_object_cache();
+		$is_redis_installed = defined('WP_REDIS_VERSION')
+			|| class_exists('\RedisCache\Plugin')
+			|| function_exists('redis_cache_enable');
+
+		$object_cache_warning = null;
+		if (!$object_cache_active) {
+			$object_cache_warning = $is_redis_installed
+				? __('Redis is installed, but object cache is not active. Enable Redis object caching.', 'fromscratch')
+				: __('No persistent object cache detected. Consider enabling Redis/Memcached for better performance.', 'fromscratch');
+		}
+
+		$object_cache_row_value = '';
+		if ($object_cache_active) {
+			$active_label = $object_cache !== '' ? $object_cache : ($is_redis_installed ? 'Redis' : __('Object cache drop-in', 'fromscratch'));
+			if ($active_label === 'external') {
+				$active_label = __('Object cache drop-in', 'fromscratch');
+			}
+			$object_cache_row_value = esc_html($active_label) . ' ' . $check . ' ' . esc_html__('(active)', 'fromscratch');
+		} elseif ($is_redis_installed) {
+			$object_cache_row_value = esc_html__('Redis', 'fromscratch') . ' ' . $cross . ' ' . esc_html__('(installed, inactive)', 'fromscratch');
+		} else {
+			$object_cache_row_value = esc_html__('None', 'fromscratch') . ' ' . $cross;
+		}
+
+		$db_version_warning = null;
+		if ($db_server !== null && isset($db_server['type'], $db_server['version']) && stripos((string) $db_server['type'], 'mysql') !== false) {
+			if (preg_match('/^(\d+)/', (string) $db_server['version'], $m) === 1) {
+				$db_major = (int) $m[1];
+				if ($db_major > 0 && $db_major < 8) {
+					$db_version_warning = sprintf(
+						/* translators: 1: MySQL/MariaDB version */
+						__('Database version (%1$s) is quite old. Consider upgrading for security and performance.', 'fromscratch'),
+						$db_server['version']
+					);
+				}
+			}
+		}
 		?>
 		<div class="page-settings-form" style="margin-bottom: 24px;">
 			<h2 class="title"><?= esc_html__('System info', 'fromscratch') ?></h2>
 			<table class="fs-perf-table fs-perf-summary-table" style="width: auto; margin: 16px 0 12px; border-collapse: collapse;" role="presentation">
 				<tbody>
-					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('OPcache', 'fromscratch') ?></td>
-						<td style="padding: 2px 0;"><?php
+					<tr>
+						<td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('PHP version', 'fromscratch') ?></td>
+						<td style="padding: 2px 0;">
+							<div>
+								<?= esc_html(PHP_VERSION) ?> <a href="<?= esc_url(add_query_arg('phpinfo', '1', $system_url)) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html__('phpinfo', 'fromscratch') ?></a>
+							</div>
+							<?= $fs_render_warning($php_version_warning) ?>
+						</td>
+					</tr>
+
+					<tr>
+						<td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('OPcache', 'fromscratch') ?></td>
+						<td style="padding: 2px 0;">
+							<?php
 							if (!$opcache_available) {
 								echo $cross . ' ' . esc_html__('not installed', 'fromscratch');
 							} else {
 								echo $opcache_on ? $check . ' ' . esc_html__('enabled', 'fromscratch') : $cross . ' ' . esc_html__('disabled', 'fromscratch');
 							}
-						?></td></tr>
-					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Object cache', 'fromscratch') ?></td>
-						<td style="padding: 2px 0;"><?php
-							$object_cache_active = function_exists('wp_using_ext_object_cache') && wp_using_ext_object_cache();
-							$is_redis_installed = defined('WP_REDIS_VERSION')
-								|| class_exists('\RedisCache\Plugin')
-								|| function_exists('redis_cache_enable');
-
-							if ($object_cache_active) {
-								$active_label = $object_cache !== '' ? $object_cache : ($is_redis_installed ? 'Redis' : __('Object cache drop-in', 'fromscratch'));
-								if ($active_label === 'external') {
-									$active_label = __('Object cache drop-in', 'fromscratch');
-								}
-								echo esc_html($active_label) . ' ' . $check . ' ' . esc_html__('(active)', 'fromscratch');
-							} elseif ($is_redis_installed) {
-								echo esc_html__('Redis', 'fromscratch') . ' ' . $cross . ' ' . esc_html__('(installed, inactive)', 'fromscratch');
-							} else {
-								echo esc_html__('None', 'fromscratch') . ' ' . $cross;
-							}
-						?></td></tr>
-					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Xdebug', 'fromscratch') ?></td>
-						<td style="padding: 2px 0;"><?= $xdebug_on ? $check . ' ' . esc_html__('enabled', 'fromscratch') : $cross . ' ' . esc_html__('disabled', 'fromscratch') ?></td></tr>
-					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Debug mode', 'fromscratch') ?></td>
-						<td style="padding: 2px 0;"><?= (function_exists('fs_is_debug') && fs_is_debug()) ? $check . ' ' . esc_html__('enabled', 'fromscratch') : $cross . ' ' . esc_html__('disabled', 'fromscratch') ?></td></tr>
-					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('PHP version', 'fromscratch') ?></td>
-						<td style="padding: 2px 0;"><?= esc_html(PHP_VERSION) ?></td></tr>
-					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Memory limit', 'fromscratch') ?></td>
-						<td style="padding: 2px 0;"><?= esc_html($memory_limit !== false && $memory_limit !== '' ? $memory_limit : '—') ?></td></tr>
-					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Max upload size', 'fromscratch') ?></td>
-						<td style="padding: 2px 0;"><?= $upload_max !== false && $upload_max !== '' ? esc_html($upload_max) : '—' ?></td></tr>
-					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Max post size', 'fromscratch') ?></td>
-						<td style="padding: 2px 0;"><?= $post_max !== false && $post_max !== '' ? esc_html($post_max) : '—' ?></td></tr>
+							?>
+							<?= $fs_render_warning($opcache_warning) ?>
+						</td>
+					</tr>
+					<tr>
+						<td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Object cache', 'fromscratch') ?></td>
+						<td style="padding: 2px 0;">
+							<?= $object_cache_row_value ?>
+							<?= $fs_render_warning($object_cache_warning) ?>
+						</td>
+					</tr>
+					<tr>
+						<td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Xdebug', 'fromscratch') ?></td>
+						<td style="padding: 2px 0;">
+							<?= $xdebug_on ? $check . ' ' . esc_html__('enabled', 'fromscratch') : $cross . ' ' . esc_html__('disabled', 'fromscratch') ?>
+							<?= $fs_render_warning($xdebug_warning) ?>
+						</td>
+					</tr>
+					<tr>
+						<td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Debug mode', 'fromscratch') ?></td>
+						<td style="padding: 2px 0;">
+							<?= $debug_enabled ? $check . ' ' . esc_html__('enabled', 'fromscratch') : $cross . ' ' . esc_html__('disabled', 'fromscratch') ?>
+							<?= $fs_render_warning($debugmode_warning) ?>
+						</td>
+					</tr>
+					<tr>
+						<td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Memory limit', 'fromscratch') ?></td>
+						<td style="padding: 2px 0;">
+							<?= esc_html($memory_limit !== false && $memory_limit !== '' ? $memory_limit : '—') ?>
+							<?= $fs_render_warning($memory_warning) ?>
+						</td>
+					</tr>
+					<tr>
+						<td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Max upload size', 'fromscratch') ?></td>
+						<td style="padding: 2px 0;">
+							<?= $upload_max !== false && $upload_max !== '' ? esc_html($upload_max) : '—' ?>
+							<?= $fs_render_warning($upload_warning) ?>
+						</td>
+					</tr>
+					<tr>
+						<td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Max post size', 'fromscratch') ?></td>
+						<td style="padding: 2px 0;">
+							<?= $post_max !== false && $post_max !== '' ? esc_html($post_max) : '—' ?>
+							<?= $fs_render_warning($post_warning) ?>
+							<?= $fs_render_warning($upload_post_warning) ?>
+						</td>
+					</tr>
 					<?php if ($db_server !== null) : ?>
-					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Database', 'fromscratch') ?></td>
-						<td style="padding: 2px 0;"><?= esc_html($db_server['type']) ?></td></tr>
-					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Database version', 'fromscratch') ?></td>
-						<td style="padding: 2px 0;"><?= esc_html($db_server['version']) ?></td></tr>
+						<tr>
+							<td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Database', 'fromscratch') ?></td>
+							<td style="padding: 2px 0;"><?= esc_html($db_server['type']) ?></td>
+						</tr>
+						<tr>
+							<td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Database version', 'fromscratch') ?></td>
+							<td style="padding: 2px 0;">
+								<?= esc_html($db_server['version']) ?>
+								<?= $fs_render_warning($db_version_warning) ?>
+							</td>
+						</tr>
 					<?php endif; ?>
-					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('phpinfo()', 'fromscratch') ?></td>
-						<td style="padding: 2px 0;"><a href="<?= esc_url(add_query_arg('phpinfo', '1', $system_url)) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html__('Open in new window', 'fromscratch') ?></a></td></tr>
 				</tbody>
 			</table>
 
@@ -227,13 +434,15 @@ function fs_render_developer_system(): void
 				<?php submit_button(); ?>
 			</form>
 			<script>
-			(function() {
-				var cb = document.getElementById('fromscratch_perf_panel_guest');
-				var wrap = document.getElementById('fs-perf-guest-ips-wrap');
-				if (cb && wrap) {
-					cb.addEventListener('change', function() { wrap.style.display = this.checked ? '' : 'none'; });
-				}
-			})();
+				(function() {
+					var cb = document.getElementById('fromscratch_perf_panel_guest');
+					var wrap = document.getElementById('fs-perf-guest-ips-wrap');
+					if (cb && wrap) {
+						cb.addEventListener('change', function() {
+							wrap.style.display = this.checked ? '' : 'none';
+						});
+					}
+				})();
 			</script>
 		</div>
 
@@ -260,5 +469,5 @@ function fs_render_developer_system(): void
 		</form>
 
 	</div>
-	<?php
+<?php
 }
