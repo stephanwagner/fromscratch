@@ -90,7 +90,7 @@ function fs_dashboard_panel()
 			$security_url = admin_url('options-general.php?page=fs-developer-security');
 
 			if ($is_developer && (int) get_option('blog_public', 1) === 0) :
-				$system_url = admin_url('options-general.php?page=fs-developer-system#fs-search-visibility');
+				$system_url = admin_url('options-general.php?page=' . fs_developer_settings_page_slug('system') . '#fs-search-visibility');
 			?>
 				<div class="notice notice-warning inline" style="margin: 0 0 1em 0;">
 					<p><strong><?php esc_html_e('Search engines are asked not to index this site.', 'fromscratch'); ?></strong></p>

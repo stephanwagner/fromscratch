@@ -391,7 +391,7 @@ add_action('admin_bar_menu', function ($admin_bar): void {
 	$admin_bar->add_node([
 		'id'    => 'fs_wp_perf',
 		'title' => $perf_icon,
-		'href'  => admin_url('options-general.php?page=fs-developer-system'),
+		'href'  => admin_url('options-general.php?page=' . fs_developer_settings_page_slug('system')),
 	]);
 
 	// Purge cache icon (top-level).

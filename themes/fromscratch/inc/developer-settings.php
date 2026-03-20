@@ -8,8 +8,8 @@ defined('ABSPATH') || exit;
  */
 
 const FS_DEVELOPER_TABS_BASE = [
-	'general'  => ['label' => 'General'],
 	'system'   => ['label' => 'System'],
+	'email'    => ['label' => 'Email'],
 	'security' => ['label' => 'Security'],
 	'features' => ['label' => 'Features'],
 	'access'   => ['label' => 'User rights'],
@@ -33,10 +33,10 @@ function fs_developer_settings_available_tabs(): array
 	return $tabs;
 }
 
-/** Page slug for a tab. General = fs-developer; others = fs-developer-features, etc. */
+/** Page slug for a tab. System = fs-developer; others = fs-developer-features, etc. */
 function fs_developer_settings_page_slug(string $tab): string
 {
-	return $tab === 'general' ? 'fs-developer' : 'fs-developer-' . $tab;
+	return $tab === 'system' ? 'fs-developer' : 'fs-developer-' . $tab;
 }
 
 /** Current tab derived from $_GET['page'] (e.g. fs-developer-features → features). */
@@ -45,14 +45,14 @@ function fs_developer_settings_current_tab_from_page(): string
 	$page = isset($_GET['page']) ? sanitize_key($_GET['page']) : '';
 	$available = array_keys(fs_developer_settings_available_tabs());
 	if ($page === 'fs-developer') {
-		return 'general';
+		return 'system';
 	}
 	$prefix = 'fs-developer-';
 	if (strpos($page, $prefix) !== 0) {
-		return $available[0] ?? 'general';
+		return $available[0] ?? 'system';
 	}
 	$tab = substr($page, strlen($prefix));
-	return in_array($tab, $available, true) ? $tab : ($available[0] ?? 'general');
+	return in_array($tab, $available, true) ? $tab : ($available[0] ?? 'system');
 }
 
 /** Menu position for a tab (1-based) for consistent order under Settings. */
@@ -86,7 +86,7 @@ function fs_developer_settings_load_hook(string $page_slug): string
 foreach (fs_developer_settings_page_slugs() as $slug) {
 	add_action(fs_developer_settings_load_hook($slug), function () use ($slug) {
 		global $title;
-		$tab = $slug === 'fs-developer' ? 'general' : substr($slug, strlen('fs-developer-'));
+		$tab = $slug === 'fs-developer' ? 'system' : substr($slug, strlen('fs-developer-'));
 		$tabs = fs_developer_settings_available_tabs();
 		$label = $tabs[$tab]['label'] ?? $slug;
 		$title = $slug === 'fs-developer' ? __('Developer', 'fromscratch') : sprintf(__('Developer › %s', 'fromscratch'), $label);
@@ -181,8 +181,8 @@ function fs_developer_settings_render_nav(): void
 }
 
 $fs_developer_settings_dir = __DIR__ . '/developer-settings/';
-require_once $fs_developer_settings_dir . 'general.php';
 require_once $fs_developer_settings_dir . 'system.php';
+require_once $fs_developer_settings_dir . 'email.php';
 require_once $fs_developer_settings_dir . 'security.php';
 require_once $fs_developer_settings_dir . 'features.php';
 require_once $fs_developer_settings_dir . 'access.php';
@@ -192,7 +192,7 @@ if (function_exists('fs_theme_feature_enabled') && fs_theme_feature_enabled('lan
 	require_once $fs_developer_settings_dir . 'languages.php';
 }
 
-// Hide Developer sub-pages from the Settings menu; only "Developer" (General) remains visible.
+// Hide Developer sub-pages from the Settings menu; only "Developer" (System) remains visible.
 add_action('admin_menu', function () {
 	global $submenu;
 	if (!isset($submenu['options-general.php']) || !current_user_can('manage_options')) {
