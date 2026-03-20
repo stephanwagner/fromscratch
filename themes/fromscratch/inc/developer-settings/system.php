@@ -193,9 +193,12 @@ function fs_render_developer_system(): void
 						<td style="padding: 2px 0;"><a href="<?= esc_url(add_query_arg('phpinfo', '1', $system_url)) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html__('Open in new window', 'fromscratch') ?></a></td></tr>
 				</tbody>
 			</table>
-			<h2 class="title" style="margin-top: 28px;"><?= esc_html__('Performance', 'fromscratch') ?></h2>
+
+			<hr class="fs-small">
+
 			<form method="post" action="" style="margin-top: 12px;">
 				<?php wp_nonce_field('fromscratch_perf'); ?>
+				<h2 class="title"><?= esc_html__('Performance', 'fromscratch') ?></h2>
 				<input type="hidden" name="fromscratch_save_perf" value="1">
 				<p style="margin-bottom: 8px;">
 					<label>
@@ -221,7 +224,7 @@ function fs_render_developer_system(): void
 						<span class="description" style="display: block; margin-top: 4px;"><?= esc_html__('Comma-separated. Only these IPs will see the panel when logged out.', 'fromscratch') ?></span>
 					</p>
 				</div>
-				<?php submit_button(__('Save', 'fromscratch'), 'primary', '', false); ?>
+				<?php submit_button(); ?>
 			</form>
 			<script>
 			(function() {
