@@ -276,6 +276,31 @@ function fs_developer_perf_current_ip(): string
 }
 
 /**
+ * Nginx purge endpoint URL from config/theme.php.
+ */
+function fs_developer_perf_nginx_purge_url(): string
+{
+	$url = function_exists('fs_config') ? fs_config('nginx_cache_purge_url') : null;
+	if (!is_string($url) || $url === '') {
+		$url = '/purge';
+	}
+	// Allow relative endpoint URLs in config.
+	if (strpos($url, 'http://') === 0 || strpos($url, 'https://') === 0) {
+		return $url;
+	}
+	return home_url($url);
+}
+
+function fs_developer_perf_show_nginx_purge_in_admin_bar(): bool
+{
+	$show = function_exists('fs_config') ? fs_config('nginx_cache_purge_show_in_admin_bar') : null;
+	if ($show === null) {
+		return true;
+	}
+	return (bool) $show;
+}
+
+/**
  * Whether the sticky performance panel is shown to guests (not logged in) for the current IP.
  */
 function fs_developer_perf_panel_guest_visible(): bool
@@ -348,15 +373,35 @@ add_action('init', function (): void {
 		return;
 	}
 
+	$purge_url = fs_developer_perf_nginx_purge_url();
+
 	/**
 	 * Allow integrations to purge page/full-page caches.
 	 */
 	do_action('fromscratch_purge_page_cache');
 
-	// Reasonable default: flush object cache if available.
+	// Trigger nginx purge endpoint.
+	$ok = true;
+	if ($purge_url !== '' && function_exists('wp_remote_get')) {
+		$response = wp_remote_get($purge_url, [
+			'timeout' => 3,
+			'redirection' => 0,
+			'blocking' => true,
+		]);
+		if (is_wp_error($response)) {
+			$ok = false;
+		} else {
+			$code = (int) wp_remote_retrieve_response_code($response);
+			$ok = $code >= 200 && $code < 500;
+		}
+	}
+
+	// Optional: flush object cache if available.
 	if (function_exists('wp_cache_flush')) {
 		wp_cache_flush();
 	}
+
+	set_transient('fromscratch_purge_cache_notice', $ok ? '1' : '0', 30);
 
 	$redirect = wp_get_referer();
 	if (!$redirect) {
@@ -366,6 +411,25 @@ add_action('init', function (): void {
 	wp_safe_redirect($redirect);
 	exit;
 }, 1);
+
+add_action('admin_notices', function (): void {
+	if (!current_user_can('manage_options')) {
+		return;
+	}
+	if (!is_admin()) {
+		return;
+	}
+	$notice = get_transient('fromscratch_purge_cache_notice');
+	if ($notice === false) {
+		return;
+	}
+	delete_transient('fromscratch_purge_cache_notice');
+	?>
+	<div class="notice notice-success is-dismissible">
+		<p><strong><?= esc_html($notice === '1' ? __('Cache purged.', 'fromscratch') : __('Cache purge finished with issues.', 'fromscratch')) ?></strong></p>
+	</div>
+	<?php
+}, 20);
 
 /**
  * Show performance metrics in the admin bar for developer users (backend and frontend). Click to expand details with scale per metric.
@@ -396,21 +460,23 @@ add_action('admin_bar_menu', function ($admin_bar): void {
 
 	// Purge cache icon (top-level).
 	if (current_user_can('manage_options')) {
-		if (get_option('fromscratch_purge_cache_admin_bar', '0') !== '1') {
+		if (!fs_developer_perf_show_nginx_purge_in_admin_bar()) {
 			return;
 		}
-		$purge_url = wp_nonce_url(add_query_arg('fs-purge-cache', '1', home_url('/')), 'fs_purge_cache');
+		// Purge via WordPress so we can verify nonce + show a success notice.
+		$wp_purge_url = wp_nonce_url(add_query_arg('fs-purge-cache', '1', home_url('/')), 'fs_purge_cache');
 		$purge_icon = '<svg xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 100%;" width="24px" height="24px" viewBox="0 -960 960 960" fill="currentColor"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-70q0-17 11.5-28.5T760-800q17 0 28.5 11.5T800-760v200q0 17-11.5 28.5T760-520H560q-17 0-28.5-11.5T520-560q0-17 11.5-28.5T560-600h128q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q68 0 124.5-34.5T692-367q8-14 22.5-19.5t29.5-.5q16 5 23 21t-1 30q-41 80-117 128t-169 48Z"/></svg>';
 		$admin_bar->add_node([
 			'id'    => 'fs-purge-cache',
 			'title' => $purge_icon,
 			'href'  => '#',
+			'meta'  => ['title' => __('Purge page cache', 'fromscratch')],
 		]);
 		$admin_bar->add_node([
 			'parent' => 'fs-purge-cache',
 			'id'     => 'fs-purge-cache-page',
 			'title'  => __('Purge page cache', 'fromscratch'),
-			'href'   => $purge_url,
+			'href'   => $wp_purge_url,
 		]);
 	}
 	$admin_bar->add_node([

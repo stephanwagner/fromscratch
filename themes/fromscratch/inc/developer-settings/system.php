@@ -60,9 +60,6 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 		$on = isset($_POST['fromscratch_perf_admin_bar']) && $_POST['fromscratch_perf_admin_bar'] === '1';
 		update_option('fromscratch_perf_admin_bar', $on ? '1' : '0');
 
-		$purge_on = isset($_POST['fromscratch_purge_cache_admin_bar']) && $_POST['fromscratch_purge_cache_admin_bar'] === '1';
-		update_option('fromscratch_purge_cache_admin_bar', $purge_on ? '1' : '0');
-
 		$guest_on = isset($_POST['fromscratch_perf_panel_guest']) && $_POST['fromscratch_perf_panel_guest'] === '1';
 		update_option('fromscratch_perf_panel_guest', $guest_on ? '1' : '0');
 		$raw = isset($_POST['fromscratch_perf_panel_guest_ips']) ? sanitize_text_field(wp_unslash($_POST['fromscratch_perf_panel_guest_ips'])) : '';
@@ -176,6 +173,8 @@ function fs_render_developer_system(): void
 						?></td></tr>
 					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Xdebug', 'fromscratch') ?></td>
 						<td style="padding: 2px 0;"><?= $xdebug_on ? $check . ' ' . esc_html__('enabled', 'fromscratch') : $cross . ' ' . esc_html__('disabled', 'fromscratch') ?></td></tr>
+					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Debug mode', 'fromscratch') ?></td>
+						<td style="padding: 2px 0;"><?= (function_exists('fs_is_debug') && fs_is_debug()) ? $check . ' ' . esc_html__('enabled', 'fromscratch') : $cross . ' ' . esc_html__('disabled', 'fromscratch') ?></td></tr>
 					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('PHP version', 'fromscratch') ?></td>
 						<td style="padding: 2px 0;"><?= esc_html(PHP_VERSION) ?></td></tr>
 					<tr><td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Memory limit', 'fromscratch') ?></td>
@@ -202,13 +201,6 @@ function fs_render_developer_system(): void
 						<input type="hidden" name="fromscratch_perf_admin_bar" value="0">
 						<input type="checkbox" name="fromscratch_perf_admin_bar" value="1" <?= checked(get_option('fromscratch_perf_admin_bar', '1'), '1', false) ?>>
 						<?= esc_html__('Show performance in admin bar', 'fromscratch') ?>
-					</label>
-				</p>
-				<p style="margin-bottom: 8px;">
-					<label>
-						<input type="hidden" name="fromscratch_purge_cache_admin_bar" value="0">
-						<input type="checkbox" name="fromscratch_purge_cache_admin_bar" value="1" <?= checked(get_option('fromscratch_purge_cache_admin_bar', '0'), '1', false) ?>>
-						<?= esc_html__('Show purge page cache in admin bar', 'fromscratch') ?>
 					</label>
 				</p>
 				<p style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -247,7 +239,6 @@ function fs_render_developer_system(): void
 			<?php wp_nonce_field('fromscratch_system_search_visibility'); ?>
 			<input type="hidden" name="fromscratch_save_search_visibility" value="1">
 			<h2 class="title"><?= esc_html__('Search engine visibility', 'fromscratch') ?></h2>
-			<p class="description"><?= esc_html__('This setting matches Settings → Reading.', 'fromscratch') ?></p>
 			<p class="description"><?= esc_html__('When enabled, search engines are asked not to index this site.', 'fromscratch') ?></p>
 			<table class="form-table" role="presentation">
 				<tr>
@@ -264,156 +255,6 @@ function fs_render_developer_system(): void
 			<?php submit_button(); ?>
 		</form>
 
-		<hr class="fs-small">
-
-		<div class="page-settings-form">
-			<h2 class="title"><?= esc_html__('Cheat sheet', 'fromscratch') ?></h2>
-			<p class="description"><?= esc_html__('Common functions for use in templates and theme code.', 'fromscratch') ?></p>
-
-			<div class="fs-cheatsheet" style="max-width: 720px;">
-				<h3 class="title" style="margin-top: 20px;"><?= esc_html__('Assets', 'fromscratch') ?></h3>
-				<table class="widefat striped" style="margin-top: 8px;">
-					<tbody>
-						<tr>
-							<td style="width: 220px; vertical-align: top;"><code>fs_asset_url( $path )</code></td>
-							<td><?= esc_html__('URL for a static theme asset with cache-busting. Path is relative to theme root; files live under assets/.', 'fromscratch') ?>
-								<br><code>fs_asset_url( '/img/logo.png' )</code> → <code>.../assets/img/logo.png?ver=1</code>
-							</td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top;"><code>asset_url( $path )</code></td>
-							<td><?= esc_html__('Short alias for fs_asset_url().', 'fromscratch') ?></td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top;"><code>fs_asset_hash( $file )</code></td>
-							<td><?= esc_html__('File modification time (for cache-busting). Use when enqueuing scripts/styles manually; path under assets/.', 'fromscratch') ?>
-								<br><code>fs_asset_hash( '/assets/css/main.css' )</code>
-							</td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top;"><code>fs_asset_version()</code></td>
-							<td><?= esc_html__('Current asset version string (from Settings). In debug mode returns time() so cache is bypassed.', 'fromscratch') ?></td>
-						</tr>
-					</tbody>
-				</table>
-
-				<h3 class="title" style="margin-top: 24px;"><?= esc_html__('Config', 'fromscratch') ?></h3>
-
-				<table class="widefat striped" style="margin-top: 8px;">
-					<tbody>
-						<tr>
-							<td style="width: 220px; vertical-align: top;"><code>fs_config( $key )</code></td>
-							<td><?= esc_html__('Theme config (config/theme.php + theme-design.php). Optional dot path, e.g. "menus", "design.sections".', 'fromscratch') ?></td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top;"><code>fs_config_settings( $key )</code></td>
-							<td><?= esc_html__('Content/settings config (config/theme-content.php).', 'fromscratch') ?></td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top;"><code>fs_config_cpt( $key )</code></td>
-							<td><?= esc_html__('Custom post types config (config/cpt.php).', 'fromscratch') ?></td>
-						</tr>
-					</tbody>
-				</table>
-
-				<h3 class="title" style="margin-top: 24px;"><?= esc_html__('Design', 'fromscratch') ?></h3>
-				<table class="widefat striped" style="margin-top: 8px;">
-					<tbody>
-						<tr>
-							<td style="width: 220px; vertical-align: top;"><code>fs_design_variable_value( $id )</code></td>
-							<td><?= esc_html__('Effective value of a design variable (override from Settings → Theme → Design or default). Use in templates or inline styles.', 'fromscratch') ?>
-								<br><code>fs_design_variable_value( 'primary_color' )</code>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-
-				<h3 class="title" style="margin-top: 24px;"><?= esc_html__('Email', 'fromscratch') ?></h3>
-				<table class="widefat striped" style="margin-top: 8px;">
-					<tbody>
-						<tr>
-							<td style="width: 220px; vertical-align: top;"><code>fs_report_email()</code></td>
-							<td><?= esc_html__('Report email from Developer › System. Use for automated reports (e.g. weekly analytics).', 'fromscratch') ?></td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top;"><code>fs_developer_email()</code></td>
-							<td><?= esc_html__('Developer email from Developer › System. Use for system alerts, error notifications and security warnings.', 'fromscratch') ?></td>
-						</tr>
-					</tbody>
-				</table>
-
-				<h3 class="title" style="margin-top: 24px;"><?= esc_html__('Features &amp; debug', 'fromscratch') ?></h3>
-				<table class="widefat striped" style="margin-top: 8px;">
-					<tbody>
-						<tr>
-							<td style="width: 220px; vertical-align: top;"><code>fs_theme_feature_enabled( $feature )</code></td>
-							<td><?= esc_html__('Check if a feature is on (e.g. "seo", "enable_languages", "enable_blogs").', 'fromscratch') ?></td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top;"><code>fs_is_debug()</code></td>
-							<td><?= esc_html__('True when WP_DEBUG is on. Asset version and hashes bypass cache in debug.', 'fromscratch') ?></td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top;"><code>fs_is_developer_user( $user_id )</code></td>
-							<td><?= esc_html__('True if the user has developer rights (for conditional output).', 'fromscratch') ?></td>
-						</tr>
-					</tbody>
-				</table>
-
-				<?php if (function_exists('fs_theme_feature_enabled') && fs_theme_feature_enabled('languages')) : ?>
-					<h3 class="title" style="margin-top: 24px;"><?= esc_html__('Languages', 'fromscratch') ?></h3>
-					<table class="widefat striped" style="margin-top: 8px;">
-						<tbody>
-							<tr>
-								<td style="width: 220px; vertical-align: top;"><code>fs_language_current_request_lang()</code></td>
-								<td><?= esc_html__('Current language slug for this request.', 'fromscratch') ?></td>
-							</tr>
-							<tr>
-								<td style="vertical-align: top;"><code>fs_language_home_url( $lang_slug )</code></td>
-								<td><?= esc_html__('Home URL for a given language (respects prefix settings).', 'fromscratch') ?></td>
-							</tr>
-							<tr>
-								<td style="vertical-align: top;"><code>fs_get_content_languages()</code></td>
-								<td><?= esc_html__('List of configured languages (id, label, etc.).', 'fromscratch') ?></td>
-							</tr>
-							<tr>
-								<td style="vertical-align: top;"><code>fs_get_default_language()</code></td>
-								<td><?= esc_html__('Default language slug.', 'fromscratch') ?></td>
-							</tr>
-						</tbody>
-					</table>
-				<?php endif; ?>
-
-				<h3 class="title" style="margin-top: 24px;"><?= esc_html__('Helpers', 'fromscratch') ?></h3>
-				<table class="widefat striped" style="margin-top: 8px;">
-					<tbody>
-						<tr>
-							<td style="width: 220px; vertical-align: top;"><code>fs_nav_menu( $args )</code></td>
-							<td>
-								<?= esc_html__('Render a menu with the custom accessible walker from config/nav-walker.php.', 'fromscratch') ?>
-								<br><code>fs_nav_menu([ 'theme_location' =&gt; 'main_menu' ]);</code>
-							</td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top;"><code>FS_Walker_Nav_Menu</code></td>
-							<td><?= esc_html__('Minimal custom walker for clean markup: menu-link, menu-label, menu-depth-* and accessible submenu toggle buttons.', 'fromscratch') ?></td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top;"><code>fs_content_option( $option_id, $default )</code></td>
-							<td><?= esc_html__('Get a content option with language fallback: current language → default language → key without suffix. Use the base option id (no _en/_de).', 'fromscratch') ?></td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top;"><code>fs_get_page_id_by_slug( $slug )</code></td>
-							<td><?= esc_html__('Get page ID by post slug. Returns null if not found.', 'fromscratch') ?></td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top;"><code>fs_get_or_create_menu_id( $menu_slug )</code></td>
-							<td><?= esc_html__('Get (or create) a nav menu ID by slug.', 'fromscratch') ?></td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</div>
 	</div>
 	<?php
 }

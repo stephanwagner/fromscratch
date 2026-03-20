@@ -353,9 +353,6 @@ msgstr "Suchmaschinen-Indexierung unten aktivieren"
 msgid "Search engine visibility"
 msgstr "Suchmaschinen-Sichtbarkeit"
 
-msgid "This setting matches Settings → Reading."
-msgstr "Diese Einstellung entspricht Einstellungen → Lesen."
-
 msgid "When enabled, search engines are asked not to index this site."
 msgstr "Wenn aktiviert, werden Suchmaschinen gebeten, diese Webseite nicht zu indexieren."
 

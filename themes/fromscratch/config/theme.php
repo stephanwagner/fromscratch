@@ -53,10 +53,11 @@ return [
 	 * SVG support
 	 * Large filesizes can cause memory issues.
 	 */
-	'svg_max_size' => 2, // Max file size in MB
+	'svg_max_size' => 4, // Max file size in MB
 
 	/**
-	 * WebP conversion
+	 * WebP images
+	 * The quality of the lossy WebP conversion if enabled.
 	 * JPEG → lossy WebP
 	 * PNG → lossless WebP
 	 */
@@ -96,4 +97,12 @@ return [
 		'Referrer-Policy' => 'strict-origin-when-cross-origin',
 		'X-Permitted-Cross-Domain-Policies' => 'none',
 	],
+
+	/**
+	 * Nginx cache purge endpoint URL.
+	 * show_in_admin_bar: show/hide purge action in WordPress admin bar.
+	 * Example: '/purge'
+	 */
+	'nginx_cache_purge_show_in_admin_bar' => true,
+	'nginx_cache_purge_url' => '/purge',
 ];
