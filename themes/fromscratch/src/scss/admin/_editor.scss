@@ -94,3 +94,11 @@ div.fromscratch-editor-panel {
     margin-bottom: 0;
   }
 }
+
+// Exclude from search
+
+.fromscratch-exclude-from-search {
+  .components-base-control {
+    width: 100%;
+  }
+}

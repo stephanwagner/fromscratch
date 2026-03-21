@@ -188,6 +188,7 @@ function fs_editor_scripts(): void
 		[
 			'wp-plugins',
 			'wp-edit-post',
+			'wp-editor',
 			'wp-element',
 			'wp-block-editor',
 			'wp-components',

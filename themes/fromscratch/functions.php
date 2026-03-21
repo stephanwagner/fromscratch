@@ -41,6 +41,7 @@ require_once 'inc/helpers/page-blocker.php';
 require_once 'inc/login-client-logo.php';
 require_once 'inc/assets.php';
 require_once 'inc/cpt.php';
+require_once 'inc/exclude-from-search.php';
 
 // Mail (SMTP / SendGrid from Developer › System)
 require_once 'inc/mail.php';
