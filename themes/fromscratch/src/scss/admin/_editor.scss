@@ -51,8 +51,10 @@ div.fromscratch-editor-panel {
   }
 
   .fromscratch-expirator-field-action {
-    .components-flex {
-      gap: 0 !important;
+    width: 100%;
+
+    .components-radio-control__group-wrapper {
+      width: 100%;
     }
   }
 
@@ -103,25 +105,33 @@ div.fromscratch-editor-panel {
   }
 }
 
-// Post expirator (document Summary slot + schedule-like dropdown)
+// Post expirator (document Summary slot: rows match editor-post-panel__row / Titelform)
 
 .fromscratch-expirator-root {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   width: 100%;
 }
 
-.fromscratch-expirator-post-status {
+.fromscratch-expirator-post-status,
+.fromscratch-expirator-action-row {
   width: 100%;
-}
-
-.fromscratch-expirator-sidebar-extra {
-  width: 100%;
-  margin-top: 4px;
 }
 
 .fromscratch-expirator-document-panel.components-panel__row {
-  .editor-post-panel__row.fromscratch-expirator-post-status {
+  .editor-post-panel__row.fromscratch-expirator-post-status,
+  .editor-post-panel__row.fromscratch-expirator-action-row {
     width: 100%;
   }
+}
+
+.fromscratch-expirator__toggle,
+.fromscratch-expirator__action-toggle {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .fromscratch-expirator__popover-content {

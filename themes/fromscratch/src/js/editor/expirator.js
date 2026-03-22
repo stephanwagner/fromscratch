@@ -23,7 +23,7 @@
   const {
     PanelRow,
     DateTimePicker,
-    SelectControl,
+    RadioControl,
     TextControl,
     Dropdown,
     Button
@@ -66,47 +66,6 @@
     const hour12 = h % 12 || 12;
     const suffix = h < 12 ? am || 'am' : pm || 'pm';
     return hour12 + ':' + i + ' ' + suffix;
-  }
-
-  /** Normalize 24h "H:mm" or "HH:mm" to "HH:mm", or return empty if invalid. */
-  function normalizeTime24(str) {
-    if (!str || typeof str !== 'string') return '';
-    const t = str.trim();
-    const m = t.match(/^(\d{1,2}):(\d{2})$/);
-    if (!m) return '';
-    const h = Math.max(0, Math.min(23, parseInt(m[1], 10)));
-    const i = Math.max(0, Math.min(59, parseInt(m[2], 10)));
-    return String(h).padStart(2, '0') + ':' + String(i).padStart(2, '0');
-  }
-
-  /** Parse user time input to 24h "HH:mm". Handles 24h (HH:mm) and 12h (h:mm am/pm) when is12. */
-  function parseTimeForStorage(str, is12) {
-    if (!str || typeof str !== 'string') return '';
-    const t = str.trim();
-    if (t === '') return '';
-    if (normalizeTime24(t)) return normalizeTime24(t);
-    if (!is12) return '';
-    const m = t.match(/^(\d{1,2}):(\d{2})\s*(.+)$/);
-    if (!m) return '';
-    let h = parseInt(m[1], 10);
-    const i = Math.max(0, Math.min(59, parseInt(m[2], 10)));
-    const suffix = (m[3] || '').trim();
-    const isPm = pmLabel && suffix.toLowerCase() === pmLabel.toLowerCase();
-    const isAm = amLabel && suffix.toLowerCase() === amLabel.toLowerCase();
-    if (!isAm && !isPm) return '';
-    if (h < 1 || h > 12) return '';
-    if (h === 12) h = isPm ? 12 : 0;
-    else if (isPm) h += 12;
-    return String(h).padStart(2, '0') + ':' + String(i).padStart(2, '0');
-  }
-
-  /** Build stored "Y-m-d H:i" from date + time (time defaults to "00:00" if date set). */
-  function partsToStored(dateVal, timeVal) {
-    const date = dateVal && typeof dateVal === 'string' ? dateVal.trim() : '';
-    const time = parseTimeForStorage(timeVal, is12Hour);
-    if (date === '') return '';
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return '';
-    return time ? date + ' ' + time : date + ' 00:00';
   }
 
   /**
@@ -246,8 +205,9 @@
     const rawValue = meta[META_KEY_DATE] || '';
     const actionValue = meta[META_KEY_ACTION] || 'draft';
     const redirectValue = meta[META_KEY_REDIRECT] || '';
-    /** Anchor element for popover (same idea as core PostSchedulePanel). */
+    /** Anchor elements for popovers (same idea as core PostSchedulePanel / post URL). */
     const [rowAnchorEl, setRowAnchorEl] = useState(null);
+    const [actionRowAnchorEl, setActionRowAnchorEl] = useState(null);
     const popoverProps = useMemo(
       function () {
         return {
@@ -258,6 +218,17 @@
         };
       },
       [rowAnchorEl]
+    );
+    const popoverPropsAction = useMemo(
+      function () {
+        return {
+          anchor: actionRowAnchorEl,
+          placement: 'left-start',
+          offset: 36,
+          shift: true
+        };
+      },
+      [actionRowAnchorEl]
     );
 
     function handleChange(newDate) {
@@ -276,28 +247,6 @@
 
     function handleClear() {
       setMeta({ ...meta, [META_KEY_ENABLED]: '', [META_KEY_DATE]: '' });
-    }
-
-    function handleDateChange(e) {
-      const dateVal = e.target && e.target.value;
-      const { time } = storedToParts(rawValue);
-      const stored = partsToStored(dateVal, time);
-      setMeta({
-        ...meta,
-        [META_KEY_ENABLED]: stored ? '1' : '',
-        [META_KEY_DATE]: stored || ''
-      });
-    }
-
-    function handleTimeBlur(e) {
-      const timeVal = (e.target && e.target.value) || '';
-      const { date } = storedToParts(rawValue);
-      const stored = partsToStored(date, timeVal);
-      setMeta({
-        ...meta,
-        [META_KEY_ENABLED]: stored ? '1' : '',
-        [META_KEY_DATE]: stored || ''
-      });
     }
 
     function handleActionChange(value) {
@@ -330,11 +279,153 @@
       ? formatExpirationPreviewLabel(rawValue)
       : noneLabel;
 
-    const actionOptions = [
-      { value: 'draft', label: actionDraft },
-      { value: 'private', label: actionPrivate },
-      { value: 'redirect', label: actionRedirect }
+    const actionDraftDesc =
+      labels.actionDraftDesc ||
+      'Move this post to drafts so it is not publicly visible.';
+    const actionPrivateDesc =
+      labels.actionPrivateDesc ||
+      'Only site administrators and editors can view the post.';
+    const actionRedirectDesc =
+      labels.actionRedirectDesc ||
+      'Send visitors to another URL when they open this post.';
+
+    const actionRadioOptions = [
+      {
+        value: 'draft',
+        label: actionDraft,
+        description: actionDraftDesc
+      },
+      {
+        value: 'private',
+        label: actionPrivate,
+        description: actionPrivateDesc
+      },
+      {
+        value: 'redirect',
+        label: actionRedirect,
+        description: actionRedirectDesc
+      }
     ];
+
+    /** Button label in the row (like Titelform / slug preview). */
+    function getActionTogglePreview() {
+      if (actionValue === 'draft') {
+        return actionDraft;
+      }
+      if (actionValue === 'private') {
+        return actionPrivate;
+      }
+      if (actionValue === 'redirect') {
+        var u = (redirectValue || '').trim();
+        if (u.length > 32) {
+          u = u.slice(0, 29) + '…';
+        }
+        return u ? actionRedirect + ': ' + u : actionRedirect;
+      }
+      return actionDraft;
+    }
+
+    function renderActionPopoverHeaderFallback(onClose) {
+      return el(
+        'div',
+        {
+          className:
+            'block-editor-inspector-popover-header fromscratch-expirator__inspector-fallback'
+        },
+        el(
+          'div',
+          {
+            className: 'components-flex components-h-stack',
+            style: {
+              alignItems: 'center',
+              width: '100%',
+              gap: '8px'
+            }
+          },
+          el(
+            'h2',
+            {
+              className:
+                'block-editor-inspector-popover-header__heading components-heading',
+              style: { fontSize: '13px', margin: 0, flex: '0 1 auto' }
+            },
+            actionLabel
+          ),
+          el('div', {
+            className: 'components-flex-item',
+            style: { flex: '1 1 auto', minWidth: '8px' }
+          }),
+          el(
+            'button',
+            {
+              type: 'button',
+              className:
+                'components-button block-editor-inspector-popover-header__action is-small has-icon',
+              'aria-label': closeLabel,
+              onClick: onClose
+            },
+            el('svg', {
+              xmlns: 'http://www.w3.org/2000/svg',
+              viewBox: '0 0 24 24',
+              width: '24',
+              height: '24',
+              'aria-hidden': 'true',
+              focusable: 'false'
+            }, el('path', {
+              d: 'M12 13.06l3.712 3.713 1.061-1.06L13.061 12l3.712-3.712-1.06-1.06L12 10.938 8.288 7.227l-1.061 1.06L10.939 12l-3.712 3.712 1.06 1.061L12 13.061z'
+            }))
+          )
+        )
+      );
+    }
+
+    function renderActionDropdownBody(onClose) {
+      var headerEl = InspectorPopoverHeader
+        ? el(InspectorPopoverHeader, {
+            title: actionLabel,
+            onClose: onClose
+          })
+        : renderActionPopoverHeaderFallback(onClose);
+
+      return el(
+        'div',
+        { className: 'fromscratch-expirator__popover-inner' },
+        headerEl,
+        el(
+          'div',
+          {
+            className:
+              'fromscratch-expirator__popover-body fromscratch-editor-panel fromscratch-expirator-panel fromscratch-expirator__dialog fromscratch-expirator__action-popover-body'
+          },
+          el(
+            PanelRow,
+            null,
+            el(RadioControl, {
+              className: 'fromscratch-expirator-field-action',
+              label: actionLabel,
+              hideLabelFromVision: true,
+              selected: actionValue,
+              options: actionRadioOptions,
+              onChange: handleActionChange
+            })
+          ),
+          actionValue === 'redirect'
+            ? el(
+                PanelRow,
+                null,
+                el(TextControl, {
+                  className: 'fromscratch-expirator-field-redirect',
+                  label: redirectLabel,
+                  value: redirectValue,
+                  onChange: handleRedirectChange,
+                  placeholder: redirectPlaceholder,
+                  type: 'url'
+                })
+              )
+            : null
+        )
+      );
+    }
 
     function renderInspectorPopoverHeaderFallback(onClose) {
       return el(
@@ -452,10 +543,14 @@
       );
     }
 
+    const panelRowClass =
+      'components-flex components-h-stack editor-post-panel__row';
+
     const scheduleLikeRow = el(
       'div',
       {
-        className: 'editor-post-panel__row fromscratch-expirator-post-status',
+        className:
+          panelRowClass + ' fromscratch-expirator-post-status',
         ref: function (node) {
           setRowAnchorEl(node);
         }
@@ -481,7 +576,8 @@
         el(Dropdown, {
           popoverProps: popoverProps,
           focusOnMount: true,
-          className: 'fromscratch-expirator__panel-dropdown',
+          className:
+            'components-dropdown fromscratch-expirator__panel-dropdown editor-post-schedule__panel-dropdown',
           contentClassName:
             'fromscratch-expirator__popover-content editor-post-schedule__dialog',
           renderToggle: function (toggleProps) {
@@ -511,44 +607,71 @@
     const hasExpirationDate =
       typeof rawValue === 'string' && rawValue.trim() !== '';
 
+    const afterExpirationRow = hasExpirationDate
+      ? el(
+          'div',
+          {
+            className:
+              panelRowClass + ' fromscratch-expirator-action-row',
+            ref: function (node) {
+              setActionRowAnchorEl(node);
+            }
+          },
+          el(
+            'div',
+            { className: 'editor-post-panel__row-label' },
+            actionLabel
+          ),
+          el(
+            'div',
+            {
+              className: 'editor-post-panel__row-control',
+              style: {
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                justifyContent: 'flex-end',
+                flex: '1',
+                minWidth: 0
+              }
+            },
+            el(Dropdown, {
+              popoverProps: popoverPropsAction,
+              focusOnMount: true,
+              className:
+                'components-dropdown fromscratch-expirator__panel-dropdown fromscratch-expirator__action-panel-dropdown editor-post-url__panel-dropdown',
+              contentClassName:
+                'fromscratch-expirator__popover-content fromscratch-expirator__action-popover editor-post-url__dialog',
+              renderToggle: function (toggleProps) {
+                var onToggle = toggleProps.onToggle;
+                var isOpen = toggleProps.isOpen;
+                return el(
+                  Button,
+                  {
+                    variant: 'tertiary',
+                    size: 'compact',
+                    className:
+                      'fromscratch-expirator__action-toggle editor-post-url__panel-toggle',
+                    onClick: onToggle,
+                    'aria-expanded': isOpen,
+                    'aria-label': actionLabel
+                  },
+                  getActionTogglePreview()
+                );
+              },
+              renderContent: function (contentProps) {
+                return renderActionDropdownBody(contentProps.onClose);
+              }
+            })
+          )
+        )
+      : null;
+
     return el(
       'div',
       { className: 'fromscratch-expirator-root' },
       scheduleLikeRow,
-      hasExpirationDate
-        ? el(
-            'div',
-            {
-              className:
-                'fromscratch-editor-panel fromscratch-expirator-panel fromscratch-expirator-sidebar-extra'
-            },
-            el(
-              PanelRow,
-              null,
-              el(SelectControl, {
-                className: 'fromscratch-expirator-field-action',
-                label: actionLabel,
-                value: actionValue,
-                options: actionOptions,
-                onChange: handleActionChange
-              })
-            ),
-            actionValue === 'redirect'
-              ? el(
-                  PanelRow,
-                  null,
-                  el(TextControl, {
-                    className: 'fromscratch-expirator-field-redirect',
-                    label: redirectLabel,
-                    value: redirectValue,
-                    onChange: handleRedirectChange,
-                    placeholder: redirectPlaceholder,
-                    type: 'url'
-                  })
-                )
-              : null
-          )
-        : null
+      afterExpirationRow
     );
   }
 

@@ -724,6 +724,15 @@ msgstr "Als Privat speichern"
 msgid "Redirect to"
 msgstr "Weiterleiten zu"
 
+msgid "Move this post to drafts so it is not publicly visible."
+msgstr "Verschiebt den Beitrag in Entwürfe, er ist dann nicht öffentlich sichtbar."
+
+msgid "Only site administrators and editors can view the post."
+msgstr "Nur für Website-Administratoren und Redakteure sichtbar."
+
+msgid "Send visitors to another URL when they open this post."
+msgstr "Leitet Besucher beim Aufruf dieses Beitrags auf eine andere URL weiter."
+
 msgid "Uncheck to disable expiration."
 msgstr "Abwählen, um den Ablauf zu deaktivieren."
 
