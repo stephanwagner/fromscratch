@@ -109,7 +109,31 @@
     return time ? date + ' ' + time : date + ' 00:00';
   }
 
-  /** Format stored "Y-m-d H:i" for preview using WordPress date/time format (Settings → General). */
+  /**
+   * Timezone label like the Publish row (CET / UTC+1), from wp.date settings — not IANA (Europe/Zurich).
+   * Mirrors Gutenberg getTimezoneAbbreviation() in post-schedule/label.js.
+   */
+  function getTimezoneAbbreviationForDisplay() {
+    if (!wpDate || typeof wpDate.getSettings !== 'function') {
+      return '';
+    }
+    try {
+      var settings = wpDate.getSettings();
+      var tz = settings && settings.timezone;
+      if (!tz) {
+        return '';
+      }
+      if (tz.abbr && isNaN(Number(tz.abbr))) {
+        return String(tz.abbr);
+      }
+      var symbol = tz.offset < 0 ? '' : '+';
+      return 'UTC' + symbol + (tz.offsetFormatted || '');
+    } catch (e) {
+      return '';
+    }
+  }
+
+  /** Format stored "Y-m-d H:i" using Settings → General date + time formats (same options as Publish). */
   function formatStoredForDisplay(stored) {
     const dateObj = parseStoredDate(stored);
     if (!dateObj) return '';
@@ -144,6 +168,26 @@
         : timePart
       : '';
     return timeStr ? dateStr + ', ' + timeStr : dateStr;
+  }
+
+  /**
+   * Preview line: site date + time formats (Settings → General) + timezone abbreviation (CET…),
+   * same inputs as the publish schedule area — not Gutenberg’s fixed "post schedule full date format".
+   */
+  function formatExpirationPreviewLabel(stored) {
+    const formattedDate = formatStoredForDisplay(stored);
+    if (!formattedDate) {
+      return '';
+    }
+    const abbr = getTimezoneAbbreviationForDisplay();
+    if (!abbr) {
+      return formattedDate;
+    }
+    const rtl =
+      wp.i18n &&
+      typeof wp.i18n.isRTL === 'function' &&
+      wp.i18n.isRTL();
+    return rtl ? abbr + ' ' + formattedDate : formattedDate + ' ' + abbr;
   }
 
   function parseStoredDate(value) {
@@ -283,9 +327,7 @@
     const redirectPlaceholder = labels.redirectPlaceholder || '/new-path';
 
     const previewContent = rawValue
-      ? timezone
-        ? [formatStoredForDisplay(rawValue), el('br'), '(' + timezone + ')']
-        : formatStoredForDisplay(rawValue)
+      ? formatExpirationPreviewLabel(rawValue)
       : noneLabel;
 
     const actionOptions = [
