@@ -11,9 +11,12 @@
   }
 
   const el = wp.element.createElement;
-  const { useState } = wp.element;
+  const { useState, useMemo } = wp.element;
   const { registerPlugin } = wp.plugins;
   const editor = wp.editor || {};
+  const blockEditor = wp.blockEditor || {};
+  const InspectorPopoverHeader =
+    blockEditor.__experimentalInspectorPopoverHeader;
   const PluginPostStatusInfo = editor.PluginPostStatusInfo;
   const { useSelect } = wp.data;
   const { useEntityProp } = wp.coreData;
@@ -22,7 +25,8 @@
     DateTimePicker,
     SelectControl,
     TextControl,
-    Modal
+    Dropdown,
+    Button
   } = wp.components;
   const wpDate = wp.date;
 
@@ -103,11 +107,6 @@
     if (date === '') return '';
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return '';
     return time ? date + ' ' + time : date + ' 00:00';
-  }
-
-  /** Current date/time in site timezone as stored "Y-m-d H:i". */
-  function getNowForStorage() {
-    return formatForStorage(new Date());
   }
 
   /** Format stored "Y-m-d H:i" for preview using WordPress date/time format (Settings → General). */
@@ -201,10 +200,21 @@
     }
 
     const rawValue = meta[META_KEY_DATE] || '';
-    const isEnabled = meta[META_KEY_ENABLED] === '1';
     const actionValue = meta[META_KEY_ACTION] || 'draft';
     const redirectValue = meta[META_KEY_REDIRECT] || '';
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    /** Anchor element for popover (same idea as core PostSchedulePanel). */
+    const [rowAnchorEl, setRowAnchorEl] = useState(null);
+    const popoverProps = useMemo(
+      function () {
+        return {
+          anchor: rowAnchorEl,
+          placement: 'left-start',
+          offset: 36,
+          shift: true
+        };
+      },
+      [rowAnchorEl]
+    );
 
     function handleChange(newDate) {
       if (newDate === null || newDate === undefined) {
@@ -220,17 +230,8 @@
       });
     }
 
-    function handleNow() {
-      setMeta({
-        ...meta,
-        [META_KEY_ENABLED]: '1',
-        [META_KEY_DATE]: getNowForStorage()
-      });
-    }
-
     function handleClear() {
       setMeta({ ...meta, [META_KEY_ENABLED]: '', [META_KEY_DATE]: '' });
-      setIsModalOpen(false);
     }
 
     function handleDateChange(e) {
@@ -266,10 +267,14 @@
       });
     }
 
-    const nowLabel = labels.nowLabel || 'Now';
     const clearLabel = labels.clearLabel || 'Reset';
-    const previewEmptyLabel =
-      labels.previewEmptyLabel || 'Set expiration date and time';
+    const closeLabel =
+      labels.closeLabel ||
+      (wp.i18n && wp.i18n.__
+        ? wp.i18n.__('Close', 'fromscratch')
+        : 'Close');
+    const panelTitle = labels.panelTitle || 'Expiration';
+    const noneLabel = labels.noneLabel || 'None';
     const actionLabel = labels.actionLabel || 'After expiration';
     const actionDraft = labels.actionDraft || 'Set to draft';
     const actionPrivate = labels.actionPrivate || 'Set to private';
@@ -281,56 +286,7 @@
       ? timezone
         ? [formatStoredForDisplay(rawValue), el('br'), '(' + timezone + ')']
         : formatStoredForDisplay(rawValue)
-      : previewEmptyLabel;
-
-    const previewTrigger = el(
-      'button',
-      {
-        'type': 'button',
-        'className':
-          'fromscratch-expirator-preview components-button is-tertiary',
-        'onClick': function () {
-          setIsModalOpen(true);
-        },
-        'aria-haspopup': 'dialog',
-        'aria-expanded': isModalOpen
-      },
-      previewContent
-    );
-
-    const previewResetButton = rawValue
-      ? el(
-          'button',
-          {
-            'type': 'button',
-            'className':
-              'fromscratch-expirator-preview-reset components-button is-tertiary has-icon',
-            'onClick': handleClear,
-            'aria-label': clearLabel
-          },
-          el('span', {
-            className: 'dashicons dashicons-no-alt',
-            style: { fontSize: '16px', width: '16px', height: '16px' }
-          })
-        )
-      : null;
-
-    const firstRowContent = rawValue
-      ? el(
-          'div',
-          {
-            style: {
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              width: '100%',
-              marginBottom: '4px'
-            }
-          },
-          previewTrigger,
-          previewResetButton
-        )
-      : previewTrigger;
+      : noneLabel;
 
     const actionOptions = [
       { value: 'draft', label: actionDraft },
@@ -338,123 +294,219 @@
       { value: 'redirect', label: actionRedirect }
     ];
 
-    const modalBody = el(
-      'div',
-      {
-        className: 'fromscratch-editor-panel fromscratch-expirator-panel fromscratch-expirator-modal-body'
-      },
-      el(
-        PanelRow,
-        null,
-        el(DateTimePicker, {
-          currentDate: parseStoredDate(rawValue) || null,
-          onChange: handleChange,
-          is12Hour: is12Hour,
-          startOfWeek: (function () {
-            var n = parseInt(labels.startOfWeek, 10);
-            return n >= 0 && n <= 6 ? n : 0;
-          })()
-        })
-      ),
-      el(
-        PanelRow,
-        null,
+    function renderInspectorPopoverHeaderFallback(onClose) {
+      return el(
+        'div',
+        {
+          className:
+            'block-editor-inspector-popover-header fromscratch-expirator__inspector-fallback'
+        },
         el(
-          'p',
+          'div',
           {
+            className:
+              'components-flex components-h-stack',
             style: {
-              margin: 0,
-              display: 'flex',
-              gap: '8px',
-              flexWrap: 'wrap'
+              alignItems: 'center',
+              width: '100%',
+              gap: '8px'
             }
           },
           el(
+            'h2',
+            {
+              className:
+                'block-editor-inspector-popover-header__heading components-heading',
+              style: { fontSize: '13px', margin: 0, flex: '0 1 auto' }
+            },
+            panelTitle
+          ),
+          el('div', {
+            className: 'components-flex-item',
+            style: { flex: '1 1 auto', minWidth: '8px' }
+          }),
+          el(
             'button',
             {
               type: 'button',
-              className: 'components-button is-primary is-small',
+              className:
+                'components-button block-editor-inspector-popover-header__action is-small is-tertiary',
               onClick: function () {
-                setIsModalOpen(false);
+                handleClear();
+                if (typeof onClose === 'function') {
+                  onClose();
+                }
               }
             },
-            labels.okLabel || 'OK'
+            clearLabel
           ),
           el(
             'button',
             {
               type: 'button',
-              className: 'components-button is-tertiary is-small',
-              onClick: handleNow
+              className:
+                'components-button block-editor-inspector-popover-header__action is-small has-icon',
+              'aria-label': closeLabel,
+              onClick: onClose
             },
-            nowLabel
-          ),
-          rawValue
-            ? el(
-                'button',
-                {
-                  type: 'button',
-                  className: 'components-button is-tertiary is-small',
-                  onClick: handleClear
-                },
-                clearLabel
-              )
-            : null
+            el('svg', {
+              xmlns: 'http://www.w3.org/2000/svg',
+              viewBox: '0 0 24 24',
+              width: '24',
+              height: '24',
+              'aria-hidden': 'true',
+              focusable: 'false'
+            }, el('path', {
+              d: 'M12 13.06l3.712 3.713 1.061-1.06L13.061 12l3.712-3.712-1.06-1.06L12 10.938 8.288 7.227l-1.061 1.06L10.939 12l-3.712 3.712 1.06 1.061L12 13.061z'
+            }))
+          )
         )
-      ),
-      el(
-        PanelRow,
-        null,
-        el(SelectControl, {
-          className: 'fromscratch-expirator-field-action',
-          label: actionLabel,
-          value: actionValue,
-          options: actionOptions,
-          onChange: handleActionChange
-        })
-      ),
-      actionValue === 'redirect'
-        ? el(
+      );
+    }
+
+    function renderDropdownBody(onClose) {
+      var headerEl = InspectorPopoverHeader
+        ? el(InspectorPopoverHeader, {
+            title: panelTitle,
+            onClose: onClose,
+            actions: [
+              {
+                label: clearLabel,
+                onClick: function () {
+                  handleClear();
+                  if (typeof onClose === 'function') {
+                    onClose();
+                  }
+                }
+              }
+            ]
+          })
+        : renderInspectorPopoverHeaderFallback(onClose);
+
+      return el(
+        'div',
+        { className: 'fromscratch-expirator__popover-inner' },
+        headerEl,
+        el(
+          'div',
+          {
+            className:
+              'fromscratch-expirator__popover-body fromscratch-editor-panel fromscratch-expirator-panel fromscratch-expirator__dialog'
+          },
+          el(
             PanelRow,
             null,
-            el(TextControl, {
-              className: 'fromscratch-expirator-field-redirect',
-              label: redirectLabel,
-              value: redirectValue,
-              onChange: handleRedirectChange,
-              placeholder: redirectPlaceholder,
-              type: 'url'
+            el(DateTimePicker, {
+              currentDate: parseStoredDate(rawValue) || null,
+              onChange: handleChange,
+              is12Hour: is12Hour,
+              startOfWeek: (function () {
+                var n = parseInt(labels.startOfWeek, 10);
+                return n >= 0 && n <= 6 ? n : 0;
+              })()
             })
           )
-        : null
-    );
-
-    const modalEl = isModalOpen
-      ? el(
-          Modal,
-          {
-            className: 'fromscratch-expirator-modal',
-            title: labels.panelTitle || 'Expiration',
-            onRequestClose: function () {
-              setIsModalOpen(false);
-            },
-            isDismissible: true
-          },
-          modalBody
         )
-      : null;
+      );
+    }
 
-    return el(
+    const scheduleLikeRow = el(
       'div',
-      { className: 'fromscratch-expirator-post-status' },
+      {
+        className: 'editor-post-panel__row fromscratch-expirator-post-status',
+        ref: function (node) {
+          setRowAnchorEl(node);
+        }
+      },
+      el(
+        'div',
+        { className: 'editor-post-panel__row-label' },
+        panelTitle
+      ),
       el(
         'div',
         {
-          className: 'fromscratch-editor-panel fromscratch-expirator-panel'
+          className: 'editor-post-panel__row-control',
+          style: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            justifyContent: 'flex-end',
+            flex: '1',
+            minWidth: 0
+          }
         },
-        el(PanelRow, null, firstRowContent)
-      ),
-      modalEl
+        el(Dropdown, {
+          popoverProps: popoverProps,
+          focusOnMount: true,
+          className: 'fromscratch-expirator__panel-dropdown',
+          contentClassName:
+            'fromscratch-expirator__popover-content editor-post-schedule__dialog',
+          renderToggle: function (toggleProps) {
+            var onToggle = toggleProps.onToggle;
+            var isOpen = toggleProps.isOpen;
+            return el(
+              Button,
+              {
+                variant: 'tertiary',
+                size: 'compact',
+                className:
+                  'fromscratch-expirator__toggle editor-post-schedule__dialog-toggle',
+                onClick: onToggle,
+                'aria-expanded': isOpen,
+                'aria-label': panelTitle
+              },
+              previewContent
+            );
+          },
+          renderContent: function (contentProps) {
+            return renderDropdownBody(contentProps.onClose);
+          }
+        })
+      )
+    );
+
+    const hasExpirationDate =
+      typeof rawValue === 'string' && rawValue.trim() !== '';
+
+    return el(
+      'div',
+      { className: 'fromscratch-expirator-root' },
+      scheduleLikeRow,
+      hasExpirationDate
+        ? el(
+            'div',
+            {
+              className:
+                'fromscratch-editor-panel fromscratch-expirator-panel fromscratch-expirator-sidebar-extra'
+            },
+            el(
+              PanelRow,
+              null,
+              el(SelectControl, {
+                className: 'fromscratch-expirator-field-action',
+                label: actionLabel,
+                value: actionValue,
+                options: actionOptions,
+                onChange: handleActionChange
+              })
+            ),
+            actionValue === 'redirect'
+              ? el(
+                  PanelRow,
+                  null,
+                  el(TextControl, {
+                    className: 'fromscratch-expirator-field-redirect',
+                    label: redirectLabel,
+                    value: redirectValue,
+                    onChange: handleRedirectChange,
+                    placeholder: redirectPlaceholder,
+                    type: 'url'
+                  })
+                )
+              : null
+          )
+        : null
     );
   }
 

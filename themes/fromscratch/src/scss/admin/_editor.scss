@@ -103,18 +103,38 @@ div.fromscratch-editor-panel {
   }
 }
 
-// Post expirator (document Summary slot + modal)
+// Post expirator (document Summary slot + schedule-like dropdown)
+
+.fromscratch-expirator-root {
+  width: 100%;
+}
 
 .fromscratch-expirator-post-status {
   width: 100%;
 }
 
-.fromscratch-expirator-modal .fromscratch-expirator-modal-body {
-  min-width: 0;
+.fromscratch-expirator-sidebar-extra {
+  width: 100%;
+  margin-top: 4px;
 }
 
-@media (min-width: 600px) {
-  .components-modal__frame.fromscratch-expirator-modal {
-    min-width: 400px;
+.fromscratch-expirator-document-panel.components-panel__row {
+  .editor-post-panel__row.fromscratch-expirator-post-status {
+    width: 100%;
   }
+}
+
+.fromscratch-expirator__popover-content {
+  min-width: min(320px, 92vw);
+}
+
+.fromscratch-expirator__popover-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: min(320px, 92vw);
+}
+
+.fromscratch-expirator__popover-body {
+  padding: 0 12px 12px;
 }

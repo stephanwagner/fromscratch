@@ -1220,3 +1220,8 @@ msgstr "Klein"
 # Exclude from search
 msgid "Exclude from search"
 msgstr "Von der Suche ausschließen"
+
+# Post expirator (empty expiration button)
+msgctxt "expiration date empty"
+msgid "None"
+msgstr "Ohne"

@@ -145,7 +145,8 @@ add_action('enqueue_block_editor_assets', function () {
 		'actionRedirect'  => __('Redirect to', 'fromscratch'),
 		'redirectPlaceholder' => __('/new-path', 'fromscratch'),
 		'redirectLabel'   => __('Redirect URL', 'fromscratch'),
-		'previewEmptyLabel' => __('Set expiration date and time', 'fromscratch'),
+		'noneLabel'       => _x( 'None', 'expiration date empty', 'fromscratch' ),
+		'closeLabel'      => __('Close', 'fromscratch'),
 		'monthNames'      => $month_names,
 	], 11);
 });
