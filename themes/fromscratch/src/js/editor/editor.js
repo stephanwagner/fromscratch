@@ -1,4 +1,4 @@
+import './exclude-from-search';
 import './expirator';
 import './seo';
 import './languages';
-import './exclude-from-search';

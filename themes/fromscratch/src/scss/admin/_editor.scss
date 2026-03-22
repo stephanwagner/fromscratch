@@ -102,3 +102,19 @@ div.fromscratch-editor-panel {
     width: 100%;
   }
 }
+
+// Post expirator (document Summary slot + modal)
+
+.fromscratch-expirator-post-status {
+  width: 100%;
+}
+
+.fromscratch-expirator-modal .fromscratch-expirator-modal-body {
+  min-width: 0;
+}
+
+@media (min-width: 600px) {
+  .components-modal__frame.fromscratch-expirator-modal {
+    min-width: 400px;
+  }
+}

@@ -13,11 +13,17 @@
   const el = wp.element.createElement;
   const { useState } = wp.element;
   const { registerPlugin } = wp.plugins;
-  const { PluginDocumentSettingPanel } = wp.editPost;
+  const editor = wp.editor || {};
+  const PluginPostStatusInfo = editor.PluginPostStatusInfo;
   const { useSelect } = wp.data;
   const { useEntityProp } = wp.coreData;
-  const { PanelRow, DateTimePicker, SelectControl, TextControl } =
-    wp.components;
+  const {
+    PanelRow,
+    DateTimePicker,
+    SelectControl,
+    TextControl,
+    Modal
+  } = wp.components;
   const wpDate = wp.date;
 
   const META_KEY_DATE = '_fs_expiration_date';
@@ -198,7 +204,7 @@
     const isEnabled = meta[META_KEY_ENABLED] === '1';
     const actionValue = meta[META_KEY_ACTION] || 'draft';
     const redirectValue = meta[META_KEY_REDIRECT] || '';
-    const [isPickerOpen, setIsPickerOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     function handleChange(newDate) {
       if (newDate === null || newDate === undefined) {
@@ -224,7 +230,7 @@
 
     function handleClear() {
       setMeta({ ...meta, [META_KEY_ENABLED]: '', [META_KEY_DATE]: '' });
-      setIsPickerOpen(false);
+      setIsModalOpen(false);
     }
 
     function handleDateChange(e) {
@@ -284,11 +290,10 @@
         'className':
           'fromscratch-expirator-preview components-button is-tertiary',
         'onClick': function () {
-          setIsPickerOpen(function (prev) {
-            return !prev;
-          });
+          setIsModalOpen(true);
         },
-        'aria-expanded': isPickerOpen
+        'aria-haspopup': 'dialog',
+        'aria-expanded': isModalOpen
       },
       previewContent
     );
@@ -327,103 +332,129 @@
         )
       : previewTrigger;
 
-    const pickerContent = !isPickerOpen
-      ? []
-      : [
-          el(DateTimePicker, {
-            currentDate: parseStoredDate(rawValue) || null,
-            onChange: handleChange,
-            is12Hour: is12Hour,
-            startOfWeek: (function () {
-              var n = parseInt(labels.startOfWeek, 10);
-              return n >= 0 && n <= 6 ? n : 0;
-            })()
-          }),
-          el(
-            'p',
-            {
-              style: {
-                marginTop: '8px',
-                marginBottom: '12px',
-                display: 'flex',
-                gap: '8px',
-                flexWrap: 'wrap'
-              }
-            },
-            el(
-              'button',
-              {
-                type: 'button',
-                className: 'components-button is-tertiary is-small',
-                onClick: function () {
-                  setIsPickerOpen(false);
-                }
-              },
-              labels.okLabel || 'OK'
-            ),
-            el(
-              'button',
-              {
-                type: 'button',
-                className: 'components-button is-tertiary is-small',
-                onClick: handleNow
-              },
-              nowLabel
-            ),
-            rawValue
-              ? el(
-                  'button',
-                  {
-                    type: 'button',
-                    className: 'components-button is-tertiary is-small',
-                    onClick: handleClear
-                  },
-                  clearLabel
-                )
-              : null
-          )
-        ];
-
     const actionOptions = [
       { value: 'draft', label: actionDraft },
       { value: 'private', label: actionPrivate },
       { value: 'redirect', label: actionRedirect }
     ];
-    const actionSelectEl =
-      isPickerOpen || isEnabled
-        ? el(SelectControl, {
-            className: 'fromscratch-expirator-field-action',
-            label: actionLabel,
-            value: actionValue,
-            options: actionOptions,
-            onChange: handleActionChange
-          })
-        : null;
-    const redirectInputEl =
-      (isPickerOpen || isEnabled) && actionValue === 'redirect'
-        ? el(TextControl, {
-            className: 'fromscratch-expirator-field-redirect',
-            label: redirectLabel,
-            value: redirectValue,
-            onChange: handleRedirectChange,
-            placeholder: redirectPlaceholder,
-            type: 'url'
-          })
-        : null;
 
-    return el(
+    const modalBody = el(
       'div',
-      { className: 'fromscratch-editor-panel fromscratch-expirator-panel' },
-      el(PanelRow, null, firstRowContent),
-      isPickerOpen
+      {
+        className: 'fromscratch-editor-panel fromscratch-expirator-panel fromscratch-expirator-modal-body'
+      },
+      el(
+        PanelRow,
+        null,
+        el(DateTimePicker, {
+          currentDate: parseStoredDate(rawValue) || null,
+          onChange: handleChange,
+          is12Hour: is12Hour,
+          startOfWeek: (function () {
+            var n = parseInt(labels.startOfWeek, 10);
+            return n >= 0 && n <= 6 ? n : 0;
+          })()
+        })
+      ),
+      el(
+        PanelRow,
+        null,
+        el(
+          'p',
+          {
+            style: {
+              margin: 0,
+              display: 'flex',
+              gap: '8px',
+              flexWrap: 'wrap'
+            }
+          },
+          el(
+            'button',
+            {
+              type: 'button',
+              className: 'components-button is-primary is-small',
+              onClick: function () {
+                setIsModalOpen(false);
+              }
+            },
+            labels.okLabel || 'OK'
+          ),
+          el(
+            'button',
+            {
+              type: 'button',
+              className: 'components-button is-tertiary is-small',
+              onClick: handleNow
+            },
+            nowLabel
+          ),
+          rawValue
+            ? el(
+                'button',
+                {
+                  type: 'button',
+                  className: 'components-button is-tertiary is-small',
+                  onClick: handleClear
+                },
+                clearLabel
+              )
+            : null
+        )
+      ),
+      el(
+        PanelRow,
+        null,
+        el(SelectControl, {
+          className: 'fromscratch-expirator-field-action',
+          label: actionLabel,
+          value: actionValue,
+          options: actionOptions,
+          onChange: handleActionChange
+        })
+      ),
+      actionValue === 'redirect'
         ? el(
             PanelRow,
             null,
-            el('div', { style: { width: '100%' } }, ...pickerContent)
+            el(TextControl, {
+              className: 'fromscratch-expirator-field-redirect',
+              label: redirectLabel,
+              value: redirectValue,
+              onChange: handleRedirectChange,
+              placeholder: redirectPlaceholder,
+              type: 'url'
+            })
           )
-        : null,
-      actionSelectEl ? el(PanelRow, null, actionSelectEl) : null,
-      redirectInputEl ? el(PanelRow, null, redirectInputEl) : null
+        : null
+    );
+
+    const modalEl = isModalOpen
+      ? el(
+          Modal,
+          {
+            className: 'fromscratch-expirator-modal',
+            title: labels.panelTitle || 'Expiration',
+            onRequestClose: function () {
+              setIsModalOpen(false);
+            },
+            isDismissible: true
+          },
+          modalBody
+        )
+      : null;
+
+    return el(
+      'div',
+      { className: 'fromscratch-expirator-post-status' },
+      el(
+        'div',
+        {
+          className: 'fromscratch-editor-panel fromscratch-expirator-panel'
+        },
+        el(PanelRow, null, firstRowContent)
+      ),
+      modalEl
     );
   }
 
@@ -438,13 +469,13 @@
     if (!postType || allowed.indexOf(postType) === -1) {
       return null;
     }
+    if (!PluginPostStatusInfo) {
+      return null;
+    }
     return el(
-      PluginDocumentSettingPanel,
+      PluginPostStatusInfo,
       {
-        name: 'fromscratch-expirator',
-        title: labels.panelTitle || 'Expiration',
-        className: 'fromscratch-expirator-document-panel',
-        order: 10
+        className: 'fromscratch-expirator-document-panel'
       },
       el(ExpiratorPanelContent, null)
     );
