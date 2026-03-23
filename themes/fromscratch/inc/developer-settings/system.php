@@ -50,6 +50,67 @@ function fs_developer_redis_safeguard_is_installed(): bool
 		&& strpos($wp_config, '// END FromScratch Redis safeguard') !== false;
 }
 
+const FS_LATEST_PHP_VERSION_HOOK = 'fromscratch_refresh_latest_php_version';
+
+/**
+ * Fetch latest stable PHP version from upstream releases.
+ * Returns empty string when unavailable.
+ */
+function fs_fetch_latest_stable_php_version(): string
+{
+	if (!function_exists('wp_remote_get')) {
+		return '';
+	}
+	$resp = wp_remote_get('https://api.github.com/repos/php/php-src/releases?per_page=100', [
+		'timeout' => 8,
+		'headers' => [
+			'Accept' => 'application/vnd.github+json',
+			'User-Agent' => 'fromscratch-php-version-check',
+		],
+	]);
+	if (is_wp_error($resp)) {
+		return '';
+	}
+	$data = json_decode(wp_remote_retrieve_body($resp), true);
+	if (!is_array($data)) {
+		return '';
+	}
+	$best = null;
+	foreach ($data as $release) {
+		$tag_name = isset($release['tag_name']) ? (string) $release['tag_name'] : '';
+		if ($tag_name === '' || !empty($release['prerelease']) || !empty($release['draft'])) {
+			continue;
+		}
+		if (preg_match('/(\d+\.\d+\.\d+)/', $tag_name, $m) !== 1) {
+			continue;
+		}
+		$version = (string) $m[1];
+		if ($best === null || version_compare($version, (string) $best, '>')) {
+			$best = $version;
+		}
+	}
+	return is_string($best) ? $best : '';
+}
+
+add_action(FS_LATEST_PHP_VERSION_HOOK, function (): void {
+	$version = fs_fetch_latest_stable_php_version();
+	set_transient('fs_latest_stable_php_version', $version, 24 * HOUR_IN_SECONDS * 7 * 2);
+});
+
+/**
+ * Schedule PHP version metadata refresh in background.
+ */
+function fs_schedule_latest_php_version_refresh(): void
+{
+	if (get_transient('fs_latest_stable_php_version') !== false) {
+		return;
+	}
+	if (wp_next_scheduled(FS_LATEST_PHP_VERSION_HOOK)) {
+		return;
+	}
+	wp_schedule_single_event(time() + 1, FS_LATEST_PHP_VERSION_HOOK);
+}
+
 function fs_developer_redis_safeguard_install(): array
 {
 	$file_path = fs_developer_redis_safeguard_file_path();
@@ -301,44 +362,9 @@ function fs_render_developer_system(): void
 		$fs_latest_php_minor = 5;
 
 		$fs_latest_php_version = get_transient('fs_latest_stable_php_version');
-		// WordPress returns `false` when the transient is not set.
 		if ($fs_latest_php_version === false) {
-			$fs_latest_php_version = null;
-			if (function_exists('wp_remote_get')) {
-				$resp = wp_remote_get('https://api.github.com/repos/php/php-src/releases?per_page=100', [
-					'timeout' => 8,
-					'headers' => [
-						'Accept' => 'application/vnd.github+json',
-						'User-Agent' => 'fromscratch-php-version-check',
-					],
-				]);
-				if (!is_wp_error($resp)) {
-					$data = json_decode(wp_remote_retrieve_body($resp), true);
-					if (is_array($data)) {
-						$best = null;
-						foreach ($data as $r) {
-							$tag_name = isset($r['tag_name']) ? (string) $r['tag_name'] : '';
-							if ($tag_name === '') {
-								continue;
-							}
-							if (!empty($r['prerelease']) || !empty($r['draft'])) {
-								continue;
-							}
-							if (preg_match('/(\d+\.\d+\.\d+)/', $tag_name, $m) !== 1) {
-								continue;
-							}
-							$ver = (string) $m[1];
-							if ($best === null || version_compare($ver, (string) $best, '>')) {
-								$best = $ver;
-							}
-						}
-						$fs_latest_php_version = is_string($best) ? $best : null;
-					}
-				}
-			}
-
-			// Cache even failures briefly to avoid repeated calls.
-			set_transient('fs_latest_stable_php_version', (string) ($fs_latest_php_version ?? ''), 24 * HOUR_IN_SECONDS * 7 * 2);
+			fs_schedule_latest_php_version_refresh();
+			$fs_latest_php_version = '';
 		}
 
 		if (is_string($fs_latest_php_version) && $fs_latest_php_version !== '' && preg_match('/^(\d+)\.(\d+)\./', $fs_latest_php_version, $m) === 1) {

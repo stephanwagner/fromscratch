@@ -65,6 +65,53 @@ function fs_redirects_internal_paths(): array
 }
 
 /**
+ * Whether a path is an internal WP/system path that should never be redirected by the custom router.
+ */
+function fs_redirects_is_internal_path(string $path): bool
+{
+	foreach (fs_redirects_internal_paths() as $internal) {
+		if ($path === $internal || str_starts_with($path, $internal . '/')) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ * Resolve and validate redirect target.
+ * - Relative paths are treated as local URLs.
+ * - External URLs are allowed only when host is in allowlist filter.
+ *
+ * @return string Empty string when invalid/disallowed.
+ */
+function fs_redirect_resolve_target_url(string $to): string
+{
+	$to = trim($to);
+	if ($to === '') {
+		return '';
+	}
+	if (strpos($to, 'http://') !== 0 && strpos($to, 'https://') !== 0) {
+		return home_url($to);
+	}
+
+	$target_host = strtolower((string) wp_parse_url($to, PHP_URL_HOST));
+	$home_host = strtolower((string) wp_parse_url(home_url('/'), PHP_URL_HOST));
+	if ($target_host === '' || $home_host === '') {
+		return '';
+	}
+	if ($target_host === $home_host) {
+		return $to;
+	}
+
+	$allowed_hosts = apply_filters('fromscratch_allowed_redirect_hosts', []);
+	if (!is_array($allowed_hosts)) {
+		$allowed_hosts = [];
+	}
+	$allowed_hosts = array_map(static fn($h) => strtolower(trim((string) $h)), $allowed_hosts);
+	return in_array($target_host, $allowed_hosts, true) ? $to : '';
+}
+
+/**
  * Redirect manager: run redirects via WordPress when method is "wordpress".
  * When method is "htaccess", Apache handles redirects from .htaccess.
  */
@@ -81,10 +128,8 @@ add_action('template_redirect', function () {
 	$path = trim((string) parse_url($path, PHP_URL_PATH), '/');
 	$request = $path === '' ? '/' : '/' . $path;
 
-	foreach (fs_redirects_internal_paths() as $internal) {
-		if (str_starts_with($path, $internal)) {
-			return;
-		}
+	if (fs_redirects_is_internal_path($path)) {
+		return;
 	}
 	if (!isset($redirects[$request])) {
 		return;
@@ -95,9 +140,10 @@ add_action('template_redirect', function () {
 	if ($to === '') {
 		return;
 	}
-	if (strpos($to, 'http') !== 0) {
-		$to = home_url($to);
+	$to = fs_redirect_resolve_target_url($to);
+	if ($to === '') {
+		return;
 	}
-	wp_redirect($to, $code);
+	wp_safe_redirect($to, $code);
 	exit;
 }, 1);

@@ -313,6 +313,10 @@ add_action('template_redirect', function (): void {
 	if (!is_string($url) || $url === '') {
 		return;
 	}
-	wp_redirect(esc_url_raw($url), 301);
+	$target = function_exists('fs_redirect_resolve_target_url') ? fs_redirect_resolve_target_url($url) : '';
+	if ($target === '') {
+		return;
+	}
+	wp_safe_redirect($target, 301);
 	exit;
 });
