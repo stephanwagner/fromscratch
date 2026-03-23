@@ -184,7 +184,7 @@ function fs_render_developer_email(): void
 
 		<?php fs_developer_settings_render_nav(); ?>
 
-		<form method="post" action="" class="page-settings-form">
+		<form method="post" action="" class="fs-page-settings-form">
 			<?php settings_fields(FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL); ?>
 			<h2 class="title"><?= esc_html__('Email addresses', 'fromscratch') ?></h2>
 			<table class="form-table" role="presentation">
@@ -210,12 +210,14 @@ function fs_render_developer_email(): void
 					</td>
 				</tr>
 			</table>
-			<?php submit_button(); ?>
+			<div class="fs-submit-row">
+				<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
+			</div>
 		</form>
 
-		<hr class="fs-small">
+		<hr class="fs-page-settings-divider">
 
-		<form method="post" action="" class="page-settings-form fs-mail-delivery-form" id="fs-mail-delivery">
+		<form method="post" action="" class="fs-page-settings-form fs-mail-delivery-form" id="fs-mail-delivery">
 			<?php wp_nonce_field('fromscratch_system_mail_delivery'); ?>
 			<input type="hidden" name="fromscratch_save_mail_delivery" value="1">
 			<h2 class="title"><?= esc_html__('Mail delivery', 'fromscratch') ?></h2>
@@ -326,10 +328,12 @@ function fs_render_developer_email(): void
 			})();
 			</script>
 
-			<?php submit_button(); ?>
+			<div class="fs-submit-row">
+				<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
+			</div>
 		</form>
 
-		<hr class="fs-small">
+		<hr class="fs-page-settings-divider">
 
 		<form method="post" action="" class="fs-test-mail-form" id="fs-test-mail-form">
 			<?php wp_nonce_field('fromscratch_system_test_mail'); ?>
@@ -344,7 +348,9 @@ function fs_render_developer_email(): void
 					</td>
 				</tr>
 			</table>
-			<?php submit_button(__('Send test mail', 'fromscratch'), 'secondary', 'fromscratch_test_mail', false); ?>
+			<div class="fs-submit-row">
+				<button type="submit" name="fromscratch_test_mail" class="button button-primary"><?= esc_html__('Send test mail', 'fromscratch') ?></button>
+			</div>
 		</form>
 	</div>
 	<?php

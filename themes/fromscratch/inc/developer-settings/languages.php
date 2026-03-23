@@ -117,7 +117,7 @@ function fs_render_developer_languages(): void
 
 		<h2 class="title"><?= esc_html__('Languages', 'fromscratch') ?></h2>
 		<p class="description"><?= esc_html__('Configure the languages available for your content and manage how they are used across the site.', 'fromscratch') ?></p>
-		<form method="post" action="" class="page-settings-form" id="fs-languages-form">
+		<form method="post" action="" class="fs-page-settings-form" id="fs-languages-form">
 			<?php settings_fields(FS_THEME_OPTION_GROUP_LANGUAGES); ?>
 			<table class="form-table" role="presentation">
 				<tr>
@@ -291,7 +291,9 @@ function fs_render_developer_languages(): void
 					});
 				})();
 			</script>
-			<?php submit_button(); ?>
+			<div class="fs-submit-row">
+				<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
+			</div>
 		</form>
 	</div>
 <?php

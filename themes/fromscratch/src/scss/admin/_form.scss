@@ -1,15 +1,15 @@
 // Form
 
-.page-settings-form {
+.fs-page-settings-form {
   margin: 20px 0 0;
 
   hr {
     margin: 24px 0;
-
-    &.fs-small {
-      margin: 12px 0;
-    }
   }
+}
+
+hr.fs-page-settings-divider {
+  margin: 24px 0;
 }
 
 .fs-form-row {
@@ -18,6 +18,16 @@
   &:last-child {
     margin-bottom: 0;
   }
+}
+
+.fs-submit-row {
+  margin-top: 20px;
+}
+
+// Table
+
+th.form-table-checkbox-label {
+  padding-top: 15px;
 }
 
 // Buttons

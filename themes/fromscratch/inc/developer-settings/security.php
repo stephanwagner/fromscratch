@@ -143,7 +143,7 @@ function fs_render_developer_security(): void
 			</div>
 		<?php endif; ?>
 
-		<form method="post" action="" class="page-settings-form">
+		<form method="post" action="" class="fs-page-settings-form">
 			<?php wp_nonce_field('fromscratch_security_password'); ?>
 			<input type="hidden" name="fromscratch_save_password" value="1">
 			<h2 class="title"><?= esc_html__('Password protection', 'fromscratch') ?></h2>
@@ -181,12 +181,14 @@ function fs_render_developer_security(): void
 					</td>
 				</tr>
 			</table>
-			<?php submit_button(); ?>
+			<div class="fs-submit-row">
+				<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
+			</div>
 		</form>
 
-		<hr>
+		<hr class="fs-page-settings-divider">
 
-		<form method="post" action="" class="page-settings-form">
+		<form method="post" action="" class="fs-page-settings-form">
 			<?php wp_nonce_field('fromscratch_security_maintenance'); ?>
 			<input type="hidden" name="fromscratch_save_maintenance" value="1">
 			<h2 class="title"><?= esc_html__('Maintenance mode', 'fromscratch') ?></h2>
@@ -218,12 +220,14 @@ function fs_render_developer_security(): void
 					</td>
 				</tr>
 			</table>
-			<?php submit_button(); ?>
+			<div class="fs-submit-row">
+				<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
+			</div>
 		</form>
 
 		<?php if (function_exists('fs_theme_feature_enabled') && fs_theme_feature_enabled('blocked_ips')) : ?>
-			<hr>
-			<form method="post" action="" class="page-settings-form">
+			<hr class="fs-page-settings-divider">
+			<form method="post" action="" class="fs-page-settings-form">
 				<?php wp_nonce_field('fromscratch_security_blocked_ips'); ?>
 				<input type="hidden" name="fromscratch_save_blocked_ips" value="1">
 				<h2 class="title"><?= esc_html__('Blocked IP addresses', 'fromscratch') ?></h2>
@@ -243,10 +247,13 @@ function fs_render_developer_security(): void
 				<div style="display: block; margin-top: 16px; margin-bottom: -8px;">
 					<textarea name="fromscratch_blocked_ips" id="fromscratch_blocked_ips" rows="5" class="regular-text code fs-code-small"><?= esc_textarea(get_option('fromscratch_blocked_ips', '')) ?></textarea>
 				</div>
-				<?php submit_button(); ?>
+				<div class="fs-submit-row">
+					<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
+				</div>
 			</form>
 
-			<hr>
+			<hr class="fs-page-settings-divider">
+
 			<h2 class="title"><?= esc_html__('Failed login attempts', 'fromscratch') ?></h2>
 			<p class="description"><?= esc_html__('Shows recent failed login attempts.', 'fromscratch') ?></p>
 			<p class="description"><?= esc_html__('IPs exceeding the configured threshold are listed as suspicious and can be blocked.', 'fromscratch') ?></p>

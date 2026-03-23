@@ -96,7 +96,7 @@ function fs_render_developer_access(): void
 
 		<?php fs_developer_settings_render_nav(); ?>
 
-		<form method="post" action="" class="page-settings-form">
+		<form method="post" action="" class="fs-page-settings-form">
 			<h2 class="title"><?= esc_html__('User rights', 'fromscratch') ?></h2>
 			<p class="description" style="margin-bottom: 16px;"><?= esc_html__('Control which admin pages and Settings sections are visible to Administrators (Admin) and users with developer rights (Developer). Uncheck to hide from that role.', 'fromscratch') ?></p>
 			<?php settings_fields(FS_THEME_OPTION_GROUP_DEVELOPER); ?>
@@ -133,7 +133,9 @@ function fs_render_developer_access(): void
 					</tbody>
 				</table>
 			<?php endforeach; ?>
-			<?php submit_button(); ?>
+			<div class="fs-submit-row">
+				<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
+			</div>
 		</form>
 	</div>
 	<?php

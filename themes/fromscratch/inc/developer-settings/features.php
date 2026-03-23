@@ -103,152 +103,154 @@ function fs_render_developer_features(): void
 
 		<?php fs_developer_settings_render_nav(); ?>
 
-		<form method="post" action="" class="page-settings-form">
+		<form method="post" action="" class="fs-page-settings-form">
 			<h2 class="title"><?= esc_html__('Features', 'fromscratch') ?></h2>
 			<p class="description"><?= esc_html__('Enable the features your project needs.', 'fromscratch') ?></p>
 			<p class="description"><?= esc_html__('All features are modular and can be toggled at any time to keep the theme lean and maintainable.', 'fromscratch') ?></p>
 
-			<h3><?= esc_html__('Content', 'fromscratch') ?></h3>
+			<h3 style="margin-top: 24px;"><?= esc_html__('Content', 'fromscratch') ?></h3>
 
-			<hr class="fs-small">
+			<div class="fs-feature-group">
 
-			<?php settings_fields(FS_THEME_OPTION_GROUP_FEATURES); ?>
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><?= esc_html__('Blogs', 'fromscratch') ?></th>
-					<td>
-						<input type="hidden" name="fromscratch_features[enable_blogs]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_blogs]" id="fromscratch_features_enable_blogs" value="1" <?= checked($feat('enable_blogs'), 1, false) ?>> <?= esc_html__('Allow posts', 'fromscratch') ?></label>
-						<p class="description fs-indent-checkbox"><?= esc_html__('Shows the Posts menu in the admin and allows creating and editing blog posts.', 'fromscratch') ?></p>
-						<div class="fs-feature-sub" id="fs-feature-sub-blogs" style="margin-top: 12px; <?= $feat('enable_blogs') !== 1 ? 'display:none;' : '' ?>">
-							<input type="hidden" name="fromscratch_features[enable_remove_post_tags]" value="0">
-							<label><input type="checkbox" name="fromscratch_features[enable_remove_post_tags]" value="1" <?= checked($feat('enable_remove_post_tags'), 1, false) ?>> <?= esc_html__('Disable tags', 'fromscratch') ?></label>
-							<p class="description fs-indent-checkbox" style="margin-top: 4px;"><?= esc_html__('Unregisters the Tags taxonomy for posts.', 'fromscratch') ?></p>
-						</div>
-					</td>
-				</tr>
-			</table>
+				<?php settings_fields(FS_THEME_OPTION_GROUP_FEATURES); ?>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row" class="form-table-checkbox-label"><?= esc_html__('Blogs', 'fromscratch') ?></th>
+						<td>
+							<input type="hidden" name="fromscratch_features[enable_blogs]" value="0">
+							<label><input type="checkbox" name="fromscratch_features[enable_blogs]" id="fromscratch_features_enable_blogs" value="1" <?= checked($feat('enable_blogs'), 1, false) ?>> <?= esc_html__('Allow posts', 'fromscratch') ?></label>
+							<p class="description fs-indent-checkbox"><?= esc_html__('Shows the Posts menu in the admin and allows creating and editing blog posts.', 'fromscratch') ?></p>
+							<div class="fs-feature-sub" id="fs-feature-sub-blogs" style="margin-top: 12px; <?= $feat('enable_blogs') !== 1 ? 'display:none;' : '' ?>">
+								<input type="hidden" name="fromscratch_features[enable_remove_post_tags]" value="0">
+								<label><input type="checkbox" name="fromscratch_features[enable_remove_post_tags]" value="1" <?= checked($feat('enable_remove_post_tags'), 1, false) ?>> <?= esc_html__('Disable tags', 'fromscratch') ?></label>
+								<p class="description fs-indent-checkbox" style="margin-top: 4px;"><?= esc_html__('Unregisters the Tags taxonomy for posts.', 'fromscratch') ?></p>
+							</div>
+						</td>
+					</tr>
+				</table>
 
-			<hr class="fs-small">
+				<hr>
 
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><?= esc_html__('Duplicate', 'fromscratch') ?></th>
-					<td>
-						<input type="hidden" name="fromscratch_features[enable_duplicate_post]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_duplicate_post]" value="1" <?= checked($feat('enable_duplicate_post'), 1, false) ?>> <?= esc_html__('Allow duplication', 'fromscratch') ?></label>
-						<p class="description fs-indent-checkbox"><?= esc_html__('Shows a "Duplicate" row action for pages and posts.', 'fromscratch') ?></p>
-					</td>
-				</tr>
-			</table>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row" class="form-table-checkbox-label"><?= esc_html__('Duplicate', 'fromscratch') ?></th>
+						<td>
+							<input type="hidden" name="fromscratch_features[enable_duplicate_post]" value="0">
+							<label><input type="checkbox" name="fromscratch_features[enable_duplicate_post]" value="1" <?= checked($feat('enable_duplicate_post'), 1, false) ?>> <?= esc_html__('Allow duplication', 'fromscratch') ?></label>
+							<p class="description fs-indent-checkbox"><?= esc_html__('Shows a "Duplicate" row action for pages and posts.', 'fromscratch') ?></p>
+						</td>
+					</tr>
+				</table>
 
-			<hr class="fs-small">
+				<hr>
 
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><?= esc_html__('Post expirator', 'fromscratch') ?></th>
-					<td>
-						<input type="hidden" name="fromscratch_features[enable_post_expirator]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_post_expirator]" value="1" <?= checked($feat('enable_post_expirator'), 1, false) ?>> <?= esc_html__('Enable post expirator', 'fromscratch') ?></label>
-						<p class="description fs-indent-checkbox"><?= esc_html__('Adds an expiration date to pages and posts.', 'fromscratch') ?></p>
-					</td>
-				</tr>
-			</table>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row" class="form-table-checkbox-label"><?= esc_html__('Post expirator', 'fromscratch') ?></th>
+						<td>
+							<input type="hidden" name="fromscratch_features[enable_post_expirator]" value="0">
+							<label><input type="checkbox" name="fromscratch_features[enable_post_expirator]" value="1" <?= checked($feat('enable_post_expirator'), 1, false) ?>> <?= esc_html__('Enable post expirator', 'fromscratch') ?></label>
+							<p class="description fs-indent-checkbox"><?= esc_html__('Adds an expiration date to pages and posts.', 'fromscratch') ?></p>
+						</td>
+					</tr>
+				</table>
 
-			<hr class="fs-small">
+				<hr>
 
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><?= esc_html__('SEO', 'fromscratch') ?></th>
-					<td>
-						<input type="hidden" name="fromscratch_features[enable_seo]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_seo]" value="1" <?= checked($feat('enable_seo'), 1, false) ?>> <?= esc_html__('Enable SEO panel', 'fromscratch') ?></label>
-						<p class="description fs-indent-checkbox"><?= esc_html__('Adds a section to pages and posts to enter SEO info.', 'fromscratch') ?></p>
-					</td>
-				</tr>
-			</table>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row" class="form-table-checkbox-label"><?= esc_html__('SEO', 'fromscratch') ?></th>
+						<td>
+							<input type="hidden" name="fromscratch_features[enable_seo]" value="0">
+							<label><input type="checkbox" name="fromscratch_features[enable_seo]" value="1" <?= checked($feat('enable_seo'), 1, false) ?>> <?= esc_html__('Enable SEO panel', 'fromscratch') ?></label>
+							<p class="description fs-indent-checkbox"><?= esc_html__('Adds a section to pages and posts to enter SEO info.', 'fromscratch') ?></p>
+						</td>
+					</tr>
+				</table>
 
-			<hr class="fs-small">
+				<hr>
 
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><?= esc_html__('Languages', 'fromscratch') ?></th>
-					<td>
-						<input type="hidden" name="fromscratch_features[enable_languages]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_languages]" id="fromscratch_features_enable_languages" value="1" <?= checked($feat('enable_languages'), 1, false) ?>> <?= esc_html__('Enable languages', 'fromscratch') ?></label>
-						<p class="description fs-indent-checkbox"><?= esc_html__('Enables built-in support for multiple content languages.', 'fromscratch') ?></p>
-					</td>
-				</tr>
-			</table>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row" class="form-table-checkbox-label"><?= esc_html__('Languages', 'fromscratch') ?></th>
+						<td>
+							<input type="hidden" name="fromscratch_features[enable_languages]" value="0">
+							<label><input type="checkbox" name="fromscratch_features[enable_languages]" id="fromscratch_features_enable_languages" value="1" <?= checked($feat('enable_languages'), 1, false) ?>> <?= esc_html__('Enable languages', 'fromscratch') ?></label>
+							<p class="description fs-indent-checkbox"><?= esc_html__('Enables built-in support for multiple content languages.', 'fromscratch') ?></p>
+						</td>
+					</tr>
+				</table>
 
-			<hr class="fs-small">
+			</div>
 
 			<h3 style="margin-top: 32px;"><?= esc_html__('Media', 'fromscratch') ?></h3>
 
-			<hr class="fs-small">
+			<div class="fs-feature-group">
 
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><?= esc_html__('Media folders', 'fromscratch') ?></th>
-					<td>
-						<input type="hidden" name="fromscratch_features[enable_media_folders]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_media_folders]" value="1" <?= checked($feat('enable_media_folders'), 1, false) ?>> <?= esc_html__('Enable media folders', 'fromscratch') ?></label>
-						<p class="description fs-indent-checkbox"><?= esc_html__('Adds folders to the Media Library with a sidebar for organizing.', 'fromscratch') ?></p>
-					</td>
-				</tr>
-			</table>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row" class="form-table-checkbox-label"><?= esc_html__('Media folders', 'fromscratch') ?></th>
+						<td>
+							<input type="hidden" name="fromscratch_features[enable_media_folders]" value="0">
+							<label><input type="checkbox" name="fromscratch_features[enable_media_folders]" value="1" <?= checked($feat('enable_media_folders'), 1, false) ?>> <?= esc_html__('Enable media folders', 'fromscratch') ?></label>
+							<p class="description fs-indent-checkbox"><?= esc_html__('Adds folders to the Media Library with a sidebar for organizing.', 'fromscratch') ?></p>
+						</td>
+					</tr>
+				</table>
 
-			<hr class="fs-small">
+				<hr>
 
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><?= esc_html__('SVG support', 'fromscratch') ?></th>
-					<td>
-						<input type="hidden" name="fromscratch_features[enable_svg]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_svg]" value="1" <?= checked($feat('enable_svg'), 1, false) ?>> <?= esc_html__('Allow SVG uploads', 'fromscratch') ?></label>
-						<p class="description fs-indent-checkbox"><?= esc_html__('Uploaded SVG files are automatically sanitized to remove potentially unsafe code.', 'fromscratch') ?></p>
-					</td>
-				</tr>
-			</table>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row" class="form-table-checkbox-label"><?= esc_html__('SVG support', 'fromscratch') ?></th>
+						<td>
+							<input type="hidden" name="fromscratch_features[enable_svg]" value="0">
+							<label><input type="checkbox" name="fromscratch_features[enable_svg]" value="1" <?= checked($feat('enable_svg'), 1, false) ?>> <?= esc_html__('Allow SVG uploads', 'fromscratch') ?></label>
+							<p class="description fs-indent-checkbox"><?= esc_html__('Uploaded SVG files are automatically sanitized to remove potentially unsafe code.', 'fromscratch') ?></p>
+						</td>
+					</tr>
+				</table>
 
-			<hr class="fs-small">
+				<hr>
 
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><?= esc_html__('WebP images', 'fromscratch') ?></th>
-					<td>
-						<input type="hidden" name="fromscratch_features[enable_webp]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_webp]" id="fromscratch_features_enable_webp" value="1" <?= checked($feat('enable_webp'), 1, false) ?>> <?= esc_html__('Convert images to WebP', 'fromscratch') ?></label>
-						<p class="description fs-indent-checkbox"><?= esc_html__('Convert generated JPEG and PNG image to WebP. Requires GD or Imagick with WebP support.', 'fromscratch') ?></p>
-						<div class="fs-feature-sub" id="fs-feature-sub-webp" style="margin-top: 12px; <?= $feat('enable_webp') !== 1 ? 'display:none;' : '' ?>">
-							<input type="hidden" name="fromscratch_features[enable_webp_convert_original]" value="0">
-							<label><input type="checkbox" name="fromscratch_features[enable_webp_convert_original]" value="1" <?= checked($feat('enable_webp_convert_original'), 1, false) ?>> <?= esc_html__('Also convert the original image', 'fromscratch') ?></label>
-							<p class="description fs-indent-checkbox"><?= esc_html__('By default, only resized versions of an image are converted. The original upload remains unchanged.', 'fromscratch') ?></p>
-						</div>
-					</td>
-				</tr>
-			</table>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row" class="form-table-checkbox-label"><?= esc_html__('WebP images', 'fromscratch') ?></th>
+						<td>
+							<input type="hidden" name="fromscratch_features[enable_webp]" value="0">
+							<label><input type="checkbox" name="fromscratch_features[enable_webp]" id="fromscratch_features_enable_webp" value="1" <?= checked($feat('enable_webp'), 1, false) ?>> <?= esc_html__('Convert images to WebP', 'fromscratch') ?></label>
+							<p class="description fs-indent-checkbox"><?= esc_html__('Convert generated JPEG and PNG image to WebP. Requires GD or Imagick with WebP support.', 'fromscratch') ?></p>
+							<div class="fs-feature-sub" id="fs-feature-sub-webp" style="margin-top: 12px; <?= $feat('enable_webp') !== 1 ? 'display:none;' : '' ?>">
+								<input type="hidden" name="fromscratch_features[enable_webp_convert_original]" value="0">
+								<label><input type="checkbox" name="fromscratch_features[enable_webp_convert_original]" value="1" <?= checked($feat('enable_webp_convert_original'), 1, false) ?>> <?= esc_html__('Also convert the original image', 'fromscratch') ?></label>
+								<p class="description fs-indent-checkbox"><?= esc_html__('By default, only resized versions of an image are converted. The original upload remains unchanged.', 'fromscratch') ?></p>
+							</div>
+						</td>
+					</tr>
+				</table>
 
-			<hr class="fs-small">
+			</div>
 
 			<h3 style="margin-top: 32px;"><?= esc_html__('Security', 'fromscratch') ?></h3>
 
-			<hr class="fs-small">
+			<div class="fs-feature-group">
 
-			<table class="form-table" role="presentation">
-				<tr>
-					<th scope="row"><?= esc_html__('IP Blocking', 'fromscratch') ?></th>
-					<td>
-						<input type="hidden" name="fromscratch_features[enable_blocked_ips]" value="0">
-						<label><input type="checkbox" name="fromscratch_features[enable_blocked_ips]" value="1" <?= checked($feat('enable_blocked_ips'), 1, false) ?>> <?= esc_html__('Enable IP blocking', 'fromscratch') ?></label>
-						<p class="description fs-indent-checkbox"><?= esc_html__('Allows blocking specific IP addresses and detects suspicious login attempts.', 'fromscratch') ?></p>
-					</td>
-				</tr>
-			</table>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row" class="form-table-checkbox-label"><?= esc_html__('IP Blocking', 'fromscratch') ?></th>
+						<td>
+							<input type="hidden" name="fromscratch_features[enable_blocked_ips]" value="0">
+							<label><input type="checkbox" name="fromscratch_features[enable_blocked_ips]" value="1" <?= checked($feat('enable_blocked_ips'), 1, false) ?>> <?= esc_html__('Enable IP blocking', 'fromscratch') ?></label>
+							<p class="description fs-indent-checkbox"><?= esc_html__('Allows blocking specific IP addresses and detects suspicious login attempts.', 'fromscratch') ?></p>
+						</td>
+					</tr>
+				</table>
 
-			<hr class="fs-small">
+			</div>
 
-			<?php submit_button(); ?>
+			<div class="fs-submit-row">
+				<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
+			</div>
 		</form>
 		<script>
 			(function() {

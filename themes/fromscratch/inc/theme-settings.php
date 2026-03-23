@@ -673,7 +673,7 @@ function theme_settings_page(): void
 			$og_fallback_id = (int) get_option('fromscratch_og_image_fallback', 0);
 			$og_fallback_url = $og_fallback_id > 0 ? wp_get_attachment_image_url($og_fallback_id, 'medium') : '';
 			?>
-			<form method="post" action="options.php" class="page-settings-form">
+			<form method="post" action="options.php" class="fs-page-settings-form">
 				<?php settings_fields(FS_THEME_OPTION_GROUP_GENERAL); ?>
 				<h2 class="title"><?= esc_html__('Client logo', 'fromscratch') ?></h2>
 				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Shown on the login page instead of the WordPress logo.', 'fromscratch') ?></p>
@@ -754,10 +754,12 @@ function theme_settings_page(): void
 						</td>
 					</tr>
 				</table>
-				<?php submit_button(); ?>
+				<p class="fs-submit-row">
+					<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
+				</p>
 			</form>
 		<?php elseif ($tab === 'texts') : ?>
-			<form method="post" action="options.php" class="page-settings-form" id="fs-content-form">
+			<form method="post" action="options.php" class="fs-page-settings-form" id="fs-content-form">
 				<?php
 				$content_tabs = fs_config_settings('content.tabs');
 				$content_tabs = is_array($content_tabs) ? $content_tabs : [];
@@ -805,7 +807,7 @@ function theme_settings_page(): void
 								if (!empty($ct['sections']) && is_array($ct['sections'])) {
 									foreach ($ct['sections'] as $index => $section) {
 										if ($index > 0) {
-											echo '<hr class="fs-small">';
+											echo '<hr>';
 										}
 										do_settings_sections(FS_THEME_CONTENT_OPTION_PREFIX . $ct['id'] . '_' . $section['id']);
 									}
@@ -816,10 +818,10 @@ function theme_settings_page(): void
 					</div>
 				</div>
 
-				<hr class="fs-small">
+				<hr>
 
-				<p class="submit" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-					<?php submit_button(null, 'primary', 'submit', false); ?>
+				<p class="fs-submit-row" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+					<button type="submit" name="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
 
 					<?php if (function_exists('fs_is_developer_user') && fs_is_developer_user((int) get_current_user_id())) : ?>
 						<button type="button"
@@ -907,7 +909,7 @@ document.querySelectorAll('[data-fs-content-developer-options-container]').forEa
 				];
 			}
 			?>
-			<form method="post" action="<?= esc_url(admin_url('options-general.php?page=fs-theme-settings&tab=redirects')) ?>" class="page-settings-form" id="fs-redirects-form">
+			<form method="post" action="<?= esc_url(admin_url('options-general.php?page=fs-theme-settings&tab=redirects')) ?>" class="fs-page-settings-form" id="fs-redirects-form">
 				<?php wp_nonce_field('fromscratch_save_redirects'); ?>
 				<input type="hidden" name="fromscratch_save_redirects" value="1">
 				<?php
@@ -961,7 +963,9 @@ document.querySelectorAll('[data-fs-content-developer-options-container]').forEa
 				<p style="margin-top: 12px;">
 					<button type="button" class="button" id="fs-redirect-add"><?= esc_html__('Add redirect', 'fromscratch') ?></button>
 				</p>
-				<?php submit_button(); ?>
+				<p class="fs-submit-row">
+					<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
+				</p>
 			</form>
 			<script>
 				(function() {
@@ -989,7 +993,7 @@ document.querySelectorAll('[data-fs-content-developer-options-container]').forEa
 				})();
 			</script>
 		<?php elseif ($tab === 'css') : ?>
-			<form method="post" action="<?= esc_url(admin_url('options-general.php?page=fs-theme-settings&tab=css')) ?>" class="page-settings-form">
+			<form method="post" action="<?= esc_url(admin_url('options-general.php?page=fs-theme-settings&tab=css')) ?>" class="fs-page-settings-form">
 				<?php wp_nonce_field('fromscratch_save_css'); ?>
 				<input type="hidden" name="fromscratch_save_css" value="1">
 				<h2 class="title"><?= esc_html__('Custom CSS', 'fromscratch') ?></h2>
@@ -1006,10 +1010,12 @@ document.querySelectorAll('[data-fs-content-developer-options-container]').forEa
 						</td>
 					</tr>
 				</table>
-				<?php submit_button(); ?>
+				<p class="fs-submit-row">
+					<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
+				</p>
 			</form>
 		<?php else : ?>
-			<form method="post" action="options.php" class="page-settings-form">
+			<form method="post" action="options.php" class="fs-page-settings-form">
 				<h2 class="title"><?= esc_html__('Design', 'fromscratch') ?></h2>
 				<p class="description"><?= esc_html__('Define design values used across the website.', 'fromscratch') ?></p>
 				<p class="description"><?= esc_html__('Changes are automatically applied wherever they are used.', 'fromscratch') ?></p>
@@ -1083,9 +1089,11 @@ document.querySelectorAll('[data-fs-content-developer-options-container]').forEa
 					</div>
 				</div>
 
-				<hr class="fs-small">
+				<hr>
 
-				<?php submit_button(); ?>
+				<p class="fs-submit-row">
+					<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
+				</p>
 			</form>
 		<?php endif; ?>
 	</div>

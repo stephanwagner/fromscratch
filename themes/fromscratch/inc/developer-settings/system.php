@@ -405,7 +405,7 @@ function fs_render_developer_system(): void
 			}
 		}
 		?>
-		<div class="page-settings-form" style="margin-bottom: 24px;">
+		<div class="fs-page-settings-form" style="margin-bottom: 24px;">
 			<h2 class="title"><?= esc_html__('System info', 'fromscratch') ?></h2>
 			<table class="widefat striped fs-system-info-table" role="presentation">
 				<tbody>
@@ -500,7 +500,7 @@ function fs_render_developer_system(): void
 				</tbody>
 			</table>
 
-			<hr class="fs-small">
+			<hr>
 
 			<form method="post" action="" style="margin-top: 12px;">
 				<?php wp_nonce_field('fromscratch_perf'); ?>
@@ -530,7 +530,9 @@ function fs_render_developer_system(): void
 						<span class="description" style="display: block; margin-top: 4px;"><?= esc_html__('Comma-separated. Only these IPs will see the panel when logged out.', 'fromscratch') ?></span>
 					</p>
 				</div>
-				<?php submit_button(); ?>
+				<div class="fs-submit-row">
+					<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
+				</div>
 			</form>
 			<script>
 				(function() {
@@ -545,9 +547,9 @@ function fs_render_developer_system(): void
 			</script>
 		</div>
 
-		<hr class="fs-small">
+		<hr>
 
-		<form method="post" action="" class="page-settings-form" id="fs-search-visibility">
+		<form method="post" action="" class="fs-page-settings-form" id="fs-search-visibility">
 			<?php wp_nonce_field('fromscratch_system_search_visibility'); ?>
 			<input type="hidden" name="fromscratch_save_search_visibility" value="1">
 			<h2 class="title"><?= esc_html__('Search engine visibility', 'fromscratch') ?></h2>
@@ -564,7 +566,9 @@ function fs_render_developer_system(): void
 					</td>
 				</tr>
 			</table>
-			<?php submit_button(); ?>
+			<div class="fs-submit-row">
+				<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
+			</div>
 		</form>
 
 	</div>

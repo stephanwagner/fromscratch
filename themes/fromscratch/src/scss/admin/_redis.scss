@@ -4,4 +4,17 @@
   .sidebar-column {
     display: none !important;
   }
+
+  .nav-tab-wrapper {
+    border-bottom: 0;
+  }
+
+  .nav-tab {
+    border-radius: 4px;
+    border-bottom: 1px solid #c3c4c7;
+
+    &:first-child {
+      margin-left: 0;
+    }
+  }
 }
