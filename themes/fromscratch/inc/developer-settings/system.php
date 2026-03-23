@@ -24,6 +24,9 @@ function fs_developer_redis_safeguard_block(): string
 	$relative_path = '/wp-content/themes/' . $stylesheet . '/inc/fromscratch-redis-safeguard.php';
 	return implode("\n", [
 		'// BEGIN FromScratch Redis safeguard',
+		'if (!defined(\'WP_REDIS_DISABLE_COMMENT\')) {',
+		"\tdefine('WP_REDIS_DISABLE_COMMENT', true);",
+		'}',
 		'$fs_redis_safeguard = __DIR__ . \'' . $relative_path . '\';',
 		'if (file_exists($fs_redis_safeguard)) {',
 		"\trequire_once \$fs_redis_safeguard;",
