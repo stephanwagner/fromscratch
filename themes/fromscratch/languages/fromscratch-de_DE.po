@@ -1449,3 +1449,51 @@ msgstr "Anheften lösen"
 
 msgid "192.168.1.1, 10.0.0.1"
 msgstr "192.168.1.1, 10.0.0.1"
+
+msgid "Add New"
+msgstr "Neu hinzufügen"
+
+msgid "Add New %s"
+msgstr "%s hinzufügen"
+
+msgid "Edit %s"
+msgstr "%s bearbeiten"
+
+msgid "New %s"
+msgstr "Neues %s"
+
+msgid "View %s"
+msgstr "%s ansehen"
+
+msgid "Search %s"
+msgstr "%s durchsuchen"
+
+msgid "No %s found."
+msgstr "Keine %s gefunden."
+
+msgid "No %s found in Trash."
+msgstr "Keine %s im Papierkorb gefunden."
+
+msgid "All %s"
+msgstr "Alle %s"
+
+msgid "%s Archives"
+msgstr "%s-Archive"
+
+msgid "%s Attributes"
+msgstr "%s-Attribute"
+
+msgid "Insert into %s"
+msgstr "In %s einfügen"
+
+msgid "Uploaded to this %s"
+msgstr "Zu diesem %s hochgeladen"
+
+msgid "Filter %s list"
+msgstr "%s-Liste filtern"
+
+msgid "%s list navigation"
+msgstr "%s-Listen-Navigation"
+
+msgid "%s list"
+msgstr "%s-Liste"
