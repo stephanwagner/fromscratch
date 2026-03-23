@@ -595,16 +595,16 @@ function fs_render_developer_system(): void
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><label for="fromscratch_matomo_token_auth"><?= esc_html__('Token (optional)', 'fromscratch') ?></label></th>
+						<th scope="row"><label for="fromscratch_matomo_token_auth"><?= esc_html__('Auth Token', 'fromscratch') ?></label></th>
 						<td>
 							<input type="text" name="fromscratch_matomo_token_auth" id="fromscratch_matomo_token_auth" value="<?= esc_attr($matomo_token_value) ?>" class="regular-text" style="max-width: 420px;">
-							<p class="description"><?= esc_html__('Optional token_auth for authenticated Matomo API requests (for example dashboard widgets or statistics in emails). Tracking works without it unless your setup requires authenticated endpoints.', 'fromscratch') ?></p>
+							<p class="description"><?= esc_html__('To enable analytics on the dashboard or in emails, provide an auth token. You can create auth tokens in Matomo under Administration › Personal › Security › Auth tokens.', 'fromscratch') ?></p>
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><label for="fromscratch_matomo_custom_js"><?= esc_html__('Tracking code (optional)', 'fromscratch') ?></label></th>
+						<th scope="row"><label for="fromscratch_matomo_custom_js"><?= esc_html__('Tracking settings', 'fromscratch') ?></label></th>
 						<td>
-							<textarea name="fromscratch_matomo_custom_js" id="fromscratch_matomo_custom_js" rows="4" class="large-text code" placeholder="_paq.push(['setUserId', '123']);"><?= esc_textarea($matomo_custom_js_value) ?></textarea>
+							<textarea name="fromscratch_matomo_custom_js" id="fromscratch_matomo_custom_js" rows="4" class="large-text code fs-code-small" placeholder="_paq.push(['setUserId', '123']);"><?= esc_textarea($matomo_custom_js_value) ?></textarea>
 							<p class="description"><?= esc_html__('Optional additional _paq commands. One command per line.', 'fromscratch') ?></p>
 						</td>
 					</tr>

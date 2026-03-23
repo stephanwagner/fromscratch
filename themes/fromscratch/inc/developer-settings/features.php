@@ -176,7 +176,7 @@ function fs_render_developer_features(): void
 						<td>
 							<input type="hidden" name="fromscratch_features[enable_matomo]" value="0">
 							<label><input type="checkbox" name="fromscratch_features[enable_matomo]" value="1" <?= checked($feat('enable_matomo'), 1, false) ?>> <?= esc_html__('Enable Matomo analytics integration', 'fromscratch') ?></label>
-							<p class="description fs-indent-checkbox"><?= esc_html__('Enables Matomo script loading on the frontend using the settings from Developer → System.', 'fromscratch') ?></p>
+							<p class="description fs-indent-checkbox"><?= esc_html__('Enables Matomo script loading on the frontend using the settings from Developer › System.', 'fromscratch') ?></p>
 						</td>
 					</tr>
 				</table>

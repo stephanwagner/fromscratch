@@ -1345,7 +1345,7 @@ msgid "Allowed IP addresses"
 msgstr "Erlaubte IP-Adressen"
 
 msgid "Comma-separated. Only these IPs will see the panel when logged out."
-msgstr "Kommagetrennt. Nur diese IPs sehen das Panel beim Abmelden."
+msgstr "Kommagetrennt. Nur diese IPs sehen das Panel wenn ausgeloggt."
 
 msgid "Cannot write safeguard file in wp-content."
 msgstr "Die Schutzdatei in wp-content kann nicht geschrieben werden."
@@ -1497,3 +1497,39 @@ msgstr "%s-Listen-Navigation"
 
 msgid "%s list"
 msgstr "%s-Liste"
+
+msgid "Matomo"
+msgstr "Matomo"
+
+msgid "Enable Matomo analytics integration"
+msgstr "Matomo-Analytics-Integration aktivieren"
+
+msgid "Enables Matomo script loading on the frontend using the settings from Developer › System."
+msgstr "Aktiviert das Laden des Matomo-Skripts im Frontend anhand der Einstellungen unter Entwickler › System."
+
+msgid "Loads the Matomo tracking script on the frontend and transmits page view and interaction data to the configured Matomo endpoint using the provided site ID."
+msgstr "Lädt das Matomo-Tracking-Skript im Frontend und überträgt Seitenaufrufe sowie Interaktionsdaten an den konfigurierten Matomo-Endpunkt mit der angegebenen Site-ID."
+
+msgid "Matomo URL"
+msgstr "Matomo-URL"
+
+msgid "Base URL of your Matomo instance, e.g. https://analytics.example.com"
+msgstr "Basis-URL deiner Matomo-Instanz, z. B. https://analytics.example.com"
+
+msgid "Site ID"
+msgstr "Site-ID"
+
+msgid "Matomo site ID (idSite). Default is 1."
+msgstr "Matomo-Site-ID (idSite). Standard ist 1."
+
+msgid "Auth Token"
+msgstr "Auth-Token"
+
+msgid "To enable analytics on the dashboard or in emails, provide an auth token. You can create auth tokens in Matomo under Administration › Personal › Security › Auth tokens."
+msgstr "Um Analysen im Dashboard oder in E-Mails zu aktivieren, gib ein Auth-Token an. Auth-Tokens kannst du in Matomo unter Administration › Personal › Security › Auth tokens erstellen."
+
+msgid "Tracking settings"
+msgstr "Tracking-Einstellungen"
+
+msgid "Optional additional _paq commands. One command per line."
+msgstr "Optionale zusätzliche _paq-Befehle. Ein Befehl pro Zeile."
