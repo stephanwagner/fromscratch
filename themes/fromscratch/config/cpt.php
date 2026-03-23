@@ -24,6 +24,7 @@ return [
 				'revisions',
 				'page-attributes'
 			],
+			'has_order' => true,
 			'has_archive' => true,
 			'has_categories' => true,
 			'menu_position' => 5,

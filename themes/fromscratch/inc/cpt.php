@@ -38,6 +38,8 @@ function fs_register_cpts(): void
 			continue;
 		}
 		$args = array_merge($defaults, $args);
+		$has_order = !empty($args['has_order']);
+		unset($args['has_order']);
 		// Convenience config: has_categories => true adds built-in category taxonomy.
 		$has_categories = !empty($args['has_categories']);
 		unset($args['has_categories']);
@@ -51,6 +53,9 @@ function fs_register_cpts(): void
 		// Block editor needs custom-fields support to expose/save post meta (e.g. SEO panel).
 		if (isset($args['supports']) && is_array($args['supports']) && !in_array('custom-fields', $args['supports'], true)) {
 			$args['supports'][] = 'custom-fields';
+		}
+		if ($has_order && isset($args['supports']) && is_array($args['supports']) && !in_array('page-attributes', $args['supports'], true)) {
+			$args['supports'][] = 'page-attributes';
 		}
 		// Ensure labels exist and derive missing labels from configured name/singular_name.
 		$provided_labels = isset($args['labels']) && is_array($args['labels']) ? $args['labels'] : [];
@@ -147,6 +152,271 @@ add_action('admin_head', function (): void {
 	}
 	echo '<style id="fs-cpt-menu-icons">' . $css . '</style>';
 }, 5);
+
+/**
+ * Return ordered CPT map from config.
+ *
+ * @return array<string, bool>
+ */
+function fs_cpt_ordered_map(): array
+{
+	$cpts = fs_config_cpt('cpts');
+	if (!is_array($cpts) || $cpts === []) {
+		return [];
+	}
+	$ordered = [];
+	foreach ($cpts as $post_type => $args) {
+		if (!is_string($post_type) || $post_type === '' || !is_array($args)) {
+			continue;
+		}
+		if (!empty($args['has_order'])) {
+			$ordered[sanitize_key($post_type)] = true;
+		}
+	}
+	return $ordered;
+}
+
+function fs_cpt_is_ordered(string $post_type): bool
+{
+	$map = fs_cpt_ordered_map();
+	return isset($map[$post_type]) && $map[$post_type] === true;
+}
+
+/**
+ * Admin list: default sort by menu_order for ordered CPTs.
+ */
+add_action('pre_get_posts', function (\WP_Query $query): void {
+	if (!is_admin() || !$query->is_main_query()) {
+		return;
+	}
+	$post_type = $query->get('post_type');
+	if (!is_string($post_type) || $post_type === '' || !fs_cpt_is_ordered($post_type)) {
+		return;
+	}
+	$orderby = (string) $query->get('orderby');
+	if ($orderby !== '' && $orderby !== 'menu_order') {
+		return;
+	}
+	$order = strtoupper((string) $query->get('order')) === 'DESC' ? 'DESC' : 'ASC';
+	$query->set('orderby', ['menu_order' => $order, 'date' => 'DESC']);
+	$query->set('order', $order);
+}, 20);
+
+/**
+ * Ordered CPTs: when menu_order is left at 0, append to end (max + 1).
+ */
+add_action('save_post', function (int $post_id, \WP_Post $post): void {
+	static $running = [];
+	if (isset($running[$post_id])) {
+		return;
+	}
+	if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
+		return;
+	}
+	if (!fs_cpt_is_ordered($post->post_type)) {
+		return;
+	}
+	if (in_array($post->post_status, ['auto-draft', 'trash'], true)) {
+		return;
+	}
+	if ((int) $post->menu_order !== 0) {
+		return;
+	}
+
+	$max_ids = get_posts([
+		'post_type'      => $post->post_type,
+		'post_status'    => 'any',
+		'posts_per_page' => 1,
+		'fields'         => 'ids',
+		'orderby'        => 'menu_order',
+		'order'          => 'DESC',
+		'exclude'        => [$post_id],
+	]);
+	$max = isset($max_ids[0]) ? (int) $max_ids[0] : 0;
+	$max_order = $max > 0 ? (int) get_post_field('menu_order', $max) : 0;
+
+	$running[$post_id] = true;
+	wp_update_post([
+		'ID'         => $post_id,
+		'menu_order' => $max_order + 1,
+	]);
+	unset($running[$post_id]);
+}, 20, 2);
+
+/**
+ * Add reorder column for ordered CPTs.
+ */
+add_filter('manage_posts_columns', function (array $columns): array {
+	$post_type = isset($_GET['post_type']) ? sanitize_key((string) wp_unslash($_GET['post_type'])) : 'post';
+	if (!fs_cpt_is_ordered($post_type)) {
+		return $columns;
+	}
+	$out = [];
+	foreach ($columns as $key => $label) {
+		$out[$key] = $label;
+		if ($key === 'title') {
+			$out['fs_cpt_order'] = __('Order', 'fromscratch');
+			$out['fs_cpt_reorder'] = __('Reorder', 'fromscratch');
+		}
+	}
+	if (!isset($out['fs_cpt_order'])) {
+		$out['fs_cpt_order'] = __('Order', 'fromscratch');
+	}
+	if (!isset($out['fs_cpt_reorder'])) {
+		$out['fs_cpt_reorder'] = __('Reorder', 'fromscratch');
+	}
+	return $out;
+}, 20);
+
+/**
+ * Make "Order" column header clickable/sortable for ordered CPTs.
+ */
+add_action('init', function (): void {
+	$ordered = fs_cpt_ordered_map();
+	if ($ordered === []) {
+		return;
+	}
+	foreach (array_keys($ordered) as $post_type) {
+		add_filter('manage_edit-' . $post_type . '_sortable_columns', function (array $columns): array {
+			$columns['fs_cpt_order'] = 'menu_order';
+			return $columns;
+		});
+	}
+}, 20);
+
+/**
+ * Default list-table sort UI for ordered CPTs: show Order as active (not Date).
+ */
+add_filter('request', function (array $vars): array {
+	if (!is_admin()) {
+		return $vars;
+	}
+	$post_type = isset($vars['post_type']) ? sanitize_key((string) $vars['post_type']) : '';
+	if ($post_type === '' || !fs_cpt_is_ordered($post_type)) {
+		return $vars;
+	}
+	if (!empty($vars['orderby'])) {
+		return $vars;
+	}
+	$vars['orderby'] = 'menu_order';
+	$vars['order'] = 'asc';
+	return $vars;
+}, 20);
+
+/**
+ * Ensure ordered CPT list URL includes menu_order so the UI shows "Order" as active sort.
+ */
+add_action('admin_init', function (): void {
+	global $pagenow;
+	if ($pagenow !== 'edit.php') {
+		return;
+	}
+	// Let reorder action requests pass through untouched.
+	if (!empty($_GET['fs_cpt_reorder']) || !empty($_GET['post_id'])) {
+		return;
+	}
+	if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
+		return;
+	}
+	$post_type = isset($_GET['post_type']) ? sanitize_key((string) wp_unslash($_GET['post_type'])) : '';
+	if ($post_type === '' || !fs_cpt_is_ordered($post_type)) {
+		return;
+	}
+	if (!empty($_GET['orderby'])) {
+		return;
+	}
+	$url = add_query_arg([
+		'post_type' => $post_type,
+		'orderby'   => 'menu_order',
+		'order'     => 'asc',
+	], admin_url('edit.php'));
+	wp_safe_redirect($url);
+	exit;
+}, 15);
+
+add_action('manage_posts_custom_column', function (string $column, int $post_id): void {
+	if ($column === 'fs_cpt_order') {
+		$order = (int) get_post_field('menu_order', $post_id);
+		echo esc_html((string) $order);
+		return;
+	}
+	if ($column !== 'fs_cpt_reorder') {
+		return;
+	}
+	$post = get_post($post_id);
+	if (!$post instanceof \WP_Post || !fs_cpt_is_ordered($post->post_type) || !current_user_can('edit_post', $post_id)) {
+		return;
+	}
+	$base = admin_url('edit.php?post_type=' . rawurlencode($post->post_type));
+	$mk = function (string $dir, string $label) use ($base, $post_id): string {
+		$url = add_query_arg([
+			'fs_cpt_reorder' => $dir,
+			'post_id'        => $post_id,
+		], $base);
+		$url = wp_nonce_url($url, 'fs_cpt_reorder_' . $dir . '_' . $post_id);
+		return '<a class="button button-small" href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
+	};
+	echo '<div style="display:flex;gap:4px;flex-wrap:wrap">';
+	echo $mk('top', __('Top', 'fromscratch')) . $mk('up', __('Up', 'fromscratch')) . $mk('down', __('Down', 'fromscratch')) . $mk('bottom', __('Bottom', 'fromscratch'));
+	echo '</div>';
+}, 20, 2);
+
+/**
+ * Handle reorder actions from list table.
+ */
+add_action('admin_init', function (): void {
+	if (!is_admin() || empty($_GET['fs_cpt_reorder']) || empty($_GET['post_id'])) {
+		return;
+	}
+	$dir = sanitize_key((string) wp_unslash($_GET['fs_cpt_reorder']));
+	$post_id = (int) $_GET['post_id'];
+	$post = get_post($post_id);
+	if (!$post instanceof \WP_Post || !fs_cpt_is_ordered($post->post_type) || !current_user_can('edit_post', $post_id)) {
+		return;
+	}
+	$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field((string) wp_unslash($_GET['_wpnonce'])) : '';
+	if (!wp_verify_nonce($nonce, 'fs_cpt_reorder_' . $dir . '_' . $post_id)) {
+		return;
+	}
+	$ordered_ids = get_posts([
+		'post_type'      => $post->post_type,
+		'post_status'    => ['publish', 'future', 'draft', 'pending', 'private'],
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+		'orderby'        => ['menu_order' => 'ASC', 'date' => 'DESC', 'ID' => 'ASC'],
+	]);
+	$ordered_ids = array_values(array_map('intval', is_array($ordered_ids) ? $ordered_ids : []));
+	$idx = array_search($post_id, $ordered_ids, true);
+	if ($idx === false) {
+		return;
+	}
+	if ($dir === 'up' && $idx > 0) {
+		$tmp = $ordered_ids[$idx - 1];
+		$ordered_ids[$idx - 1] = $ordered_ids[$idx];
+		$ordered_ids[$idx] = $tmp;
+	} elseif ($dir === 'down' && $idx < count($ordered_ids) - 1) {
+		$tmp = $ordered_ids[$idx + 1];
+		$ordered_ids[$idx + 1] = $ordered_ids[$idx];
+		$ordered_ids[$idx] = $tmp;
+	} elseif ($dir === 'top' && $idx > 0) {
+		unset($ordered_ids[$idx]);
+		array_unshift($ordered_ids, $post_id);
+		$ordered_ids = array_values($ordered_ids);
+	} elseif ($dir === 'bottom' && $idx < count($ordered_ids) - 1) {
+		unset($ordered_ids[$idx]);
+		$ordered_ids[] = $post_id;
+		$ordered_ids = array_values($ordered_ids);
+	}
+	foreach ($ordered_ids as $menu_order => $id) {
+		wp_update_post([
+			'ID'         => (int) $id,
+			// Start at 1 so save_post "append when 0" logic doesn't override reordered top item.
+			'menu_order' => (int) $menu_order + 1,
+		]);
+	}
+	wp_safe_redirect(admin_url('edit.php?post_type=' . rawurlencode($post->post_type)));
+	exit;
+});
 
 /**
  * Build default labels from post type key (fallback when labels not provided).
