@@ -19,14 +19,14 @@
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
-    "@babel/preset-env": "^7.29.0",
+    "@babel/preset-env": "^7.29.2",
     "@babel/preset-react": "^7.28.5",
     "@rollup/plugin-babel": "^7.0.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^1.0.0",
-    "baseline-browser-mapping": "^2.10.0",
+    "baseline-browser-mapping": "^2.10.10",
     "concurrently": "^9.2.1",
-    "rollup": "^4.59.0",
-    "sass": "^1.97.3"
+    "rollup": "^4.60.0",
+    "sass": "^1.98.0"
   }
 }
