@@ -205,7 +205,7 @@ function fs_developer_perf_band(float $value, array $boundaries, ?array $labels 
  *
  * @param float        $value  Current value.
  * @param string|array $metric_or_config Metric key or config array with max + boundaries.
- * @param array        $opts   Optional. compact (bool), show_min_max (bool), unit (string), aria_label_metric (string).
+ * @param array        $opts   Optional. compact (bool), unit (string), aria_label_metric (string).
  */
 function fs_developer_perf_scale_html(float $value, $metric_or_config, array $opts = []): string
 {
@@ -224,7 +224,6 @@ function fs_developer_perf_scale_html(float $value, $metric_or_config, array $op
 	}
 
 	$compact = !empty($opts['compact']);
-	$show_min_max = isset($opts['show_min_max']) ? (bool) $opts['show_min_max'] : true;
 	$unit = isset($opts['unit']) ? (string) $opts['unit'] : '';
 	$aria_metric = isset($opts['aria_label_metric']) ? (string) $opts['aria_label_metric'] : '';
 
@@ -243,13 +242,7 @@ function fs_developer_perf_scale_html(float $value, $metric_or_config, array $op
 	$bar_style = "--fs-perf-pct: {$pct}; --fs-perf-s1: {$stops[0]}; --fs-perf-s2: {$stops[1]}; --fs-perf-s3: {$stops[2]}; --fs-perf-s4: {$stops[3]};";
 	$out = '<span class="fs-perf-scale' . ($compact ? ' fs-perf-scale--compact' : '') . '" style="' . esc_attr($bar_style) . '"' . ($aria ? ' role="img" aria-label="' . esc_attr($aria) . '"' : '') . '>';
 	$out .= '<span class="fs-perf-scale__inner">';
-	if ($show_min_max) {
-		$out .= '<span class="fs-perf-scale__min" aria-hidden="true">' . esc_html($min_label) . '</span>';
-	}
 	$out .= '<span class="fs-perf-scale__bar-wrap" aria-hidden="true"><span class="fs-perf-scale__bar"></span><span class="fs-perf-scale__indicator"></span></span>';
-	if ($show_min_max) {
-		$out .= '<span class="fs-perf-scale__max" aria-hidden="true">' . esc_html($max_label) . '</span>';
-	}
 	$out .= ' <span class="fs-perf-scale__label">' . esc_html($label) . '</span>';
 	$out .= '</span></span>';
 	return $out;
@@ -331,12 +324,15 @@ function fs_developer_perf_admin_bar_inline_css(): string
 {
 	// !important so wp-admin.css cannot override.
 	return '
-		#wpadminbar .fs-perf-scale { --fs-perf-s1: 8%; --fs-perf-s2: 20%; --fs-perf-s3: 40%; --fs-perf-s4: 80%; display: inline-block !important; margin-left: 8px; vertical-align: middle !important; line-height: 1 !important; }
-		#wpadminbar .fs-perf-scale__inner { display: inline-flex !important; align-items: center; gap: 6px; flex-wrap: nowrap; }
+		#wpadminbar .fs-perf-adminbar-row { display: flex !important; align-items: center; gap: 24px; width: 100%; }
+		#wpadminbar .fs-perf-adminbar-row__label { white-space: nowrap; }
+		#wpadminbar .fs-perf-scale { --fs-perf-s1: 8%; --fs-perf-s2: 20%; --fs-perf-s3: 40%; --fs-perf-s4: 80%; display: inline-block !important; margin-left: auto !important; vertical-align: middle !important; line-height: 1 !important; }
+		#wpadminbar .fs-perf-scale__inner { display: inline-flex !important; align-items: center; gap: 8px; flex-wrap: nowrap; }
+		#wpadminbar .fs-perf-scale__label { order: 1; }
 		#wpadminbar .fs-perf-scale__min, #wpadminbar .fs-perf-scale__max { font-size: 11px !important; color: #72aee6 !important; white-space: nowrap; line-height: 1 !important; }
-		#wpadminbar .fs-perf-scale__bar-wrap { position: relative; display: inline-block !important; width: 72px !important; height: 12px !important; }
-		#wpadminbar .fs-perf-scale__bar { position: absolute; inset: 0; height: 8px !important; top: 2px; border-radius: 4px; background: linear-gradient(to right, #22c55e 0%, #22c55e var(--fs-perf-s1), #84cc16 var(--fs-perf-s1), #84cc16 var(--fs-perf-s2), #f97316 var(--fs-perf-s2), #f97316 var(--fs-perf-s3), #ef4444 var(--fs-perf-s3), #ef4444 var(--fs-perf-s4), #b91c1c var(--fs-perf-s4), #b91c1c 100%) !important; }
-		#wpadminbar .fs-perf-scale__indicator { position: absolute; top: 0; left: calc(var(--fs-perf-pct, 0) * 1%); transform: translateX(-50%); width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 6px solid #fff !important; pointer-events: none; }
+		#wpadminbar .fs-perf-scale__bar-wrap { order: 2; position: relative; display: inline-block !important; width: 72px !important; height: 12px !important; }
+		#wpadminbar .fs-perf-scale__bar { position: absolute; inset: 0; height: 6px !important; top: 3px; border-radius: 4px; background: linear-gradient(to right, #22c55e 0%, #22c55e var(--fs-perf-s1), #84cc16 var(--fs-perf-s1), #84cc16 var(--fs-perf-s2), #f97316 var(--fs-perf-s2), #f97316 var(--fs-perf-s3), #ef4444 var(--fs-perf-s3), #ef4444 var(--fs-perf-s4), #b91c1c var(--fs-perf-s4), #b91c1c 100%) !important; }
+		#wpadminbar .fs-perf-scale__indicator { position: absolute; top: 0; bottom: 0; left: calc(var(--fs-perf-pct, 0) * 1%); transform: translateX(-50%); width: 2px; border-radius: 2px; pointer-events: none; background: #fff; border: 1px solid #000; }
 		#wpadminbar .fs-perf-scale__label { font-weight: 600 !important; font-size: 12px !important; white-space: nowrap; line-height: 1 !important; color: inherit; }
 	';
 }
@@ -445,8 +441,11 @@ add_action('admin_bar_menu', function ($admin_bar): void {
 	$perf = fs_developer_perf_metrics();
 	$scale = function ($value, $metric, $unit = '', $aria = '') {
 		return function_exists('fs_developer_perf_scale_html')
-			? fs_developer_perf_scale_html((float) $value, $metric, ['compact' => true, 'show_min_max' => true, 'unit' => $unit, 'aria_label_metric' => $aria])
+			? fs_developer_perf_scale_html((float) $value, $metric, ['compact' => true, 'unit' => $unit, 'aria_label_metric' => $aria])
 			: '';
+	};
+	$admin_bar_row = function (string $label, string $value_text, float $value, string $metric, string $unit = '') use ($scale): string {
+		return '<span class="fs-perf-adminbar-row"><span class="fs-perf-adminbar-row__label">' . esc_html($label) . ': ' . esc_html($value_text) . '</span>' . $scale($value, $metric, $unit, $label, false) . '</span>';
 	};
 
 	$perf_icon = '<svg xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 100%;" width="24px" height="24px" viewBox="0 -960 960 960" fill="currentColor"><path d="M245-474q26-66 62.5-127T390-716l-52-11q-20-4-39 2t-33 20L140-579q-15 15-11.5 36t23.5 29l93 40Zm588-390q-106-5-201.5 41T461-702q-48 48-84.5 104T313-480q-5 13-5 26.5t10 23.5l125 125q10 10 23.5 10t26.5-5q62-27 118-63.5T715-448q75-75 121-170.5T877-820q0-8-4-16t-10-14q-6-6-14-10t-16-4ZM556-622.5q0-33.5 23-56.5t56.5-23q33.5 0 56.5 23t23 56.5q0 33.5-23 56.5t-56.5 23q-33.5 0-56.5-23t-23-56.5ZM487-232l40 93q8 20 29 24t36-11l126-126q14-14 20-33.5t2-39.5l-10-52q-55 46-115.5 82.5T487-232Zm-325-86q35-35 85-35.5t85 34.5q35 35 35 85t-35 85q-48 48-113.5 57T87-74q9-66 18.5-131.5T162-318Z"/></svg>';
@@ -476,28 +475,28 @@ add_action('admin_bar_menu', function ($admin_bar): void {
 		$admin_bar->add_node([
 			'parent' => 'fs_wp_perf',
 			'id'     => 'fs_wp_perf_time',
-			'title'  => (function () use ($perf, $scale): string {
+			'title'  => (function () use ($perf, $admin_bar_row): string {
 				$t = fs_developer_perf_format_time((float) $perf['time']);
-				return __('Execution time', 'fromscratch') . ': ' . esc_html($t['value']) . esc_html($t['unit']) . ' ' . $scale($perf['time'], 'time', 's', __('Execution time', 'fromscratch'));
+				return $admin_bar_row(__('Execution time', 'fromscratch'), (string) $t['value'] . (string) $t['unit'], (float) $perf['time'], 'time', 's');
 			})(),
 		]);
 
 		$admin_bar->add_node([
 			'parent' => 'fs_wp_perf',
 			'id'     => 'fs_wp_perf_memory',
-			'title'  => __('Peak memory', 'fromscratch') . ': ' . esc_html((string) $perf['memory']) . ' MB ' . $scale($perf['memory'], 'memory', ' MB', __('Peak memory', 'fromscratch')),
+			'title'  => $admin_bar_row(__('Peak memory', 'fromscratch'), (string) $perf['memory'] . ' MB', (float) $perf['memory'], 'memory', ' MB'),
 		]);
 
 		$admin_bar->add_node([
 			'parent' => 'fs_wp_perf',
 			'id'     => 'fs_wp_perf_queries',
-			'title'  => __('DB queries', 'fromscratch') . ': ' . esc_html((string) $perf['queries']) . ' ' . $scale($perf['queries'], 'queries', '', __('DB queries', 'fromscratch')),
+			'title'  => $admin_bar_row(__('DB queries', 'fromscratch'), (string) $perf['queries'], (float) $perf['queries'], 'queries', ''),
 		]);
 
 		$admin_bar->add_node([
 			'parent' => 'fs_wp_perf',
 			'id'     => 'fs_wp_perf_hooks',
-			'title'  => __('Hooks fired', 'fromscratch') . ': ' . esc_html((string) $perf['hooks']) . ' ' . $scale($perf['hooks'], 'hooks', '', __('Hooks fired', 'fromscratch')),
+			'title'  => $admin_bar_row(__('Hooks fired', 'fromscratch'), (string) $perf['hooks'], (float) $perf['hooks'], 'hooks', ''),
 		]);
 	}
 }, 999);
