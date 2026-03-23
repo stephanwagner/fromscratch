@@ -3,14 +3,14 @@
     >ul {
       li#wp-admin-bar-fs-purge-cache,
       li#wp-admin-bar-fs_wp_perf {
-        >a.ab-item {
+        >.ab-item {
           text-align: center;
           padding: 0;
           width: 32px;
         }
 
         &:not(:hover) {
-          >a.ab-item {
+          >.ab-item {
             color: rgba(240, 246, 252, .6);
           }
         }

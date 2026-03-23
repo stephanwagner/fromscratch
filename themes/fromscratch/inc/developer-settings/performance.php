@@ -424,11 +424,11 @@ add_action('admin_notices', function (): void {
 		return;
 	}
 	delete_transient('fromscratch_purge_cache_notice');
-	?>
+?>
 	<div class="notice notice-success is-dismissible">
 		<p><strong><?= esc_html($notice === '1' ? __('Cache purged.', 'fromscratch') : __('Cache purge finished with issues.', 'fromscratch')) ?></strong></p>
 	</div>
-	<?php
+<?php
 }, 20);
 
 /**
@@ -451,38 +451,35 @@ add_action('admin_bar_menu', function ($admin_bar): void {
 
 	$perf_icon = '<svg xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 100%;" width="24px" height="24px" viewBox="0 -960 960 960" fill="currentColor"><path d="M245-474q26-66 62.5-127T390-716l-52-11q-20-4-39 2t-33 20L140-579q-15 15-11.5 36t23.5 29l93 40Zm588-390q-106-5-201.5 41T461-702q-48 48-84.5 104T313-480q-5 13-5 26.5t10 23.5l125 125q10 10 23.5 10t26.5-5q62-27 118-63.5T715-448q75-75 121-170.5T877-820q0-8-4-16t-10-14q-6-6-14-10t-16-4ZM556-622.5q0-33.5 23-56.5t56.5-23q33.5 0 56.5 23t23 56.5q0 33.5-23 56.5t-56.5 23q-33.5 0-56.5-23t-23-56.5ZM487-232l40 93q8 20 29 24t36-11l126-126q14-14 20-33.5t2-39.5l-10-52q-55 46-115.5 82.5T487-232Zm-325-86q35-35 85-35.5t85 34.5q35 35 35 85t-35 85q-48 48-113.5 57T87-74q9-66 18.5-131.5T162-318Z"/></svg>';
 	if ($show_perf) {
+		// Purge cache (top-level): add before performance node so it appears first in the bar.
+		if (current_user_can('manage_options') && fs_developer_perf_show_nginx_purge_in_admin_bar()) {
+			$wp_purge_url = wp_nonce_url(add_query_arg('fs-purge-cache', '1', home_url('/')), 'fs_purge_cache');
+			$purge_icon = '<svg xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 100%;" width="24px" height="24px" viewBox="0 -960 960 960" fill="currentColor"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-70q0-17 11.5-28.5T760-800q17 0 28.5 11.5T800-760v200q0 17-11.5 28.5T760-520H560q-17 0-28.5-11.5T520-560q0-17 11.5-28.5T560-600h128q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q68 0 124.5-34.5T692-367q8-14 22.5-19.5t29.5-.5q16 5 23 21t-1 30q-41 80-117 128t-169 48Z"/></svg>';
+			$admin_bar->add_node([
+				'id'    => 'fs-purge-cache',
+				'title' => $purge_icon,
+			]);
+			$admin_bar->add_node([
+				'parent' => 'fs-purge-cache',
+				'id'     => 'fs-purge-cache-page',
+				'title'  => __('Purge page cache', 'fromscratch'),
+				'href'   => $wp_purge_url,
+			]);
+		}
+
 		$admin_bar->add_node([
 			'id'    => 'fs_wp_perf',
 			'title' => $perf_icon,
 			'href'  => admin_url('options-general.php?page=' . fs_developer_settings_page_slug('system')),
 		]);
-	}
 
-	// Purge cache icon (top-level).
-	if (current_user_can('manage_options') && fs_developer_perf_show_nginx_purge_in_admin_bar()) {
-		// Purge via WordPress so we can verify nonce + show a success notice.
-		$wp_purge_url = wp_nonce_url(add_query_arg('fs-purge-cache', '1', home_url('/')), 'fs_purge_cache');
-		$purge_icon = '<svg xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 100%;" width="24px" height="24px" viewBox="0 -960 960 960" fill="currentColor"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-70q0-17 11.5-28.5T760-800q17 0 28.5 11.5T800-760v200q0 17-11.5 28.5T760-520H560q-17 0-28.5-11.5T520-560q0-17 11.5-28.5T560-600h128q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q68 0 124.5-34.5T692-367q8-14 22.5-19.5t29.5-.5q16 5 23 21t-1 30q-41 80-117 128t-169 48Z"/></svg>';
-		$admin_bar->add_node([
-			'id'    => 'fs-purge-cache',
-			'title' => $purge_icon,
-			'href'  => '#',
-		]);
-		$admin_bar->add_node([
-			'parent' => 'fs-purge-cache',
-			'id'     => 'fs-purge-cache-page',
-			'title'  => __('Purge page cache', 'fromscratch'),
-			'href'   => $wp_purge_url,
-		]);
-	}
-	if ($show_perf) {
 		$admin_bar->add_node([
 			'parent' => 'fs_wp_perf',
 			'id'     => 'fs_wp_perf_pin',
 			'title'  => __('Pin to bottom-left', 'fromscratch'),
-			'href'   => '#',
 			'meta'   => ['class' => 'fs-perf-pin-trigger'],
 		]);
+
 		$admin_bar->add_node([
 			'parent' => 'fs_wp_perf',
 			'id'     => 'fs_wp_perf_time',
@@ -491,16 +488,19 @@ add_action('admin_bar_menu', function ($admin_bar): void {
 				return __('Execution time', 'fromscratch') . ': ' . esc_html($t['value']) . esc_html($t['unit']) . ' ' . $scale($perf['time'], 'time', 's', __('Execution time', 'fromscratch'));
 			})(),
 		]);
+
 		$admin_bar->add_node([
 			'parent' => 'fs_wp_perf',
 			'id'     => 'fs_wp_perf_memory',
 			'title'  => __('Peak memory', 'fromscratch') . ': ' . esc_html((string) $perf['memory']) . ' MB ' . $scale($perf['memory'], 'memory', ' MB', __('Peak memory', 'fromscratch')),
 		]);
+
 		$admin_bar->add_node([
 			'parent' => 'fs_wp_perf',
 			'id'     => 'fs_wp_perf_queries',
 			'title'  => __('DB queries', 'fromscratch') . ': ' . esc_html((string) $perf['queries']) . ' ' . $scale($perf['queries'], 'queries', '', __('DB queries', 'fromscratch')),
 		]);
+
 		$admin_bar->add_node([
 			'parent' => 'fs_wp_perf',
 			'id'     => 'fs_wp_perf_hooks',

@@ -308,7 +308,7 @@ function fs_render_developer_system(): void
 				if ($db_major > 0 && $db_major < 8) {
 					$db_version_warning = sprintf(
 						/* translators: 1: MySQL/MariaDB version */
-						__('Database version (%1$s) is quite old. Consider upgrading for security and performance.', 'fromscratch'),
+						__('Database version (%1$s) is quite old. Consider upgrading.', 'fromscratch'),
 						$db_server['version']
 					);
 				}
