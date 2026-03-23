@@ -319,41 +319,6 @@ function fs_developer_perf_panel_guest_visible(): bool
 	return in_array($current, $list, true);
 }
 
-/** Inline CSS for the performance scale inside #wpadminbar (frontend and admin). */
-function fs_developer_perf_admin_bar_inline_css(): string
-{
-	// !important so wp-admin.css cannot override.
-	return '
-		#wpadminbar .fs-perf-adminbar-row { display: flex !important; align-items: center; gap: 24px; width: 100%; }
-		#wpadminbar .fs-perf-adminbar-row__label { white-space: nowrap; }
-		#wpadminbar .fs-perf-scale { --fs-perf-s1: 8%; --fs-perf-s2: 20%; --fs-perf-s3: 40%; --fs-perf-s4: 80%; display: inline-block !important; margin-left: auto !important; vertical-align: middle !important; line-height: 1 !important; }
-		#wpadminbar .fs-perf-scale__inner { display: inline-flex !important; align-items: center; gap: 8px; flex-wrap: nowrap; }
-		#wpadminbar .fs-perf-scale__label { order: 1; }
-		#wpadminbar .fs-perf-scale__min, #wpadminbar .fs-perf-scale__max { font-size: 11px !important; color: #72aee6 !important; white-space: nowrap; line-height: 1 !important; }
-		#wpadminbar .fs-perf-scale__bar-wrap { order: 2; position: relative; display: inline-block !important; width: 72px !important; height: 12px !important; }
-		#wpadminbar .fs-perf-scale__bar { position: absolute; inset: 0; height: 6px !important; top: 3px; border-radius: 4px; background: linear-gradient(to right, #22c55e 0%, #22c55e var(--fs-perf-s1), #84cc16 var(--fs-perf-s1), #84cc16 var(--fs-perf-s2), #f97316 var(--fs-perf-s2), #f97316 var(--fs-perf-s3), #ef4444 var(--fs-perf-s3), #ef4444 var(--fs-perf-s4), #b91c1c var(--fs-perf-s4), #b91c1c 100%) !important; }
-		#wpadminbar .fs-perf-scale__indicator { position: absolute; top: 0; bottom: 0; left: calc(var(--fs-perf-pct, 0) * 1%); transform: translateX(-50%); width: 2px; border-radius: 2px; pointer-events: none; background: #fff; border: 1px solid #000; }
-		#wpadminbar .fs-perf-scale__label { font-weight: 600 !important; font-size: 12px !important; white-space: nowrap; line-height: 1 !important; color: inherit; }
-	';
-}
-
-/**
- * Enqueue inline CSS for the performance scale in the admin bar. Frontend uses wp_enqueue_scripts; admin uses admin_enqueue_scripts.
- */
-add_action('wp_enqueue_scripts', function (): void {
-	if (!fs_developer_perf_show_in_admin_bar() || !is_user_logged_in() || !function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id()) || !is_admin_bar_showing()) {
-		return;
-	}
-	wp_add_inline_style('admin-bar', fs_developer_perf_admin_bar_inline_css());
-}, 20);
-
-add_action('admin_enqueue_scripts', function (): void {
-	if (!fs_developer_perf_show_in_admin_bar() || !function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
-		return;
-	}
-	wp_add_inline_style('admin-bar', fs_developer_perf_admin_bar_inline_css());
-}, 20);
-
 /**
  * Handle page-cache purge endpoint: /?fs-purge-cache=1&_wpnonce=...
  */
@@ -515,24 +480,35 @@ function fs_developer_perf_pinned_panel_render(): void
 	$perf = fs_developer_perf_metrics();
 	$panel_css = '
 		.fs-perf-pinned-panel { --fs-perf-s1: 8%; --fs-perf-s2: 20%; --fs-perf-s3: 40%; --fs-perf-s4: 80%; }
-		.fs-perf-pinned-panel__table { width: 100%; border-collapse: collapse; font-size: 11px; margin: 0; table-layout: fixed; }
+		.fs-perf-pinned-panel { display: none; position: fixed; bottom: 12px; left: 12px; z-index: 999999; max-width: calc(100vw - 24px); background: #fff; border: 1px solid #c3c4c7; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.15); font-size: 12px; line-height: 1.4; overflow: hidden; }
+		.fs-perf-pinned-panel__header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #c3c4c7; background: #f0f0f1; }
+		.fs-perf-pinned-panel__title { font-weight: 600; font-size: 13px; }
+		.fs-perf-pinned-panel__minimize { font-size: 11px; color: #2271b1; cursor: pointer; }
+		.fs-perf-pinned-panel__minimize:hover { color: #1c548a; }
+		.fs-perf-pinned-panel__body { padding: 8px; }
+		.fs-perf-pinned-panel__table { border-collapse: collapse; margin: 0; table-layout: fixed; }
 		.fs-perf-pinned-panel__table th,
-		.fs-perf-pinned-panel__table td { padding: 5px 6px; border: 1px solid #c3c4c7; vertical-align: middle; }
-		.fs-perf-pinned-panel__table thead th { background: #f0f0f1; font-weight: 600; text-align: left; }
+		.fs-perf-pinned-panel__table td { min-width: 75px; padding: 6px 16px 6px 0; vertical-align: middle; border-bottom: 1px solid #dcdcde; }
+		.fs-perf-pinned-panel__table th:last-child,
+		.fs-perf-pinned-panel__table td:last-child { padding-right: 0; }
+		.fs-perf-pinned-panel__table tbody tr:last-child th,
+		.fs-perf-pinned-panel__table tbody tr:last-child td { border-bottom: 0; }
+		.fs-perf-pinned-panel__table thead th { font-weight: 600; text-align: left; font-size: 11px; }
 		.fs-perf-pinned-panel__table thead th.fs-perf-pinned-panel__th-avg { white-space: nowrap; }
-		.fs-perf-pinned-panel__table tbody th { font-weight: normal; color: #646970; text-align: left; width: 24%; }
-		.fs-perf-pinned-panel__table td.fs-perf-pinned-panel__avg-cell { text-align: right; white-space: nowrap; }
+		.fs-perf-pinned-panel__avg-header { display: flex; align-items: center; gap: 6px; }
+		.fs-perf-pinned-panel__pages { color: #646970; font-weight: normal; white-space: nowrap; }
+		.fs-perf-pinned-panel__table tbody th { font-weight: normal; color: #646970; text-align: left; }
+		.fs-perf-pinned-panel__table td.fs-perf-pinned-panel__avg-cell { white-space: nowrap; }
 		.fs-perf-pinned-panel__table td.fs-perf-pinned-panel__scale-cell { vertical-align: middle; }
-		.fs-perf-pinned-panel__table tbody tr:nth-child(even) td,
-		.fs-perf-pinned-panel__table tbody tr:nth-child(even) th[scope="row"] { background: #f9f9f9; }
-		.fs-perf-pinned-panel__table .fs-perf-clear-history { margin-left: 6px; padding: 0 6px !important; font-size: 10px !important; line-height: 1.5 !important; vertical-align: middle; }
-		.fs-perf-pinned-panel .fs-perf-pinned-panel__scale-cell .fs-perf-scale { display: inline-block !important; margin-left: 0 !important; vertical-align: middle !important; line-height: 1 !important; }
-		.fs-perf-pinned-panel .fs-perf-scale__inner { display: inline-flex !important; align-items: center; gap: 4px; flex-wrap: nowrap; }
-		.fs-perf-pinned-panel .fs-perf-scale__min, .fs-perf-pinned-panel .fs-perf-scale__max { font-size: 10px !important; color: #646970; white-space: nowrap; }
-		.fs-perf-pinned-panel .fs-perf-scale__bar-wrap { position: relative; display: inline-block !important; width: 64px !important; height: 10px !important; }
-		.fs-perf-pinned-panel .fs-perf-scale__bar { position: absolute; inset: 0; height: 6px !important; top: 2px; border-radius: 3px; background: linear-gradient(to right, #22c55e 0%, #22c55e var(--fs-perf-s1), #84cc16 var(--fs-perf-s1), #84cc16 var(--fs-perf-s2), #f97316 var(--fs-perf-s2), #f97316 var(--fs-perf-s3), #ef4444 var(--fs-perf-s3), #ef4444 var(--fs-perf-s4), #b91c1c var(--fs-perf-s4), #b91c1c 100%) !important; }
-		.fs-perf-pinned-panel .fs-perf-scale__indicator { position: absolute; top: 0; left: calc(var(--fs-perf-pct, 0) * 1%); transform: translateX(-50%); width: 0; height: 0; border-left: 3px solid transparent; border-right: 3px solid transparent; border-top: 5px solid #1d2327; pointer-events: none; }
-		.fs-perf-pinned-panel .fs-perf-scale__label { font-weight: 600 !important; font-size: 11px !important; white-space: nowrap; }
+		.fs-perf-pinned-panel__table .fs-perf-clear-history { margin-left: auto; cursor: pointer; color: #2271b1; font-weight: normal; }
+		.fs-perf-pinned-panel__table .fs-perf-clear-history:hover { color: #1c548a; }
+		.fs-perf-pinned-panel .fs-perf-pinned-panel__scale-cell .fs-perf-scale { display: inline-block; margin-left: 0; vertical-align: middle; line-height: 1; }
+		.fs-perf-pinned-panel .fs-perf-scale__inner { display: inline-flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
+		.fs-perf-pinned-panel .fs-perf-scale__label { order: 1; font-weight: 600; font-size: 11px; white-space: nowrap; }
+		.fs-perf-pinned-panel .fs-perf-scale__bar-wrap { order: 2; position: relative; display: inline-block; width: 64px; height: 10px; }
+		.fs-perf-pinned-panel .fs-perf-scale__bar { position: absolute; inset: 0; height: 6px; top: 2px; border-radius: 3px; background: linear-gradient(to right, #22c55e 0%, #22c55e var(--fs-perf-s1), #84cc16 var(--fs-perf-s1), #84cc16 var(--fs-perf-s2), #f97316 var(--fs-perf-s2), #f97316 var(--fs-perf-s3), #ef4444 var(--fs-perf-s3), #ef4444 var(--fs-perf-s4), #b91c1c var(--fs-perf-s4), #b91c1c 100%); }
+		.fs-perf-pinned-panel .fs-perf-scale__indicator { position: absolute; top: 0; bottom: 0; left: calc(var(--fs-perf-pct, 0) * 1%); transform: translateX(-50%); width: 2px; border-radius: 2px; pointer-events: none; background: #fff; border: 1px solid #000; box-sizing: content-box; }
+		.fs-perf-pinned-panel__tab { display: none; padding: 6px 12px; background: #f0f0f1; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
 	';
 	$scale_config = [
 		'time'    => fs_developer_perf_scale_config('time'),
@@ -554,7 +530,7 @@ function fs_developer_perf_pinned_panel_render(): void
 	];
 	$perf_data_attr = ' data-perf-time="' . esc_attr((string) $perf['time']) . '" data-perf-memory="' . esc_attr((string) $perf['memory']) . '" data-perf-queries="' . esc_attr((string) $perf['queries']) . '" data-perf-hooks="' . esc_attr((string) $perf['hooks']) . '"';
 ?>
-	<div id="fs-perf-pinned-panel" class="fs-perf-pinned-panel" style="display: none; position: fixed; bottom: 12px; left: 12px; z-index: 999999; width: min(500px, calc(100vw - 24px)); max-width: 500px; background: #fff; border: 1px solid #c3c4c7; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.15); font-size: 12px; line-height: 1.4;" <?= $perf_data_attr ?>>
+	<div id="fs-perf-pinned-panel" class="fs-perf-pinned-panel" <?= $perf_data_attr ?>>
 		<script type="application/json" id="fs-perf-scale-config">
 			<?= wp_json_encode($scale_config) ?>
 		</script>
@@ -562,27 +538,32 @@ function fs_developer_perf_pinned_panel_render(): void
 			<?= $panel_css ?>
 		</style>
 		<div class="fs-perf-pinned-panel__content">
-			<div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; border-bottom: 1px solid #c3c4c7; background: #f0f0f1;">
-				<strong><?= esc_html__('Performance', 'fromscratch') ?></strong>
-				<button type="button" class="fs-perf-minimize button button-small" style="padding: 2px 8px; font-size: 11px;"><?= esc_html__('Minimize', 'fromscratch') ?></button>
+			<div class="fs-perf-pinned-panel__header">
+				<div class="fs-perf-pinned-panel__title"><?= esc_html__('Performance', 'fromscratch') ?></div>
+				<div class="fs-perf-pinned-panel__minimize" data-fs-perf-minimize>
+					<?= esc_html__('Minimize', 'fromscratch') ?>
+				</div>
 			</div>
-			<div style="padding: 8px 10px 10px;">
-				<div id="fs-perf-pages-caption" class="fs-perf-pinned-panel__pages" style="font-size: 11px; color: #646970; margin-bottom: 6px; min-height: 1em;"></div>
+			<div class="fs-perf-pinned-panel__body">
 				<?php $t = fs_developer_perf_format_time((float) $perf['time']); ?>
 				<table class="fs-perf-pinned-panel__table widefat striped" role="presentation">
 					<thead>
 						<tr>
-							<th scope="col"><?= esc_html__('Metric', 'fromscratch') ?></th>
+							<th scope="col"></th>
 							<th scope="col"><?= esc_html__('Current', 'fromscratch') ?></th>
-							<th scope="col" colspan="2" class="fs-perf-pinned-panel__th-avg"><?= esc_html__('Average', 'fromscratch') ?>
-								<button type="button" class="fs-perf-clear-history button button-small" style="display: none;"><?= esc_html(_x('Clear', 'performance panel history', 'fromscratch')) ?></button>
+							<th scope="col" colspan="2" class="fs-perf-pinned-panel__th-avg">
+								<div class="fs-perf-pinned-panel__avg-header">
+									<span class="fs-perf-pinned-panel__avg-title"><?= esc_html__('Average', 'fromscratch') ?></span>
+									<span id="fs-perf-pages-caption" class="fs-perf-pinned-panel__pages"></span>
+									<div class="fs-perf-clear-history" data-fs-perf-clear-history><?= esc_html(_x('Clear', 'performance panel history', 'fromscratch')) ?></div>
+								</div>
 							</th>
 						</tr>
 					</thead>
 					<tbody>
 						<tr>
 							<th scope="row"><?= esc_html__('Execution time', 'fromscratch') ?></th>
-							<td><strong><?= esc_html($t['value']) ?><?= esc_html($t['unit']) ?></strong></td>
+							<td><strong><?= esc_html($t['value']) ?> <?= esc_html($t['unit']) ?></strong></td>
 							<td id="fs-perf-avg-time" class="fs-perf-pinned-panel__avg-cell"><?= esc_html__('—', 'fromscratch') ?></td>
 							<td id="fs-perf-avg-scale-time" class="fs-perf-pinned-panel__scale-cell"><?= esc_html__('—', 'fromscratch') ?></td>
 						</tr>
@@ -608,7 +589,7 @@ function fs_developer_perf_pinned_panel_render(): void
 				</table>
 			</div>
 		</div>
-		<button type="button" class="fs-perf-pinned-panel__tab" style="display: none; padding: 6px 12px; background: #f0f0f1; border: 1px solid #c3c4c7; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,.1); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;"><?= esc_html__('Performance', 'fromscratch') ?> ▲</button>
+		<div class="fs-perf-pinned-panel__tab"><?= esc_html__('Performance', 'fromscratch') ?></div>
 	</div>
 	<script>
 		(function() {
@@ -674,15 +655,12 @@ function fs_developer_perf_pinned_panel_render(): void
 					var s3 = max > 0 ? (b[2] / max * 100).toFixed(2) + '%' : '0%';
 					var s4 = max > 0 ? (b[3] / max * 100).toFixed(2) + '%' : '0%';
 					var label = bandLabel(value, b);
-					var maxLabel = metric === 'time' ? max + 's' : metric === 'memory' ? max + ' MB' : String(max);
-					return '<span class="fs-perf-scale" style="--fs-perf-pct:' + pct + ';--fs-perf-s1:' + s1 + ';--fs-perf-s2:' + s2 + ';--fs-perf-s3:' + s3 + ';--fs-perf-s4:' + s4 + ';display:inline-block!important;margin-left:0;vertical-align:middle!important;line-height:1!important">' +
-						'<span class="fs-perf-scale__inner" style="display:inline-flex!important;align-items:center;gap:4px;flex-wrap:nowrap">' +
-						'<span class="fs-perf-scale__min" style="font-size:10px!important;color:#646970;white-space:nowrap">0</span>' +
-						'<span class="fs-perf-scale__bar-wrap" style="position:relative;display:inline-block!important;width:64px!important;height:10px!important">' +
-						'<span class="fs-perf-scale__bar" style="position:absolute;inset:0;height:6px!important;top:2px;border-radius:3px;background:linear-gradient(to right,#22c55e 0%,#22c55e var(--fs-perf-s1),#84cc16 var(--fs-perf-s1),#84cc16 var(--fs-perf-s2),#f97316 var(--fs-perf-s2),#f97316 var(--fs-perf-s3),#ef4444 var(--fs-perf-s3),#ef4444 var(--fs-perf-s4),#b91c1c var(--fs-perf-s4),#b91c1c 100%)!important"></span>' +
-						'<span class="fs-perf-scale__indicator" style="position:absolute;top:0;left:calc(var(--fs-perf-pct,0)*1%);transform:translateX(-50%);width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:5px solid #1d2327;pointer-events:none"></span></span>' +
-						'<span class="fs-perf-scale__max" style="font-size:10px!important;color:#646970;white-space:nowrap">' + maxLabel + '</span> ' +
-						'<span class="fs-perf-scale__label" style="font-weight:600!important;font-size:11px!important;white-space:nowrap">' + label + '</span></span></span>';
+					return '<span class="fs-perf-scale" style="--fs-perf-pct:' + pct + ';--fs-perf-s1:' + s1 + ';--fs-perf-s2:' + s2 + ';--fs-perf-s3:' + s3 + ';--fs-perf-s4:' + s4 + '">' +
+						'<span class="fs-perf-scale__inner">' +
+						'<span class="fs-perf-scale__bar-wrap">' +
+						'<span class="fs-perf-scale__bar"></span>' +
+						'<span class="fs-perf-scale__indicator"></span></span>' +
+						'<span class="fs-perf-scale__label">' + label + '</span></span></span>';
 				}
 
 				function renderAverageSection(data) {
@@ -705,7 +683,7 @@ function fs_developer_perf_pinned_panel_render(): void
 					} : null;
 
 					if (captionEl) {
-						captionEl.textContent = count > 0 ? '(' + pagesLabel + ')' : '';
+						captionEl.textContent = count > 0 ? pagesLabel : '';
 					}
 					if (clearBtn) {
 						clearBtn.style.display = count > 0 ? 'inline-block' : 'none';
@@ -725,13 +703,13 @@ function fs_developer_perf_pinned_panel_render(): void
 					}
 
 					if (avgTimeEl) {
-						avgTimeEl.innerHTML = '<strong>' + (avg.time < 1 ? Math.round(avg.time * 1000) + 'ms' : avg.time.toFixed(3) + 's') + '</strong>';
+						avgTimeEl.innerHTML = '<strong>' + (avg.time < 1 ? Math.round(avg.time * 1000) + ' ms' : avg.time.toFixed(3) + ' s') + '</strong>';
 					}
 					if (avgScaleTimeEl) {
 						avgScaleTimeEl.innerHTML = scaleHtml(avg.time, 'time');
 					}
 					if (avgMemoryEl) {
-						avgMemoryEl.innerHTML = '<strong>' + avg.memory.toFixed(2) + ' MB</strong>';
+						avgMemoryEl.innerHTML = '<strong>' + avg.memory + ' MB</strong>';
 					}
 					if (avgScaleMemoryEl) {
 						avgScaleMemoryEl.innerHTML = scaleHtml(avg.memory, 'memory');
@@ -783,7 +761,7 @@ function fs_developer_perf_pinned_panel_render(): void
 				startMinimized = sessionStorage.getItem(MINIMIZED_KEY) === '1';
 			} catch (e) {}
 			setExpanded(!startMinimized);
-			var minBtn = panel.querySelector('.fs-perf-minimize');
+			var minBtn = panel.querySelector('[data-fs-perf-minimize]');
 			if (minBtn) minBtn.addEventListener('click', function() {
 				setExpanded(false);
 			});

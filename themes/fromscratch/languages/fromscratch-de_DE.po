@@ -1431,9 +1431,6 @@ msgstr "%s Seiten"
 msgid "Average"
 msgstr "Durchschnitt"
 
-msgid "Metric"
-msgstr "Metrik"
-
 msgid "Current"
 msgstr "Aktuell"
 

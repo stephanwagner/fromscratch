@@ -48,4 +48,82 @@
       }
     }
   }
+
+  .fs-perf-adminbar-row {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    width: 100%;
+  }
+
+  .fs-perf-adminbar-row__label {
+    white-space: nowrap;
+  }
+
+  .fs-perf-scale {
+    --fs-perf-s1: 8%;
+    --fs-perf-s2: 20%;
+    --fs-perf-s3: 40%;
+    --fs-perf-s4: 80%;
+    display: inline-block;
+    margin-left: auto;
+    vertical-align: middle;
+    line-height: 1;
+  }
+
+  .fs-perf-scale__inner {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  .fs-perf-scale__label {
+    order: 1;
+    font-weight: 600;
+    font-size: 12px;
+    white-space: nowrap;
+    line-height: 1;
+    color: inherit;
+  }
+
+  .fs-perf-scale__bar-wrap {
+    order: 2;
+    position: relative;
+    display: inline-block;
+    width: 72px;
+    height: 12px;
+  }
+
+  .fs-perf-scale__bar {
+    position: absolute;
+    inset: 0;
+    height: 6px;
+    top: 3px;
+    border-radius: 4px;
+    background: linear-gradient(to right,
+        #22c55e 0%,
+        #22c55e var(--fs-perf-s1),
+        #84cc16 var(--fs-perf-s1),
+        #84cc16 var(--fs-perf-s2),
+        #f97316 var(--fs-perf-s2),
+        #f97316 var(--fs-perf-s3),
+        #ef4444 var(--fs-perf-s3),
+        #ef4444 var(--fs-perf-s4),
+        #b91c1c var(--fs-perf-s4),
+        #b91c1c 100%);
+  }
+
+  .fs-perf-scale__indicator {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--fs-perf-pct, 0) * 1%);
+    transform: translateX(-50%);
+    width: 2px;
+    border-radius: 2px;
+    pointer-events: none;
+    background: #fff;
+    border: 1px solid #000;
+  }
 }
