@@ -406,19 +406,23 @@ add_filter('posts_clauses', function (array $clauses, \WP_Query $query): array {
 	}
 	$meta_key = FS_TRANSLATION_GROUP_META;
 	$join_alias = 'fs_lang_grp';
+	$group_post_alias = 'fs_lang_group_post';
 	$tr_alias = 'fs_lang_tr';
 	$tt_alias = 'fs_lang_tt';
 	$clauses['join'] .= " LEFT JOIN {$wpdb->postmeta} AS {$join_alias} ON {$join_alias}.post_id = {$wpdb->posts}.ID AND {$join_alias}.meta_key = '" . esc_sql($meta_key) . "' ";
+	$group_id_expr = "COALESCE(CAST({$join_alias}.meta_value AS UNSIGNED), {$wpdb->posts}.ID)";
+	$clauses['join'] .= " LEFT JOIN {$wpdb->posts} AS {$group_post_alias} ON {$group_post_alias}.ID = {$group_id_expr} ";
 	if ($default_term_id > 0) {
 		$clauses['join'] .= " LEFT JOIN {$wpdb->term_relationships} AS {$tr_alias} ON {$tr_alias}.object_id = {$wpdb->posts}.ID ";
 		$clauses['join'] .= " LEFT JOIN {$wpdb->term_taxonomy} AS {$tt_alias} ON {$tt_alias}.term_taxonomy_id = {$tr_alias}.term_taxonomy_id AND {$tt_alias}.taxonomy = '" . esc_sql(FS_LANGUAGE_TAXONOMY) . "' AND {$tt_alias}.term_id = " . $default_term_id . " ";
 	}
-	$group_order = " COALESCE(CAST({$join_alias}.meta_value AS UNSIGNED), {$wpdb->posts}.ID) ";
+	$order_dir = strtoupper((string) $query->get('order')) === 'DESC' ? 'DESC' : 'ASC';
+	$group_order = " COALESCE({$group_post_alias}.menu_order, {$wpdb->posts}.menu_order) ";
 	$default_first = $default_term_id > 0
 		? " (CASE WHEN {$tt_alias}.term_id IS NOT NULL THEN 0 ELSE 1 END) "
 		: " 0 ";
 	$existing = trim($clauses['orderby']);
-	$clauses['orderby'] = $group_order . ' ASC, ' . $default_first . ' ASC' . ($existing !== '' ? ', ' . $existing : '');
+	$clauses['orderby'] = $group_order . ' ' . $order_dir . ', ' . $default_first . ' ASC' . ($existing !== '' ? ', ' . $existing : '');
 	return $clauses;
 }, 10, 2);
 
