@@ -98,7 +98,8 @@
     if (!dateObj) return '';
     const df = labels.dateFormat || 'F j, Y';
     const tf = labels.timeFormat || 'g:i a';
-    const format = df + ' ' + tf;
+    // Match publish/status row: comma between date and time (e.g. "9. März 2026, 6:47").
+    const format = df + ', ' + tf;
     if (wpDate) {
       try {
         if (typeof wpDate.dateI18n === 'function') {
@@ -143,9 +144,7 @@
       return formattedDate;
     }
     const rtl =
-      wp.i18n &&
-      typeof wp.i18n.isRTL === 'function' &&
-      wp.i18n.isRTL();
+      wp.i18n && typeof wp.i18n.isRTL === 'function' && wp.i18n.isRTL();
     return rtl ? abbr + ' ' + formattedDate : formattedDate + ' ' + abbr;
   }
 
@@ -263,9 +262,7 @@
     const clearLabel = labels.clearLabel || 'Reset';
     const closeLabel =
       labels.closeLabel ||
-      (wp.i18n && wp.i18n.__
-        ? wp.i18n.__('Close', 'fromscratch')
-        : 'Close');
+      (wp.i18n && wp.i18n.__ ? wp.i18n.__('Close', 'fromscratch') : 'Close');
     const panelTitle = labels.panelTitle || 'Expiration';
     const noneLabel = labels.noneLabel || 'None';
     const actionLabel = labels.actionLabel || 'After expiration';
@@ -358,22 +355,26 @@
           el(
             'button',
             {
-              type: 'button',
-              className:
+              'type': 'button',
+              'className':
                 'components-button block-editor-inspector-popover-header__action is-small has-icon',
               'aria-label': closeLabel,
-              onClick: onClose
+              'onClick': onClose
             },
-            el('svg', {
-              xmlns: 'http://www.w3.org/2000/svg',
-              viewBox: '0 0 24 24',
-              width: '24',
-              height: '24',
-              'aria-hidden': 'true',
-              focusable: 'false'
-            }, el('path', {
-              d: 'M12 13.06l3.712 3.713 1.061-1.06L13.061 12l3.712-3.712-1.06-1.06L12 10.938 8.288 7.227l-1.061 1.06L10.939 12l-3.712 3.712 1.06 1.061L12 13.061z'
-            }))
+            el(
+              'svg',
+              {
+                'xmlns': 'http://www.w3.org/2000/svg',
+                'viewBox': '0 0 24 24',
+                'width': '24',
+                'height': '24',
+                'aria-hidden': 'true',
+                'focusable': 'false'
+              },
+              el('path', {
+                d: 'M12 13.06l3.712 3.713 1.061-1.06L13.061 12l3.712-3.712-1.06-1.06L12 10.938 8.288 7.227l-1.061 1.06L10.939 12l-3.712 3.712 1.06 1.061L12 13.061z'
+              })
+            )
           )
         )
       );
@@ -395,7 +396,7 @@
           'div',
           {
             className:
-              'fromscratch-expirator__popover-body fromscratch-editor-panel fromscratch-expirator-panel fromscratch-expirator__dialog fromscratch-expirator__action-popover-body'
+              'fromscratch-expirator__popover-body fromscratch-expirator__popover-body--after-expiration fromscratch-editor-panel fromscratch-expirator-panel fromscratch-expirator__dialog'
           },
           el(
             PanelRow,
@@ -437,8 +438,7 @@
         el(
           'div',
           {
-            className:
-              'components-flex components-h-stack',
+            className: 'components-flex components-h-stack',
             style: {
               alignItems: 'center',
               width: '100%',
@@ -476,22 +476,26 @@
           el(
             'button',
             {
-              type: 'button',
-              className:
+              'type': 'button',
+              'className':
                 'components-button block-editor-inspector-popover-header__action is-small has-icon',
               'aria-label': closeLabel,
-              onClick: onClose
+              'onClick': onClose
             },
-            el('svg', {
-              xmlns: 'http://www.w3.org/2000/svg',
-              viewBox: '0 0 24 24',
-              width: '24',
-              height: '24',
-              'aria-hidden': 'true',
-              focusable: 'false'
-            }, el('path', {
-              d: 'M12 13.06l3.712 3.713 1.061-1.06L13.061 12l3.712-3.712-1.06-1.06L12 10.938 8.288 7.227l-1.061 1.06L10.939 12l-3.712 3.712 1.06 1.061L12 13.061z'
-            }))
+            el(
+              'svg',
+              {
+                'xmlns': 'http://www.w3.org/2000/svg',
+                'viewBox': '0 0 24 24',
+                'width': '24',
+                'height': '24',
+                'aria-hidden': 'true',
+                'focusable': 'false'
+              },
+              el('path', {
+                d: 'M12 13.06l3.712 3.713 1.061-1.06L13.061 12l3.712-3.712-1.06-1.06L12 10.938 8.288 7.227l-1.061 1.06L10.939 12l-3.712 3.712 1.06 1.061L12 13.061z'
+              })
+            )
           )
         )
       );
@@ -524,7 +528,7 @@
           'div',
           {
             className:
-              'fromscratch-expirator__popover-body fromscratch-editor-panel fromscratch-expirator-panel fromscratch-expirator__dialog'
+              'fromscratch-expirator__popover-body fromscratch-expirator__popover-body--expiration-date fromscratch-editor-panel fromscratch-expirator-panel fromscratch-expirator__dialog'
           },
           el(
             PanelRow,
@@ -549,17 +553,15 @@
     const scheduleLikeRow = el(
       'div',
       {
-        className:
-          panelRowClass + ' fromscratch-expirator-post-status',
+        className: panelRowClass + ' fromscratch-expirator-post-status',
+        style: {
+          display: 'flex'
+        },
         ref: function (node) {
           setRowAnchorEl(node);
         }
       },
-      el(
-        'div',
-        { className: 'editor-post-panel__row-label' },
-        panelTitle
-      ),
+      el('div', { className: 'editor-post-panel__row-label' }, panelTitle),
       el(
         'div',
         {
@@ -579,18 +581,18 @@
           className:
             'components-dropdown fromscratch-expirator__panel-dropdown editor-post-schedule__panel-dropdown',
           contentClassName:
-            'fromscratch-expirator__popover-content editor-post-schedule__dialog',
+            'fromscratch-expirator__popover-content fromscratch-expirator__popover-content--expiration-date editor-post-schedule__dialog',
           renderToggle: function (toggleProps) {
             var onToggle = toggleProps.onToggle;
             var isOpen = toggleProps.isOpen;
             return el(
               Button,
               {
-                variant: 'tertiary',
-                size: 'compact',
-                className:
+                'variant': 'tertiary',
+                'size': 'compact',
+                'className':
                   'fromscratch-expirator__toggle editor-post-schedule__dialog-toggle',
-                onClick: onToggle,
+                'onClick': onToggle,
                 'aria-expanded': isOpen,
                 'aria-label': panelTitle
               },
@@ -611,17 +613,12 @@
       ? el(
           'div',
           {
-            className:
-              panelRowClass + ' fromscratch-expirator-action-row',
+            className: panelRowClass + ' fromscratch-expirator-action-row',
             ref: function (node) {
               setActionRowAnchorEl(node);
             }
           },
-          el(
-            'div',
-            { className: 'editor-post-panel__row-label' },
-            actionLabel
-          ),
+          el('div', { className: 'editor-post-panel__row-label' }, actionLabel),
           el(
             'div',
             {
@@ -641,18 +638,18 @@
               className:
                 'components-dropdown fromscratch-expirator__panel-dropdown fromscratch-expirator__action-panel-dropdown editor-post-url__panel-dropdown',
               contentClassName:
-                'fromscratch-expirator__popover-content fromscratch-expirator__action-popover editor-post-url__dialog',
+                'fromscratch-expirator__popover-content fromscratch-expirator__popover-content--after-expiration editor-post-url__dialog',
               renderToggle: function (toggleProps) {
                 var onToggle = toggleProps.onToggle;
                 var isOpen = toggleProps.isOpen;
                 return el(
                   Button,
                   {
-                    variant: 'tertiary',
-                    size: 'compact',
-                    className:
+                    'variant': 'tertiary',
+                    'size': 'compact',
+                    'className':
                       'fromscratch-expirator__action-toggle editor-post-url__panel-toggle',
-                    onClick: onToggle,
+                    'onClick': onToggle,
                     'aria-expanded': isOpen,
                     'aria-label': actionLabel
                   },

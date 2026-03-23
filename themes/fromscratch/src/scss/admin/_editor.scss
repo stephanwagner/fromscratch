@@ -1,6 +1,6 @@
 // Editor panel
 
-div.fromscratch-editor-panel {
+div.fromscratch-seo-panel {
   .components-panel__row {
     >* {
       width: 100%;
@@ -119,7 +119,15 @@ div.fromscratch-editor-panel {
   width: 100%;
 }
 
+.fromscratch-expirator-action-row,
+.fromscratch-expirator-post-status {
+  display: flex;
+  gap: 8px;
+}
+
 .fromscratch-expirator-document-panel.components-panel__row {
+  margin-top: 0;
+
   .editor-post-panel__row.fromscratch-expirator-post-status,
   .editor-post-panel__row.fromscratch-expirator-action-row {
     width: 100%;
@@ -135,16 +143,31 @@ div.fromscratch-editor-panel {
 }
 
 .fromscratch-expirator__popover-content {
+  width: min(320px, 92vw);
+  max-width: min(320px, 92vw);
   min-width: min(320px, 92vw);
-}
+  box-sizing: border-box;
 
-.fromscratch-expirator__popover-inner {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  min-width: min(320px, 92vw);
-}
+  &--after-expiration {
+    .fromscratch-expirator__popover-inner {
+      padding: 8px;
+    }
 
-.fromscratch-expirator__popover-body {
-  padding: 0 12px 12px;
+    .components-popover__content {
+      width: 100%;
+    }
+
+    .components-panel__row,
+    .components-base-control {
+      width: 100%;
+    }
+
+    .fromscratch-expirator-field-redirect {
+      margin-top: 8px;
+    }
+  }
+
+  .components-datetime {
+    width: 100%;
+  }
 }
