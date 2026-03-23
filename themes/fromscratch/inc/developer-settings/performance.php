@@ -499,7 +499,7 @@ function fs_developer_perf_pinned_panel_render(): void
 		.fs-perf-pinned-panel__pages { color: #646970; font-weight: normal; white-space: nowrap; }
 		.fs-perf-pinned-panel__table tbody th { font-weight: normal; color: #646970; text-align: left; }
 		.fs-perf-pinned-panel__table td.fs-perf-pinned-panel__avg-cell { white-space: nowrap; }
-		.fs-perf-pinned-panel__table td.fs-perf-pinned-panel__scale-cell { vertical-align: middle; }
+		.fs-perf-pinned-panel__table td.fs-perf-pinned-panel__scale-cell { vertical-align: middle; text-align: right; }
 		.fs-perf-pinned-panel__table .fs-perf-clear-history { margin-left: auto; cursor: pointer; color: #2271b1; font-weight: normal; }
 		.fs-perf-pinned-panel__table .fs-perf-clear-history:hover { color: #1c548a; }
 		.fs-perf-pinned-panel .fs-perf-pinned-panel__scale-cell .fs-perf-scale { display: inline-block; margin-left: 0; vertical-align: middle; line-height: 1; }

@@ -353,23 +353,42 @@ add_action('manage_posts_custom_column', function (string $column, int $post_id)
 	if (!$post instanceof \WP_Post || !fs_cpt_is_ordered($post->post_type) || !current_user_can('edit_post', $post_id)) {
 		return;
 	}
+	static $ordered_cache = [];
+	if (!isset($ordered_cache[$post->post_type])) {
+		$ids = get_posts([
+			'post_type'      => $post->post_type,
+			'post_status'    => ['publish', 'future', 'draft', 'pending', 'private'],
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+			'orderby'        => ['menu_order' => 'ASC', 'date' => 'DESC', 'ID' => 'ASC'],
+		]);
+		$ordered_cache[$post->post_type] = array_values(array_map('intval', is_array($ids) ? $ids : []));
+	}
+	$ordered_ids = $ordered_cache[$post->post_type];
+	$idx = array_search($post_id, $ordered_ids, true);
+	$is_first = $idx === 0;
+	$is_last = $idx === count($ordered_ids) - 1;
+
 	$base = admin_url('edit.php?post_type=' . rawurlencode($post->post_type));
-	$mk = function (string $dir, string $label) use ($base, $post_id): string {
+	$mk = function (string $dir, string $label, string $icon_class, bool $disabled = false) use ($base, $post_id): string {
+		if ($disabled) {
+			return '<span class="fs-cpt-reorder-menu__action is-disabled" aria-disabled="true"><span class="dashicons ' . esc_attr($icon_class) . '" aria-hidden="true"></span><span>' . esc_html($label) . '</span></span>';
+		}
 		$url = add_query_arg([
 			'fs_cpt_reorder' => $dir,
 			'post_id'        => $post_id,
 		], $base);
 		$url = wp_nonce_url($url, 'fs_cpt_reorder_' . $dir . '_' . $post_id);
-		return '<a class="button button-small" href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
+		return '<a class="fs-cpt-reorder-menu__action" href="' . esc_url($url) . '"><span class="dashicons ' . esc_attr($icon_class) . '" aria-hidden="true"></span><span>' . esc_html($label) . '</span></a>';
 	};
 	$order = (int) get_post_field('menu_order', $post_id);
 	echo '<div class="fs-cpt-reorder-menu"><span class="fs-cpt-reorder-menu__order">' . esc_html((string) $order) . '</span>';
-	echo '<button type="button" class="button button-small fs-cpt-reorder-menu__toggle" aria-expanded="false" aria-label="' . esc_attr__('Reorder', 'fromscratch') . '" title="' . esc_attr__('Reorder', 'fromscratch') . '"><span class="dashicons dashicons-sort"></span></button>';
+	echo '<button type="button" class="button button-small fs-cpt-reorder-menu__toggle" aria-expanded="false" aria-label="' . esc_attr__('Reorder', 'fromscratch') . '" title="' . esc_attr__('Reorder', 'fromscratch') . '"><svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M334.5-442.35Q324-452.7 324-468v-258l-80 80q-11 11-25.67 11-14.66 0-25.33-11-11-10.67-11-25.33Q182-686 193-697l142-142q5.4-5 11.7-7.5 6.3-2.5 13.5-2.5t13.5 2.5Q380-844 385-839l142 142q11 11 11 25t-11 25.48Q516-636 501.5-636T476-647l-80-79v258q0 15.3-10.29 25.65Q375.42-432 360.21-432t-25.71-10.35ZM586.3-113.5Q580-116 575-121L433-263q-11-10.91-10.5-25.45.5-14.55 11.5-26.03Q445-325 459.5-325t25.5 11l79 80v-258q0-15.3 10.29-25.65Q584.58-528 599.79-528t25.71 10.35Q636-507.3 636-492v258l80-80q11-11 25.67-11 14.66 0 25.33 11 11 10.67 11 25.33Q778-274 767-263L625-121q-5.4 5-11.7 7.5-6.3 2.5-13.5 2.5t-13.5-2.5Z"/></svg></button>';
 	echo '<div class="fs-cpt-reorder-menu__popover" hidden>';
-	echo $mk('top', __('Top', 'fromscratch'));
-	echo $mk('up', __('Up', 'fromscratch'));
-	echo $mk('down', __('Down', 'fromscratch'));
-	echo $mk('bottom', __('Bottom', 'fromscratch'));
+	echo $mk('up', __('Move up', 'fromscratch'), 'dashicons-arrow-up-alt2', $is_first);
+	echo $mk('down', __('Move down', 'fromscratch'), 'dashicons-arrow-down-alt2', $is_last);
+	echo $mk('top', __('Move to top', 'fromscratch'), 'dashicons-upload', $is_first);
+	echo $mk('bottom', __('Move to bottom', 'fromscratch'), 'dashicons-download', $is_last);
 	echo '</div>';
 	echo '</div>';
 }, 20, 2);
@@ -384,13 +403,17 @@ add_action('admin_head', function (): void {
 		return;
 	}
 	echo '<style>
-	.column-fs_cpt_reorder{width:120px}
+	.column-fs_cpt_reorder{width:115px}
 	td.fs_cpt_reorder.column-fs_cpt_reorder{white-space:nowrap}
 	.fs-cpt-reorder-menu{position:relative;display:inline-flex;align-items:center;gap:6px}
 	.fs-cpt-reorder-menu__order{display:inline-block;min-width:18px;text-align:right;font-variant-numeric:tabular-nums}
 	.fs-cpt-reorder-menu__toggle .dashicons{font-size:16px;line-height:18px;width:16px;height:16px}
-	.fs-cpt-reorder-menu__popover{position:absolute;left:100%;top:0;z-index:1000;display:flex;gap:4px;flex-wrap:wrap;padding:6px;margin-left:6px;min-width:170px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+	.fs-cpt-reorder-menu__popover{position:absolute;right:100%;top:0;z-index:1000;display:flex;gap:4px;flex-direction:column;padding:6px;margin-left:6px;min-width:170px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
 	.fs-cpt-reorder-menu__popover[hidden]{display:none}
+	.fs-cpt-reorder-menu__action{display:inline-flex;align-items:center;gap:6px;padding:4px 6px;border-radius:3px;color:#2271b1;text-decoration:none}
+	.fs-cpt-reorder-menu__action:hover{background:#f0f6fc;color:#135e96}
+	.fs-cpt-reorder-menu__action .dashicons{font-size:14px;width:14px;height:14px;line-height:14px}
+	.fs-cpt-reorder-menu__action.is-disabled{color:#8c8f94;cursor:not-allowed;background:transparent}
 	</style>';
 });
 
@@ -405,12 +428,37 @@ add_action('admin_footer', function (): void {
 	}
 	echo '<script>
 	(function(){
+		function positionPopover(menu,pop){
+			var btn=menu.querySelector(".fs-cpt-reorder-menu__toggle");
+			if(!btn||!pop) return;
+			var rect=btn.getBoundingClientRect();
+			var margin=8;
+			var popW=pop.offsetWidth||170;
+			var popH=pop.offsetHeight||140;
+			var left=rect.left-popW-margin;
+			if(left<margin){left=margin;}
+			var top=rect.top;
+			if(top+popH>window.innerHeight-margin){
+				top=rect.bottom-popH;
+			}
+			if(top<margin){top=margin;}
+			pop.style.position="fixed";
+			pop.style.left=left+"px";
+			pop.style.top=top+"px";
+			pop.style.right="auto";
+		}
 		function closeAll(exceptMenu){
 			document.querySelectorAll(".fs-cpt-reorder-menu").forEach(function(menu){
 				if(exceptMenu && menu===exceptMenu) return;
 				var pop=menu.querySelector(".fs-cpt-reorder-menu__popover");
 				var btn=menu.querySelector(".fs-cpt-reorder-menu__toggle");
-				if(pop){pop.hidden=true;}
+				if(pop){
+					pop.hidden=true;
+					pop.style.position="";
+					pop.style.left="";
+					pop.style.top="";
+					pop.style.right="";
+				}
 				if(btn){btn.setAttribute("aria-expanded","false");}
 			});
 		}
@@ -424,11 +472,18 @@ add_action('admin_footer', function (): void {
 				closeAll(menu);
 				pop.hidden=!willOpen;
 				btn.setAttribute("aria-expanded",willOpen?"true":"false");
+				if(willOpen){positionPopover(menu,pop);}
 				return;
 			}
 			if(!e.target.closest(".fs-cpt-reorder-menu")){
 				closeAll(null);
 			}
+		});
+		window.addEventListener("resize",function(){
+			document.querySelectorAll(".fs-cpt-reorder-menu").forEach(function(menu){
+				var pop=menu.querySelector(".fs-cpt-reorder-menu__popover");
+				if(pop && !pop.hidden){positionPopover(menu,pop);}
+			});
 		});
 		document.addEventListener("keydown",function(e){
 			if(e.key==="Escape"){closeAll(null);}
