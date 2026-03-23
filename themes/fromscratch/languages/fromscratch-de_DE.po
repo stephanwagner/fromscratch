@@ -1314,6 +1314,9 @@ msgstr "Datenbankversion"
 msgid "Not installed"
 msgstr "Nicht installiert"
 
+msgid "Installed"
+msgstr "Installiert"
+
 msgid "Enabled"
 msgstr "Aktiviert"
 
@@ -1343,6 +1346,39 @@ msgstr "Erlaubte IP-Adressen"
 
 msgid "Comma-separated. Only these IPs will see the panel when logged out."
 msgstr "Kommagetrennt. Nur diese IPs sehen das Panel beim Abmelden."
+
+msgid "Cannot write safeguard file in wp-content."
+msgstr "Die Schutzdatei in wp-content kann nicht geschrieben werden."
+
+msgid "Failed to create Redis safeguard file."
+msgstr "Die Redis-Schutzdatei konnte nicht erstellt werden."
+
+msgid "Cannot update wp-config.php for Redis safeguard."
+msgstr "wp-config.php kann für den Redis-Schutz nicht aktualisiert werden."
+
+msgid "Failed to read wp-config.php."
+msgstr "wp-config.php konnte nicht gelesen werden."
+
+msgid "Failed to write Redis safeguard include to wp-config.php."
+msgstr "Der Redis-Schutz-Include konnte nicht in wp-config.php geschrieben werden."
+
+msgid "Redis safeguard installed."
+msgstr "Redis-Schutz installiert."
+
+msgid "Redis safeguard"
+msgstr "Redis-Schutz"
+
+msgid "Create safeguard file"
+msgstr "Schutzdatei erstellen"
+
+msgid "Install safeguard file"
+msgstr "Schutz-Datei installieren"
+
+msgid "Safeguard file is missing in theme /inc folder."
+msgstr "Die Schutzdatei fehlt im Theme-Ordner /inc."
+
+msgid "Redis object cache is active but safeguard is not installed. Install the safeguard to prevent outages when Redis is unavailable."
+msgstr "Der Redis-Objekt-Cache ist aktiv, aber der Schutz ist nicht installiert. Installiere den Schutz, um Ausfälle zu verhindern, wenn Redis nicht verfügbar ist."
 
 msgid "—"
 msgstr "—"

@@ -5,6 +5,86 @@ defined('ABSPATH') || exit;
 $fs_developer_tab = 'system';
 $fs_developer_page_slug = fs_developer_settings_page_slug($fs_developer_tab);
 
+function fs_developer_redis_safeguard_file_path(): string
+{
+	return trailingslashit(get_stylesheet_directory()) . 'inc/fromscratch-redis-safeguard.php';
+}
+
+function fs_developer_redis_safeguard_wpconfig_path(): string
+{
+	return trailingslashit(ABSPATH) . 'wp-config.php';
+}
+
+function fs_developer_redis_safeguard_block(): string
+{
+	$stylesheet = sanitize_key((string) get_option('stylesheet', 'fromscratch'));
+	if ($stylesheet === '') {
+		$stylesheet = 'fromscratch';
+	}
+	$relative_path = '/wp-content/themes/' . $stylesheet . '/inc/fromscratch-redis-safeguard.php';
+	return implode("\n", [
+		'// BEGIN FromScratch Redis safeguard',
+		'$fs_redis_safeguard = __DIR__ . \'' . $relative_path . '\';',
+		'if (file_exists($fs_redis_safeguard)) {',
+		"\trequire_once \$fs_redis_safeguard;",
+		'}',
+		'// END FromScratch Redis safeguard',
+	]) . "\n\n";
+}
+
+function fs_developer_redis_safeguard_is_installed(): bool
+{
+	$file_path = fs_developer_redis_safeguard_file_path();
+	$wp_config_path = fs_developer_redis_safeguard_wpconfig_path();
+	if (!is_file($file_path) || !is_readable($wp_config_path)) {
+		return false;
+	}
+	$wp_config = file_get_contents($wp_config_path);
+	if ($wp_config === false) {
+		return false;
+	}
+	return strpos($wp_config, '// BEGIN FromScratch Redis safeguard') !== false
+		&& strpos($wp_config, '// END FromScratch Redis safeguard') !== false;
+}
+
+function fs_developer_redis_safeguard_install(): array
+{
+	$file_path = fs_developer_redis_safeguard_file_path();
+	$wp_config_path = fs_developer_redis_safeguard_wpconfig_path();
+	$block = fs_developer_redis_safeguard_block();
+
+	if (!is_file($file_path) || !is_readable($file_path)) {
+		return ['ok' => false, 'message' => __('Safeguard file is missing in theme /inc folder.', 'fromscratch')];
+	}
+	if (!is_file($wp_config_path) || !is_readable($wp_config_path) || !is_writable($wp_config_path)) {
+		return ['ok' => false, 'message' => __('Cannot update wp-config.php for Redis safeguard.', 'fromscratch')];
+	}
+
+	$wp_config = file_get_contents($wp_config_path);
+	if ($wp_config === false) {
+		return ['ok' => false, 'message' => __('Failed to read wp-config.php.', 'fromscratch')];
+	}
+	if (strpos($wp_config, '// BEGIN FromScratch Redis safeguard') === false) {
+		$needle = "/* That's all, stop editing! Happy publishing. */";
+		if (strpos($wp_config, $needle) !== false) {
+			$wp_config = str_replace($needle, "\n" . $block . "\n" . $needle, $wp_config);
+		} else {
+			$wp_config .= "\n" . $block;
+		}
+	} else {
+		$wp_config = (string) preg_replace(
+			'/\/\/ BEGIN FromScratch Redis safeguard.*?\/\/ END FromScratch Redis safeguard\s*/s',
+			$block,
+			$wp_config
+		);
+	}
+	if (file_put_contents($wp_config_path, $wp_config) === false) {
+		return ['ok' => false, 'message' => __('Failed to write Redis safeguard include to wp-config.php.', 'fromscratch')];
+	}
+
+	return ['ok' => true, 'message' => __('Redis safeguard installed.', 'fromscratch')];
+}
+
 add_action('admin_menu', function () use ($fs_developer_tab, $fs_developer_page_slug) {
 	if (!current_user_can('manage_options')) {
 		return;
@@ -55,6 +135,14 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 	}
 	$url = admin_url('options-general.php?page=' . fs_developer_settings_page_slug('system'));
 
+	// Redis safeguard install (manual action).
+	if (!empty($_POST['fromscratch_install_redis_safeguard']) && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_install_redis_safeguard')) {
+		$result = fs_developer_redis_safeguard_install();
+		set_transient('fromscratch_redis_safeguard_notice', $result, 30);
+		wp_safe_redirect($url);
+		exit;
+	}
+
 	// Performance settings
 	if (!empty($_POST['fromscratch_save_perf']) && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_perf')) {
 		$on = isset($_POST['fromscratch_perf_admin_bar']) && $_POST['fromscratch_perf_admin_bar'] === '1';
@@ -68,6 +156,8 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 			return filter_var($ip, FILTER_VALIDATE_IP) !== false;
 		});
 		update_option('fromscratch_perf_panel_guest_ips', implode(', ', $ips));
+		$redis_guard_result = fs_developer_redis_safeguard_install();
+		set_transient('fromscratch_redis_safeguard_notice', $redis_guard_result, 30);
 		set_transient('fromscratch_perf_admin_bar_saved', '1', 30);
 		wp_safe_redirect($url);
 		exit;
@@ -97,12 +187,21 @@ function fs_render_developer_system(): void
 	if ($perf_saved !== false) {
 		delete_transient('fromscratch_perf_admin_bar_saved');
 	}
+	$redis_guard_notice = get_transient('fromscratch_redis_safeguard_notice');
+	if ($redis_guard_notice !== false) {
+		delete_transient('fromscratch_redis_safeguard_notice');
+	}
 ?>
 	<div class="wrap">
 		<h1><?= esc_html(__('Developer settings', 'fromscratch')) ?></h1>
 		<?php if ($system_saved !== false || $perf_saved !== false) : ?>
 			<div class="notice notice-success is-dismissible">
 				<p><strong><?= esc_html(__('Settings saved.', 'fromscratch')) ?></strong></p>
+			</div>
+		<?php endif; ?>
+		<?php if (is_array($redis_guard_notice) && !empty($redis_guard_notice['message'])) : ?>
+			<div class="notice <?= !empty($redis_guard_notice['ok']) ? 'notice-success' : 'notice-warning' ?> is-dismissible">
+				<p><strong><?= esc_html((string) $redis_guard_notice['message']) ?></strong></p>
 			</div>
 		<?php endif; ?>
 
@@ -277,6 +376,7 @@ function fs_render_developer_system(): void
 		$is_redis_installed = defined('WP_REDIS_VERSION')
 			|| class_exists('\RedisCache\Plugin')
 			|| function_exists('redis_cache_enable');
+		$redis_guard_installed = fs_developer_redis_safeguard_is_installed();
 
 		$object_cache_warning = null;
 		if (!$object_cache_active) {
@@ -286,6 +386,10 @@ function fs_render_developer_system(): void
 		}
 
 		$object_cache_row_value = $object_cache_active ? $fs_system_status(true, esc_html__('Active', 'fromscratch')) : $fs_system_status(false, esc_html__('Inactive', 'fromscratch'));
+		$redis_safeguard_warning = null;
+		if ($is_redis_installed && !$redis_guard_installed) {
+			$redis_safeguard_warning = __('Redis object cache is active but safeguard is not installed. Install the safeguard to prevent outages when Redis is unavailable.', 'fromscratch');
+		}
 
 		$db_version_warning = null;
 		if ($db_server !== null && isset($db_server['type'], $db_server['version']) && stripos((string) $db_server['type'], 'mysql') !== false) {
@@ -328,6 +432,20 @@ function fs_render_developer_system(): void
 						<td>
 							<?= $object_cache_row_value ?>
 							<?= $fs_render_warning($object_cache_warning) ?>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?= esc_html__('Redis safeguard', 'fromscratch') ?></th>
+						<td>
+							<?= $redis_guard_installed ? $fs_system_status(true, esc_html__('Installed', 'fromscratch')) : $fs_system_status(false, esc_html__('Not installed', 'fromscratch')) ?>
+							<?php if (!$redis_guard_installed) : ?>
+								<form method="post" action="" style="display: block;">
+									<?php wp_nonce_field('fromscratch_install_redis_safeguard'); ?>
+									<input type="hidden" name="fromscratch_install_redis_safeguard" value="1">
+									<button type="submit" class="is-link"><?= esc_html__('Install safeguard file', 'fromscratch') ?></button>
+								</form>
+							<?php endif; ?>
+							<?= $fs_render_warning($redis_safeguard_warning) ?>
 						</td>
 					</tr>
 					<tr>
