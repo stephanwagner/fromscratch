@@ -293,7 +293,8 @@ function fs_render_developer_system(): void
 				$db_major = (int) $m[1];
 				if ($db_major > 0 && $db_major < 8) {
 					$db_version_warning = sprintf(
-						__('Database version is quite old. Consider upgrading.', 'fromscratch'),
+						/* translators: %s: database server version */
+						__('Database version (%s) is quite old. Consider upgrading.', 'fromscratch'),
 						$db_server['version']
 					);
 				}
@@ -346,21 +347,21 @@ function fs_render_developer_system(): void
 					<tr>
 						<th scope="row"><?= esc_html__('Memory limit', 'fromscratch') ?></th>
 						<td>
-							<?= esc_html($memory_limit !== false && $memory_limit !== '' ? $memory_limit : '—') ?>
+							<?= $memory_limit !== false && $memory_limit !== '' ? esc_html($memory_limit) : esc_html__('—', 'fromscratch') ?>
 							<?= $fs_render_warning($memory_warning) ?>
 						</td>
 					</tr>
 					<tr>
 						<th scope="row"><?= esc_html__('Max upload size', 'fromscratch') ?></th>
 						<td>
-							<?= $upload_max !== false && $upload_max !== '' ? esc_html($upload_max) : '—' ?>
+							<?= $upload_max !== false && $upload_max !== '' ? esc_html($upload_max) : esc_html__('—', 'fromscratch') ?>
 							<?= $fs_render_warning($upload_warning) ?>
 						</td>
 					</tr>
 					<tr>
 						<th scope="row"><?= esc_html__('Max post size', 'fromscratch') ?></th>
 						<td>
-							<?= $post_max !== false && $post_max !== '' ? esc_html($post_max) : '—' ?>
+							<?= $post_max !== false && $post_max !== '' ? esc_html($post_max) : esc_html__('—', 'fromscratch') ?>
 							<?= $fs_render_warning($post_warning) ?>
 							<?= $fs_render_warning($upload_post_warning) ?>
 						</td>
@@ -391,7 +392,7 @@ function fs_render_developer_system(): void
 					<label>
 						<input type="hidden" name="fromscratch_perf_admin_bar" value="0">
 						<input type="checkbox" name="fromscratch_perf_admin_bar" value="1" <?= checked(get_option('fromscratch_perf_admin_bar', '1'), '1', false) ?>>
-						<?= esc_html__('Show performance in admin bar', 'fromscratch') ?>
+						<?= esc_html__('Show performance panel in admin bar', 'fromscratch') ?>
 					</label>
 				</p>
 				<p style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -407,7 +408,7 @@ function fs_render_developer_system(): void
 					</p>
 					<p style="margin-bottom: 0;">
 						<label for="fromscratch_perf_panel_guest_ips"><?= esc_html__('Allowed IP addresses', 'fromscratch') ?></label><br>
-						<input type="text" name="fromscratch_perf_panel_guest_ips" id="fromscratch_perf_panel_guest_ips" value="<?= esc_attr($guest_ips) ?>" class="regular-text" placeholder="192.168.1.1, 10.0.0.1" style="margin-top: 4px; max-width: 320px;">
+						<input type="text" name="fromscratch_perf_panel_guest_ips" id="fromscratch_perf_panel_guest_ips" value="<?= esc_attr($guest_ips) ?>" class="regular-text" placeholder="<?= esc_attr__('192.168.1.1, 10.0.0.1', 'fromscratch') ?>" style="margin-top: 4px; max-width: 320px;">
 						<span class="description" style="display: block; margin-top: 4px;"><?= esc_html__('Comma-separated. Only these IPs will see the panel when logged out.', 'fromscratch') ?></span>
 					</p>
 				</div>

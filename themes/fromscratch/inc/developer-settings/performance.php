@@ -552,7 +552,7 @@ function fs_developer_perf_pinned_panel_render(): void
 			'pages_one'       => __('1 page', 'fromscratch'),
 			'pages_many'      => __('%s pages', 'fromscratch'),
 			'average'         => __('Average', 'fromscratch'),
-			'clear'           => __('Clear', 'fromscratch'),
+			'clear'           => _x('Clear', 'performance panel history', 'fromscratch'),
 			'no_data'         => __('No data yet.', 'fromscratch'),
 			'execution_time'  => __('Execution time', 'fromscratch'),
 			'peak_memory'     => __('Peak memory', 'fromscratch'),

@@ -1234,3 +1234,182 @@ msgstr "Von der Suche ausschließen"
 msgctxt "expiration date empty"
 msgid "None"
 msgstr "Ohne"
+
+# Developer → System info + Performance panel
+msgid "Warning:"
+msgstr "Warnung:"
+
+msgid "Your PHP version (%1$s) is older than recommended. Consider upgrading to at least %2$s (latest stable is %3$s)."
+msgstr "Deine PHP-Version (%1$s) ist älter als empfohlen. Erwäge ein Upgrade auf mindestens %2$s (aktuell stabil: %3$s)."
+
+msgid "Consider increasing `memory_limit` to at least 256M."
+msgstr "Erwäge, `memory_limit` auf mindestens 256M zu erhöhen."
+
+msgid "Consider increasing `upload_max_filesize` to at least 16M."
+msgstr "Erwäge, `upload_max_filesize` auf mindestens 16M zu erhöhen."
+
+msgid "Consider increasing `post_max_size` to at least 16M."
+msgstr "Erwäge, `post_max_size` auf mindestens 16M zu erhöhen."
+
+msgid "`post_max_size` is smaller than `upload_max_filesize`. Some uploads may fail. Increase `post_max_size`."
+msgstr "`post_max_size` ist kleiner als `upload_max_filesize`. Einige Uploads können fehlschlagen. Erhöhe `post_max_size`."
+
+msgid "Debug mode is enabled. Disable it in production."
+msgstr "Der Debug-Modus ist aktiv. In Produktion deaktivieren."
+
+msgid "Xdebug is enabled. Disable it in production for better performance."
+msgstr "Xdebug ist aktiv. In Produktion für bessere Performance deaktivieren."
+
+msgid "OPcache is not installed."
+msgstr "OPcache ist nicht installiert."
+
+msgid "OPcache is disabled. Enable it for significantly better performance."
+msgstr "OPcache ist deaktiviert. Aktiviere für deutlich bessere Performance."
+
+msgid "Redis is installed, but object cache is not active. Enable Redis object caching."
+msgstr "Redis ist installiert, aber der Objekt-Cache ist nicht aktiv. Aktiviere Redis-Objektcaching."
+
+msgid "No persistent object cache detected. Consider enabling Redis/Memcached for better performance."
+msgstr "Kein persistenter Objekt-Cache erkannt. Erwäge Redis/Memcached für bessere Performance."
+
+msgid "Database version (%s) is quite old. Consider upgrading."
+msgstr "Die Datenbankversion (%s) ist veraltet. Ein Upgrade wird empfohlen."
+
+msgid "System info"
+msgstr "Systeminformationen"
+
+msgid "PHP version"
+msgstr "PHP-Version"
+
+msgid "Open PHP info"
+msgstr "PHP-Info öffnen"
+
+msgid "OPcache"
+msgstr "OPcache"
+
+msgid "Object cache"
+msgstr "Objekt-Cache"
+
+msgid "Xdebug"
+msgstr "Xdebug"
+
+msgid "Debug mode"
+msgstr "Debug-Modus"
+
+msgid "Memory limit"
+msgstr "Speicherlimit"
+
+msgid "Max upload size"
+msgstr "Max. Upload-Größe"
+
+msgid "Max post size"
+msgstr "Max. POST-Größe"
+
+msgid "Database"
+msgstr "Datenbank"
+
+msgid "Database version"
+msgstr "Datenbankversion"
+
+msgid "Not installed"
+msgstr "Nicht installiert"
+
+msgid "Enabled"
+msgstr "Aktiviert"
+
+msgid "Disabled"
+msgstr "Deaktiviert"
+
+msgid "Active"
+msgstr "Aktiv"
+
+msgid "Inactive"
+msgstr "Inaktiv"
+
+msgid "Performance"
+msgstr "Performance"
+
+msgid "Show performance panel in admin bar"
+msgstr "Performance-Panel in der Admin-Leiste anzeigen"
+
+msgid "Enable performance panel for logged out users"
+msgstr "Performance-Panel für nicht angemeldete Nutzer aktivieren"
+
+msgid "Your current IP:"
+msgstr "Deine aktuelle IP:"
+
+msgid "Allowed IP addresses"
+msgstr "Erlaubte IP-Adressen"
+
+msgid "Comma-separated. Only these IPs will see the panel when logged out."
+msgstr "Kommagetrennt. Nur diese IPs sehen das Panel beim Abmelden."
+
+msgid "—"
+msgstr "—"
+
+msgid "Excellent"
+msgstr "Hervorragend"
+
+msgid "Good"
+msgstr "Gut"
+
+msgid "Acceptable"
+msgstr "Akzeptabel"
+
+msgid "Heavy"
+msgstr "Hoch"
+
+msgid "Problematic"
+msgstr "Problematisch"
+
+msgid "%1$s %2$s: %3$s"
+msgstr "%1$s %2$s: %3$s"
+
+msgid "Cache purged."
+msgstr "Cache geleert."
+
+msgid "Cache purge finished with issues."
+msgstr "Cache-Leeren mit Problemen abgeschlossen."
+
+msgid "Purge page cache"
+msgstr "Seiten-Cache leeren"
+
+msgid "Pin to bottom-left"
+msgstr "Unten links anheften"
+
+msgid "Execution time"
+msgstr "Ausführungszeit"
+
+msgid "Peak memory"
+msgstr "Spitzenspeicher"
+
+msgid "DB queries"
+msgstr "DB-Abfragen"
+
+msgid "Hooks fired"
+msgstr "Ausgeführte Hooks"
+
+msgid "1 page"
+msgstr "1 Seite"
+
+msgid "%s pages"
+msgstr "%s Seiten"
+
+msgid "Average"
+msgstr "Durchschnitt"
+
+msgctxt "performance panel history"
+msgid "Clear"
+msgstr "Leeren"
+
+msgid "No data yet."
+msgstr "Noch keine Daten."
+
+msgid "Minimize"
+msgstr "Minimieren"
+
+msgid "Unpin"
+msgstr "Anheften lösen"
+
+msgid "192.168.1.1, 10.0.0.1"
+msgstr "192.168.1.1, 10.0.0.1"
