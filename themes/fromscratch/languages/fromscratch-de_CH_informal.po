@@ -721,8 +721,17 @@ msgstr "Als Entwurf speichern"
 msgid "Set to private"
 msgstr "Als Privat speichern"
 
-msgid "Redirect to"
-msgstr "Weiterleiten zu"
+msgid "Draft"
+msgstr "Entwurf"
+
+msgid "Private"
+msgstr "Privat"
+
+msgid "Redirect"
+msgstr "Weiterleitung"
+
+msgid "Redirect to another URL"
+msgstr "Zu einer anderen URL weiterleiten"
 
 msgid "Move this post to drafts so it is not publicly visible."
 msgstr "Verschiebt den Beitrag in Entwürfe, er ist dann nicht öffentlich sichtbar."
@@ -1191,6 +1200,9 @@ msgstr "Ideale Größe: 1200 × 630 px."
 
 msgid "Image"
 msgstr "Bild"
+
+msgid "Set OG image"
+msgstr "OG-Bild festlegen"
 
 # Theme settings: Excerpt (General tab)
 msgid "Excerpt"

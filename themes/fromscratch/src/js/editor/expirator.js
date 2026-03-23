@@ -267,8 +267,11 @@
     const noneLabel = labels.noneLabel || 'None';
     const actionLabel = labels.actionLabel || 'After expiration';
     const actionDraft = labels.actionDraft || 'Set to draft';
+    const actionDraftShort = labels.actionDraftShort || 'Draft';
     const actionPrivate = labels.actionPrivate || 'Set to private';
+    const actionPrivateShort = labels.actionPrivateShort || 'Private';
     const actionRedirect = labels.actionRedirect || 'Redirect to';
+    const actionRedirectShort = labels.actionRedirectShort || 'Redirection';
     const redirectLabel = labels.redirectLabel || 'Redirect URL';
     const redirectPlaceholder = labels.redirectPlaceholder || '/new-path';
 
@@ -307,17 +310,13 @@
     /** Button label in the row (like Titelform / slug preview). */
     function getActionTogglePreview() {
       if (actionValue === 'draft') {
-        return actionDraft;
+        return actionDraftShort;
       }
       if (actionValue === 'private') {
-        return actionPrivate;
+        return actionPrivateShort;
       }
       if (actionValue === 'redirect') {
-        var u = (redirectValue || '').trim();
-        if (u.length > 32) {
-          u = u.slice(0, 29) + '…';
-        }
-        return u ? actionRedirect + ': ' + u : actionRedirect;
+        return actionRedirectShort;
       }
       return actionDraft;
     }

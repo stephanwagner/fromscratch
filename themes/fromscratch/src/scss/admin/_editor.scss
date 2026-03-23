@@ -97,6 +97,17 @@ div.fromscratch-seo-panel {
   }
 }
 
+.fromscratch-languages-panel {
+  .components-base-control__help {
+    margin-top: 6px;
+    margin-bottom: 0;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #646970;
+    font-style: normal;
+  }
+}
+
 // Exclude from search
 
 .fromscratch-exclude-from-search {
@@ -160,6 +171,11 @@ div.fromscratch-seo-panel {
     .components-panel__row,
     .components-base-control {
       width: 100%;
+    }
+
+    .components-radio-control__label {
+      width: 100%;
+      max-width: 100%;
     }
 
     .fromscratch-expirator-field-redirect {
