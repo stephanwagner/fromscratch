@@ -1374,9 +1374,6 @@ msgstr "Cache-Leeren mit Problemen abgeschlossen."
 msgid "Purge page cache"
 msgstr "Seiten-Cache leeren"
 
-msgid "Pin to bottom-left"
-msgstr "Unten links anheften"
-
 msgid "Execution time"
 msgstr "Ausführungszeit"
 
@@ -1397,6 +1394,12 @@ msgstr "%s Seiten"
 
 msgid "Average"
 msgstr "Durchschnitt"
+
+msgid "Metric"
+msgstr "Metrik"
+
+msgid "Current"
+msgstr "Aktuell"
 
 msgctxt "performance panel history"
 msgid "Clear"

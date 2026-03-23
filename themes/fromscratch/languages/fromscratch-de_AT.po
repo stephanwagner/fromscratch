@@ -1398,6 +1398,12 @@ msgstr "%s Seiten"
 msgid "Average"
 msgstr "Durchschnitt"
 
+msgid "Metric"
+msgstr "Metrik"
+
+msgid "Current"
+msgstr "Aktuell"
+
 msgctxt "performance panel history"
 msgid "Clear"
 msgstr "Leeren"
