@@ -157,7 +157,9 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 		});
 		update_option('fromscratch_perf_panel_guest_ips', implode(', ', $ips));
 		$redis_guard_result = fs_developer_redis_safeguard_install();
-		set_transient('fromscratch_redis_safeguard_notice', $redis_guard_result, 30);
+		if (is_array($redis_guard_result) && empty($redis_guard_result['ok'])) {
+			set_transient('fromscratch_redis_safeguard_notice', $redis_guard_result, 30);
+		}
 		set_transient('fromscratch_perf_admin_bar_saved', '1', 30);
 		wp_safe_redirect($url);
 		exit;

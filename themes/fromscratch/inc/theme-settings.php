@@ -754,9 +754,9 @@ function theme_settings_page(): void
 						</td>
 					</tr>
 				</table>
-				<p class="fs-submit-row">
+				<div class="fs-submit-row">
 					<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
-				</p>
+				</div>
 			</form>
 		<?php elseif ($tab === 'texts') : ?>
 			<form method="post" action="options.php" class="fs-page-settings-form" id="fs-content-form">
@@ -820,7 +820,7 @@ function theme_settings_page(): void
 
 				<hr>
 
-				<p class="fs-submit-row" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+				<div class="fs-submit-row" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
 					<button type="submit" name="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
 
 					<?php if (function_exists('fs_is_developer_user') && fs_is_developer_user((int) get_current_user_id())) : ?>
@@ -834,7 +834,7 @@ function theme_settings_page(): void
 								: esc_html__('Show developer options', 'fromscratch') ?>
 						</button>
 					<?php endif; ?>
-				</p>
+				</div>
 			</form>
 			<script>
 				(function() {
@@ -963,9 +963,9 @@ document.querySelectorAll('[data-fs-content-developer-options-container]').forEa
 				<p style="margin-top: 12px;">
 					<button type="button" class="button" id="fs-redirect-add"><?= esc_html__('Add redirect', 'fromscratch') ?></button>
 				</p>
-				<p class="fs-submit-row">
+				<div class="fs-submit-row">
 					<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
-				</p>
+				</div>
 			</form>
 			<script>
 				(function() {
@@ -1010,9 +1010,9 @@ document.querySelectorAll('[data-fs-content-developer-options-container]').forEa
 						</td>
 					</tr>
 				</table>
-				<p class="fs-submit-row">
+				<div class="fs-submit-row">
 					<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
-				</p>
+				</div>
 			</form>
 		<?php else : ?>
 			<form method="post" action="options.php" class="fs-page-settings-form">
@@ -1091,9 +1091,9 @@ document.querySelectorAll('[data-fs-content-developer-options-container]').forEa
 
 				<hr>
 
-				<p class="fs-submit-row">
+				<div class="fs-submit-row">
 					<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
-				</p>
+				</div>
 			</form>
 		<?php endif; ?>
 	</div>
