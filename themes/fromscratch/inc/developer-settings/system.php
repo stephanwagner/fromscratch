@@ -173,6 +173,23 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 		wp_safe_redirect($url);
 		exit;
 	}
+
+	// Matomo settings
+	if (!empty($_POST['fromscratch_save_matomo']) && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_system_matomo')) {
+		$matomo_url = isset($_POST['fromscratch_matomo_url']) ? esc_url_raw(trim((string) wp_unslash($_POST['fromscratch_matomo_url']))) : '';
+		$site_id = isset($_POST['fromscratch_matomo_site_id']) ? (int) $_POST['fromscratch_matomo_site_id'] : 1;
+		$token = isset($_POST['fromscratch_matomo_token_auth']) ? sanitize_text_field((string) wp_unslash($_POST['fromscratch_matomo_token_auth'])) : '';
+		$custom_js = isset($_POST['fromscratch_matomo_custom_js']) ? trim((string) wp_unslash($_POST['fromscratch_matomo_custom_js'])) : '';
+
+		update_option('fromscratch_matomo_url', $matomo_url);
+		update_option('fromscratch_matomo_site_id', max(1, $site_id));
+		update_option('fromscratch_matomo_token_auth', $token);
+		update_option('fromscratch_matomo_custom_js', $custom_js);
+
+		set_transient('fromscratch_system_saved', '1', 30);
+		wp_safe_redirect($url);
+		exit;
+	}
 }, 1);
 
 function fs_render_developer_system(): void
@@ -232,6 +249,11 @@ function fs_render_developer_system(): void
 		$current_ip = function_exists('fs_developer_perf_current_ip') ? fs_developer_perf_current_ip() : '';
 		$guest_ips = get_option('fromscratch_perf_panel_guest_ips', '');
 		$guest_panel_on = get_option('fromscratch_perf_panel_guest', '0') === '1';
+		$matomo_url_value = (string) get_option('fromscratch_matomo_url', '');
+		$matomo_site_id_value = (int) get_option('fromscratch_matomo_site_id', 1);
+		$matomo_token_value = (string) get_option('fromscratch_matomo_token_auth', '');
+		$matomo_custom_js_value = (string) get_option('fromscratch_matomo_custom_js', '');
+		$matomo_feature_enabled = function_exists('fs_theme_feature_enabled') && fs_theme_feature_enabled('matomo');
 		$system_url = admin_url('options-general.php?page=' . fs_developer_settings_page_slug('system'));
 
 		$fs_parse_bytes = function ($value): ?int {
@@ -549,7 +571,51 @@ function fs_render_developer_system(): void
 			</script>
 		</div>
 
-		<hr>
+		<?php if ($matomo_feature_enabled) : ?>
+			<hr class="fs-page-settings-divider">
+
+			<form method="post" action="" class="fs-page-settings-form" id="fs-matomo-settings">
+				<?php wp_nonce_field('fromscratch_system_matomo'); ?>
+				<input type="hidden" name="fromscratch_save_matomo" value="1">
+				<h2 class="title"><?= esc_html__('Matomo', 'fromscratch') ?></h2>
+				<p class="description"><?= esc_html__('Loads the Matomo tracking script on the frontend and transmits page view and interaction data to the configured Matomo endpoint using the provided site ID.', 'fromscratch') ?></p>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="fromscratch_matomo_url"><?= esc_html__('Matomo URL', 'fromscratch') ?></label></th>
+						<td>
+							<input type="url" name="fromscratch_matomo_url" id="fromscratch_matomo_url" value="<?= esc_attr($matomo_url_value) ?>" class="regular-text" placeholder="https://analytics.example.com" style="max-width: 420px;">
+							<p class="description"><?= esc_html__('Base URL of your Matomo instance, e.g. https://analytics.example.com', 'fromscratch') ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="fromscratch_matomo_site_id"><?= esc_html__('Site ID', 'fromscratch') ?></label></th>
+						<td>
+							<input type="number" min="1" step="1" name="fromscratch_matomo_site_id" id="fromscratch_matomo_site_id" value="<?= esc_attr((string) $matomo_site_id_value) ?>" class="small-text">
+							<p class="description"><?= esc_html__('Matomo site ID (idSite). Default is 1.', 'fromscratch') ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="fromscratch_matomo_token_auth"><?= esc_html__('Token (optional)', 'fromscratch') ?></label></th>
+						<td>
+							<input type="text" name="fromscratch_matomo_token_auth" id="fromscratch_matomo_token_auth" value="<?= esc_attr($matomo_token_value) ?>" class="regular-text" style="max-width: 420px;">
+							<p class="description"><?= esc_html__('Optional token_auth for authenticated Matomo API requests (for example dashboard widgets or statistics in emails). Tracking works without it unless your setup requires authenticated endpoints.', 'fromscratch') ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="fromscratch_matomo_custom_js"><?= esc_html__('Tracking code (optional)', 'fromscratch') ?></label></th>
+						<td>
+							<textarea name="fromscratch_matomo_custom_js" id="fromscratch_matomo_custom_js" rows="4" class="large-text code" placeholder="_paq.push(['setUserId', '123']);"><?= esc_textarea($matomo_custom_js_value) ?></textarea>
+							<p class="description"><?= esc_html__('Optional additional _paq commands. One command per line.', 'fromscratch') ?></p>
+						</td>
+					</tr>
+				</table>
+				<div class="fs-submit-row">
+					<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
+				</div>
+			</form>
+		<?php endif; ?>
+
+		<hr class="fs-page-settings-divider">
 
 		<form method="post" action="" class="fs-page-settings-form" id="fs-search-visibility">
 			<?php wp_nonce_field('fromscratch_system_search_visibility'); ?>

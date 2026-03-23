@@ -45,6 +45,7 @@ require_once 'inc/exclude-from-search.php';
 
 // Mail (SMTP / SendGrid from Developer › System)
 require_once 'inc/mail.php';
+require_once 'inc/matomo.php';
 
 // Security
 require_once 'inc/security/password-protection.php';
