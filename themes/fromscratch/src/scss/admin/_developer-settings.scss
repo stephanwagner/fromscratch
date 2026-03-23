@@ -1,3 +1,35 @@
+// System info
+
+.fs-system-info-table {
+  margin: 16px 0 0;
+  width: auto;
+
+  th,
+  td {
+    vertical-align: top;
+  }
+
+  th {
+    min-width: 160px;
+  }
+}
+
+.fs-system-status-icon-wrap {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.fs-warning-wrap {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #92400e;
+}
+
+.fs-warning-label {
+  font-weight: 600;
+}
+
 // Languages table
 
 .fs-languages-table.fs-hide-reorder .fs-reorder-th,

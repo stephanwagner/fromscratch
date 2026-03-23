@@ -100,12 +100,7 @@ function fs_render_developer_system(): void
 ?>
 	<div class="wrap">
 		<h1><?= esc_html(__('Developer settings', 'fromscratch')) ?></h1>
-		<?php if ($system_saved !== false) : ?>
-			<div class="notice notice-success is-dismissible">
-				<p><strong><?= esc_html(__('Settings saved.', 'fromscratch')) ?></strong></p>
-			</div>
-		<?php endif; ?>
-		<?php if ($perf_saved !== false) : ?>
+		<?php if ($system_saved !== false || $perf_saved !== false) : ?>
 			<div class="notice notice-success is-dismissible">
 				<p><strong><?= esc_html(__('Settings saved.', 'fromscratch')) ?></strong></p>
 			</div>
@@ -120,20 +115,19 @@ function fs_render_developer_system(): void
 		<?php endif; ?>
 
 		<?php
-		$check = '✔';
-		$cross = '✖';
+		$fs_system_status = static function (bool $check, string $label): string {
+			$check_icon = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="m389-369 299-299q11-11 25.5-11t25.5 11q11 11 11 25.5T739-617L415-292q-11 11-25.5 11T364-292L221-435q-11-11-11-25.5t11-25.5q11-11 25.5-11t25.5 11l117 117Z"/></svg>';
+			$cross_icon = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M480-429 316-265q-11 11-25 10.5T266-266q-11-11-11-25.5t11-25.5l163-163-164-164q-11-11-10.5-25.5T266-695q11-11 25.5-11t25.5 11l163 164 164-164q11-11 25.5-11t25.5 11q11 11 11 25.5T695-644L531-480l164 164q11 11 11 25t-11 25q-11 11-25.5 11T644-266L480-429Z"/></svg>';
+			$label = esc_html($label);
+			return '<span class="fs-system-status-icon-wrap">' . ($check ? $check_icon : $cross_icon) . '<span class="fs-system-status-icon-label">' . $label . '</span></span>';
+		};
 		$opcache_on = fs_developer_perf_opcache_enabled();
 		$opcache_available = function_exists('opcache_get_status');
-		$object_cache = fs_developer_perf_object_cache_label();
 		$xdebug_on = fs_developer_perf_xdebug_enabled();
 		$memory_limit = ini_get('memory_limit');
 		$db_server = function_exists('fs_developer_perf_db_server') ? fs_developer_perf_db_server() : null;
 		$upload_max = ini_get('upload_max_filesize');
 		$post_max = ini_get('post_max_size');
-		$cache_hits = null;
-		if (function_exists('fs_developer_perf_object_cache_hits')) {
-			$cache_hits = (int) call_user_func('fs_developer_perf_object_cache_hits');
-		}
 		$current_ip = function_exists('fs_developer_perf_current_ip') ? fs_developer_perf_current_ip() : '';
 		$guest_ips = get_option('fromscratch_perf_panel_guest_ips', '');
 		$guest_panel_on = get_option('fromscratch_perf_panel_guest', '0') === '1';
@@ -166,14 +160,13 @@ function fs_render_developer_system(): void
 				return '';
 			}
 
-			$warning_label = esc_html(__('Warning', 'fromscratch'));
+			$warning_label = esc_html(__('Warning:', 'fromscratch'));
 			$warning_text = esc_html($message);
 
-			return '<div style="margin-top: 4px; font-size: 12px; color: #92400e;">'
-				. '<span style="display:inline-block; padding: 0 6px; border-radius: 999px; font-weight: 700; background: #fef3c7; border: 1px solid #f59e0b; margin-right: 8px;">'
-				. $warning_label
-				. '</span>'
-				. $warning_text
+			return '<div class="fs-warning-wrap">'
+				. '<span class="fs-warning-label">' . $warning_label . '</span>'
+				. ' '
+				. '<span class="fs-warning-text">' . $warning_text . '</span>'
 				. '</div>';
 		};
 
@@ -219,7 +212,7 @@ function fs_render_developer_system(): void
 			}
 
 			// Cache even failures briefly to avoid repeated calls.
-			set_transient('fs_latest_stable_php_version', (string) ($fs_latest_php_version ?? ''), 12 * HOUR_IN_SECONDS);
+			set_transient('fs_latest_stable_php_version', (string) ($fs_latest_php_version ?? ''), 24 * HOUR_IN_SECONDS * 7 * 2);
 		}
 
 		if (is_string($fs_latest_php_version) && $fs_latest_php_version !== '' && preg_match('/^(\d+)\.(\d+)\./', $fs_latest_php_version, $m) === 1) {
@@ -272,8 +265,12 @@ function fs_render_developer_system(): void
 		$opcache_warning = null;
 		if (!$opcache_available) {
 			$opcache_warning = __('OPcache is not installed.', 'fromscratch');
-		} elseif (!$opcache_on) {
+			$opcache_status = $fs_system_status(false, esc_html__('Not installed', 'fromscratch'));
+		} elseif ($opcache_on) {
+			$opcache_status = $fs_system_status(true, esc_html__('Enabled', 'fromscratch'));
+		} else {
 			$opcache_warning = __('OPcache is disabled. Enable it for significantly better performance.', 'fromscratch');
+			$opcache_status = $fs_system_status(false, esc_html__('Disabled', 'fromscratch'));
 		}
 
 		$object_cache_active = function_exists('wp_using_ext_object_cache') && wp_using_ext_object_cache();
@@ -288,18 +285,7 @@ function fs_render_developer_system(): void
 				: __('No persistent object cache detected. Consider enabling Redis/Memcached for better performance.', 'fromscratch');
 		}
 
-		$object_cache_row_value = '';
-		if ($object_cache_active) {
-			$active_label = $object_cache !== '' ? $object_cache : ($is_redis_installed ? 'Redis' : __('Object cache drop-in', 'fromscratch'));
-			if ($active_label === 'external') {
-				$active_label = __('Object cache drop-in', 'fromscratch');
-			}
-			$object_cache_row_value = esc_html($active_label) . ' ' . $check . ' ' . esc_html__('(active)', 'fromscratch');
-		} elseif ($is_redis_installed) {
-			$object_cache_row_value = esc_html__('Redis', 'fromscratch') . ' ' . $cross . ' ' . esc_html__('(installed, inactive)', 'fromscratch');
-		} else {
-			$object_cache_row_value = esc_html__('None', 'fromscratch') . ' ' . $cross;
-		}
+		$object_cache_row_value = $object_cache_active ? $fs_system_status(true, esc_html__('Active', 'fromscratch')) : $fs_system_status(false, esc_html__('Inactive', 'fromscratch'));
 
 		$db_version_warning = null;
 		if ($db_server !== null && isset($db_server['type'], $db_server['version']) && stripos((string) $db_server['type'], 'mysql') !== false) {
@@ -307,8 +293,7 @@ function fs_render_developer_system(): void
 				$db_major = (int) $m[1];
 				if ($db_major > 0 && $db_major < 8) {
 					$db_version_warning = sprintf(
-						/* translators: 1: MySQL/MariaDB version */
-						__('Database version (%1$s) is quite old. Consider upgrading.', 'fromscratch'),
+						__('Database version is quite old. Consider upgrading.', 'fromscratch'),
 						$db_server['version']
 					);
 				}
@@ -317,69 +302,64 @@ function fs_render_developer_system(): void
 		?>
 		<div class="page-settings-form" style="margin-bottom: 24px;">
 			<h2 class="title"><?= esc_html__('System info', 'fromscratch') ?></h2>
-			<table class="fs-perf-table fs-perf-summary-table" style="width: auto; margin: 16px 0 12px; border-collapse: collapse;" role="presentation">
+			<table class="widefat striped fs-system-info-table" role="presentation">
 				<tbody>
 					<tr>
-						<td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('PHP version', 'fromscratch') ?></td>
-						<td style="padding: 2px 0;">
+						<th scope="row"><?= esc_html__('PHP version', 'fromscratch') ?></th>
+						<td>
 							<div>
-								<?= esc_html(PHP_VERSION) ?> <a href="<?= esc_url(add_query_arg('phpinfo', '1', $system_url)) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html__('phpinfo', 'fromscratch') ?></a>
+								<?= esc_html(PHP_VERSION) ?><br>
+								<a href="<?= esc_url(add_query_arg('phpinfo', '1', $system_url)) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html__('Open PHP info', 'fromscratch') ?></a>
 							</div>
 							<?= $fs_render_warning($php_version_warning) ?>
 						</td>
 					</tr>
 
 					<tr>
-						<td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('OPcache', 'fromscratch') ?></td>
-						<td style="padding: 2px 0;">
-							<?php
-							if (!$opcache_available) {
-								echo $cross . ' ' . esc_html__('not installed', 'fromscratch');
-							} else {
-								echo $opcache_on ? $check . ' ' . esc_html__('enabled', 'fromscratch') : $cross . ' ' . esc_html__('disabled', 'fromscratch');
-							}
-							?>
+						<th scope="row"><?= esc_html__('OPcache', 'fromscratch') ?></th>
+						<td>
+							<?= $opcache_status ?>
 							<?= $fs_render_warning($opcache_warning) ?>
 						</td>
 					</tr>
 					<tr>
-						<td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Object cache', 'fromscratch') ?></td>
-						<td style="padding: 2px 0;">
+						<th scope="row"><?= esc_html__('Object cache', 'fromscratch') ?></th>
+						<td>
 							<?= $object_cache_row_value ?>
 							<?= $fs_render_warning($object_cache_warning) ?>
 						</td>
 					</tr>
 					<tr>
-						<td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Xdebug', 'fromscratch') ?></td>
-						<td style="padding: 2px 0;">
-							<?= $xdebug_on ? $check . ' ' . esc_html__('enabled', 'fromscratch') : $cross . ' ' . esc_html__('disabled', 'fromscratch') ?>
+						<th scope="row"><?= esc_html__('Xdebug', 'fromscratch') ?></th>
+						<td>
+							<?= $xdebug_on ? $fs_system_status(true, esc_html__('Enabled', 'fromscratch')) : $fs_system_status(false, esc_html__('Disabled', 'fromscratch')) ?>
 							<?= $fs_render_warning($xdebug_warning) ?>
 						</td>
 					</tr>
 					<tr>
-						<td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Debug mode', 'fromscratch') ?></td>
-						<td style="padding: 2px 0;">
-							<?= $debug_enabled ? $check . ' ' . esc_html__('enabled', 'fromscratch') : $cross . ' ' . esc_html__('disabled', 'fromscratch') ?>
+						<th scope="row"><?= esc_html__('Debug mode', 'fromscratch') ?></th>
+						<td>
+							<?= $debug_enabled ? $fs_system_status(true, esc_html__('Enabled', 'fromscratch')) : $fs_system_status(false, esc_html__('Disabled', 'fromscratch')) ?>
 							<?= $fs_render_warning($debugmode_warning) ?>
 						</td>
 					</tr>
 					<tr>
-						<td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Memory limit', 'fromscratch') ?></td>
-						<td style="padding: 2px 0;">
+						<th scope="row"><?= esc_html__('Memory limit', 'fromscratch') ?></th>
+						<td>
 							<?= esc_html($memory_limit !== false && $memory_limit !== '' ? $memory_limit : '—') ?>
 							<?= $fs_render_warning($memory_warning) ?>
 						</td>
 					</tr>
 					<tr>
-						<td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Max upload size', 'fromscratch') ?></td>
-						<td style="padding: 2px 0;">
+						<th scope="row"><?= esc_html__('Max upload size', 'fromscratch') ?></th>
+						<td>
 							<?= $upload_max !== false && $upload_max !== '' ? esc_html($upload_max) : '—' ?>
 							<?= $fs_render_warning($upload_warning) ?>
 						</td>
 					</tr>
 					<tr>
-						<td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Max post size', 'fromscratch') ?></td>
-						<td style="padding: 2px 0;">
+						<th scope="row"><?= esc_html__('Max post size', 'fromscratch') ?></th>
+						<td>
 							<?= $post_max !== false && $post_max !== '' ? esc_html($post_max) : '—' ?>
 							<?= $fs_render_warning($post_warning) ?>
 							<?= $fs_render_warning($upload_post_warning) ?>
@@ -387,12 +367,12 @@ function fs_render_developer_system(): void
 					</tr>
 					<?php if ($db_server !== null) : ?>
 						<tr>
-							<td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Database', 'fromscratch') ?></td>
-							<td style="padding: 2px 0;"><?= esc_html($db_server['type']) ?></td>
+							<th scope="row"><?= esc_html__('Database', 'fromscratch') ?></th>
+							<td><?= esc_html($db_server['type']) ?></td>
 						</tr>
 						<tr>
-							<td style="padding: 2px 12px 2px 0; color: #646970;"><?= esc_html__('Database version', 'fromscratch') ?></td>
-							<td style="padding: 2px 0;">
+							<th scope="row"><?= esc_html__('Database version', 'fromscratch') ?></th>
+							<td>
 								<?= esc_html($db_server['version']) ?>
 								<?= $fs_render_warning($db_version_warning) ?>
 							</td>
@@ -418,10 +398,10 @@ function fs_render_developer_system(): void
 					<label>
 						<input type="hidden" name="fromscratch_perf_panel_guest" value="0">
 						<input type="checkbox" name="fromscratch_perf_panel_guest" id="fromscratch_perf_panel_guest" value="1" <?= checked($guest_panel_on, true, false) ?>>
-						<?= esc_html__('Enable performance panel for logged out users.', 'fromscratch') ?>
+						<?= esc_html__('Enable performance panel for logged out users', 'fromscratch') ?>
 					</label>
 				</p>
-				<div id="fs-perf-guest-ips-wrap" class="fs-perf-guest-ips-wrap" style="margin-top: 12px; <?= $guest_panel_on ? '' : 'display: none;' ?>">
+				<div id="fs-perf-guest-ips-wrap" class="fs-perf-guest-ips-wrap fs-indent-checkbox" style="margin-top: 12px; <?= $guest_panel_on ? '' : 'display: none;' ?>">
 					<p style="margin-bottom: 6px;">
 						<?= esc_html__('Your current IP:', 'fromscratch') ?> <code id="fs-perf-current-ip"><?= $current_ip !== '' ? esc_html($current_ip) : esc_html__('—', 'fromscratch') ?></code>
 					</p>
