@@ -112,11 +112,15 @@ function fs_developer_settings_render_nav(): void
 	$base_url = admin_url('options-general.php');
 	$current_page = isset($_GET['page']) ? sanitize_key($_GET['page']) : '';
 
-	// Add Redis settings as an external tab when the Redis Object Cache plugin is available.
+	// Add Redis settings as an external tab when enabled in config and plugin is available.
 	if (
+		function_exists('fs_config_redis_enabled')
+		&& fs_config_redis_enabled()
+		&& (
 		class_exists('\RedisCache\Plugin')
 		|| defined('WP_REDIS_VERSION')
 		|| function_exists('redis_cache_enable')
+		)
 	) {
 		$out = [];
 		$inserted = false;
@@ -220,6 +224,9 @@ add_action('admin_menu', function (): void {
 	if (!function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
 		return;
 	}
+	if (!function_exists('fs_config_redis_enabled') || !fs_config_redis_enabled()) {
+		return;
+	}
 	if (
 		!class_exists('\RedisCache\Plugin')
 		&& !defined('WP_REDIS_VERSION')
@@ -248,6 +255,9 @@ add_action('admin_notices', function (): void {
 	if (!function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
 		return;
 	}
+	if (!function_exists('fs_config_redis_enabled') || !fs_config_redis_enabled()) {
+		return;
+	}
 	$page = isset($_GET['page']) ? sanitize_key($_GET['page']) : '';
 	if ($page !== 'redis-cache') {
 		return;
@@ -270,6 +280,8 @@ add_filter('submenu_file', function ($submenu_file, $parent_file) {
 	if (
 		$page === 'redis-cache'
 		&& current_user_can('manage_options')
+		&& function_exists('fs_config_redis_enabled')
+		&& fs_config_redis_enabled()
 		&& function_exists('fs_is_developer_user')
 		&& fs_is_developer_user((int) get_current_user_id())
 		&& (class_exists('\RedisCache\Plugin') || defined('WP_REDIS_VERSION') || function_exists('redis_cache_enable'))

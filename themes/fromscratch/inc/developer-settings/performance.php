@@ -273,7 +273,11 @@ function fs_developer_perf_current_ip(): string
  */
 function fs_developer_perf_nginx_purge_url(): string
 {
-	$url = function_exists('fs_config') ? fs_config('nginx_cache_purge_url') : null;
+	$url = function_exists('fs_config') ? fs_config('nginx_site_cache.purge_url') : null;
+	if (!is_string($url) || $url === '') {
+		// Backward compat with old flat config key.
+		$url = function_exists('fs_config') ? fs_config('nginx_cache_purge_url') : null;
+	}
 	if (!is_string($url) || $url === '') {
 		$url = '/purge';
 	}
@@ -286,11 +290,16 @@ function fs_developer_perf_nginx_purge_url(): string
 
 function fs_developer_perf_show_nginx_purge_in_admin_bar(): bool
 {
-	$show = function_exists('fs_config') ? fs_config('nginx_cache_purge_show_in_admin_bar') : null;
-	if ($show === null) {
+	if (!function_exists('fs_config')) {
 		return true;
 	}
-	return (bool) $show;
+	$enabled = fs_config('nginx_site_cache.enabled');
+	if ($enabled !== null) {
+		return (bool) $enabled;
+	}
+	// Backward compat with old flat config key.
+	$legacy = fs_config('nginx_cache_purge_show_in_admin_bar');
+	return $legacy === null ? true : (bool) $legacy;
 }
 
 /**

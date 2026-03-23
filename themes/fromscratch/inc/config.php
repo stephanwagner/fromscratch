@@ -71,6 +71,22 @@ function fs_config_redirects(?string $key = null)
 }
 
 /**
+ * Whether Redis integration is enabled in theme config.
+ */
+function fs_config_redis_enabled(): bool
+{
+	$v = fs_config('redis_object_cache.enabled');
+	if ($v === null) {
+		// Backward compatibility with old key.
+		$v = fs_config('redis.enabled');
+	}
+	if ($v === null) {
+		return true;
+	}
+	return (bool) $v;
+}
+
+/**
  * Resolve dot-path key into config value.
  *
  * @param array $config Config array.

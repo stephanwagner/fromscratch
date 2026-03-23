@@ -99,10 +99,20 @@ return [
 	],
 
 	/**
-	 * Nginx cache purge endpoint URL.
-	 * show_in_admin_bar: show/hide purge action in WordPress admin bar.
-	 * Example: '/purge'
+	 * Redis integration in Developer settings.
+	 * When false, Redis-specific UI/actions are hidden.
 	 */
-	'nginx_cache_purge_show_in_admin_bar' => true,
-	'nginx_cache_purge_url' => '/purge',
+	'redis_object_cache' => [
+		'enabled' => true,
+	],
+
+	/**
+	 * Nginx site cache integration.
+	 * enabled: globally enable/disable cache purge actions.
+	 * purge_url: endpoint URL (relative like '/purge' or absolute URL).
+	 */
+	'nginx_site_cache' => [
+		'enabled' => true,
+		'purge_url' => '/purge',
+	],
 ];
