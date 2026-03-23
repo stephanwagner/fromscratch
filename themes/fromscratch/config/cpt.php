@@ -22,7 +22,9 @@ return [
 				'thumbnail',
 				'excerpt',
 				'revisions',
-				'page-attributes'
+				'page-attributes',
+				'custom-fields',
+				'author',
 			],
 			'has_order' => true,
 			'has_archive' => true,

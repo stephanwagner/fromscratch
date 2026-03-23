@@ -206,6 +206,12 @@ function fs_language_list_column_content(string $column, int $post_id): void
 	if ($column !== 'fs_language') {
 		return;
 	}
+	static $rendered = [];
+	$key = $post_id . ':' . $column;
+	if (isset($rendered[$key])) {
+		return;
+	}
+	$rendered[$key] = true;
 	if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('languages')) {
 		return;
 	}

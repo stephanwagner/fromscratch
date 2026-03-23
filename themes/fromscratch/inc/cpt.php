@@ -251,19 +251,30 @@ add_filter('manage_posts_columns', function (array $columns): array {
 	if (!fs_cpt_is_ordered($post_type)) {
 		return $columns;
 	}
+	$reorder_label = __('Order', 'fromscratch');
 	$out = [];
+	$inserted = false;
 	foreach ($columns as $key => $label) {
 		$out[$key] = $label;
-		if ($key === 'title') {
-			$out['fs_cpt_order'] = __('Order', 'fromscratch');
-			$out['fs_cpt_reorder'] = __('Reorder', 'fromscratch');
+		// Place order controls after category columns (or near date fallback below).
+		if ($key === 'categories' || $key === 'taxonomy-category' || $key === 'taxonomy-categories') {
+			$out['fs_cpt_reorder'] = $reorder_label;
+			$inserted = true;
 		}
 	}
-	if (!isset($out['fs_cpt_order'])) {
-		$out['fs_cpt_order'] = __('Order', 'fromscratch');
+	if (!$inserted) {
+		$with_fallback = [];
+		foreach ($out as $key => $label) {
+			if ($key === 'date') {
+				$with_fallback['fs_cpt_reorder'] = $reorder_label;
+				$inserted = true;
+			}
+			$with_fallback[$key] = $label;
+		}
+		$out = $with_fallback;
 	}
-	if (!isset($out['fs_cpt_reorder'])) {
-		$out['fs_cpt_reorder'] = __('Reorder', 'fromscratch');
+	if (!$inserted) {
+		$out['fs_cpt_reorder'] = $reorder_label;
 	}
 	return $out;
 }, 20);
@@ -278,7 +289,7 @@ add_action('init', function (): void {
 	}
 	foreach (array_keys($ordered) as $post_type) {
 		add_filter('manage_edit-' . $post_type . '_sortable_columns', function (array $columns): array {
-			$columns['fs_cpt_order'] = 'menu_order';
+			$columns['fs_cpt_reorder'] = 'menu_order';
 			return $columns;
 		});
 	}
@@ -335,11 +346,6 @@ add_action('admin_init', function (): void {
 }, 15);
 
 add_action('manage_posts_custom_column', function (string $column, int $post_id): void {
-	if ($column === 'fs_cpt_order') {
-		$order = (int) get_post_field('menu_order', $post_id);
-		echo esc_html((string) $order);
-		return;
-	}
 	if ($column !== 'fs_cpt_reorder') {
 		return;
 	}
@@ -356,10 +362,80 @@ add_action('manage_posts_custom_column', function (string $column, int $post_id)
 		$url = wp_nonce_url($url, 'fs_cpt_reorder_' . $dir . '_' . $post_id);
 		return '<a class="button button-small" href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
 	};
-	echo '<div style="display:flex;gap:4px;flex-wrap:wrap">';
-	echo $mk('top', __('Top', 'fromscratch')) . $mk('up', __('Up', 'fromscratch')) . $mk('down', __('Down', 'fromscratch')) . $mk('bottom', __('Bottom', 'fromscratch'));
+	$order = (int) get_post_field('menu_order', $post_id);
+	echo '<div class="fs-cpt-reorder-menu"><span class="fs-cpt-reorder-menu__order">' . esc_html((string) $order) . '</span>';
+	echo '<button type="button" class="button button-small fs-cpt-reorder-menu__toggle" aria-expanded="false" aria-label="' . esc_attr__('Reorder', 'fromscratch') . '" title="' . esc_attr__('Reorder', 'fromscratch') . '"><span class="dashicons dashicons-sort"></span></button>';
+	echo '<div class="fs-cpt-reorder-menu__popover" hidden>';
+	echo $mk('top', __('Top', 'fromscratch'));
+	echo $mk('up', __('Up', 'fromscratch'));
+	echo $mk('down', __('Down', 'fromscratch'));
+	echo $mk('bottom', __('Bottom', 'fromscratch'));
+	echo '</div>';
 	echo '</div>';
 }, 20, 2);
+
+add_action('admin_head', function (): void {
+	global $pagenow;
+	if ($pagenow !== 'edit.php') {
+		return;
+	}
+	$post_type = isset($_GET['post_type']) ? sanitize_key((string) wp_unslash($_GET['post_type'])) : '';
+	if ($post_type === '' || !fs_cpt_is_ordered($post_type)) {
+		return;
+	}
+	echo '<style>
+	.column-fs_cpt_reorder{width:120px}
+	td.fs_cpt_reorder.column-fs_cpt_reorder{white-space:nowrap}
+	.fs-cpt-reorder-menu{position:relative;display:inline-flex;align-items:center;gap:6px}
+	.fs-cpt-reorder-menu__order{display:inline-block;min-width:18px;text-align:right;font-variant-numeric:tabular-nums}
+	.fs-cpt-reorder-menu__toggle .dashicons{font-size:16px;line-height:18px;width:16px;height:16px}
+	.fs-cpt-reorder-menu__popover{position:absolute;left:100%;top:0;z-index:1000;display:flex;gap:4px;flex-wrap:wrap;padding:6px;margin-left:6px;min-width:170px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+	.fs-cpt-reorder-menu__popover[hidden]{display:none}
+	</style>';
+});
+
+add_action('admin_footer', function (): void {
+	global $pagenow;
+	if ($pagenow !== 'edit.php') {
+		return;
+	}
+	$post_type = isset($_GET['post_type']) ? sanitize_key((string) wp_unslash($_GET['post_type'])) : '';
+	if ($post_type === '' || !fs_cpt_is_ordered($post_type)) {
+		return;
+	}
+	echo '<script>
+	(function(){
+		function closeAll(exceptMenu){
+			document.querySelectorAll(".fs-cpt-reorder-menu").forEach(function(menu){
+				if(exceptMenu && menu===exceptMenu) return;
+				var pop=menu.querySelector(".fs-cpt-reorder-menu__popover");
+				var btn=menu.querySelector(".fs-cpt-reorder-menu__toggle");
+				if(pop){pop.hidden=true;}
+				if(btn){btn.setAttribute("aria-expanded","false");}
+			});
+		}
+		document.addEventListener("click",function(e){
+			var btn=e.target.closest(".fs-cpt-reorder-menu__toggle");
+			if(btn){
+				var menu=btn.closest(".fs-cpt-reorder-menu");
+				var pop=menu?menu.querySelector(".fs-cpt-reorder-menu__popover"):null;
+				if(!menu||!pop) return;
+				var willOpen=pop.hidden;
+				closeAll(menu);
+				pop.hidden=!willOpen;
+				btn.setAttribute("aria-expanded",willOpen?"true":"false");
+				return;
+			}
+			if(!e.target.closest(".fs-cpt-reorder-menu")){
+				closeAll(null);
+			}
+		});
+		document.addEventListener("keydown",function(e){
+			if(e.key==="Escape"){closeAll(null);}
+		});
+	})();
+	</script>';
+});
 
 /**
  * Handle reorder actions from list table.
