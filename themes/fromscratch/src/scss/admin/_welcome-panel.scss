@@ -1,0 +1,12 @@
+@use '../core' as *;
+
+.welcome-panel {
+  background: #fff;
+  border: 1px solid #c3c4c7;
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.welcome-panel-close {
+  display: none !important;
+}
