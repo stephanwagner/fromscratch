@@ -169,6 +169,8 @@ function fs_dashboard_line_chart_config(array $labels, array $datasets): array
                 'tooltip' => [
                     'mode' => 'index',
                     'intersect' => false,
+                    'boxPadding' => 4,
+                    'padding' => 8
                 ],
             ],
             'scales' => [
