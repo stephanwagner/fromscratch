@@ -99,6 +99,7 @@ function fs_dashboard_get_matomo_daily_visits(int $days = 7): array
         return [];
     }
     $body = wp_remote_retrieve_body($response);
+
     $data = json_decode($body, true);
     if (!is_array($data) || !isset($data[0]) || !is_array($data[0])) {
         set_transient($cache_key, [], 5 * MINUTE_IN_SECONDS);
@@ -135,6 +136,170 @@ function fs_dashboard_get_matomo_daily_visits(int $days = 7): array
             'pageviews' => (int) ($row['pageviews'] ?? 0),
         ];
     }
+
+    set_transient($cache_key, $out, HOUR_IN_SECONDS);
+    return $out;
+}
+
+/**
+ * Fetch daily + weekly Matomo series in one call.
+ *
+ * @return array{daily: array<int, array{date:string,unique:int,visits:int,pageviews:int}>, weekly: array<int, array{date:string,unique:int,visits:int,pageviews:int}>}
+ */
+function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8): array
+{
+    $days = max(1, min(365, $days));
+    $weeks = max(1, min(104, $weeks));
+    $settings = fs_dashboard_matomo_settings();
+    if ($settings === null || !function_exists('wp_remote_get')) {
+        return ['daily' => [], 'weekly' => []];
+    }
+
+    $cache_key = 'fromscratch_matomo_day_week_' . md5(wp_json_encode([
+        'url' => $settings['url'],
+        'site_id' => (int) $settings['site_id'],
+        'token' => $settings['token'],
+        'days' => $days,
+        'weeks' => $weeks,
+    ]));
+
+    $bypass_cache = is_admin()
+        && current_user_can('manage_options')
+        && isset($_GET['fs_no_cache'])
+        && (string) $_GET['fs_no_cache'] !== '';
+    if (!$bypass_cache) {
+        $cached = get_transient($cache_key);
+        if (is_array($cached) && isset($cached['daily'], $cached['weekly']) && is_array($cached['daily']) && is_array($cached['weekly'])) {
+            return $cached;
+        }
+    }
+
+    // IMPORTANT: each `urls[n]` value must be URL-encoded, otherwise the inner `&...`
+    // will be treated as top-level query parameters and Matomo returns wrong data.
+    $bulk_base = $settings['url'] . 'index.php';
+    $bulk_query = [
+        'module' => 'API',
+        'method' => 'API.getBulkRequest',
+        'format' => 'JSON',
+        'token_auth' => $settings['token'],
+        'urls[0]' => rawurlencode(sprintf(
+            'method=VisitsSummary.get&period=day&date=last%d&idSite=%d',
+            $days,
+            (int) $settings['site_id']
+        )),
+        // In your other implementation you use previous9 for 8 weeks (skip current week).
+        'urls[1]' => rawurlencode(sprintf(
+            'method=VisitsSummary.get&period=week&date=previous%d&idSite=%d',
+            $weeks + 1,
+            (int) $settings['site_id']
+        )),
+    ];
+    $bulk_url = $bulk_base . '?' . http_build_query($bulk_query, '', '&', PHP_QUERY_RFC3986);
+
+    $response = wp_remote_get($bulk_url, [
+        'timeout' => 10,
+        'headers' => ['Accept' => 'application/json'],
+    ]);
+    if (is_wp_error($response)) {
+        $empty = ['daily' => [], 'weekly' => []];
+        set_transient($cache_key, $empty, 5 * MINUTE_IN_SECONDS);
+        return $empty;
+    }
+
+    $body = (string) wp_remote_retrieve_body($response);
+    $data = json_decode($body, true);
+
+    if (!is_array($data) || !isset($data[0]) || !is_array($data[0])) {
+        $empty = ['daily' => [], 'weekly' => []];
+        set_transient($cache_key, $empty, 5 * MINUTE_IN_SECONDS);
+        return $empty;
+    }
+
+    $map_rows = static function ($payload, int $daysOrWeeks, string $mode): array {
+        if (!is_array($payload)) {
+            return [];
+        }
+        if (isset($payload['value']) && is_array($payload['value'])) {
+            $payload = $payload['value'];
+        }
+
+        $series = [];
+        $sec = $mode === 'week' ? WEEK_IN_SECONDS : DAY_IN_SECONDS;
+        for ($i = $daysOrWeeks - 1; $i >= 0; $i--) {
+            $key = gmdate('Y-m-d', time() - ($i * $sec));
+            $series[$key] = ['unique' => 0, 'visits' => 0, 'pageviews' => 0];
+        }
+
+        foreach ($payload as $date => $value) {
+            // Matomo can return:
+            // - associative keys like "YYYY-MM-DD" or "YYYY-MM-DD,YYYY-MM-DD"
+            // - numeric keys with rows containing a "label" field
+            $key = is_string($date) ? $date : '';
+            if ($key === '' && is_array($value) && isset($value['label']) && is_string($value['label'])) {
+                $key = $value['label'];
+            }
+            if ($key === '') {
+                continue;
+            }
+
+            // Normalize range keys and other variants to a single start date.
+            if (str_contains($key, ',')) {
+                $parts = explode(',', $key, 2);
+                $key = (string) ($parts[0] ?? $key);
+            }
+            if (strlen($key) >= 10) {
+                $key = substr($key, 0, 10);
+            }
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $key)) {
+                continue;
+            }
+
+            $unique = 0;
+            $visits = 0;
+            $pageviews = 0;
+            if (is_array($value)) {
+                $stats = $value;
+                if (isset($value['value']) && is_array($value['value'])) {
+                    $stats = $value['value'];
+                }
+                $unique = (int) ($stats['nb_uniq_visitors'] ?? 0);
+                $visits = (int) ($stats['nb_visits'] ?? 0);
+                $pageviews = (int) ($stats['nb_actions'] ?? 0);
+            } elseif (is_numeric($value)) {
+                $visits = (int) $value;
+            }
+
+            // For "previousX" Matomo can return a key outside our precomputed series.
+            $series[$key] = [
+                'unique' => max(0, $unique),
+                'visits' => max(0, $visits),
+                'pageviews' => max(0, $pageviews),
+            ];
+        }
+
+        if (!empty($series)) {
+            ksort($series);
+        }
+        $out = [];
+        foreach ($series as $date => $row) {
+            $out[] = [
+                'date' => $date,
+                'unique' => (int) ($row['unique'] ?? 0),
+                'visits' => (int) ($row['visits'] ?? 0),
+                'pageviews' => (int) ($row['pageviews'] ?? 0),
+            ];
+        }
+        // Trim to last N points (weekly request contains 1 extra)
+        if (count($out) > $daysOrWeeks) {
+            $out = array_slice($out, -$daysOrWeeks);
+        }
+        return $out;
+    };
+
+    $out = [
+        'daily' => $map_rows($data[0] ?? [], $days, 'day'),
+        'weekly' => $map_rows($data[1] ?? [], $weeks, 'week'),
+    ];
 
     set_transient($cache_key, $out, HOUR_IN_SECONDS);
     return $out;
@@ -211,7 +376,8 @@ function fs_render_dashboard_statistics_page(): void
     if (!current_user_can('edit_posts')) {
         wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'fromscratch'));
     }
-    $matomo_rows = fs_dashboard_get_matomo_daily_visits(7);
+    $series = fs_dashboard_get_matomo_daily_and_weekly(8, 8);
+    $matomo_rows = $series['daily'] ?? [];
     if (empty($matomo_rows)) {
 ?>
         <div class="wrap">
@@ -279,10 +445,71 @@ function fs_render_dashboard_statistics_page(): void
         ]
     ];
     $line_chart_config = fs_dashboard_line_chart_config($labels, $datasets);
+
+    $week_rows = $series['weekly'] ?? [];
+    $week_chart_config = [];
+    if (!empty($week_rows)) {
+        $week_labels = array_map(static function ($r) {
+            $date = (string) ($r['date'] ?? '');
+            $ts = $date !== '' ? strtotime($date . ' 00:00:00') : false;
+            if (!$ts) {
+                return $date;
+            }
+            $monday = (new DateTimeImmutable('@' . $ts))->setTimezone(wp_timezone())->modify('monday this week');
+            $week_no = (int) $monday->format('W');
+            return [
+                sprintf(__('Week %d', 'fromscratch'), $week_no),
+                wp_date((string) get_option('date_format'), $monday->getTimestamp()),
+            ];
+        }, $week_rows);
+
+        $week_unique = array_map(static fn($r) => (int) ($r['unique'] ?? 0), $week_rows);
+        $week_visits = array_map(static fn($r) => (int) ($r['visits'] ?? 0), $week_rows);
+        $week_pageviews = array_map(static fn($r) => (int) ($r['pageviews'] ?? 0), $week_rows);
+        $week_datasets = [
+            [
+                'label' => __('Daily visits', 'fromscratch'),
+                'data' => $week_visits,
+                'borderColor' => '#2e8ae5',
+                'backgroundColor' => '#2e8ae5',
+                'borderWidth' => 3,
+                'tension' => 0.3,
+                'fill' => false,
+                'pointRadius' => 3.5,
+                'pointHoverRadius' => 4.5,
+                'pointBackgroundColor' => '#2e8ae5',
+            ],
+            [
+                'label' => __('Unique visitors', 'fromscratch'),
+                'data' => $week_unique,
+                'borderColor' => '#99ccff',
+                'backgroundColor' => '#99ccff',
+                'borderWidth' => 3,
+                'tension' => 0.3,
+                'fill' => false,
+                'pointRadius' => 3.5,
+                'pointHoverRadius' => 4.5,
+                'pointBackgroundColor' => '#99ccff',
+            ],
+            [
+                'label' => __('Page views', 'fromscratch'),
+                'data' => $week_pageviews,
+                'borderColor' => '#ff6673',
+                'backgroundColor' => '#ff6673',
+                'borderWidth' => 3,
+                'tension' => 0.3,
+                'fill' => false,
+                'pointRadius' => 3.5,
+                'pointHoverRadius' => 4.5,
+                'pointBackgroundColor' => '#ff6673',
+            ],
+        ];
+        $week_chart_config = fs_dashboard_line_chart_config($week_labels, $week_datasets);
+    }
     ?>
     <div class="wrap">
         <h1><?= esc_html__('Analytics', 'fromscratch') ?></h1>
-        <p class="description"><?= esc_html__('Daily visits and page views for the last 7 days.', 'fromscratch') ?></p>
+        <p class="description"><?= esc_html__('Daily visits and page views for the last 8 days.', 'fromscratch') ?></p>
         <div class="fs-chart-container">
             <canvas
                 id="fs-stats-chart"
@@ -290,6 +517,17 @@ function fs_render_dashboard_statistics_page(): void
                 data-chart="line"
                 data-chart-config="<?= esc_attr(wp_json_encode($line_chart_config)) ?>"></canvas>
         </div>
+
+        <p class="description" style="margin-top: 18px;"><?= esc_html__('Weekly unique visitors, visits and page views for the last 8 weeks.', 'fromscratch') ?></p>
+        <?php if (!empty($week_chart_config)) : ?>
+            <div class="fs-chart-container">
+                <canvas
+                    id="fs-stats-chart-weeks"
+                    height="250"
+                    data-chart="line"
+                    data-chart-config="<?= esc_attr(wp_json_encode($week_chart_config)) ?>"></canvas>
+            </div>
+        <?php endif; ?>
     </div>
 <?php
 }
