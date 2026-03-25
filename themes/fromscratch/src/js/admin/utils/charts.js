@@ -33,9 +33,40 @@ function initCharts() {
       config.options.maintainAspectRatio = true;
     }
 
+    if (!config.options.plugins) {
+      config.options.plugins = {};
+    }
+    if (!config.options.plugins.tooltip) {
+      config.options.plugins.tooltip = {};
+    }
+    if (!config.options.plugins.tooltip.callbacks) {
+      config.options.plugins.tooltip.callbacks = {};
+    }
+    if (!config.options.plugins.tooltip.callbacks.title) {
+      config.options.plugins.tooltip.callbacks.title = function (items) {
+        if (!items || !items.length) return '';
+        var idx = items[0].dataIndex;
+        var labels = items[0].chart && items[0].chart.data ? items[0].chart.data.labels : null;
+        var raw = labels && typeof idx === 'number' ? labels[idx] : items[0].label;
+        return raw || '';
+      };
+    }
+    if (!config.options.plugins.tooltip.callbacks.label) {
+      config.options.plugins.tooltip.callbacks.label = function (item) {
+        var dsLabel = item && item.dataset && item.dataset.label ? item.dataset.label : '';
+        var val =
+          item && typeof item.formattedValue !== 'undefined'
+            ? item.formattedValue
+            : item && typeof item.raw !== 'undefined'
+            ? item.raw
+            : '';
+        return dsLabel ? dsLabel + ': ' + val : val;
+      };
+    }
+
     var ctx = el.getContext ? el.getContext('2d') : null;
     if (!ctx) return;
-    // eslint-disable-next-line no-new
+    
     new Chart(ctx, config);
   });
 }
@@ -45,4 +76,3 @@ if (document.readyState === 'loading') {
 } else {
   initCharts();
 }
-
