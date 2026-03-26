@@ -223,11 +223,15 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
             $payload = $payload['value'];
         }
 
+        // For daily we prefill missing dates with 0.
+        // For weekly we do NOT prefill, because Matomo `previousX` excludes the current week
+        // and prefilling would introduce a zero-week and then slice away real data.
         $series = [];
-        $sec = $mode === 'week' ? WEEK_IN_SECONDS : DAY_IN_SECONDS;
-        for ($i = $daysOrWeeks - 1; $i >= 0; $i--) {
-            $key = gmdate('Y-m-d', time() - ($i * $sec));
-            $series[$key] = ['unique' => 0, 'visits' => 0, 'pageviews' => 0];
+        if ($mode !== 'week') {
+            for ($i = $daysOrWeeks - 1; $i >= 0; $i--) {
+                $key = gmdate('Y-m-d', time() - ($i * DAY_IN_SECONDS));
+                $series[$key] = ['unique' => 0, 'visits' => 0, 'pageviews' => 0];
+            }
         }
 
         foreach ($payload as $date => $value) {
@@ -269,7 +273,6 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
                 $visits = (int) $value;
             }
 
-            // For "previousX" Matomo can return a key outside our precomputed series.
             $series[$key] = [
                 'unique' => max(0, $unique),
                 'visits' => max(0, $visits),
@@ -509,6 +512,22 @@ function fs_render_dashboard_statistics_page(): void
     ?>
     <div class="wrap">
         <h1><?= esc_html__('Analytics', 'fromscratch') ?></h1>
+        <?php
+        $matomo_settings = fs_dashboard_matomo_settings();
+        $matomo_login_url = $matomo_settings ? $matomo_settings['url'] : '';
+        $total_visits = array_sum(array_map(static fn($r) => (int) ($r['visits'] ?? 0), $rows));
+        $total_pageviews = array_sum(array_map(static fn($r) => (int) ($r['pageviews'] ?? 0), $rows));
+        ?>
+        <div class="notice inline" style="margin: 12px 0 14px; padding: 10px 12px;">
+            <p style="margin: 0;">
+                <strong><?= esc_html__('Total', 'fromscratch') ?>:</strong>
+                <?= esc_html(sprintf(__('%1$s visits', 'fromscratch'), number_format_i18n((int) $total_visits))) ?>
+                · <?= esc_html(sprintf(__('%1$s page views', 'fromscratch'), number_format_i18n((int) $total_pageviews))) ?>
+                <?php if ($matomo_login_url !== '') : ?>
+                    · <a href="<?= esc_url($matomo_login_url) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html__('Open Matomo', 'fromscratch') ?></a>
+                <?php endif; ?>
+            </p>
+        </div>
         <p class="description"><?= esc_html__('Daily visits and page views for the last 8 days.', 'fromscratch') ?></p>
         <div class="fs-chart-container">
             <canvas
