@@ -142,9 +142,14 @@ function fs_dashboard_get_matomo_daily_visits(int $days = 7): array
 }
 
 /**
- * Fetch daily + weekly Matomo series in one call.
+ * Fetch Analytics Matomo data in one call.
  *
- * @return array{daily: array<int, array{date:string,unique:int,visits:int,pageviews:int}>, weekly: array<int, array{date:string,unique:int,visits:int,pageviews:int}>}
+ * @return array{
+ *   daily: array<int, array{date:string,unique:int,visits:int,pageviews:int}>,
+ *   weekly: array<int, array{date:string,unique:int,visits:int,pageviews:int}>,
+ *   devices: array{desktop:int,mobile:int,tablet:int},
+ *   pages: array<int, array{label:string,url:string,hits:int}>
+ * }
  */
 function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8): array
 {
@@ -152,7 +157,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
     $weeks = max(1, min(104, $weeks));
     $settings = fs_dashboard_matomo_settings();
     if ($settings === null || !function_exists('wp_remote_get')) {
-        return ['daily' => [], 'weekly' => []];
+        return ['daily' => [], 'weekly' => [], 'devices' => ['desktop' => 0, 'mobile' => 0, 'tablet' => 0], 'pages' => []];
     }
 
     $cache_key = 'fromscratch_matomo_day_week_' . md5(wp_json_encode([
@@ -201,7 +206,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'headers' => ['Accept' => 'application/json'],
     ]);
     if (is_wp_error($response)) {
-        $empty = ['daily' => [], 'weekly' => []];
+        $empty = ['daily' => [], 'weekly' => [], 'devices' => ['desktop' => 0, 'mobile' => 0, 'tablet' => 0], 'pages' => []];
         set_transient($cache_key, $empty, 5 * MINUTE_IN_SECONDS);
         return $empty;
     }
@@ -210,7 +215,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
     $data = json_decode($body, true);
 
     if (!is_array($data) || !isset($data[0]) || !is_array($data[0])) {
-        $empty = ['daily' => [], 'weekly' => []];
+        $empty = ['daily' => [], 'weekly' => [], 'devices' => ['desktop' => 0, 'mobile' => 0, 'tablet' => 0], 'pages' => []];
         set_transient($cache_key, $empty, 5 * MINUTE_IN_SECONDS);
         return $empty;
     }
@@ -302,7 +307,59 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
     $out = [
         'daily' => $map_rows($data[0] ?? [], $days, 'day'),
         'weekly' => $map_rows($data[1] ?? [], $weeks, 'week'),
+        'devices' => ['desktop' => 0, 'mobile' => 0, 'tablet' => 0],
+        'pages' => [],
     ];
+
+    $range_visits = static function ($payload): int {
+        if (!is_array($payload)) {
+            return 0;
+        }
+        if (isset($payload['value']) && is_array($payload['value'])) {
+            $payload = $payload['value'];
+        }
+        if (isset($payload['result']) && $payload['result'] === 'error') {
+            return 0;
+        }
+        if (isset($payload['nb_visits'])) {
+            return max(0, (int) $payload['nb_visits']);
+        }
+        if (is_numeric($payload)) {
+            return max(0, (int) $payload);
+        }
+        return 0;
+    };
+
+    // Devices: range previous 90 days
+    $out['devices']['desktop'] = $range_visits($data[2] ?? []);
+    $out['devices']['mobile'] = $range_visits($data[3] ?? []);
+    $out['devices']['tablet'] = $range_visits($data[4] ?? []);
+
+    // Top pages: range previous 90 days
+    $pages_payload = $data[5] ?? [];
+    if (is_array($pages_payload) && isset($pages_payload['value']) && is_array($pages_payload['value'])) {
+        $pages_payload = $pages_payload['value'];
+    }
+    if (is_array($pages_payload)) {
+        $pages = [];
+        foreach ($pages_payload as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $label = isset($row['label']) ? (string) $row['label'] : '';
+            $url = isset($row['url']) ? (string) $row['url'] : '';
+            $hits = (int) ($row['nb_hits'] ?? 0);
+            if ($label === '' && $url === '') {
+                continue;
+            }
+            $pages[] = [
+                'label' => $label,
+                'url' => $url,
+                'hits' => max(0, $hits),
+            ];
+        }
+        $out['pages'] = array_slice($pages, 0, 10);
+    }
 
     set_transient($cache_key, $out, HOUR_IN_SECONDS);
     return $out;
@@ -509,6 +566,55 @@ function fs_render_dashboard_statistics_page(): void
         ];
         $week_chart_config = fs_dashboard_line_chart_config($week_labels, $week_datasets);
     }
+
+    $devices = is_array($series['devices'] ?? null) ? $series['devices'] : ['desktop' => 0, 'mobile' => 0, 'tablet' => 0];
+    $devices_chart_config = [
+        'type' => 'bar',
+        'data' => [
+            'labels' => [
+                __('Desktop', 'fromscratch'),
+                __('Handy', 'fromscratch'),
+                __('Tablet', 'fromscratch'),
+            ],
+            'datasets' => [
+                [
+                    'data' => [
+                        (int) ($devices['desktop'] ?? 0),
+                        (int) ($devices['mobile'] ?? 0),
+                        (int) ($devices['tablet'] ?? 0),
+                    ],
+                    'backgroundColor' => ['#ff6673', '#2e8ae5', '#99ccff'],
+                    'borderRadius' => 6,
+                ],
+            ],
+        ],
+        'options' => [
+            'responsive' => true,
+            'maintainAspectRatio' => false,
+            'plugins' => [
+                'legend' => ['display' => false],
+                'tooltip' => [
+                    'mode' => 'index',
+                    'intersect' => false,
+                    'boxPadding' => 4,
+                    'padding' => 8,
+                ],
+            ],
+            'scales' => [
+                'x' => [
+                    'ticks' => ['color' => '#64748b'],
+                    'grid' => ['display' => false],
+                ],
+                'y' => [
+                    'beginAtZero' => true,
+                    'ticks' => ['color' => '#64748b'],
+                    'grid' => ['color' => '#8888884d'],
+                ],
+            ],
+        ],
+    ];
+
+    $top_pages = is_array($series['pages'] ?? null) ? $series['pages'] : [];
     ?>
     <div class="wrap">
         <h1><?= esc_html__('Analytics', 'fromscratch') ?></h1>
@@ -547,6 +653,42 @@ function fs_render_dashboard_statistics_page(): void
                     data-chart-config="<?= esc_attr(wp_json_encode($week_chart_config)) ?>"></canvas>
             </div>
         <?php endif; ?>
+
+        <div style="display:flex; gap:16px; margin-top: 18px; align-items: stretch; flex-wrap: wrap;">
+            <div class="fs-chart-container" style="flex: 1 1 360px; min-width: 320px;">
+                <p class="description" style="margin: 0 0 10px 0;"><?= esc_html__('Devices (last 90 days)', 'fromscratch') ?></p>
+                <canvas
+                    id="fs-stats-chart-devices"
+                    height="250"
+                    data-chart="bar"
+                    data-chart-config="<?= esc_attr(wp_json_encode($devices_chart_config)) ?>"></canvas>
+            </div>
+
+            <div class="fs-chart-container" style="flex: 1 1 360px; min-width: 320px;">
+                <p class="description" style="margin: 0 0 10px 0;"><?= esc_html__('Top pages (last 90 days)', 'fromscratch') ?></p>
+                <?php if (!empty($top_pages)) : ?>
+                    <ol style="margin: 0; padding-left: 18px;">
+                        <?php foreach ($top_pages as $row) :
+                            $label = (string) ($row['label'] ?? '');
+                            $url = (string) ($row['url'] ?? '');
+                            $hits = (int) ($row['hits'] ?? 0);
+                            $text = $label !== '' ? $label : $url;
+                        ?>
+                            <li style="margin: 0 0 8px 0;">
+                                <?php if ($url !== '') : ?>
+                                    <a href="<?= esc_url($url) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html($text) ?></a>
+                                <?php else : ?>
+                                    <?= esc_html($text) ?>
+                                <?php endif; ?>
+                                <span style="color:#646970;"> — <?= esc_html(number_format_i18n($hits)) ?></span>
+                            </li>
+                        <?php endforeach; ?>
+                    </ol>
+                <?php else : ?>
+                    <p style="margin: 0; color:#646970;"><?= esc_html__('No data available.', 'fromscratch') ?></p>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
 <?php
 }
