@@ -599,20 +599,30 @@ function fs_render_dashboard_statistics_page(): void
     }
 
     $devices = is_array($series['devices'] ?? null) ? $series['devices'] : ['desktop' => 0, 'mobile' => 0, 'tablet' => 0];
+    $device_desktop = (int) ($devices['desktop'] ?? 0);
+    $device_mobile = (int) ($devices['mobile'] ?? 0);
+    $device_tablet = (int) ($devices['tablet'] ?? 0);
+    $device_total = max(0, $device_desktop + $device_mobile + $device_tablet);
+    $device_pct = static function (int $v) use ($device_total): int {
+        if ($device_total <= 0) {
+            return 0;
+        }
+        return (int) round(($v / $device_total) * 100);
+    };
     $devices_chart_config = [
         'type' => 'bar',
         'data' => [
             'labels' => [
-                __('Desktop', 'fromscratch'),
-                __('Handy', 'fromscratch'),
-                __('Tablet', 'fromscratch'),
+                [__('Desktop', 'fromscratch'), sprintf(__('%d%%', 'fromscratch'), $device_pct($device_desktop))],
+                [__('Handy', 'fromscratch'), sprintf(__('%d%%', 'fromscratch'), $device_pct($device_mobile))],
+                [__('Tablet', 'fromscratch'), sprintf(__('%d%%', 'fromscratch'), $device_pct($device_tablet))],
             ],
             'datasets' => [
                 [
                     'data' => [
-                        (int) ($devices['desktop'] ?? 0),
-                        (int) ($devices['mobile'] ?? 0),
-                        (int) ($devices['tablet'] ?? 0),
+                        $device_desktop,
+                        $device_mobile,
+                        $device_tablet,
                     ],
                     'backgroundColor' => ['#ff6673', '#2e8ae5', '#99ccff'],
                     'borderRadius' => 6,
@@ -666,7 +676,7 @@ function fs_render_dashboard_statistics_page(): void
             </p>
         </div>
 
-        <h2 style="margin-top: 32px; margin-bottom: 12px;"><?= esc_html__('Daily visits and page views for the last 8 days.', 'fromscratch') ?></h2>
+        <h2 style="margin-top: 32px; margin-bottom: 12px;"><?= esc_html__('Daily visits and page views (last 8 days)', 'fromscratch') ?></h2>
 
         <div class="fs-chart-container">
             <canvas
@@ -676,7 +686,7 @@ function fs_render_dashboard_statistics_page(): void
                 data-chart-config="<?= esc_attr(wp_json_encode($line_chart_config)) ?>"></canvas>
         </div>
 
-        <h2 style="margin-top: 32px; margin-bottom: 12px;"><?= esc_html__('Weekly unique visitors, visits and page views for the last 8 weeks.', 'fromscratch') ?></h2>
+        <h2 style="margin-top: 32px; margin-bottom: 12px;"><?= esc_html__('Weekly visits and page views (last 8 weeks)', 'fromscratch') ?></h2>
         <?php if (!empty($week_chart_config)) : ?>
             <div class="fs-chart-container">
                 <canvas
@@ -690,10 +700,10 @@ function fs_render_dashboard_statistics_page(): void
         <div class="fs-chart-wrapper-flex">
             <div class="fs-chart-container-flex">
                 <h2 style="margin-top: 0; margin-bottom: 12px;"><?= esc_html__('Devices (last 90 days)', 'fromscratch') ?></h2>
-                <div class="fs-chart-container -small">
+                <div class="fs-chart-container -small" style="min-height: 334px;">
                     <canvas
                         id="fs-stats-chart-devices"
-                        height="250"
+                        height="300"
                         data-chart="bar"
                         data-chart-config="<?= esc_attr(wp_json_encode($devices_chart_config)) ?>"></canvas>
                 </div>
@@ -701,7 +711,7 @@ function fs_render_dashboard_statistics_page(): void
 
             <div class="fs-chart-container-flex">
                 <h2 style="margin-top: 0; margin-bottom: 12px;"><?= esc_html__('Top pages (last 90 days)', 'fromscratch') ?></h2>
-                <div class="fs-chart-container -small">
+                <div class="fs-chart-container -small" style="min-height: 334px;">
                     <?php if (!empty($top_pages)) : ?>
                         <ol style="margin: 0; padding-left: 18px;">
                             <?php foreach ($top_pages as $row) :
