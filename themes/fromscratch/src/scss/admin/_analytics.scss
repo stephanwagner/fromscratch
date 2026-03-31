@@ -1,9 +1,33 @@
 @use '../core' as *;
 
+.fs-chart-container,
+.fs-chart-wrapper-flex {
+  max-width: 860px;
+  box-sizing: border-box;
+}
+
 .fs-chart-container {
+  position: relative;
   background: #fff;
   border: 1px solid #c3c4c7;
   border-radius: 6px;
   padding: 16px;
-  max-width: 860px;
+  word-break: break-word;
+
+  &.-small {
+    width: 100%;
+    max-width: calc((860px - 24px) / 2);
+  }
+}
+
+.fs-chart-wrapper-flex {
+  display: flex;
+  gap: 24px;
+  margin-top: 32px;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+.fs-chart-container-flex {
+  width: calc(50% - 12px);
 }

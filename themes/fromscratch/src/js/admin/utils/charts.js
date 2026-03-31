@@ -67,6 +67,12 @@ function initCharts() {
     var ctx = el.getContext ? el.getContext('2d') : null;
     if (!ctx) return;
     
+    // Prevent multiple Chart instances on same canvas (can cause weird resizing/growth).
+    var existing = Chart.getChart ? Chart.getChart(el) : null;
+    if (existing) {
+      existing.destroy();
+    }
+
     new Chart(ctx, config);
   });
 }

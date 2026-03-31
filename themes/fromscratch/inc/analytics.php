@@ -174,7 +174,14 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         && (string) $_GET['fs_no_cache'] !== '';
     if (!$bypass_cache) {
         $cached = get_transient($cache_key);
-        if (is_array($cached) && isset($cached['daily'], $cached['weekly']) && is_array($cached['daily']) && is_array($cached['weekly'])) {
+        if (
+            is_array($cached)
+            && isset($cached['daily'], $cached['weekly'], $cached['devices'], $cached['pages'])
+            && is_array($cached['daily'])
+            && is_array($cached['weekly'])
+            && is_array($cached['devices'])
+            && is_array($cached['pages'])
+        ) {
             return $cached;
         }
     }
@@ -196,6 +203,30 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'urls[1]' => rawurlencode(sprintf(
             'method=VisitsSummary.get&period=week&date=previous%d&idSite=%d',
             $weeks + 1,
+            (int) $settings['site_id']
+        )),
+        // Devices: previous 90 days (range).
+        // Desktop.
+        'urls[2]' => rawurlencode(sprintf(
+            'method=VisitsSummary.get&period=range&date=previous90&idSite=%d&segment=%s',
+            (int) $settings['site_id'],
+            'deviceType==desktop'
+        )),
+        // Handy (mobile + smartphone).
+        'urls[3]' => rawurlencode(sprintf(
+            'method=VisitsSummary.get&period=range&date=previous90&idSite=%d&segment=%s',
+            (int) $settings['site_id'],
+            'deviceType==smartphone,deviceType==mobile'
+        )),
+        // Tablet (tablet + phablet).
+        'urls[4]' => rawurlencode(sprintf(
+            'method=VisitsSummary.get&period=range&date=previous90&idSite=%d&segment=%s',
+            (int) $settings['site_id'],
+            'deviceType==tablet,deviceType==phablet'
+        )),
+        // Top pages: previous 90 days.
+        'urls[5]' => rawurlencode(sprintf(
+            'method=Actions.getPageUrls&period=range&date=previous90&idSite=%d&flat=1&filter_limit=10',
             (int) $settings['site_id']
         )),
     ];
@@ -634,7 +665,9 @@ function fs_render_dashboard_statistics_page(): void
                 <?php endif; ?>
             </p>
         </div>
-        <p class="description"><?= esc_html__('Daily visits and page views for the last 8 days.', 'fromscratch') ?></p>
+
+        <h2 style="margin-top: 32px; margin-bottom: 12px;"><?= esc_html__('Daily visits and page views for the last 8 days.', 'fromscratch') ?></h2>
+
         <div class="fs-chart-container">
             <canvas
                 id="fs-stats-chart"
@@ -643,7 +676,7 @@ function fs_render_dashboard_statistics_page(): void
                 data-chart-config="<?= esc_attr(wp_json_encode($line_chart_config)) ?>"></canvas>
         </div>
 
-        <p class="description" style="margin-top: 18px;"><?= esc_html__('Weekly unique visitors, visits and page views for the last 8 weeks.', 'fromscratch') ?></p>
+        <h2 style="margin-top: 32px; margin-bottom: 12px;"><?= esc_html__('Weekly unique visitors, visits and page views for the last 8 weeks.', 'fromscratch') ?></h2>
         <?php if (!empty($week_chart_config)) : ?>
             <div class="fs-chart-container">
                 <canvas
@@ -654,39 +687,43 @@ function fs_render_dashboard_statistics_page(): void
             </div>
         <?php endif; ?>
 
-        <div style="display:flex; gap:16px; margin-top: 18px; align-items: stretch; flex-wrap: wrap;">
-            <div class="fs-chart-container" style="flex: 1 1 360px; min-width: 320px;">
-                <p class="description" style="margin: 0 0 10px 0;"><?= esc_html__('Devices (last 90 days)', 'fromscratch') ?></p>
-                <canvas
-                    id="fs-stats-chart-devices"
-                    height="250"
-                    data-chart="bar"
-                    data-chart-config="<?= esc_attr(wp_json_encode($devices_chart_config)) ?>"></canvas>
+        <div class="fs-chart-wrapper-flex">
+            <div class="fs-chart-container-flex">
+                <h2 style="margin-top: 0; margin-bottom: 12px;"><?= esc_html__('Devices (last 90 days)', 'fromscratch') ?></h2>
+                <div class="fs-chart-container -small">
+                    <canvas
+                        id="fs-stats-chart-devices"
+                        height="250"
+                        data-chart="bar"
+                        data-chart-config="<?= esc_attr(wp_json_encode($devices_chart_config)) ?>"></canvas>
+                </div>
             </div>
 
-            <div class="fs-chart-container" style="flex: 1 1 360px; min-width: 320px;">
-                <p class="description" style="margin: 0 0 10px 0;"><?= esc_html__('Top pages (last 90 days)', 'fromscratch') ?></p>
-                <?php if (!empty($top_pages)) : ?>
-                    <ol style="margin: 0; padding-left: 18px;">
-                        <?php foreach ($top_pages as $row) :
-                            $label = (string) ($row['label'] ?? '');
-                            $url = (string) ($row['url'] ?? '');
-                            $hits = (int) ($row['hits'] ?? 0);
-                            $text = $label !== '' ? $label : $url;
-                        ?>
-                            <li style="margin: 0 0 8px 0;">
-                                <?php if ($url !== '') : ?>
-                                    <a href="<?= esc_url($url) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html($text) ?></a>
-                                <?php else : ?>
-                                    <?= esc_html($text) ?>
-                                <?php endif; ?>
-                                <span style="color:#646970;"> — <?= esc_html(number_format_i18n($hits)) ?></span>
-                            </li>
-                        <?php endforeach; ?>
-                    </ol>
-                <?php else : ?>
-                    <p style="margin: 0; color:#646970;"><?= esc_html__('No data available.', 'fromscratch') ?></p>
-                <?php endif; ?>
+            <div class="fs-chart-container-flex">
+                <h2 style="margin-top: 0; margin-bottom: 12px;"><?= esc_html__('Top pages (last 90 days)', 'fromscratch') ?></h2>
+                <div class="fs-chart-container -small">
+                    <?php if (!empty($top_pages)) : ?>
+                        <ol style="margin: 0; padding-left: 18px;">
+                            <?php foreach ($top_pages as $row) :
+                                $label = (string) ($row['label'] ?? '');
+                                $url = (string) ($row['url'] ?? '');
+                                $hits = (int) ($row['hits'] ?? 0);
+                                $text = $label !== '' ? $label : $url;
+                            ?>
+                                <li style="margin: 0 0 8px 0;">
+                                    <?php if ($url !== '') : ?>
+                                        <a href="<?= esc_url($url) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html($text) ?></a>
+                                    <?php else : ?>
+                                        <?= esc_html($text) ?>
+                                    <?php endif; ?>
+                                    <span style="color:#646970;"> — <?= esc_html(number_format_i18n($hits)) ?></span>
+                                </li>
+                            <?php endforeach; ?>
+                        </ol>
+                    <?php else : ?>
+                        <p style="margin: 0; color:#646970;"><?= esc_html__('No data available.', 'fromscratch') ?></p>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
