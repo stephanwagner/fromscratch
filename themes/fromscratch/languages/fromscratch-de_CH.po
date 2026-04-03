@@ -1545,3 +1545,88 @@ msgstr "Tracking-Einstellungen"
 
 msgid "Optional additional _paq commands. One command per line."
 msgstr "Optionale zusätzliche _paq-Befehle. Ein Befehl pro Zeile."
+
+# Dashboard > Analytics (Matomo)
+msgid "Analytics"
+msgstr "Statistik"
+
+msgid "Matomo: invalid or missing auth token."
+msgstr "Matomo: Ungültiges oder fehlendes Auth-Token."
+
+msgid "Matomo API error"
+msgstr "Matomo-API-Fehler"
+
+msgid "Unexpected Matomo response format."
+msgstr "Unerwartetes Antwortformat von Matomo."
+
+msgid "%1$s – %2$s"
+msgstr "%1$s – %2$s"
+
+msgid "Not enough data available."
+msgstr "Noch nicht genügend Daten vorhanden."
+
+msgid "Please wait until enough data is available. This usually takes a day or two."
+msgstr "Bitte warte, bis genügend Daten vorliegen. Das dauert in der Regel ein oder zwei Tage."
+
+msgid "Matomo error"
+msgstr "Matomo-Fehler"
+
+msgid "Visits"
+msgstr "Besuche"
+
+msgid "Unique visitors"
+msgstr "Eindeutige Besucher"
+
+msgid "Page views"
+msgstr "Seitenaufrufe"
+
+msgid "Week %d"
+msgstr "Woche %d"
+
+msgid "Desktop"
+msgstr "Desktop"
+
+msgid "%d%%"
+msgstr "%d %%"
+
+msgid "Mobile"
+msgstr "Handy"
+
+msgid "Tablet"
+msgstr "Tablet"
+
+msgid "Total"
+msgstr "Gesamt"
+
+msgid "%1$s visits"
+msgstr "%1$s Besuche"
+
+msgid "%1$s page views"
+msgstr "%1$s Seitenaufrufe"
+
+msgid "Open Matomo"
+msgstr "Matomo öffnen"
+
+msgid "Clear cache"
+msgstr "Cache leeren"
+
+msgid "Daily visits and page views (last 8 days)"
+msgstr "Tägliche Besuche und Seitenaufrufe (letzte 8 Tage)"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "Weekly visits and page views (last 8 weeks)"
+msgstr "Wöchentliche Besuche und Seitenaufrufe (letzte 8 Wochen)"
+
+msgid "Week"
+msgstr "Woche"
+
+msgid "Devices (last 90 days)"
+msgstr "Geräte (letzte 90 Tage)"
+
+msgid "Top pages (last 90 days)"
+msgstr "Top-Seiten (letzte 90 Tage)"
+
+msgid "No data available."
+msgstr "Keine Daten verfügbar."

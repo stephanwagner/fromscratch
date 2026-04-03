@@ -264,7 +264,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
             (int) $settings['site_id'],
             'deviceType==desktop'
         )),
-        // Handy: smartphone OR mobile (matches working Matomo segments; comma = OR).
+        // Mobile: smartphone OR mobile (matches working Matomo segments; comma = OR).
         'urls[3]' => rawurlencode(sprintf(
             'method=VisitsSummary.get&period=range&date=previous90&idSite=%d&segment=%s',
             (int) $settings['site_id'],
@@ -734,7 +734,7 @@ function fs_render_dashboard_statistics_page(): void
         'data' => [
             'labels' => [
                 [__('Desktop', 'fromscratch'), sprintf(__('%d%%', 'fromscratch'), $device_pct($device_desktop))],
-                [__('Handy', 'fromscratch'), sprintf(__('%d%%', 'fromscratch'), $device_pct($device_mobile))],
+                [__('Mobile', 'fromscratch'), sprintf(__('%d%%', 'fromscratch'), $device_pct($device_mobile))],
                 [__('Tablet', 'fromscratch'), sprintf(__('%d%%', 'fromscratch'), $device_pct($device_tablet))],
             ],
             'datasets' => [
@@ -837,7 +837,7 @@ function fs_render_dashboard_statistics_page(): void
             </table>
         </div>
 
-        <h2 style="margin-top: 32px; margin-bottom: 12px;"><?= esc_html__('Weekly visits and page views (last 8 weeks, including this week)', 'fromscratch') ?></h2>
+        <h2 style="margin-top: 32px; margin-bottom: 12px;"><?= esc_html__('Weekly visits and page views (last 8 weeks)', 'fromscratch') ?></h2>
         <?php if (!empty($week_chart_config)) : ?>
             <div class="fs-chart-container">
                 <canvas
