@@ -500,6 +500,64 @@ function fs_dashboard_format_week_date_range(DateTimeImmutable $monday): string
 }
 
 /**
+ * Bar widths (0–100) for unique visitors, visits, and page views: each relative to max(u, v, p) in this row.
+ *
+ * @param array<string, mixed> $row
+ * @return array{visits:int,unique:int,pageviews:int}
+ */
+function fs_dashboard_stats_row_bar_widths(array $row): array
+{
+    $v = (int) ($row['visits'] ?? 0);
+    $u = (int) ($row['unique'] ?? 0);
+    $p = (int) ($row['pageviews'] ?? 0);
+    $max = max($v, $u, $p, 0);
+    if ($max <= 0) {
+        return ['visits' => 0, 'unique' => 0, 'pageviews' => 0];
+    }
+
+    return [
+        'visits' => (int) min(100, max(0, (int) round(($v / $max) * 100))),
+        'unique' => (int) min(100, max(0, (int) round(($u / $max) * 100))),
+        'pageviews' => (int) min(100, max(0, (int) round(($p / $max) * 100))),
+    ];
+}
+
+/**
+ * Output row-relative indicator cell (three stacked bars: unique visitors, visits, page views).
+ *
+ * @param array<string, mixed> $row
+ */
+function fs_dashboard_render_stats_indicator_cell(array $row): void
+{
+    $w = fs_dashboard_stats_row_bar_widths($row);
+    $aria = __(
+        'Unique visitors, visits, and page views compared within this row; the largest value uses the full bar width.',
+        'fromscratch'
+    );
+    ?>
+    <td class="fs-stats-indicator-cell">
+        <div class="fs-stats-indicator" role="img" aria-label="<?= esc_attr($aria) ?>">
+            <div class="fs-stats-indicator__row fs-stats-indicator__row--unique">
+                <span class="fs-stats-indicator__track">
+                    <span class="fs-stats-indicator__fill fs-stats-indicator__fill--unique" style="width: <?= (int) $w['unique'] ?>%;"></span>
+                </span>
+            </div>
+            <div class="fs-stats-indicator__row fs-stats-indicator__row--visits">
+                <span class="fs-stats-indicator__track">
+                    <span class="fs-stats-indicator__fill fs-stats-indicator__fill--visits" style="width: <?= (int) $w['visits'] ?>%;"></span>
+                </span>
+            </div>
+            <div class="fs-stats-indicator__row fs-stats-indicator__row--pageviews">
+                <span class="fs-stats-indicator__track">
+                    <span class="fs-stats-indicator__fill fs-stats-indicator__fill--pageviews" style="width: <?= (int) $w['pageviews'] ?>%;"></span>
+                </span>
+            </div>
+        </div>
+    </td>
+    <?php
+}
+
+/**
  * Reusable Chart.js line chart config.
  *
  * @param array<int, string|array<int, string>> $labels
@@ -619,8 +677,8 @@ function fs_render_dashboard_statistics_page(): void
     $pageviews = array_map(static fn($r) => (int) ($r['pageviews'] ?? 0), $rows);
     $datasets = [
         [
-            'label' => __('Visits', 'fromscratch'),
-            'data' => $visits,
+            'label' => __('Unique visitors', 'fromscratch'),
+            'data' => $unique,
             'borderColor' => '#2e8ae5',
             'backgroundColor' => '#2e8ae5',
             'borderWidth' => 3,
@@ -631,8 +689,8 @@ function fs_render_dashboard_statistics_page(): void
             'pointBackgroundColor' => '#2e8ae5',
         ],
         [
-            'label' => __('Unique visitors', 'fromscratch'),
-            'data' => $unique,
+            'label' => __('Visits', 'fromscratch'),
+            'data' => $visits,
             'borderColor' => '#99ccff',
             'backgroundColor' => '#99ccff',
             'borderWidth' => 3,
@@ -679,8 +737,8 @@ function fs_render_dashboard_statistics_page(): void
         $week_pageviews = array_map(static fn($r) => (int) ($r['pageviews'] ?? 0), $week_rows);
         $week_datasets = [
             [
-                'label' => __('Visits', 'fromscratch'),
-                'data' => $week_visits,
+                'label' => __('Unique visitors', 'fromscratch'),
+                'data' => $week_unique,
                 'borderColor' => '#2e8ae5',
                 'backgroundColor' => '#2e8ae5',
                 'borderWidth' => 3,
@@ -691,8 +749,8 @@ function fs_render_dashboard_statistics_page(): void
                 'pointBackgroundColor' => '#2e8ae5',
             ],
             [
-                'label' => __('Unique visitors', 'fromscratch'),
-                'data' => $week_unique,
+                'label' => __('Visits', 'fromscratch'),
+                'data' => $week_visits,
                 'borderColor' => '#99ccff',
                 'backgroundColor' => '#99ccff',
                 'borderWidth' => 3,
@@ -811,13 +869,16 @@ function fs_render_dashboard_statistics_page(): void
                 data-chart-config="<?= esc_attr(wp_json_encode($line_chart_config)) ?>"></canvas>
         </div>
         <div class="fs-chart-container fs-chart-container--table">
-            <table class="widefat striped" style="margin: 0;">
+            <table class="widefat striped fs-stats-table" style="margin: 0;">
                 <thead>
                     <tr>
                         <th scope="col"><?= esc_html__('Date', 'fromscratch') ?></th>
-                        <th scope="col" style="text-align:right;"><?= esc_html__('Visits', 'fromscratch') ?></th>
                         <th scope="col" style="text-align:right;"><?= esc_html__('Unique visitors', 'fromscratch') ?></th>
+                        <th scope="col" style="text-align:right;"><?= esc_html__('Visits', 'fromscratch') ?></th>
                         <th scope="col" style="text-align:right;"><?= esc_html__('Page views', 'fromscratch') ?></th>
+                        <th scope="col" class="fs-stats-indicator-col">
+                            <abbr title="<?= esc_attr__('Bars compare the three metrics within each row; the largest value uses the full width.', 'fromscratch') ?>"><?= esc_html__('Relative', 'fromscratch') ?></abbr>
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
@@ -828,9 +889,10 @@ function fs_render_dashboard_statistics_page(): void
                         ?>
                         <tr>
                             <td><?= esc_html($label) ?></td>
-                            <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['visits'] ?? 0))) ?></td>
                             <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['unique'] ?? 0))) ?></td>
+                            <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['visits'] ?? 0))) ?></td>
                             <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['pageviews'] ?? 0))) ?></td>
+                            <?php fs_dashboard_render_stats_indicator_cell($r); ?>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -847,13 +909,16 @@ function fs_render_dashboard_statistics_page(): void
                     data-chart-config="<?= esc_attr(wp_json_encode($week_chart_config)) ?>"></canvas>
             </div>
             <div class="fs-chart-container fs-chart-container--table">
-                <table class="widefat striped" style="margin: 0;">
+                <table class="widefat striped fs-stats-table" style="margin: 0;">
                     <thead>
                         <tr>
                             <th scope="col"><?= esc_html__('Week', 'fromscratch') ?></th>
-                            <th scope="col" style="text-align:right;"><?= esc_html__('Visits', 'fromscratch') ?></th>
                             <th scope="col" style="text-align:right;"><?= esc_html__('Unique visitors', 'fromscratch') ?></th>
+                            <th scope="col" style="text-align:right;"><?= esc_html__('Visits', 'fromscratch') ?></th>
                             <th scope="col" style="text-align:right;"><?= esc_html__('Page views', 'fromscratch') ?></th>
+                            <th scope="col" class="fs-stats-indicator-col">
+                                <abbr title="<?= esc_attr__('Bars compare the three metrics within each row; the largest value uses the full width.', 'fromscratch') ?>"><?= esc_html__('Relative', 'fromscratch') ?></abbr>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -878,9 +943,10 @@ function fs_render_dashboard_statistics_page(): void
                                         <?= esc_html($week_label) ?>
                                     <?php endif; ?>
                                 </td>
-                                <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['visits'] ?? 0))) ?></td>
                                 <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['unique'] ?? 0))) ?></td>
+                                <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['visits'] ?? 0))) ?></td>
                                 <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['pageviews'] ?? 0))) ?></td>
+                                <?php fs_dashboard_render_stats_indicator_cell($r); ?>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
