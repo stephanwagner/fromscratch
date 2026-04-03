@@ -46,8 +46,12 @@
   font-weight: 600;
 }
 
-.fs-analytics-page .fs-stats-table.widefat tbody td.fs-stats-metric {
-  vertical-align: top;
+.fs-analytics-page .fs-stats-table.widefat thead th:first-child {
+  font-weight: 600 !important;
+}
+
+.fs-analytics-page .fs-stats-table.widefat tbody td {
+  vertical-align: middle;
 }
 
 .fs-analytics-page .fs-stats-table.widefat tbody td:first-child {
