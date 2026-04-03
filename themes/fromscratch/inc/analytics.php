@@ -21,6 +21,9 @@ add_action('admin_menu', function (): void {
 /**
  * Get Matomo tracking settings when available.
  *
+ * Uses Developer → System options when the Matomo feature is enabled, or ACF option fields
+ * (`matomo-url`, `matomo-site-id`, `matomo-token-auth`) when Advanced Custom Fields is present.
+ *
  * @return array{url:string,site_id:int,token:string}|null
  */
 function fs_dashboard_matomo_settings(): ?array
@@ -28,17 +31,45 @@ function fs_dashboard_matomo_settings(): ?array
     if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('matomo')) {
         return null;
     }
-    $url = trim((string) get_option('fromscratch_matomo_url', ''));
-    $site_id = (int) get_option('fromscratch_matomo_site_id', 1);
-    $token = trim((string) get_option('fromscratch_matomo_token_auth', ''));
+
+    $url = '';
+    $site_id = 0;
+    $token = '';
+
+    if (function_exists('get_field')) {
+        $url = trim((string) call_user_func('get_field', 'matomo-url', 'option'));
+        $site_id = (int) call_user_func('get_field', 'matomo-site-id', 'option');
+        $token = trim((string) call_user_func('get_field', 'matomo-token-auth', 'option'));
+    }
+
+    if ($url === '' || $site_id <= 0 || $token === '') {
+        $url = trim((string) get_option('fromscratch_matomo_url', ''));
+        $site_id = (int) get_option('fromscratch_matomo_site_id', 1);
+        $token = trim((string) get_option('fromscratch_matomo_token_auth', ''));
+    }
+
     if ($url === '' || $site_id <= 0 || $token === '') {
         return null;
     }
+
     return [
         'url' => trailingslashit($url),
         'site_id' => $site_id,
         'token' => $token,
     ];
+}
+
+/**
+ * Store last Matomo API error for admin display (request lifecycle only).
+ */
+function fs_dashboard_set_last_matomo_error(string $message): void
+{
+    $GLOBALS['fs_dashboard_last_matomo_error'] = $message;
+}
+
+function fs_dashboard_get_last_matomo_error(): string
+{
+    return (string) ($GLOBALS['fs_dashboard_last_matomo_error'] ?? '');
 }
 
 /**
@@ -77,31 +108,49 @@ function fs_dashboard_get_matomo_daily_visits(int $days = 7): array
         $series[$key] = ['unique' => 0, 'visits' => 0, 'pageviews' => 0];
     }
 
-    // Use bulk request to reliably get nb_uniq_visitors, nb_visits and nb_actions.
-    $bulk_url = add_query_arg([
+    $bulk_base = $settings['url'] . 'index.php';
+    $bulk_query = [
         'module' => 'API',
         'method' => 'API.getBulkRequest',
         'format' => 'JSON',
         'token_auth' => $settings['token'],
-        'urls[0]' => sprintf(
+        'urls[0]' => rawurlencode(sprintf(
             'method=VisitsSummary.get&period=day&date=last%d&idSite=%d',
             $days,
             (int) $settings['site_id']
-        ),
-    ], $settings['url'] . 'index.php');
+        )),
+    ];
+    $bulk_url = $bulk_base . '?' . http_build_query($bulk_query, '', '&', PHP_QUERY_RFC3986);
 
     $response = wp_remote_get($bulk_url, [
         'timeout' => 10,
         'headers' => ['Accept' => 'application/json'],
     ]);
     if (is_wp_error($response)) {
+        fs_dashboard_set_last_matomo_error($response->get_error_message());
         set_transient($cache_key, [], 5 * MINUTE_IN_SECONDS);
         return [];
     }
-    $body = wp_remote_retrieve_body($response);
-
+    $status_code = (int) wp_remote_retrieve_response_code($response);
+    $body = (string) wp_remote_retrieve_body($response);
     $data = json_decode($body, true);
+
+    if ($status_code === 401) {
+        $msg = is_array($data) ? (string) ($data['message'] ?? '') : '';
+        if ($msg === '') {
+            $msg = 'HTTP 401 (Unauthorized)';
+        }
+        fs_dashboard_set_last_matomo_error(__('Matomo: invalid or missing auth token.', 'fromscratch') . ' ' . $msg);
+        set_transient($cache_key, [], 5 * MINUTE_IN_SECONDS);
+        return [];
+    }
+    if (is_array($data) && (($data['result'] ?? '') === 'error')) {
+        fs_dashboard_set_last_matomo_error((string) ($data['message'] ?? __('Matomo API error', 'fromscratch')));
+        set_transient($cache_key, [], 5 * MINUTE_IN_SECONDS);
+        return [];
+    }
     if (!is_array($data) || !isset($data[0]) || !is_array($data[0])) {
+        fs_dashboard_set_last_matomo_error(__('Unexpected Matomo response format.', 'fromscratch'));
         set_transient($cache_key, [], 5 * MINUTE_IN_SECONDS);
         return [];
     }
@@ -137,6 +186,7 @@ function fs_dashboard_get_matomo_daily_visits(int $days = 7): array
         ];
     }
 
+    fs_dashboard_set_last_matomo_error('');
     set_transient($cache_key, $out, HOUR_IN_SECONDS);
     return $out;
 }
@@ -166,6 +216,8 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'token' => $settings['token'],
         'days' => $days,
         'weeks' => $weeks,
+        // Bump when bulk URLs/segments change so transients are not stale.
+        'bulk_schema' => 3,
     ]));
 
     $bypass_cache = is_admin()
@@ -199,10 +251,10 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
             $days,
             (int) $settings['site_id']
         )),
-        // In your other implementation you use previous9 for 8 weeks (skip current week).
+        // Weekly: last N weeks (includes current week).
         'urls[1]' => rawurlencode(sprintf(
-            'method=VisitsSummary.get&period=week&date=previous%d&idSite=%d',
-            $weeks + 1,
+            'method=VisitsSummary.get&period=week&date=last%d&idSite=%d',
+            $weeks,
             (int) $settings['site_id']
         )),
         // Devices: previous 90 days (range).
@@ -212,11 +264,11 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
             (int) $settings['site_id'],
             'deviceType==desktop'
         )),
-        // Handy (mobile + smartphone).
+        // Handy: smartphone OR mobile (matches working Matomo segments; comma = OR).
         'urls[3]' => rawurlencode(sprintf(
             'method=VisitsSummary.get&period=range&date=previous90&idSite=%d&segment=%s',
             (int) $settings['site_id'],
-            'deviceType==smartphone,deviceType==mobile'
+            'deviceType==smartphone'
         )),
         // Tablet (tablet + phablet).
         'urls[4]' => rawurlencode(sprintf(
@@ -236,17 +288,33 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'timeout' => 10,
         'headers' => ['Accept' => 'application/json'],
     ]);
+    $empty = ['daily' => [], 'weekly' => [], 'devices' => ['desktop' => 0, 'mobile' => 0, 'tablet' => 0], 'pages' => []];
     if (is_wp_error($response)) {
-        $empty = ['daily' => [], 'weekly' => [], 'devices' => ['desktop' => 0, 'mobile' => 0, 'tablet' => 0], 'pages' => []];
+        fs_dashboard_set_last_matomo_error($response->get_error_message());
         set_transient($cache_key, $empty, 5 * MINUTE_IN_SECONDS);
         return $empty;
     }
 
+    $status_code = (int) wp_remote_retrieve_response_code($response);
     $body = (string) wp_remote_retrieve_body($response);
     $data = json_decode($body, true);
 
+    if ($status_code === 401) {
+        $msg = is_array($data) ? (string) ($data['message'] ?? '') : '';
+        if ($msg === '') {
+            $msg = 'HTTP 401 (Unauthorized)';
+        }
+        fs_dashboard_set_last_matomo_error(__('Matomo: invalid or missing auth token.', 'fromscratch') . ' ' . $msg);
+        set_transient($cache_key, $empty, 5 * MINUTE_IN_SECONDS);
+        return $empty;
+    }
+    if (is_array($data) && (($data['result'] ?? '') === 'error')) {
+        fs_dashboard_set_last_matomo_error((string) ($data['message'] ?? __('Matomo API error', 'fromscratch')));
+        set_transient($cache_key, $empty, 5 * MINUTE_IN_SECONDS);
+        return $empty;
+    }
     if (!is_array($data) || !isset($data[0]) || !is_array($data[0])) {
-        $empty = ['daily' => [], 'weekly' => [], 'devices' => ['desktop' => 0, 'mobile' => 0, 'tablet' => 0], 'pages' => []];
+        fs_dashboard_set_last_matomo_error(__('Unexpected Matomo response format.', 'fromscratch'));
         set_transient($cache_key, $empty, 5 * MINUTE_IN_SECONDS);
         return $empty;
     }
@@ -260,8 +328,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         }
 
         // For daily we prefill missing dates with 0.
-        // For weekly we do NOT prefill, because Matomo `previousX` excludes the current week
-        // and prefilling would introduce a zero-week and then slice away real data.
+        // For weekly we do NOT prefill: API keys are week ranges; `date=lastN` includes the current week.
         $series = [];
         if ($mode !== 'week') {
             for ($i = $daysOrWeeks - 1; $i >= 0; $i--) {
@@ -328,7 +395,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
                 'pageviews' => (int) ($row['pageviews'] ?? 0),
             ];
         }
-        // Trim to last N points (weekly request contains 1 extra)
+        // Keep at most N most recent periods (e.g. if the API returns an extra row).
         if (count($out) > $daysOrWeeks) {
             $out = array_slice($out, -$daysOrWeeks);
         }
@@ -392,6 +459,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         $out['pages'] = array_slice($pages, 0, 10);
     }
 
+    fs_dashboard_set_last_matomo_error('');
     set_transient($cache_key, $out, HOUR_IN_SECONDS);
     return $out;
 }
@@ -462,6 +530,14 @@ function fs_dashboard_statistics_url(): string
     return admin_url('index.php?page=' . fs_dashboard_stats_page_slug());
 }
 
+/**
+ * Analytics URL with cache bypass for administrators (skips Matomo transients).
+ */
+function fs_dashboard_statistics_reload_url(): string
+{
+    return add_query_arg('fs_no_cache', '1', fs_dashboard_statistics_url());
+}
+
 function fs_render_dashboard_statistics_page(): void
 {
     if (!current_user_can('edit_posts')) {
@@ -470,15 +546,24 @@ function fs_render_dashboard_statistics_page(): void
     $series = fs_dashboard_get_matomo_daily_and_weekly(8, 8);
     $matomo_rows = $series['daily'] ?? [];
     if (empty($matomo_rows)) {
-?>
+        ?>
         <div class="wrap">
             <h1><?= esc_html__('Analytics', 'fromscratch') ?></h1>
             <div class="notice notice-warning">
-                <p><strong><?= esc_html__('Matomo is not configured.', 'fromscratch') ?></strong></p>
-                <p><?= esc_html__('Enable Matomo in Developer → Features and provide URL, Site ID and an Auth Token in Developer → System to show analytics.', 'fromscratch') ?></p>
+                <p><strong><?= esc_html__('Not enough data available.', 'fromscratch') ?></strong></p>
+                <p><?= esc_html__('Please wait until enough data is available. This usually takes a day or two.', 'fromscratch') ?></p>
             </div>
+            <?php
+            $err = fs_dashboard_get_last_matomo_error();
+            if ($err !== '') :
+                ?>
+                <div class="notice notice-error">
+                    <p><strong><?= esc_html__('Matomo error', 'fromscratch') ?></strong></p>
+                    <p><?= esc_html($err) ?></p>
+                </div>
+            <?php endif; ?>
         </div>
-    <?php
+        <?php
         return;
     }
 
@@ -559,7 +644,7 @@ function fs_render_dashboard_statistics_page(): void
         $week_pageviews = array_map(static fn($r) => (int) ($r['pageviews'] ?? 0), $week_rows);
         $week_datasets = [
             [
-                'label' => __('Daily visits', 'fromscratch'),
+                'label' => __('Weekly visits', 'fromscratch'),
                 'data' => $week_visits,
                 'borderColor' => '#2e8ae5',
                 'backgroundColor' => '#2e8ae5',
@@ -666,14 +751,19 @@ function fs_render_dashboard_statistics_page(): void
         $total_pageviews = array_sum(array_map(static fn($r) => (int) ($r['pageviews'] ?? 0), $rows));
         ?>
         <div class="notice inline" style="margin: 12px 0 14px; padding: 10px 12px;">
-            <p style="margin: 0;">
-                <strong><?= esc_html__('Total', 'fromscratch') ?>:</strong>
-                <?= esc_html(sprintf(__('%1$s visits', 'fromscratch'), number_format_i18n((int) $total_visits))) ?>
-                · <?= esc_html(sprintf(__('%1$s page views', 'fromscratch'), number_format_i18n((int) $total_pageviews))) ?>
-                <?php if ($matomo_login_url !== '') : ?>
-                    · <a href="<?= esc_url($matomo_login_url) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html__('Open Matomo', 'fromscratch') ?></a>
+            <div style="margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+                <div>
+                    <strong><?= esc_html__('Total', 'fromscratch') ?>:</strong>
+                    <?= esc_html(sprintf(__('%1$s visits', 'fromscratch'), number_format_i18n((int) $total_visits))) ?>
+                    · <?= esc_html(sprintf(__('%1$s page views', 'fromscratch'), number_format_i18n((int) $total_pageviews))) ?>
+                    <?php if ($matomo_login_url !== '') : ?>
+                        · <a href="<?= esc_url($matomo_login_url) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html__('Open Matomo', 'fromscratch') ?></a>
+                    <?php endif; ?>
+                </div>
+                <?php if (current_user_can('manage_options')) : ?>
+                    <span style="margin-left: auto;"><a href="<?= esc_url(fs_dashboard_statistics_reload_url()) ?>"><?= esc_html__('Clear cache', 'fromscratch') ?></a></span>
                 <?php endif; ?>
-            </p>
+            </div>
         </div>
 
         <h2 style="margin-top: 32px; margin-bottom: 12px;"><?= esc_html__('Daily visits and page views (last 8 days)', 'fromscratch') ?></h2>
@@ -685,8 +775,34 @@ function fs_render_dashboard_statistics_page(): void
                 data-chart="line"
                 data-chart-config="<?= esc_attr(wp_json_encode($line_chart_config)) ?>"></canvas>
         </div>
+        <div class="fs-chart-container" style="margin-top: 12px;">
+            <table class="widefat striped" style="margin: 0;">
+                <thead>
+                    <tr>
+                        <th scope="col"><?= esc_html__('Date', 'fromscratch') ?></th>
+                        <th scope="col" style="text-align:right;"><?= esc_html__('Visits', 'fromscratch') ?></th>
+                        <th scope="col" style="text-align:right;"><?= esc_html__('Unique visitors', 'fromscratch') ?></th>
+                        <th scope="col" style="text-align:right;"><?= esc_html__('Page views', 'fromscratch') ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach (array_reverse($rows) as $r) :
+                        $date = (string) ($r['date'] ?? '');
+                        $ts = $date !== '' ? strtotime($date . ' 00:00:00') : false;
+                        $label = $ts ? wp_date((string) get_option('date_format'), $ts) : $date;
+                        ?>
+                        <tr>
+                            <td><?= esc_html($label) ?></td>
+                            <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['visits'] ?? 0))) ?></td>
+                            <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['unique'] ?? 0))) ?></td>
+                            <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['pageviews'] ?? 0))) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
 
-        <h2 style="margin-top: 32px; margin-bottom: 12px;"><?= esc_html__('Weekly visits and page views (last 8 weeks)', 'fromscratch') ?></h2>
+        <h2 style="margin-top: 32px; margin-bottom: 12px;"><?= esc_html__('Weekly visits and page views (last 8 weeks, including this week)', 'fromscratch') ?></h2>
         <?php if (!empty($week_chart_config)) : ?>
             <div class="fs-chart-container">
                 <canvas
@@ -695,12 +811,43 @@ function fs_render_dashboard_statistics_page(): void
                     data-chart="line"
                     data-chart-config="<?= esc_attr(wp_json_encode($week_chart_config)) ?>"></canvas>
             </div>
+            <div class="fs-chart-container" style="margin-top: 12px;">
+                <table class="widefat striped" style="margin: 0;">
+                    <thead>
+                        <tr>
+                            <th scope="col"><?= esc_html__('Week', 'fromscratch') ?></th>
+                            <th scope="col" style="text-align:right;"><?= esc_html__('Visits', 'fromscratch') ?></th>
+                            <th scope="col" style="text-align:right;"><?= esc_html__('Unique visitors', 'fromscratch') ?></th>
+                            <th scope="col" style="text-align:right;"><?= esc_html__('Page views', 'fromscratch') ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach (array_reverse($week_rows) as $r) :
+                            $date = (string) ($r['date'] ?? '');
+                            $ts = $date !== '' ? strtotime($date . ' 00:00:00') : false;
+                            $week_label = $date;
+                            if ($ts) {
+                                $monday = (new DateTimeImmutable('@' . $ts))->setTimezone(wp_timezone())->modify('monday this week');
+                                $week_no = (int) $monday->format('W');
+                                $week_label = sprintf(__('Week %d', 'fromscratch'), $week_no);
+                            }
+                            ?>
+                            <tr>
+                                <td><?= esc_html($week_label) ?></td>
+                                <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['visits'] ?? 0))) ?></td>
+                                <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['unique'] ?? 0))) ?></td>
+                                <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['pageviews'] ?? 0))) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         <?php endif; ?>
 
         <div class="fs-chart-wrapper-flex">
             <div class="fs-chart-container-flex">
                 <h2 style="margin-top: 0; margin-bottom: 12px;"><?= esc_html__('Devices (last 90 days)', 'fromscratch') ?></h2>
-                <div class="fs-chart-container -small" style="min-height: 334px;">
+                <div class="fs-chart-container" style="min-height: 334px;">
                     <canvas
                         id="fs-stats-chart-devices"
                         height="300"
@@ -711,7 +858,7 @@ function fs_render_dashboard_statistics_page(): void
 
             <div class="fs-chart-container-flex">
                 <h2 style="margin-top: 0; margin-bottom: 12px;"><?= esc_html__('Top pages (last 90 days)', 'fromscratch') ?></h2>
-                <div class="fs-chart-container -small" style="min-height: 334px;">
+                <div class="fs-chart-container" style="min-height: 334px;">
                     <?php if (!empty($top_pages)) : ?>
                         <ol style="margin: 0; padding-left: 18px;">
                             <?php foreach ($top_pages as $row) :

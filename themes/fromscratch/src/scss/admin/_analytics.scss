@@ -13,11 +13,6 @@
   border-radius: 6px;
   padding: 16px;
   word-break: break-word;
-
-  &.-small {
-    width: 100%;
-    max-width: calc((860px - 24px) / 2);
-  }
 }
 
 .fs-chart-wrapper-flex {
@@ -26,8 +21,16 @@
   margin-top: 32px;
   align-items: stretch;
   flex-wrap: wrap;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+  }
 }
 
 .fs-chart-container-flex {
   width: calc(50% - 12px);
+
+  @media (max-width: 600px) {
+    width: 100%;
+  }
 }
