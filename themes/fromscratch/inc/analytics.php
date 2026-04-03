@@ -198,16 +198,181 @@ function fs_dashboard_get_matomo_daily_visits(int $days = 7): array
  *   daily: array<int, array{date:string,unique:int,visits:int,pageviews:int}>,
  *   weekly: array<int, array{date:string,unique:int,visits:int,pageviews:int}>,
  *   devices: array{desktop:int,mobile:int,tablet:int},
- *   pages: array<int, array{label:string,url:string,hits:int}>
+ *   pages: array<int, array{label:string,url:string,hits:int}>,
+ *   avg_time_on_site: int seconds, whole site, same 90-day window as devices/pages
  * }
  */
+function fs_dashboard_matomo_extract_avg_time_on_site($payload): int
+{
+    if (!is_array($payload)) {
+        return 0;
+    }
+    if (isset($payload['value']) && is_array($payload['value'])) {
+        $payload = $payload['value'];
+    }
+    if (isset($payload['result']) && $payload['result'] === 'error') {
+        return 0;
+    }
+    if (isset($payload['avg_time_on_site'])) {
+        return max(0, (int) round((float) $payload['avg_time_on_site']));
+    }
+    foreach ($payload as $v) {
+        if (is_array($v) && isset($v['avg_time_on_site'])) {
+            return max(0, (int) round((float) $v['avg_time_on_site']));
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * Human-readable duration for Matomo seconds (e.g. average time on site).
+ */
+function fs_dashboard_format_duration_seconds(int $seconds): string
+{
+    if ($seconds <= 0) {
+        return '—';
+    }
+    if ($seconds < 60) {
+        return sprintf(
+            /* translators: %d: seconds */
+            __('%d s', 'fromscratch'),
+            $seconds
+        );
+    }
+    $m = intdiv($seconds, 60);
+    $s = $seconds % 60;
+    if ($m < 60) {
+        return $s > 0
+            ? sprintf(
+                /* translators: 1: minutes, 2: seconds */
+                __('%1$d min %2$d s', 'fromscratch'),
+                $m,
+                $s
+            )
+            : sprintf(
+                /* translators: %d: whole minutes */
+                __('%d min', 'fromscratch'),
+                $m
+            );
+    }
+    $h = intdiv($m, 60);
+    $m = $m % 60;
+
+    return sprintf(
+        /* translators: 1: hours, 2: minutes */
+        __('%1$d h %2$d min', 'fromscratch'),
+        $h,
+        $m
+    );
+}
+
+/**
+ * @param array<int, array{hits?:int}> $pages
+ */
+function fs_dashboard_top_pages_max_hits(array $pages): int
+{
+    $m = 0;
+    foreach ($pages as $row) {
+        $m = max($m, (int) ($row['hits'] ?? 0));
+    }
+
+    return $m;
+}
+
+/**
+ * @param array<int, array{label:string,url:string,hits:int}> $pages
+ */
+function fs_dashboard_render_top_pages_table(array $pages): void
+{
+    if ($pages === []) {
+        return;
+    }
+    $max_hits = fs_dashboard_top_pages_max_hits($pages);
+    ?>
+    <table class="widefat striped fs-stats-table fs-top-pages-table" style="margin: 0;">
+        <thead>
+            <tr>
+                <th scope="col" class="fs-top-pages-table__rank">
+                    <span class="screen-reader-text"><?= esc_html__('Rank', 'fromscratch') ?></span>
+                </th>
+                <th scope="col" class="fs-top-pages-table__page"><?= esc_html__('Page', 'fromscratch') ?></th>
+                <th scope="col" class="fs-stats-metric fs-stats-metric--pageviews"><?= esc_html__('Hits', 'fromscratch') ?></th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            $i = 0;
+            foreach ($pages as $row) :
+                $i++;
+                $label = (string) ($row['label'] ?? '');
+                $url = (string) ($row['url'] ?? '');
+                $hits = (int) ($row['hits'] ?? 0);
+                $text = $label !== '' ? $label : $url;
+                $w = $max_hits <= 0 ? 0 : (int) min(100, max(0, (int) round(($hits / $max_hits) * 100)));
+                ?>
+                <tr>
+                    <td class="fs-top-pages-table__rank"><?= esc_html((string) $i) ?></td>
+                    <td class="fs-top-pages-table__page">
+                        <?php if ($url !== '') : ?>
+                            <a href="<?= esc_url($url) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html($text) ?></a>
+                        <?php else : ?>
+                            <?= esc_html($text) ?>
+                        <?php endif; ?>
+                    </td>
+                    <td class="fs-stats-metric fs-stats-metric--pageviews">
+                        <span class="fs-stats-metric__value"><?= esc_html(number_format_i18n($hits)) ?></span>
+                        <span class="fs-stats-metric__bar" aria-hidden="true">
+                            <span class="fs-stats-metric__track">
+                                <span class="fs-stats-metric__fill fs-stats-metric__fill--pageviews" style="width: <?= $w ?>%;"></span>
+                            </span>
+                        </span>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+    <?php
+}
+
+/**
+ * Skip WordPress Customizer / preview URLs that pollute top pages (e.g. customize_changeset_uuid=…).
+ */
+function fs_dashboard_matomo_is_excluded_top_page_row(string $url, string $label): bool
+{
+    $haystack = strtolower($url . ' ' . $label);
+    $markers = [
+        'customize_changeset_uuid',
+        'customize_messenger_channel',
+        'customize_autosaved=',
+        'wp_customize=',
+    ];
+    foreach ($markers as $m) {
+        if (str_contains($haystack, $m)) {
+            return true;
+        }
+    }
+    // Theme-switching inside the customizer (often with other customize_* params).
+    if (str_contains($haystack, 'customize_theme=')) {
+        return true;
+    }
+
+    return false;
+}
+
 function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8): array
 {
     $days = max(1, min(365, $days));
     $weeks = max(1, min(104, $weeks));
     $settings = fs_dashboard_matomo_settings();
     if ($settings === null || !function_exists('wp_remote_get')) {
-        return ['daily' => [], 'weekly' => [], 'devices' => ['desktop' => 0, 'mobile' => 0, 'tablet' => 0], 'pages' => []];
+        return [
+            'daily' => [],
+            'weekly' => [],
+            'devices' => ['desktop' => 0, 'mobile' => 0, 'tablet' => 0],
+            'pages' => [],
+            'avg_time_on_site' => 0,
+        ];
     }
 
     $cache_key = 'fromscratch_matomo_day_week_' . md5(wp_json_encode([
@@ -217,7 +382,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'days' => $days,
         'weeks' => $weeks,
         // Bump when bulk URLs/segments change so transients are not stale.
-        'bulk_schema' => 3,
+        'bulk_schema' => 5,
     ]));
 
     $bypass_cache = is_admin()
@@ -228,7 +393,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         $cached = get_transient($cache_key);
         if (
             is_array($cached)
-            && isset($cached['daily'], $cached['weekly'], $cached['devices'], $cached['pages'])
+            && isset($cached['daily'], $cached['weekly'], $cached['devices'], $cached['pages'], $cached['avg_time_on_site'])
             && is_array($cached['daily'])
             && is_array($cached['weekly'])
             && is_array($cached['devices'])
@@ -278,7 +443,12 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         )),
         // Top pages: previous 90 days.
         'urls[5]' => rawurlencode(sprintf(
-            'method=Actions.getPageUrls&period=range&date=previous90&idSite=%d&flat=1&filter_limit=10',
+            'method=Actions.getPageUrls&period=range&date=previous90&idSite=%d&flat=1&filter_limit=40',
+            (int) $settings['site_id']
+        )),
+        // Site-wide average visit duration (seconds), previous 90 days.
+        'urls[6]' => rawurlencode(sprintf(
+            'method=VisitsSummary.get&period=range&date=previous90&idSite=%d',
             (int) $settings['site_id']
         )),
     ];
@@ -288,7 +458,13 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'timeout' => 10,
         'headers' => ['Accept' => 'application/json'],
     ]);
-    $empty = ['daily' => [], 'weekly' => [], 'devices' => ['desktop' => 0, 'mobile' => 0, 'tablet' => 0], 'pages' => []];
+    $empty = [
+        'daily' => [],
+        'weekly' => [],
+        'devices' => ['desktop' => 0, 'mobile' => 0, 'tablet' => 0],
+        'pages' => [],
+        'avg_time_on_site' => 0,
+    ];
     if (is_wp_error($response)) {
         fs_dashboard_set_last_matomo_error($response->get_error_message());
         set_transient($cache_key, $empty, 5 * MINUTE_IN_SECONDS);
@@ -407,6 +583,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'weekly' => $map_rows($data[1] ?? [], $weeks, 'week'),
         'devices' => ['desktop' => 0, 'mobile' => 0, 'tablet' => 0],
         'pages' => [],
+        'avg_time_on_site' => 0,
     ];
 
     $range_visits = static function ($payload): int {
@@ -450,6 +627,9 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
             if ($label === '' && $url === '') {
                 continue;
             }
+            if (fs_dashboard_matomo_is_excluded_top_page_row($url, $label)) {
+                continue;
+            }
             $pages[] = [
                 'label' => $label,
                 'url' => $url,
@@ -458,6 +638,8 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         }
         $out['pages'] = array_slice($pages, 0, 10);
     }
+
+    $out['avg_time_on_site'] = fs_dashboard_matomo_extract_avg_time_on_site($data[6] ?? []);
 
     fs_dashboard_set_last_matomo_error('');
     set_transient($cache_key, $out, HOUR_IN_SECONDS);
@@ -859,6 +1041,7 @@ function fs_render_dashboard_statistics_page(): void
     ];
 
     $top_pages = is_array($series['pages'] ?? null) ? $series['pages'] : [];
+    $avg_time_on_site = (int) ($series['avg_time_on_site'] ?? 0);
     ?>
     <div class="wrap fs-analytics-page">
         <h1><?= esc_html__('Analytics', 'fromscratch') ?></h1>
@@ -979,31 +1162,19 @@ function fs_render_dashboard_statistics_page(): void
                         data-chart="bar"
                         data-chart-config="<?= esc_attr(wp_json_encode($devices_chart_config)) ?>"></canvas>
                 </div>
+                <div class="fs-devices-average">
+                    <span class="fs-devices-average__label"><?= esc_html__('Average visit duration', 'fromscratch') ?></span>
+                    <span class="fs-devices-average__value"><?= esc_html(fs_dashboard_format_duration_seconds($avg_time_on_site)) ?></span>
+                </div>
             </div>
 
             <div class="fs-chart-container-flex">
                 <h2 style="margin-top: 0; margin-bottom: 12px;"><?= esc_html__('Top pages (last 90 days)', 'fromscratch') ?></h2>
-                <div class="fs-chart-container" style="min-height: 334px;">
+                <div class="fs-chart-container fs-chart-container--table">
                     <?php if (!empty($top_pages)) : ?>
-                        <ol style="margin: 0; padding-left: 18px;">
-                            <?php foreach ($top_pages as $row) :
-                                $label = (string) ($row['label'] ?? '');
-                                $url = (string) ($row['url'] ?? '');
-                                $hits = (int) ($row['hits'] ?? 0);
-                                $text = $label !== '' ? $label : $url;
-                            ?>
-                                <li style="margin: 0 0 8px 0;">
-                                    <?php if ($url !== '') : ?>
-                                        <a href="<?= esc_url($url) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html($text) ?></a>
-                                    <?php else : ?>
-                                        <?= esc_html($text) ?>
-                                    <?php endif; ?>
-                                    <span style="color:#646970;"> — <?= esc_html(number_format_i18n($hits)) ?></span>
-                                </li>
-                            <?php endforeach; ?>
-                        </ol>
+                        <?php fs_dashboard_render_top_pages_table($top_pages); ?>
                     <?php else : ?>
-                        <p style="margin: 0; color:#646970;"><?= esc_html__('No data available.', 'fromscratch') ?></p>
+                        <p class="fs-top-pages-empty"><?= esc_html__('No data available.', 'fromscratch') ?></p>
                     <?php endif; ?>
                 </div>
             </div>

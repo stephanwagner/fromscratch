@@ -123,3 +123,50 @@
     width: 100%;
   }
 }
+
+.fs-devices-average {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #c3c4c7;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.fs-devices-average__label {
+  font-weight: 600;
+  color: #1d2327;
+}
+
+.fs-devices-average__value {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1d2327;
+  font-variant-numeric: tabular-nums;
+}
+
+.fs-top-pages-table {
+  table-layout: fixed;
+}
+
+.fs-top-pages-table__rank {
+  width: 2.75rem;
+  text-align: center !important;
+  font-weight: 600;
+}
+
+.fs-analytics-page .fs-top-pages-table.widefat thead th.fs-top-pages-table__page {
+  font-weight: 600 !important;
+}
+
+.fs-top-pages-table .fs-top-pages-table__page {
+  text-align: left !important;
+  word-break: break-word;
+}
+
+.fs-top-pages-empty {
+  margin: 0;
+  color: #646970;
+}
