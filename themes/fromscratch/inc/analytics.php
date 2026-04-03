@@ -465,9 +465,44 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
 }
 
 /**
+ * Format Monday–Sunday week range for labels (e.g. "2. – 9. März 2026").
+ */
+function fs_dashboard_format_week_date_range(DateTimeImmutable $monday): string
+{
+    $monday = $monday->setTimezone(wp_timezone());
+    $sunday = $monday->modify('+6 days');
+    $same_month = $monday->format('Y-m') === $sunday->format('Y-m');
+
+    if ($same_month) {
+        return sprintf(
+            /* translators: 1: start day with period, 2: end day, month, and year */
+            __('%1$s – %2$s', 'fromscratch'),
+            wp_date('j.', $monday->getTimestamp()),
+            wp_date('j. F Y', $sunday->getTimestamp())
+        );
+    }
+
+    if ($monday->format('Y') === $sunday->format('Y')) {
+        return sprintf(
+            /* translators: 1: start date, 2: end date */
+            __('%1$s – %2$s', 'fromscratch'),
+            wp_date('j. F', $monday->getTimestamp()),
+            wp_date('j. F Y', $sunday->getTimestamp())
+        );
+    }
+
+    return sprintf(
+        /* translators: 1: start date, 2: end date */
+        __('%1$s – %2$s', 'fromscratch'),
+        wp_date((string) get_option('date_format'), $monday->getTimestamp()),
+        wp_date((string) get_option('date_format'), $sunday->getTimestamp())
+    );
+}
+
+/**
  * Reusable Chart.js line chart config.
  *
- * @param string[] $labels
+ * @param array<int, string|array<int, string>> $labels
  * @param array<int, array<string, mixed>> $datasets
  * @return array<string, mixed>
  */
@@ -547,7 +582,7 @@ function fs_render_dashboard_statistics_page(): void
     $matomo_rows = $series['daily'] ?? [];
     if (empty($matomo_rows)) {
         ?>
-        <div class="wrap">
+        <div class="wrap fs-analytics-page">
             <h1><?= esc_html__('Analytics', 'fromscratch') ?></h1>
             <div class="notice notice-warning">
                 <p><strong><?= esc_html__('Not enough data available.', 'fromscratch') ?></strong></p>
@@ -584,7 +619,7 @@ function fs_render_dashboard_statistics_page(): void
     $pageviews = array_map(static fn($r) => (int) ($r['pageviews'] ?? 0), $rows);
     $datasets = [
         [
-            'label' => __('Daily visits', 'fromscratch'),
+            'label' => __('Visits', 'fromscratch'),
             'data' => $visits,
             'borderColor' => '#2e8ae5',
             'backgroundColor' => '#2e8ae5',
@@ -644,7 +679,7 @@ function fs_render_dashboard_statistics_page(): void
         $week_pageviews = array_map(static fn($r) => (int) ($r['pageviews'] ?? 0), $week_rows);
         $week_datasets = [
             [
-                'label' => __('Weekly visits', 'fromscratch'),
+                'label' => __('Visits', 'fromscratch'),
                 'data' => $week_visits,
                 'borderColor' => '#2e8ae5',
                 'backgroundColor' => '#2e8ae5',
@@ -742,7 +777,7 @@ function fs_render_dashboard_statistics_page(): void
 
     $top_pages = is_array($series['pages'] ?? null) ? $series['pages'] : [];
     ?>
-    <div class="wrap">
+    <div class="wrap fs-analytics-page">
         <h1><?= esc_html__('Analytics', 'fromscratch') ?></h1>
         <?php
         $matomo_settings = fs_dashboard_matomo_settings();
@@ -775,7 +810,7 @@ function fs_render_dashboard_statistics_page(): void
                 data-chart="line"
                 data-chart-config="<?= esc_attr(wp_json_encode($line_chart_config)) ?>"></canvas>
         </div>
-        <div class="fs-chart-container" style="margin-top: 12px;">
+        <div class="fs-chart-container fs-chart-container--table">
             <table class="widefat striped" style="margin: 0;">
                 <thead>
                     <tr>
@@ -811,7 +846,7 @@ function fs_render_dashboard_statistics_page(): void
                     data-chart="line"
                     data-chart-config="<?= esc_attr(wp_json_encode($week_chart_config)) ?>"></canvas>
             </div>
-            <div class="fs-chart-container" style="margin-top: 12px;">
+            <div class="fs-chart-container fs-chart-container--table">
                 <table class="widefat striped" style="margin: 0;">
                     <thead>
                         <tr>
@@ -826,14 +861,23 @@ function fs_render_dashboard_statistics_page(): void
                             $date = (string) ($r['date'] ?? '');
                             $ts = $date !== '' ? strtotime($date . ' 00:00:00') : false;
                             $week_label = $date;
+                            $week_range = '';
                             if ($ts) {
                                 $monday = (new DateTimeImmutable('@' . $ts))->setTimezone(wp_timezone())->modify('monday this week');
                                 $week_no = (int) $monday->format('W');
                                 $week_label = sprintf(__('Week %d', 'fromscratch'), $week_no);
+                                $week_range = fs_dashboard_format_week_date_range($monday);
                             }
                             ?>
                             <tr>
-                                <td><?= esc_html($week_label) ?></td>
+                                <td>
+                                    <?php if ($week_range !== '') : ?>
+                                        <?= esc_html($week_label) ?><br>
+                                        <span class="fs-week-range"><?= esc_html($week_range) ?></span>
+                                    <?php else : ?>
+                                        <?= esc_html($week_label) ?>
+                                    <?php endif; ?>
+                                </td>
                                 <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['visits'] ?? 0))) ?></td>
                                 <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['unique'] ?? 0))) ?></td>
                                 <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['pageviews'] ?? 0))) ?></td>

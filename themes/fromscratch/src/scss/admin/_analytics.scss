@@ -15,6 +15,28 @@
   word-break: break-word;
 }
 
+.fs-chart-container--table {
+  margin-top: 12px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+.fs-analytics-page h2 {
+  font-weight: 600;
+}
+
+.fs-analytics-page .fs-chart-container--table table.widefat tbody td:first-child {
+  font-weight: 600;
+}
+
+.fs-week-range {
+  color: #646970;
+  font-size: 12px;
+  font-weight: 400;
+}
+
 .fs-chart-wrapper-flex {
   display: flex;
   gap: 24px;
