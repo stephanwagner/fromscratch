@@ -1630,12 +1630,3 @@ msgstr "Top-Seiten (letzte 90 Tage)"
 
 msgid "No data available."
 msgstr "Keine Daten verfügbar."
-
-msgid "Relative"
-msgstr "Relativ"
-
-msgid "Bars compare the three metrics within each row; the largest value uses the full width."
-msgstr "Die Balken vergleichen die drei Kennzahlen je Zeile; der größte Wert nutzt die volle Breite."
-
-msgid "Unique visitors, visits, and page views compared within this row; the largest value uses the full bar width."
-msgstr "Eindeutige Besucher, Besuche und Seitenaufrufe innerhalb dieser Zeile verglichen; der größte Wert nutzt die volle Balkenbreite."

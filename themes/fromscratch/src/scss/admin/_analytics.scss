@@ -27,81 +27,77 @@
   font-weight: 600;
 }
 
-.fs-analytics-page .fs-stats-table.widefat tbody td:nth-child(1),
-.fs-analytics-page .fs-stats-table.widefat tbody td:nth-child(2),
-.fs-analytics-page .fs-stats-table.widefat tbody td:nth-child(3),
-.fs-analytics-page .fs-stats-table.widefat tbody td:nth-child(4) {
+.fs-analytics-page .fs-stats-table.widefat th.fs-stats-metric,
+.fs-analytics-page .fs-stats-table.widefat td.fs-stats-metric {
+  width: 180px;
+  text-align: right;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+
+  .fs-analytics-page .fs-stats-table.widefat th.fs-stats-metric,
+  .fs-analytics-page .fs-stats-table.widefat td.fs-stats-metric {
+    width: auto;
+  }
+}
+
+.fs-analytics-page .fs-stats-table.widefat thead th.fs-stats-metric {
   font-weight: 600;
 }
 
-.fs-week-range {
-  color: #646970;
-  font-size: 12px;
-  font-weight: 400;
+.fs-analytics-page .fs-stats-table.widefat tbody td.fs-stats-metric {
+  vertical-align: top;
 }
 
-.fs-stats-indicator-col {
-  width: 1%;
-  min-width: 96px;
-  vertical-align: middle;
-}
-
-.fs-stats-indicator-cell {
-  vertical-align: middle;
+.fs-analytics-page .fs-stats-table.widefat tbody td:first-child {
   font-weight: 600;
 }
 
-.fs-stats-indicator {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 88px;
-}
-
-.fs-stats-indicator__row {
+.fs-stats-metric__value {
   display: block;
-  padding: 3px 5px;
-  border-radius: 4px;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
-.fs-stats-indicator__row--unique {
-  background: rgb(46 142 229 / 14%);
-}
-
-.fs-stats-indicator__row--visits {
-  background: rgb(153 204 255 / 22%);
-}
-
-.fs-stats-indicator__row--pageviews {
-  background: rgb(255 102 115 / 14%);
-}
-
-.fs-stats-indicator__track {
+.fs-stats-metric__bar {
   display: block;
-  width: 100%;
-  height: 8px;
-  background: rgb(255 255 255 / 55%);
+  max-width: 100px;
+  margin-top: 5px;
+  margin-left: auto;
+}
+
+.fs-stats-metric__track {
+  display: block;
+  height: 6px;
+  background: #e8e8ea;
   border-radius: 3px;
   overflow: hidden;
 }
 
-.fs-stats-indicator__fill {
+.fs-stats-metric__fill {
   display: block;
   height: 100%;
   border-radius: 3px;
   min-width: 0;
 }
 
-.fs-stats-indicator__fill--unique {
+.fs-stats-metric__fill--unique {
   background: #2e8ae5;
 }
 
-.fs-stats-indicator__fill--visits {
+.fs-stats-metric__fill--visits {
   background: #99ccff;
 }
 
-.fs-stats-indicator__fill--pageviews {
+.fs-stats-metric__fill--pageviews {
   background: #ff6673;
+}
+
+.fs-week-range {
+  color: #646970;
+  font-size: 12px;
+  font-weight: 400;
 }
 
 .fs-chart-wrapper-flex {

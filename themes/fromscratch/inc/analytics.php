@@ -500,61 +500,86 @@ function fs_dashboard_format_week_date_range(DateTimeImmutable $monday): string
 }
 
 /**
- * Bar widths (0–100) for unique visitors, visits, and page views: each relative to max(u, v, p) in this row.
+ * Per-metric maxima across table rows (each series scales to its own column peak).
  *
- * @param array<string, mixed> $row
- * @return array{visits:int,unique:int,pageviews:int}
+ * @param array<int, array<string, mixed>> $rows
+ * @return array{unique:int,visits:int,pageviews:int}
  */
-function fs_dashboard_stats_row_bar_widths(array $row): array
+function fs_dashboard_stats_metric_maxima(array $rows): array
 {
-    $v = (int) ($row['visits'] ?? 0);
-    $u = (int) ($row['unique'] ?? 0);
-    $p = (int) ($row['pageviews'] ?? 0);
-    $max = max($v, $u, $p, 0);
-    if ($max <= 0) {
-        return ['visits' => 0, 'unique' => 0, 'pageviews' => 0];
+    $maxU = 0;
+    $maxV = 0;
+    $maxP = 0;
+    foreach ($rows as $r) {
+        $maxU = max($maxU, (int) ($r['unique'] ?? 0));
+        $maxV = max($maxV, (int) ($r['visits'] ?? 0));
+        $maxP = max($maxP, (int) ($r['pageviews'] ?? 0));
     }
 
     return [
-        'visits' => (int) min(100, max(0, (int) round(($v / $max) * 100))),
-        'unique' => (int) min(100, max(0, (int) round(($u / $max) * 100))),
-        'pageviews' => (int) min(100, max(0, (int) round(($p / $max) * 100))),
+        'unique' => $maxU,
+        'visits' => $maxV,
+        'pageviews' => $maxP,
     ];
 }
 
 /**
- * Output row-relative indicator cell (three stacked bars: unique visitors, visits, page views).
+ * Bar widths (0–100): each value relative to that metric’s max in this table (not row-vs-row across metrics).
  *
  * @param array<string, mixed> $row
+ * @param array{unique:int,visits:int,pageviews:int} $maxima
+ * @return array{unique:int,visits:int,pageviews:int}
  */
-function fs_dashboard_render_stats_indicator_cell(array $row): void
+function fs_dashboard_stats_metric_bar_widths(array $row, array $maxima): array
 {
-    $w = fs_dashboard_stats_row_bar_widths($row);
-    $aria = __(
-        'Unique visitors, visits, and page views compared within this row; the largest value uses the full bar width.',
-        'fromscratch'
-    );
-    ?>
-    <td class="fs-stats-indicator-cell">
-        <div class="fs-stats-indicator" role="img" aria-label="<?= esc_attr($aria) ?>">
-            <div class="fs-stats-indicator__row fs-stats-indicator__row--unique">
-                <span class="fs-stats-indicator__track">
-                    <span class="fs-stats-indicator__fill fs-stats-indicator__fill--unique" style="width: <?= (int) $w['unique'] ?>%;"></span>
+    $u = (int) ($row['unique'] ?? 0);
+    $v = (int) ($row['visits'] ?? 0);
+    $p = (int) ($row['pageviews'] ?? 0);
+    $pct = static function (int $val, int $max): int {
+        if ($max <= 0) {
+            return 0;
+        }
+
+        return (int) min(100, max(0, (int) round(($val / $max) * 100)));
+    };
+
+    return [
+        'unique' => $pct($u, $maxima['unique']),
+        'visits' => $pct($v, $maxima['visits']),
+        'pageviews' => $pct($p, $maxima['pageviews']),
+    ];
+}
+
+/**
+ * Output three metric cells (unique, visits, page views) with counts and inline bars (per-column scale).
+ *
+ * @param array<string, mixed> $row
+ * @param array{unique:int,visits:int,pageviews:int} $maxima
+ */
+function fs_dashboard_render_stats_metric_cells(array $row, array $maxima): void
+{
+    $w = fs_dashboard_stats_metric_bar_widths($row, $maxima);
+    $cells = [
+        ['key' => 'unique', 'class' => 'unique'],
+        ['key' => 'visits', 'class' => 'visits'],
+        ['key' => 'pageviews', 'class' => 'pageviews'],
+    ];
+    foreach ($cells as $cell) {
+        $k = $cell['key'];
+        $val = (int) ($row[$k] ?? 0);
+        $width = (int) ($w[$k] ?? 0);
+        $cls = $cell['class'];
+        ?>
+        <td class="fs-stats-metric fs-stats-metric--<?= esc_attr($cls) ?>">
+            <span class="fs-stats-metric__value"><?= esc_html(number_format_i18n($val)) ?></span>
+            <span class="fs-stats-metric__bar" aria-hidden="true">
+                <span class="fs-stats-metric__track">
+                    <span class="fs-stats-metric__fill fs-stats-metric__fill--<?= esc_attr($cls) ?>" style="width: <?= $width ?>%;"></span>
                 </span>
-            </div>
-            <div class="fs-stats-indicator__row fs-stats-indicator__row--visits">
-                <span class="fs-stats-indicator__track">
-                    <span class="fs-stats-indicator__fill fs-stats-indicator__fill--visits" style="width: <?= (int) $w['visits'] ?>%;"></span>
-                </span>
-            </div>
-            <div class="fs-stats-indicator__row fs-stats-indicator__row--pageviews">
-                <span class="fs-stats-indicator__track">
-                    <span class="fs-stats-indicator__fill fs-stats-indicator__fill--pageviews" style="width: <?= (int) $w['pageviews'] ?>%;"></span>
-                </span>
-            </div>
-        </div>
-    </td>
-    <?php
+            </span>
+        </td>
+        <?php
+    }
 }
 
 /**
@@ -868,17 +893,15 @@ function fs_render_dashboard_statistics_page(): void
                 data-chart="line"
                 data-chart-config="<?= esc_attr(wp_json_encode($line_chart_config)) ?>"></canvas>
         </div>
+        <?php $daily_metric_maxima = fs_dashboard_stats_metric_maxima($rows); ?>
         <div class="fs-chart-container fs-chart-container--table">
             <table class="widefat striped fs-stats-table" style="margin: 0;">
                 <thead>
                     <tr>
                         <th scope="col"><?= esc_html__('Date', 'fromscratch') ?></th>
-                        <th scope="col" style="text-align:right;"><?= esc_html__('Unique visitors', 'fromscratch') ?></th>
-                        <th scope="col" style="text-align:right;"><?= esc_html__('Visits', 'fromscratch') ?></th>
-                        <th scope="col" style="text-align:right;"><?= esc_html__('Page views', 'fromscratch') ?></th>
-                        <th scope="col" class="fs-stats-indicator-col">
-                            <abbr title="<?= esc_attr__('Bars compare the three metrics within each row; the largest value uses the full width.', 'fromscratch') ?>"><?= esc_html__('Relative', 'fromscratch') ?></abbr>
-                        </th>
+                        <th scope="col" class="fs-stats-metric fs-stats-metric--unique"><?= esc_html__('Unique visitors', 'fromscratch') ?></th>
+                        <th scope="col" class="fs-stats-metric fs-stats-metric--visits"><?= esc_html__('Visits', 'fromscratch') ?></th>
+                        <th scope="col" class="fs-stats-metric fs-stats-metric--pageviews"><?= esc_html__('Page views', 'fromscratch') ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -889,10 +912,7 @@ function fs_render_dashboard_statistics_page(): void
                         ?>
                         <tr>
                             <td><?= esc_html($label) ?></td>
-                            <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['unique'] ?? 0))) ?></td>
-                            <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['visits'] ?? 0))) ?></td>
-                            <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['pageviews'] ?? 0))) ?></td>
-                            <?php fs_dashboard_render_stats_indicator_cell($r); ?>
+                            <?php fs_dashboard_render_stats_metric_cells($r, $daily_metric_maxima); ?>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -908,17 +928,15 @@ function fs_render_dashboard_statistics_page(): void
                     data-chart="line"
                     data-chart-config="<?= esc_attr(wp_json_encode($week_chart_config)) ?>"></canvas>
             </div>
+            <?php $weekly_metric_maxima = fs_dashboard_stats_metric_maxima($week_rows); ?>
             <div class="fs-chart-container fs-chart-container--table">
                 <table class="widefat striped fs-stats-table" style="margin: 0;">
                     <thead>
                         <tr>
                             <th scope="col"><?= esc_html__('Week', 'fromscratch') ?></th>
-                            <th scope="col" style="text-align:right;"><?= esc_html__('Unique visitors', 'fromscratch') ?></th>
-                            <th scope="col" style="text-align:right;"><?= esc_html__('Visits', 'fromscratch') ?></th>
-                            <th scope="col" style="text-align:right;"><?= esc_html__('Page views', 'fromscratch') ?></th>
-                            <th scope="col" class="fs-stats-indicator-col">
-                                <abbr title="<?= esc_attr__('Bars compare the three metrics within each row; the largest value uses the full width.', 'fromscratch') ?>"><?= esc_html__('Relative', 'fromscratch') ?></abbr>
-                            </th>
+                            <th scope="col" class="fs-stats-metric fs-stats-metric--unique"><?= esc_html__('Unique visitors', 'fromscratch') ?></th>
+                            <th scope="col" class="fs-stats-metric fs-stats-metric--visits"><?= esc_html__('Visits', 'fromscratch') ?></th>
+                            <th scope="col" class="fs-stats-metric fs-stats-metric--pageviews"><?= esc_html__('Page views', 'fromscratch') ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -943,10 +961,7 @@ function fs_render_dashboard_statistics_page(): void
                                         <?= esc_html($week_label) ?>
                                     <?php endif; ?>
                                 </td>
-                                <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['unique'] ?? 0))) ?></td>
-                                <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['visits'] ?? 0))) ?></td>
-                                <td style="text-align:right;"><?= esc_html(number_format_i18n((int) ($r['pageviews'] ?? 0))) ?></td>
-                                <?php fs_dashboard_render_stats_indicator_cell($r); ?>
+                                <?php fs_dashboard_render_stats_metric_cells($r, $weekly_metric_maxima); ?>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
