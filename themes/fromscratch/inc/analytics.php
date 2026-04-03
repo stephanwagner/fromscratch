@@ -199,30 +199,106 @@ function fs_dashboard_get_matomo_daily_visits(int $days = 7): array
  *   weekly: array<int, array{date:string,unique:int,visits:int,pageviews:int}>,
  *   devices: array{desktop:int,mobile:int,tablet:int},
  *   pages: array<int, array{label:string,url:string,hits:int}>,
- *   avg_time_on_site: int seconds, whole site, same 90-day window as devices/pages
+ *   visits_summary_90d: array{avg_time_on_site:int,nb_visits:int,nb_actions:int,nb_uniq_visitors:int,bounce_count:int}
  * }
  */
-function fs_dashboard_matomo_extract_avg_time_on_site($payload): int
+function fs_dashboard_matomo_normalize_visits_summary_payload($payload): ?array
 {
     if (!is_array($payload)) {
-        return 0;
+        return null;
     }
     if (isset($payload['value']) && is_array($payload['value'])) {
         $payload = $payload['value'];
     }
     if (isset($payload['result']) && $payload['result'] === 'error') {
-        return 0;
+        return null;
     }
-    if (isset($payload['avg_time_on_site'])) {
-        return max(0, (int) round((float) $payload['avg_time_on_site']));
+    if (isset($payload['nb_visits']) || isset($payload['avg_time_on_site'])) {
+        return $payload;
     }
     foreach ($payload as $v) {
-        if (is_array($v) && isset($v['avg_time_on_site'])) {
-            return max(0, (int) round((float) $v['avg_time_on_site']));
+        if (is_array($v) && (isset($v['nb_visits']) || isset($v['avg_time_on_site']))) {
+            return $v;
         }
     }
 
-    return 0;
+    return null;
+}
+
+/**
+ * Metrics from VisitsSummary.get (range previous90), same request as average time.
+ *
+ * @return array{avg_time_on_site:int,nb_visits:int,nb_actions:int,nb_uniq_visitors:int,bounce_count:int}
+ */
+function fs_dashboard_matomo_parse_visits_summary_90d($payload): array
+{
+    $empty = [
+        'avg_time_on_site' => 0,
+        'nb_visits' => 0,
+        'nb_actions' => 0,
+        'nb_uniq_visitors' => 0,
+        'bounce_count' => 0,
+    ];
+    $stats = fs_dashboard_matomo_normalize_visits_summary_payload($payload);
+    if ($stats === null) {
+        return $empty;
+    }
+
+    return [
+        'avg_time_on_site' => max(0, (int) round((float) ($stats['avg_time_on_site'] ?? 0))),
+        'nb_visits' => max(0, (int) ($stats['nb_visits'] ?? 0)),
+        'nb_actions' => max(0, (int) ($stats['nb_actions'] ?? 0)),
+        'nb_uniq_visitors' => max(0, (int) ($stats['nb_uniq_visitors'] ?? 0)),
+        'bounce_count' => max(0, (int) ($stats['bounce_count'] ?? 0)),
+    ];
+}
+
+/**
+ * @return array{avg_time_on_site:int,nb_visits:int,nb_actions:int,nb_uniq_visitors:int,bounce_count:int}
+ */
+function fs_dashboard_default_visits_summary_90d(): array
+{
+    return [
+        'avg_time_on_site' => 0,
+        'nb_visits' => 0,
+        'nb_actions' => 0,
+        'nb_uniq_visitors' => 0,
+        'bounce_count' => 0,
+    ];
+}
+
+/**
+ * Boxed list: 90-day site summary under the devices chart.
+ *
+ * @param array{avg_time_on_site?:int,nb_visits?:int,nb_actions?:int,nb_uniq_visitors?:int,bounce_count?:int} $s
+ */
+function fs_dashboard_render_visits_summary_90d_box(array $s): void
+{
+    $s = array_merge(fs_dashboard_default_visits_summary_90d(), $s);
+    $avg = (int) $s['avg_time_on_site'];
+    $visits = (int) $s['nb_visits'];
+    $actions = (int) $s['nb_actions'];
+    $bounce = (int) $s['bounce_count'];
+    $bounce_pct = $visits > 0 ? (int) round(($bounce / $visits) * 100) : null;
+    $apv = $visits > 0 ? round($actions / $visits, 1) : null;
+    ?>
+    <div class="fs-chart-container">
+        <ul class="fs-visits-summary-list">
+            <li>
+                <span class="fs-visits-summary-list__label"><?= esc_html__('Average visit duration', 'fromscratch') ?></span>
+                <span class="fs-visits-summary-list__value"><?= esc_html(fs_dashboard_format_duration_seconds($avg)) ?></span>
+            </li>
+            <li>
+                <span class="fs-visits-summary-list__label"><?= esc_html__('Bounce rate', 'fromscratch') ?></span>
+                <span class="fs-visits-summary-list__value"><?= $bounce_pct === null ? '—' : esc_html(sprintf(__('%d%%', 'fromscratch'), $bounce_pct)) ?></span>
+            </li>
+            <li>
+                <span class="fs-visits-summary-list__label"><?= esc_html__('Actions per visit', 'fromscratch') ?></span>
+                <span class="fs-visits-summary-list__value"><?= $apv === null ? '—' : esc_html(number_format_i18n($apv, 1)) ?></span>
+            </li>
+        </ul>
+    </div>
+    <?php
 }
 
 /**
@@ -371,7 +447,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
             'weekly' => [],
             'devices' => ['desktop' => 0, 'mobile' => 0, 'tablet' => 0],
             'pages' => [],
-            'avg_time_on_site' => 0,
+            'visits_summary_90d' => fs_dashboard_default_visits_summary_90d(),
         ];
     }
 
@@ -382,7 +458,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'days' => $days,
         'weeks' => $weeks,
         // Bump when bulk URLs/segments change so transients are not stale.
-        'bulk_schema' => 5,
+        'bulk_schema' => 7,
     ]));
 
     $bypass_cache = is_admin()
@@ -393,7 +469,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         $cached = get_transient($cache_key);
         if (
             is_array($cached)
-            && isset($cached['daily'], $cached['weekly'], $cached['devices'], $cached['pages'], $cached['avg_time_on_site'])
+            && isset($cached['daily'], $cached['weekly'], $cached['devices'], $cached['pages'], $cached['visits_summary_90d'])
             && is_array($cached['daily'])
             && is_array($cached['weekly'])
             && is_array($cached['devices'])
@@ -463,7 +539,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'weekly' => [],
         'devices' => ['desktop' => 0, 'mobile' => 0, 'tablet' => 0],
         'pages' => [],
-        'avg_time_on_site' => 0,
+        'visits_summary_90d' => fs_dashboard_default_visits_summary_90d(),
     ];
     if (is_wp_error($response)) {
         fs_dashboard_set_last_matomo_error($response->get_error_message());
@@ -583,7 +659,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'weekly' => $map_rows($data[1] ?? [], $weeks, 'week'),
         'devices' => ['desktop' => 0, 'mobile' => 0, 'tablet' => 0],
         'pages' => [],
-        'avg_time_on_site' => 0,
+        'visits_summary_90d' => fs_dashboard_default_visits_summary_90d(),
     ];
 
     $range_visits = static function ($payload): int {
@@ -639,7 +715,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         $out['pages'] = array_slice($pages, 0, 10);
     }
 
-    $out['avg_time_on_site'] = fs_dashboard_matomo_extract_avg_time_on_site($data[6] ?? []);
+    $out['visits_summary_90d'] = fs_dashboard_matomo_parse_visits_summary_90d($data[6] ?? []);
 
     fs_dashboard_set_last_matomo_error('');
     set_transient($cache_key, $out, HOUR_IN_SECONDS);
@@ -1041,7 +1117,9 @@ function fs_render_dashboard_statistics_page(): void
     ];
 
     $top_pages = is_array($series['pages'] ?? null) ? $series['pages'] : [];
-    $avg_time_on_site = (int) ($series['avg_time_on_site'] ?? 0);
+    $visits_summary_90d = is_array($series['visits_summary_90d'] ?? null)
+        ? array_merge(fs_dashboard_default_visits_summary_90d(), $series['visits_summary_90d'])
+        : fs_dashboard_default_visits_summary_90d();
     ?>
     <div class="wrap fs-analytics-page">
         <h1><?= esc_html__('Analytics', 'fromscratch') ?></h1>
@@ -1051,7 +1129,7 @@ function fs_render_dashboard_statistics_page(): void
         $total_visits = array_sum(array_map(static fn($r) => (int) ($r['visits'] ?? 0), $rows));
         $total_pageviews = array_sum(array_map(static fn($r) => (int) ($r['pageviews'] ?? 0), $rows));
         ?>
-        <div class="notice inline" style="margin: 12px 0 14px; padding: 10px 12px;">
+        <div class="notice inline fs-analytics-summary-notice">
             <div style="margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
                 <div>
                     <strong><?= esc_html__('Total', 'fromscratch') ?>:</strong>
@@ -1155,21 +1233,19 @@ function fs_render_dashboard_statistics_page(): void
         <div class="fs-chart-wrapper-flex">
             <div class="fs-chart-container-flex">
                 <h2 style="margin-top: 0; margin-bottom: 12px;"><?= esc_html__('Devices (last 90 days)', 'fromscratch') ?></h2>
-                <div class="fs-chart-container" style="min-height: 334px;">
+                <div class="fs-chart-container">
                     <canvas
                         id="fs-stats-chart-devices"
-                        height="300"
+                        height="240"
                         data-chart="bar"
                         data-chart-config="<?= esc_attr(wp_json_encode($devices_chart_config)) ?>"></canvas>
                 </div>
-                <div class="fs-devices-average">
-                    <span class="fs-devices-average__label"><?= esc_html__('Average visit duration', 'fromscratch') ?></span>
-                    <span class="fs-devices-average__value"><?= esc_html(fs_dashboard_format_duration_seconds($avg_time_on_site)) ?></span>
-                </div>
+                <h2 style="margin-top: 24px; margin-bottom: 12px;"><?= esc_html__('Overview (last 90 days)', 'fromscratch') ?></h2>
+                <?php fs_dashboard_render_visits_summary_90d_box($visits_summary_90d); ?>
             </div>
 
             <div class="fs-chart-container-flex">
-                <h2 style="margin-top: 0; margin-bottom: 12px;"><?= esc_html__('Top pages (last 90 days)', 'fromscratch') ?></h2>
+                <h2 style="margin-top: 0; margin-bottom: 12px;"><?= esc_html__('Top 10 pages (last 90 days)', 'fromscratch') ?></h2>
                 <div class="fs-chart-container fs-chart-container--table">
                     <?php if (!empty($top_pages)) : ?>
                         <?php fs_dashboard_render_top_pages_table($top_pages); ?>

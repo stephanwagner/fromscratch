@@ -1,9 +1,15 @@
 @use '../core' as *;
 
 .fs-chart-container,
-.fs-chart-wrapper-flex {
+.fs-chart-wrapper-flex,
+.fs-analytics-summary-notice {
   max-width: 860px;
   box-sizing: border-box;
+}
+
+.fs-analytics-page .fs-analytics-summary-notice.notice.inline {
+  margin: 12px 0 14px;
+  padding: 10px 12px;
 }
 
 .fs-chart-container {
@@ -108,7 +114,7 @@
   display: flex;
   gap: 24px;
   margin-top: 32px;
-  align-items: stretch;
+  align-items: flex-start;
   flex-wrap: wrap;
 
   @media (max-width: 600px) {
@@ -124,27 +130,43 @@
   }
 }
 
-.fs-devices-average {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid #c3c4c7;
+.fs-visits-summary-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fs-visits-summary-list li {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 8px 16px;
+  gap: 4px 16px;
+  padding: 8px 0;
+  border-top: 1px solid #e8e8ea;
+
+  &:first-child {
+    padding-top: 0;
+    border-top: none;
+  }
+
+  &:last-child {
+    padding-bottom: 0;
+    margin-bottom: 0;
+  }
 }
 
-.fs-devices-average__label {
+.fs-visits-summary-list__label {
   font-weight: 600;
   color: #1d2327;
 }
 
-.fs-devices-average__value {
+.fs-visits-summary-list__value {
   font-size: 15px;
   font-weight: 600;
   color: #1d2327;
   font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .fs-top-pages-table {
