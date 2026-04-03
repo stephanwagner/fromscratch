@@ -48,6 +48,13 @@
   }
 }
 
+/* Top pages: hits column ≈ bar track (100px) + cell padding — not full 180px metric width */
+.fs-analytics-page .fs-top-pages-table.widefat th.fs-stats-metric--pageviews,
+.fs-analytics-page .fs-top-pages-table.widefat td.fs-stats-metric--pageviews {
+  width: calc(100px + 1.5rem);
+  max-width: calc(100px + 1.5rem);
+}
+
 .fs-analytics-page .fs-stats-table.widefat thead th.fs-stats-metric {
   font-weight: 600;
 }
@@ -108,6 +115,14 @@
   color: #646970;
   font-size: 12px;
   font-weight: 400;
+}
+
+.fs-stats-period-current {
+  margin-left: 4px;
+  color: #646970;
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
 }
 
 .fs-chart-wrapper-flex {
@@ -185,7 +200,18 @@
 
 .fs-top-pages-table .fs-top-pages-table__page {
   text-align: left !important;
-  word-break: break-word;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  a,
+  span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .fs-top-pages-empty {

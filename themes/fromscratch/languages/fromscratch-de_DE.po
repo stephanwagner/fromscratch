@@ -1616,6 +1616,15 @@ msgstr "Tägliche Besuche und Seitenaufrufe (letzte 8 Tage)"
 msgid "Date"
 msgstr "Datum"
 
+msgid "(current)"
+msgstr "(aktuell)"
+
+msgid "(Today)"
+msgstr "(heute)"
+
+msgid "Today"
+msgstr "heute"
+
 msgid "Weekly visits and page views (last 8 weeks)"
 msgstr "Wöchentliche Besuche und Seitenaufrufe (letzte 8 Wochen)"
 

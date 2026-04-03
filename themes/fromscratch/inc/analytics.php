@@ -391,9 +391,9 @@ function fs_dashboard_render_top_pages_table(array $pages): void
                     <td class="fs-top-pages-table__rank"><?= esc_html((string) $i) ?></td>
                     <td class="fs-top-pages-table__page">
                         <?php if ($url !== '') : ?>
-                            <a href="<?= esc_url($url) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html($text) ?></a>
+                            <a href="<?= esc_url($url) ?>" target="_blank" rel="noopener noreferrer" title="<?= esc_attr($text) ?>"><?= esc_html($text) ?></a>
                         <?php else : ?>
-                            <?= esc_html($text) ?>
+                            <span title="<?= esc_attr($text) ?>"><?= esc_html($text) ?></span>
                         <?php endif; ?>
                     </td>
                     <td class="fs-stats-metric fs-stats-metric--pageviews">
@@ -758,6 +758,45 @@ function fs_dashboard_format_week_date_range(DateTimeImmutable $monday): string
 }
 
 /**
+ * Whether a Y-m-d row key is “today” in the site timezone (analytics tables / charts).
+ */
+function fs_dashboard_analytics_row_is_today(string $date_ymd): bool
+{
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date_ymd)) {
+        return false;
+    }
+    $tz = wp_timezone();
+    $row = DateTimeImmutable::createFromFormat('Y-m-d', $date_ymd, $tz);
+    if ($row === false) {
+        return false;
+    }
+    $row = $row->setTime(12, 0);
+    $today = new DateTimeImmutable('now', $tz);
+
+    return $row->format('Y-m-d') === $today->format('Y-m-d');
+}
+
+/**
+ * Whether a Y-m-d row belongs to the current ISO-style week (Monday week start) in the site timezone.
+ */
+function fs_dashboard_analytics_row_is_current_week(string $date_ymd): bool
+{
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date_ymd)) {
+        return false;
+    }
+    $tz = wp_timezone();
+    $row = DateTimeImmutable::createFromFormat('Y-m-d', $date_ymd, $tz);
+    if ($row === false) {
+        return false;
+    }
+    $row = $row->setTime(12, 0);
+    $row_monday = $row->modify('monday this week');
+    $now_monday = (new DateTimeImmutable('now', $tz))->modify('monday this week');
+
+    return $row_monday->format('Y-m-d') === $now_monday->format('Y-m-d');
+}
+
+/**
  * Per-metric maxima across table rows (each series scales to its own column peak).
  *
  * @param array<int, array<string, mixed>> $rows
@@ -838,6 +877,14 @@ function fs_dashboard_render_stats_metric_cells(array $row, array $maxima): void
         </td>
         <?php
     }
+}
+
+/**
+ * Second line of analytics line-chart x-axis labels (abbreviated month, locale-aware via wp_date).
+ */
+function fs_dashboard_analytics_chart_date_label(int $timestamp): string
+{
+    return wp_date('j M Y', $timestamp);
 }
 
 /**
@@ -952,7 +999,7 @@ function fs_render_dashboard_statistics_page(): void
         }
         return [
             wp_date('l', $ts),
-            wp_date((string) get_option('date_format'), $ts),
+            fs_dashboard_analytics_chart_date_label((int) $ts),
         ];
     }, $rows);
     $unique = array_map(static fn($r) => (int) ($r['unique'] ?? 0), $rows);
@@ -1011,7 +1058,7 @@ function fs_render_dashboard_statistics_page(): void
             $week_no = (int) $monday->format('W');
             return [
                 sprintf(__('Week %d', 'fromscratch'), $week_no),
-                wp_date((string) get_option('date_format'), $monday->getTimestamp()),
+                fs_dashboard_analytics_chart_date_label($monday->getTimestamp()),
             ];
         }, $week_rows);
 
@@ -1093,6 +1140,13 @@ function fs_render_dashboard_statistics_page(): void
         'options' => [
             'responsive' => true,
             'maintainAspectRatio' => false,
+            'datasets' => [
+                'bar' => [
+                    // Slightly narrower bars than Chart.js defaults (0.8 / 0.9).
+                    'categoryPercentage' => 0.72,
+                    'barPercentage' => 0.78,
+                ],
+            ],
             'plugins' => [
                 'legend' => ['display' => false],
                 'tooltip' => [
@@ -1170,9 +1224,15 @@ function fs_render_dashboard_statistics_page(): void
                         $date = (string) ($r['date'] ?? '');
                         $ts = $date !== '' ? strtotime($date . ' 00:00:00') : false;
                         $label = $ts ? wp_date((string) get_option('date_format'), $ts) : $date;
+                        $is_today = $date !== '' && fs_dashboard_analytics_row_is_today($date);
                         ?>
                         <tr>
-                            <td><?= esc_html($label) ?></td>
+                            <td>
+                                <?= esc_html($label) ?>
+                                <?php if ($is_today) : ?>
+                                    <span class="fs-stats-period-current"><?= esc_html__('(Today)', 'fromscratch') ?></span>
+                                <?php endif; ?>
+                            </td>
                             <?php fs_dashboard_render_stats_metric_cells($r, $daily_metric_maxima); ?>
                         </tr>
                     <?php endforeach; ?>
@@ -1212,14 +1272,22 @@ function fs_render_dashboard_statistics_page(): void
                                 $week_label = sprintf(__('Week %d', 'fromscratch'), $week_no);
                                 $week_range = fs_dashboard_format_week_date_range($monday);
                             }
+                            $is_current_week = $date !== '' && fs_dashboard_analytics_row_is_current_week($date);
                             ?>
                             <tr>
                                 <td>
                                     <?php if ($week_range !== '') : ?>
-                                        <?= esc_html($week_label) ?><br>
+                                        <?= esc_html($week_label) ?>
+                                        <?php if ($is_current_week) : ?>
+                                            <span class="fs-stats-period-current"><?= esc_html__('(current)', 'fromscratch') ?></span>
+                                        <?php endif; ?>
+                                        <br>
                                         <span class="fs-week-range"><?= esc_html($week_range) ?></span>
                                     <?php else : ?>
                                         <?= esc_html($week_label) ?>
+                                        <?php if ($is_current_week) : ?>
+                                            <span class="fs-stats-period-current"><?= esc_html__('(current)', 'fromscratch') ?></span>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </td>
                                 <?php fs_dashboard_render_stats_metric_cells($r, $weekly_metric_maxima); ?>
