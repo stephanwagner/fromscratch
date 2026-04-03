@@ -1548,7 +1548,7 @@ msgstr "Optionale zusätzliche _paq-Befehle. Ein Befehl pro Zeile."
 
 # Dashboard > Analytics (Matomo)
 msgid "Analytics"
-msgstr "Statistik"
+msgstr "Statistiken"
 
 msgid "Matomo: invalid or missing auth token."
 msgstr "Matomo: Ungültiges oder fehlendes Auth-Token."
