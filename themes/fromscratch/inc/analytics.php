@@ -281,7 +281,7 @@ function fs_dashboard_render_visits_summary_90d_box(array $s): void
     $bounce = (int) $s['bounce_count'];
     $bounce_pct = $visits > 0 ? (int) round(($bounce / $visits) * 100) : null;
     $apv = $visits > 0 ? round($actions / $visits, 1) : null;
-    ?>
+?>
     <div class="fs-chart-container">
         <ul class="fs-visits-summary-list">
             <li>
@@ -298,7 +298,7 @@ function fs_dashboard_render_visits_summary_90d_box(array $s): void
             </li>
         </ul>
     </div>
-    <?php
+<?php
 }
 
 /**
@@ -365,7 +365,7 @@ function fs_dashboard_render_top_pages_table(array $pages): void
         return;
     }
     $max_hits = fs_dashboard_top_pages_max_hits($pages);
-    ?>
+?>
     <table class="widefat striped fs-stats-table fs-top-pages-table" style="margin: 0;">
         <thead>
             <tr>
@@ -386,7 +386,7 @@ function fs_dashboard_render_top_pages_table(array $pages): void
                 $hits = (int) ($row['hits'] ?? 0);
                 $text = $label !== '' ? $label : $url;
                 $w = $max_hits <= 0 ? 0 : (int) min(100, max(0, (int) round(($hits / $max_hits) * 100)));
-                ?>
+            ?>
                 <tr>
                     <td class="fs-top-pages-table__rank"><?= esc_html((string) $i) ?></td>
                     <td class="fs-top-pages-table__page">
@@ -866,7 +866,7 @@ function fs_dashboard_render_stats_metric_cells(array $row, array $maxima): void
         $val = (int) ($row[$k] ?? 0);
         $width = (int) ($w[$k] ?? 0);
         $cls = $cell['class'];
-        ?>
+    ?>
         <td class="fs-stats-metric fs-stats-metric--<?= esc_attr($cls) ?>">
             <span class="fs-stats-metric__value"><?= esc_html(number_format_i18n($val)) ?></span>
             <span class="fs-stats-metric__bar" aria-hidden="true">
@@ -875,7 +875,7 @@ function fs_dashboard_render_stats_metric_cells(array $row, array $maxima): void
                 </span>
             </span>
         </td>
-        <?php
+    <?php
     }
 }
 
@@ -969,7 +969,7 @@ function fs_render_dashboard_statistics_page(): void
     $series = fs_dashboard_get_matomo_daily_and_weekly(8, 8);
     $matomo_rows = $series['daily'] ?? [];
     if (empty($matomo_rows)) {
-        ?>
+    ?>
         <div class="wrap fs-analytics-page">
             <h1><?= esc_html__('Analytics', 'fromscratch') ?></h1>
             <div class="notice notice-warning">
@@ -979,14 +979,14 @@ function fs_render_dashboard_statistics_page(): void
             <?php
             $err = fs_dashboard_get_last_matomo_error();
             if ($err !== '') :
-                ?>
+            ?>
                 <div class="notice notice-error">
                     <p><strong><?= esc_html__('Matomo error', 'fromscratch') ?></strong></p>
                     <p><?= esc_html($err) ?></p>
                 </div>
             <?php endif; ?>
         </div>
-        <?php
+    <?php
         return;
     }
 
@@ -1132,21 +1132,20 @@ function fs_render_dashboard_statistics_page(): void
                         $device_mobile,
                         $device_tablet,
                     ],
-                    'backgroundColor' => ['#ff6673', '#2e8ae5', '#99ccff'],
-                    'borderRadius' => 6,
+                    'backgroundColor' => ['#ff667399', '#2e8ae599', '#99ccff99'],
+                    'borderColor' => ['#ff6673', '#2e8ae5', '#99ccff'],
+                    'borderWidth' => 2,
+                    'borderRadius' => [
+                        'topLeft' => 8,
+                        'topRight' => 8,
+                    ],
                 ],
             ],
         ],
         'options' => [
+            'maxBarThickness' => 64,
             'responsive' => true,
             'maintainAspectRatio' => false,
-            'datasets' => [
-                'bar' => [
-                    // Slightly narrower bars than Chart.js defaults (0.8 / 0.9).
-                    'categoryPercentage' => 0.72,
-                    'barPercentage' => 0.78,
-                ],
-            ],
             'plugins' => [
                 'legend' => ['display' => false],
                 'tooltip' => [
@@ -1225,7 +1224,7 @@ function fs_render_dashboard_statistics_page(): void
                         $ts = $date !== '' ? strtotime($date . ' 00:00:00') : false;
                         $label = $ts ? wp_date((string) get_option('date_format'), $ts) : $date;
                         $is_today = $date !== '' && fs_dashboard_analytics_row_is_today($date);
-                        ?>
+                    ?>
                         <tr>
                             <td>
                                 <?= esc_html($label) ?>
@@ -1273,7 +1272,7 @@ function fs_render_dashboard_statistics_page(): void
                                 $week_range = fs_dashboard_format_week_date_range($monday);
                             }
                             $is_current_week = $date !== '' && fs_dashboard_analytics_row_is_current_week($date);
-                            ?>
+                        ?>
                             <tr>
                                 <td>
                                     <?php if ($week_range !== '') : ?>
