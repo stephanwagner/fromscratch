@@ -573,26 +573,26 @@ function fs_developer_perf_pinned_panel_render(): void
 						<tr>
 							<th scope="row"><?= esc_html__('Execution time', 'fromscratch') ?></th>
 							<td><strong><?= esc_html($t['value']) ?> <?= esc_html($t['unit']) ?></strong></td>
-							<td id="fs-perf-avg-time" class="fs-perf-pinned-panel__avg-cell"><?= esc_html__('—', 'fromscratch') ?></td>
-							<td id="fs-perf-avg-scale-time" class="fs-perf-pinned-panel__scale-cell"><?= esc_html__('—', 'fromscratch') ?></td>
+							<td id="fs-perf-avg-time" class="fs-perf-pinned-panel__avg-cell">–</td>
+							<td id="fs-perf-avg-scale-time" class="fs-perf-pinned-panel__scale-cell">–</td>
 						</tr>
 						<tr>
 							<th scope="row"><?= esc_html__('Peak memory', 'fromscratch') ?></th>
 							<td><strong><?= esc_html((string) $perf['memory']) ?> MB</strong></td>
-							<td id="fs-perf-avg-memory" class="fs-perf-pinned-panel__avg-cell"><?= esc_html__('—', 'fromscratch') ?></td>
-							<td id="fs-perf-avg-scale-memory" class="fs-perf-pinned-panel__scale-cell"><?= esc_html__('—', 'fromscratch') ?></td>
+							<td id="fs-perf-avg-memory" class="fs-perf-pinned-panel__avg-cell">–</td>
+							<td id="fs-perf-avg-scale-memory" class="fs-perf-pinned-panel__scale-cell">–</td>
 						</tr>
 						<tr>
 							<th scope="row"><?= esc_html__('DB queries', 'fromscratch') ?></th>
 							<td><strong><?= esc_html((string) $perf['queries']) ?></strong></td>
-							<td id="fs-perf-avg-queries" class="fs-perf-pinned-panel__avg-cell"><?= esc_html__('—', 'fromscratch') ?></td>
-							<td id="fs-perf-avg-scale-queries" class="fs-perf-pinned-panel__scale-cell"><?= esc_html__('—', 'fromscratch') ?></td>
+							<td id="fs-perf-avg-queries" class="fs-perf-pinned-panel__avg-cell">–</td>
+							<td id="fs-perf-avg-scale-queries" class="fs-perf-pinned-panel__scale-cell">–</td>
 						</tr>
 						<tr>
 							<th scope="row"><?= esc_html__('Hooks fired', 'fromscratch') ?></th>
 							<td><strong><?= esc_html((string) $perf['hooks']) ?></strong></td>
-							<td id="fs-perf-avg-hooks" class="fs-perf-pinned-panel__avg-cell"><?= esc_html__('—', 'fromscratch') ?></td>
-							<td id="fs-perf-avg-scale-hooks" class="fs-perf-pinned-panel__scale-cell"><?= esc_html__('—', 'fromscratch') ?></td>
+							<td id="fs-perf-avg-hooks" class="fs-perf-pinned-panel__avg-cell">–</td>
+							<td id="fs-perf-avg-scale-hooks" class="fs-perf-pinned-panel__scale-cell">–</td>
 						</tr>
 					</tbody>
 				</table>

@@ -1392,9 +1392,6 @@ msgstr "Die Schutzdatei fehlt im Theme-Ordner /inc."
 msgid "Redis object cache is active but safeguard is not installed. Install the safeguard to prevent outages when Redis is unavailable."
 msgstr "Der Redis-Objekt-Cache ist aktiv, aber der Schutz ist nicht installiert. Installiere den Schutz, um Ausfälle zu verhindern, wenn Redis nicht verfügbar ist."
 
-msgid "—"
-msgstr "—"
-
 msgid "Excellent"
 msgstr "Hervorragend"
 

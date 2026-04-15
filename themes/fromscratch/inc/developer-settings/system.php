@@ -533,21 +533,21 @@ function fs_render_developer_system(): void
 					<tr>
 						<th scope="row"><?= esc_html__('Memory limit', 'fromscratch') ?></th>
 						<td>
-							<?= $memory_limit !== false && $memory_limit !== '' ? esc_html($memory_limit) : esc_html__('—', 'fromscratch') ?>
+							<?= $memory_limit !== false && $memory_limit !== '' ? esc_html($memory_limit) : – ?>
 							<?= $fs_render_warning($memory_warning) ?>
 						</td>
 					</tr>
 					<tr>
 						<th scope="row"><?= esc_html__('Max upload size', 'fromscratch') ?></th>
 						<td>
-							<?= $upload_max !== false && $upload_max !== '' ? esc_html($upload_max) : esc_html__('—', 'fromscratch') ?>
+							<?= $upload_max !== false && $upload_max !== '' ? esc_html($upload_max) : – ?>
 							<?= $fs_render_warning($upload_warning) ?>
 						</td>
 					</tr>
 					<tr>
 						<th scope="row"><?= esc_html__('Max post size', 'fromscratch') ?></th>
 						<td>
-							<?= $post_max !== false && $post_max !== '' ? esc_html($post_max) : esc_html__('—', 'fromscratch') ?>
+							<?= $post_max !== false && $post_max !== '' ? esc_html($post_max) : – ?>
 							<?= $fs_render_warning($post_warning) ?>
 							<?= $fs_render_warning($upload_post_warning) ?>
 						</td>
@@ -590,7 +590,7 @@ function fs_render_developer_system(): void
 				</p>
 				<div id="fs-perf-guest-ips-wrap" class="fs-perf-guest-ips-wrap fs-indent-checkbox" style="margin-top: 12px; <?= $guest_panel_on ? '' : 'display: none;' ?>">
 					<p style="margin-bottom: 6px;">
-						<?= esc_html__('Your current IP:', 'fromscratch') ?> <code id="fs-perf-current-ip"><?= $current_ip !== '' ? esc_html($current_ip) : esc_html__('—', 'fromscratch') ?></code>
+						<?= esc_html__('Your current IP:', 'fromscratch') ?> <code id="fs-perf-current-ip"><?= $current_ip !== '' ? esc_html($current_ip) : – ?></code>
 					</p>
 					<p style="margin-bottom: 0;">
 						<label for="fromscratch_perf_panel_guest_ips"><?= esc_html__('Allowed IP addresses', 'fromscratch') ?></label><br>

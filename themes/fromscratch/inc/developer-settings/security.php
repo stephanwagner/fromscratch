@@ -289,7 +289,7 @@ function fs_render_developer_security(): void
 							<tr>
 								<td style="vertical-align: middle;"><code class="fs-code-small"><?= esc_html($ip) ?></code></td>
 								<td style="vertical-align: middle;"><?= (int) $attempts ?> <?= esc_html(_n('attempt', 'attempts', $attempts, 'fromscratch')) ?></td>
-								<td style="vertical-align: middle;"><?= $last ? esc_html(sprintf(__('%s ago', 'fromscratch'), human_time_diff($last, time()))) : '—' ?></td>
+								<td style="vertical-align: middle;"><?= $last ? esc_html(sprintf(__('%s ago', 'fromscratch'), human_time_diff($last, time()))) : '–' ?></td>
 								<td style="vertical-align: middle;">
 									<?php if ($show_block) : ?>
 										<form method="post" action="" style="display: inline;">

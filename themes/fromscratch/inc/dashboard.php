@@ -88,7 +88,7 @@ function fs_dashboard_panel()
 						<?php foreach ($scheduled as $item) : ?>
 							<li>
 								<a href="<?= esc_url(get_edit_post_link((int) $item->ID)) ?>"><?= esc_html(get_the_title((int) $item->ID) ?: __('(no title)', 'fromscratch')) ?></a>
-								<span style="color:#646970;"> — <?= esc_html(get_date_from_gmt((string) $item->post_date_gmt, get_option('date_format') . ' ' . get_option('time_format'))) ?></span>
+								<span style="color:#646970;"> – <?= esc_html(get_date_from_gmt((string) $item->post_date_gmt, get_option('date_format') . ' ' . get_option('time_format'))) ?></span>
 							</li>
 						<?php endforeach; ?>
 					</ul>
@@ -107,7 +107,7 @@ function fs_dashboard_panel()
 							$attempts = (int) ($row['attempts'] ?? 0);
 						?>
 							<li style="margin-bottom: 0.5em;">
-								<code><?php echo esc_html($ip); ?></code> — <?php echo (int) $attempts; ?> <?php echo esc_html(_n('attempt', 'attempts', $attempts, 'fromscratch')); ?>
+								<code><?php echo esc_html($ip); ?></code> – <?php echo (int) $attempts; ?> <?php echo esc_html(_n('attempt', 'attempts', $attempts, 'fromscratch')); ?>
 								<form method="post" action="<?php echo esc_url($security_url); ?>" style="display: inline; margin-left: 8px;">
 									<?php wp_nonce_field('fromscratch_block_ip'); ?>
 									<input type="hidden" name="fromscratch_block_ip" value="<?php echo esc_attr($ip); ?>">

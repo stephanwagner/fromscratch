@@ -290,11 +290,11 @@ function fs_dashboard_render_visits_summary_90d_box(array $s): void
             </li>
             <li>
                 <span class="fs-visits-summary-list__label"><?= esc_html__('Bounce rate', 'fromscratch') ?></span>
-                <span class="fs-visits-summary-list__value"><?= $bounce_pct === null ? '—' : esc_html(sprintf(__('%d%%', 'fromscratch'), $bounce_pct)) ?></span>
+                <span class="fs-visits-summary-list__value"><?= $bounce_pct === null ? '–' : esc_html(sprintf(__('%d%%', 'fromscratch'), $bounce_pct)) ?></span>
             </li>
             <li>
                 <span class="fs-visits-summary-list__label"><?= esc_html__('Actions per visit', 'fromscratch') ?></span>
-                <span class="fs-visits-summary-list__value"><?= $apv === null ? '—' : esc_html(number_format_i18n($apv, 1)) ?></span>
+                <span class="fs-visits-summary-list__value"><?= $apv === null ? '–' : esc_html(number_format_i18n($apv, 1)) ?></span>
             </li>
         </ul>
     </div>
@@ -307,8 +307,9 @@ function fs_dashboard_render_visits_summary_90d_box(array $s): void
 function fs_dashboard_format_duration_seconds(int $seconds): string
 {
     if ($seconds <= 0) {
-        return '—';
+        return '–';
     }
+
     if ($seconds < 60) {
         return sprintf(
             /* translators: %d: seconds */
@@ -316,8 +317,10 @@ function fs_dashboard_format_duration_seconds(int $seconds): string
             $seconds
         );
     }
+
     $m = intdiv($seconds, 60);
     $s = $seconds % 60;
+
     if ($m < 60) {
         return $s > 0
             ? sprintf(
@@ -332,6 +335,7 @@ function fs_dashboard_format_duration_seconds(int $seconds): string
                 $m
             );
     }
+
     $h = intdiv($m, 60);
     $m = $m % 60;
 
