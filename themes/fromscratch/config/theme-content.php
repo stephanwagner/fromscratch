@@ -175,6 +175,20 @@ return [
 							// TODO: Document
 						],
 					],
+					[
+						'id' => 'language',
+						'title' => 'Language',
+						'variables' => [
+							[
+								'id' => 'translatable',
+								'title' => 'Translatable',
+								'translate' => true,
+								'type' => 'textfield',
+								'placeholder' => 'Translatable text',
+								'description' => 'This text is translatable.',
+							],
+						],
+					],
 				],
 			],
 		],
