@@ -869,32 +869,64 @@ document.querySelectorAll('[data-fs-content-developer-options-container]').forEa
 			</script>
 			<script>
 				(function() {
-					var switcher = document.querySelector('[data-fs-content-lang-switcher]');
-					if (!switcher) return;
-					var defaultLang = switcher.getAttribute('data-fs-content-lang-default') || '';
-					var form = document.getElementById('fs-content-form');
-					if (!form) return;
+					function run() {
+						var switcher = document.querySelector('[data-fs-content-lang-switcher]');
+						if (!switcher) return;
+						var form = document.getElementById('fs-content-form');
+						if (!form) return;
 
-					function setContentLang(langId) {
-						switcher.querySelectorAll('[data-fs-content-lang-btn]').forEach(function(b) {
-							b.classList.toggle('active', b.getAttribute('data-fs-content-lang') === langId);
-						});
-						form.querySelectorAll('[data-fs-content-lang]').forEach(function(container) {
-							var containerLang = container.getAttribute('data-fs-content-lang');
-							var tr = container.closest('tr');
-							if (tr) {
-								tr.style.display = containerLang === langId ? '' : 'none';
+						function fieldContainers() {
+							return form.querySelectorAll('.fs-content-lang-container[data-fs-content-lang]');
+						}
+
+						function pickInitialLang(requested) {
+							var containers = fieldContainers();
+							var ids = {};
+							for (var i = 0; i < containers.length; i++) {
+								var lid = containers[i].getAttribute('data-fs-content-lang');
+								if (lid) ids[lid] = true;
 							}
-						});
+							if (requested && ids[requested]) return requested;
+							var btns = switcher.querySelectorAll('[data-fs-content-lang-btn]');
+							for (var j = 0; j < btns.length; j++) {
+								var bid = btns[j].getAttribute('data-fs-content-lang');
+								if (bid && ids[bid]) return bid;
+							}
+							return containers[0] ? (containers[0].getAttribute('data-fs-content-lang') || '') : '';
+						}
+
+						function setContentLang(langId) {
+							switcher.querySelectorAll('[data-fs-content-lang-btn]').forEach(function(b) {
+								b.classList.toggle('active', b.getAttribute('data-fs-content-lang') === langId);
+							});
+							fieldContainers().forEach(function(container) {
+								var containerLang = container.getAttribute('data-fs-content-lang');
+								var show = containerLang === langId;
+								var tr = container.closest('tr');
+								if (tr) {
+									tr.style.display = show ? '' : 'none';
+								} else {
+									container.style.display = show ? '' : 'none';
+								}
+							});
+						}
+
+						var requestedDefault = switcher.getAttribute('data-fs-content-lang-default') || '';
+						// Capture phase so other handlers cannot swallow the click.
+						document.addEventListener('click', function onLangBtnClick(e) {
+							var btn = e.target.closest('[data-fs-content-lang-btn]');
+							if (!btn || !switcher.contains(btn)) return;
+							e.preventDefault();
+							setContentLang(btn.getAttribute('data-fs-content-lang') || '');
+						}, true);
+
+						setContentLang(pickInitialLang(requestedDefault));
 					}
-
-					switcher.addEventListener('click', function(e) {
-						var btn = e.target.closest('[data-fs-content-lang-btn]');
-						if (!btn) return;
-						setContentLang(btn.getAttribute('data-fs-content-lang') || '');
-					});
-
-					setContentLang(defaultLang);
+					if (document.readyState === 'loading') {
+						document.addEventListener('DOMContentLoaded', run);
+					} else {
+						run();
+					}
 				})();
 			</script>
 		<?php elseif ($tab === 'redirects') : ?>
@@ -1125,7 +1157,8 @@ function fs_content_base_option_id(string $variableId): string
 
 /**
  * Output option name row (for developers only): copy option name, copy snippet (fs_content_option or get_option), monospace option id.
- * For translatable fields shows base option id and fs_content_option() snippet.
+ * Shows the actual option key for this row (including _lang suffix when applicable) so it matches the field above.
+ * The snippet still uses the base id with fs_content_option() for correct theme API usage.
  */
 function fs_content_field_option_name_row(string $variableId, array $variable = []): void
 {
@@ -1137,7 +1170,7 @@ function fs_content_field_option_name_row(string $variableId, array $variable = 
 	$type = $variable['type'] ?? 'textfield';
 	$default = ($type === 'multiselect') ? '[]' : (($type === 'image') ? '0' : "''");
 	$snippet = "fs_content_option('" . $base_id . "', " . $default . ")";
-	$display_id = $base_id;
+	$display_id = $variableId;
 	$id_attr = 'fs-opt-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', $variableId);
 	$id_snippet_attr = 'fs-opt-snippet-' . preg_replace('/[^a-zA-Z0-9_-]/', '-', $variableId);
 	$hidden_class = $show ? '' : ' fs-content-developer-options-hidden';
@@ -1292,12 +1325,20 @@ function display_custom_info_fields(): void
 					};
 				}
 				if (!empty($variable['translate'])) {
-					foreach (fs_get_content_languages() as $language) {
-						$variableIdLang = $variableId . '_' . $language['id'];
-						add_settings_field($variableIdLang, $variable_title, function () use ($variable, $variableIdLang, $language) {
-							display_custom_info_field($variable, $variableIdLang, $language['id']);
-						}, $content_page, 'section', ['class' => '-is-translatable']);
-						register_setting(FS_THEME_OPTION_GROUP_TEXTE, $variableIdLang, $register_args);
+					$content_langs = fs_get_content_languages();
+					if (!empty($content_langs)) {
+						foreach ($content_langs as $language) {
+							$variableIdLang = $variableId . '_' . $language['id'];
+							add_settings_field($variableIdLang, $variable_title, function () use ($variable, $variableIdLang, $language) {
+								display_custom_info_field($variable, $variableIdLang, $language['id']);
+							}, $content_page, 'section', ['class' => '-is-translatable']);
+							register_setting(FS_THEME_OPTION_GROUP_TEXTE, $variableIdLang, $register_args);
+						}
+					} else {
+						add_settings_field($variableId, $variable_title, function () use ($variable, $variableId) {
+							display_custom_info_field($variable, $variableId);
+						}, $content_page, 'section');
+						register_setting(FS_THEME_OPTION_GROUP_TEXTE, $variableId, $register_args);
 					}
 				} else {
 					add_settings_field($variableId, $variable_title, function () use ($variable, $variableId) {

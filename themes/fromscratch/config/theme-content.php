@@ -4,25 +4,16 @@
  * Theme settings: Content
  * Used by Settings → Theme → Content.
  *
- * Edit to add new tabs, sections and languages.
+ * Edit to add new tabs, sections, and variables.
  * Structure: content.tabs[] (left-hand tabs) → each tab has sections[] → each section has variables[].
  *
  * Per variable you can use:
  * - placeholder: hint text inside textfield/textarea (optional).
  * - description: help text shown below the field (optional).
+ * - translate: true registers one option per language (suffix _{langId}) when Developer → Features → Languages
+ *   is on and languages are configured; otherwise the field is stored like a normal single option (not translatable).
  */
 return [
-	/**
-	 * Content languages: used for the language toggle on Settings → Theme → Content and for translatable fields (variables with 'translate' => true).
-	 * When the Languages feature is disabled (Developer → Features): this config is the fallback; define your languages here.
-	 * When the Languages feature is enabled: languages are managed in Developer → Languages instead; this config is ignored.
-	 * Each item: id (e.g. 'en', 'de'), label (display name on the Content tab switcher and in admin).
-	 */
-	// 'languages' => [
-	// 	['id' => 'en', 'label' => 'English', 'default' => true],
-	// 	['id' => 'de', 'label' => 'German'],
-	// ],
-
 	/**
 	 * Content: tabs (left nav), each with sections (fields).
 	 * Labels can be translated in code; ids are used for option names (see FS_THEME_CONTENT_OPTION_PREFIX in inc/config.php; format: {prefix}{tab_id}_{section_id}_{variable_id}).

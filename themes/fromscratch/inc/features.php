@@ -87,45 +87,40 @@ function fs_theme_feature_enabled(string $feature): bool
 }
 
 /**
- * Get the effective content languages list (for Settings → Theme → Content translatable fields).
- * When Languages feature is off: returns config from theme-content.php (keys: id, name, nameNative).
- * When on: returns the list from Developer → Languages (keys: id, name, nameNative).
+ * Get the content languages list (Developer → Languages). Used for translatable fields when non-empty.
+ * When the Languages feature is off, returns an empty array (no per-language options).
  *
  * @return list<array{id: string, name?: string, nameNative?: string}>
  */
 function fs_get_content_languages(): array
 {
-	if (fs_theme_feature_enabled('languages')) {
-		$data = get_option('fs_theme_languages', ['list' => [], 'default' => '']);
-		$list = isset($data['list']) && is_array($data['list']) ? $data['list'] : [];
-		return array_values($list);
+	if (!fs_theme_feature_enabled('languages')) {
+		return [];
 	}
-	$config = function_exists('fs_config_settings') ? fs_config_settings('languages') : [];
-	return is_array($config) ? $config : [];
+	$data = get_option('fs_theme_languages', ['list' => [], 'default' => '']);
+	$list = isset($data['list']) && is_array($data['list']) ? $data['list'] : [];
+
+	return array_values($list);
 }
 
 /**
- * Get the default content language id.
- * When Languages feature is off: first language in config. When on: value from Developer → Languages.
+ * Get the default content language id (Developer → Languages). Empty when the Languages feature is off.
  *
  * @return string
  */
 function fs_get_default_language(): string
 {
-	if (fs_theme_feature_enabled('languages')) {
-		$data = get_option('fs_theme_languages', ['list' => [], 'default' => '']);
-		$default = isset($data['default']) ? (string) $data['default'] : '';
-		if ($default !== '') {
-			return $default;
-		}
-		$list = isset($data['list']) && is_array($data['list']) ? $data['list'] : [];
-		return (string) ($list[0]['id'] ?? '');
-	}
-	$config = function_exists('fs_config_settings') ? fs_config_settings('languages') : [];
-	if (!is_array($config) || empty($config)) {
+	if (!fs_theme_feature_enabled('languages')) {
 		return '';
 	}
-	return (string) ($config[0]['id'] ?? '');
+	$data = get_option('fs_theme_languages', ['list' => [], 'default' => '']);
+	$default = isset($data['default']) ? (string) $data['default'] : '';
+	if ($default !== '') {
+		return $default;
+	}
+	$list = isset($data['list']) && is_array($data['list']) ? $data['list'] : [];
+
+	return (string) ($list[0]['id'] ?? '');
 }
 
 /**
