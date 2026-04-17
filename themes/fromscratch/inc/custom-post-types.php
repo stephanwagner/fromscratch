@@ -398,37 +398,6 @@ add_filter('request', function (array $vars): array {
 	return $vars;
 }, 20);
 
-/**
- * Ensure ordered CPT list URL includes menu_order so the UI shows "Order" as active sort.
- */
-add_action('admin_init', function (): void {
-	global $pagenow;
-	if ($pagenow !== 'edit.php') {
-		return;
-	}
-	// Let reorder action requests pass through untouched.
-	if (!empty($_GET['fs_cpt_reorder']) || !empty($_GET['post_id'])) {
-		return;
-	}
-	if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
-		return;
-	}
-	$post_type = fs_cpt_current_admin_post_type();
-	if ($post_type === '' || !fs_cpt_is_ordered($post_type)) {
-		return;
-	}
-	if (!empty($_GET['orderby'])) {
-		return;
-	}
-	$url = add_query_arg([
-		'post_type' => $post_type,
-		'orderby'   => 'menu_order',
-		'order'     => 'asc',
-	], admin_url('edit.php'));
-	wp_safe_redirect($url);
-	exit;
-}, 15);
-
 add_action('manage_posts_custom_column', function (string $column, int $post_id): void {
 	if ($column !== 'fs_cpt_reorder') {
 		return;
@@ -512,8 +481,30 @@ add_action('admin_footer', function (): void {
 	if ($post_type === '' || !fs_cpt_is_ordered($post_type)) {
 		return;
 	}
+	$has_explicit_orderby = !empty($_GET['orderby']);
+	$default_dir = strtoupper((string) ($_GET['order'] ?? 'ASC')) === 'DESC' ? 'DESC' : 'ASC';
 	echo '<script>
 	(function(){
+		var defaultOrderActive = ' . ($has_explicit_orderby ? 'false' : 'true') . ';
+		var defaultOrderDir = "' . esc_js($default_dir) . '";
+		if(defaultOrderActive){
+			var orderTh=document.querySelector("th.column-fs_cpt_reorder");
+			var orderLink=orderTh?orderTh.querySelector("a"):null;
+			if(orderTh){
+				orderTh.classList.remove("sortable","asc","desc");
+				orderTh.classList.add(defaultOrderDir==="DESC"?"desc":"asc","sorted");
+				orderTh.setAttribute("aria-sort",defaultOrderDir==="DESC"?"descending":"ascending");
+			}
+			if(orderLink){
+				orderLink.setAttribute("aria-current","true");
+			}
+			var dateTh=document.querySelector("th.column-date");
+			if(dateTh){
+				dateTh.classList.remove("sorted","asc","desc");
+				if(!dateTh.classList.contains("sortable")){dateTh.classList.add("sortable");}
+				dateTh.removeAttribute("aria-sort");
+			}
+		}
 		function positionPopover(menu,pop){
 			var btn=menu.querySelector(".fs-cpt-reorder-menu__toggle");
 			if(!btn||!pop) return;
