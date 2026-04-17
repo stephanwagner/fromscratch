@@ -172,19 +172,6 @@ function fs_render_developer_features(): void
 
 				<table class="form-table" role="presentation">
 					<tr>
-						<th scope="row" class="form-table-checkbox-label"><?= esc_html__('Matomo', 'fromscratch') ?></th>
-						<td>
-							<input type="hidden" name="fromscratch_features[enable_matomo]" value="0">
-							<label><input type="checkbox" name="fromscratch_features[enable_matomo]" value="1" <?= checked($feat('enable_matomo'), 1, false) ?>> <?= esc_html__('Enable Matomo analytics integration', 'fromscratch') ?></label>
-							<p class="description fs-indent-checkbox"><?= esc_html__('Enables Matomo script loading on the frontend using the settings from Developer › System.', 'fromscratch') ?></p>
-						</td>
-					</tr>
-				</table>
-
-				<hr>
-
-				<table class="form-table" role="presentation">
-					<tr>
 						<th scope="row" class="form-table-checkbox-label"><?= esc_html__('Languages', 'fromscratch') ?></th>
 						<td>
 							<input type="hidden" name="fromscratch_features[enable_languages]" value="0">
@@ -255,6 +242,23 @@ function fs_render_developer_features(): void
 							<input type="hidden" name="fromscratch_features[enable_blocked_ips]" value="0">
 							<label><input type="checkbox" name="fromscratch_features[enable_blocked_ips]" value="1" <?= checked($feat('enable_blocked_ips'), 1, false) ?>> <?= esc_html__('Enable IP blocking', 'fromscratch') ?></label>
 							<p class="description fs-indent-checkbox"><?= esc_html__('Allows blocking specific IP addresses and detects suspicious login attempts.', 'fromscratch') ?></p>
+						</td>
+					</tr>
+				</table>
+
+			</div>
+
+			<h3 style="margin-top: 32px;"><?= esc_html__('Analytics', 'fromscratch') ?></h3>
+
+			<div class="fs-feature-group">
+
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row" class="form-table-checkbox-label"><?= esc_html__('Matomo', 'fromscratch') ?></th>
+						<td>
+							<input type="hidden" name="fromscratch_features[enable_matomo]" value="0">
+							<label><input type="checkbox" name="fromscratch_features[enable_matomo]" value="1" <?= checked($feat('enable_matomo'), 1, false) ?>> <?= esc_html__('Enable Matomo analytics integration', 'fromscratch') ?></label>
+							<p class="description fs-indent-checkbox"><?= esc_html__('Enables Matomo script loading on the frontend using the settings from Developer › System.', 'fromscratch') ?></p>
 						</td>
 					</tr>
 				</table>

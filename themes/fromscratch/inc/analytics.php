@@ -127,8 +127,8 @@ function fs_dashboard_get_matomo_daily_visits(int $days = 7): array
     ]));
     $bypass_cache = is_admin()
         && current_user_can('manage_options')
-        && isset($_GET['fs_no_cache'])
-        && (string) $_GET['fs_no_cache'] !== '';
+        && isset($_GET['no_cache'])
+        && (string) $_GET['no_cache'] !== '';
     if (!$bypass_cache) {
         $cached = get_transient($cache_key);
         if (is_array($cached)) {
@@ -796,8 +796,8 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
 
     $bypass_cache = is_admin()
         && current_user_can('manage_options')
-        && isset($_GET['fs_no_cache'])
-        && (string) $_GET['fs_no_cache'] !== '';
+        && isset($_GET['no_cache'])
+        && (string) $_GET['no_cache'] !== '';
     if (!$bypass_cache) {
         $cached = get_transient($cache_key);
         if (
@@ -1413,7 +1413,7 @@ function fs_dashboard_statistics_url(): string
  */
 function fs_dashboard_statistics_reload_url(): string
 {
-    return add_query_arg('fs_no_cache', '1', fs_dashboard_statistics_url());
+    return add_query_arg('no_cache', '1', fs_dashboard_statistics_url());
 }
 
 function fs_render_dashboard_statistics_page(): void
