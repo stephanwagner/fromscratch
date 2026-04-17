@@ -939,11 +939,19 @@ function fs_dashboard_render_stats_metric_cells(array $row, array $maxima): void
 }
 
 /**
- * Second line of analytics line-chart x-axis labels (abbreviated month, locale-aware via wp_date).
+ * Second line of daily chart x-axis labels: day with period, abbreviated month, year (locale-aware).
  */
 function fs_dashboard_analytics_chart_date_label(int $timestamp): string
 {
-    return wp_date('j M Y', $timestamp);
+    return wp_date('j. M Y', $timestamp);
+}
+
+/**
+ * Weekly chart x-axis second line only: week start (Monday), no range — day with period, abbreviated month, year.
+ */
+function fs_dashboard_analytics_week_chart_axis_date_line(int $monday_timestamp): string
+{
+    return wp_date('j. M Y', $monday_timestamp);
 }
 
 /**
@@ -971,7 +979,7 @@ function fs_dashboard_analytics_daily_axis_label(array $r)
 }
 
 /**
- * Weekly chart x-axis: “This week” + range for the current week; otherwise “Week N” + Monday date.
+ * Weekly chart x-axis: “This week” or “Week N”, then Monday as d. M Y (never a range on the chart).
  *
  * @return array{0:string,1:string}|string
  */
@@ -984,16 +992,17 @@ function fs_dashboard_analytics_weekly_axis_label(array $r)
     }
     $monday = (new DateTimeImmutable('@' . (int) $ts))->setTimezone(wp_timezone())->modify('monday this week');
     $week_no = (int) $monday->format('W');
+    $date_line = fs_dashboard_analytics_week_chart_axis_date_line($monday->getTimestamp());
     if (fs_dashboard_analytics_row_is_current_week($date)) {
         return [
             __('This week', 'fromscratch'),
-            fs_dashboard_format_week_date_range($monday),
+            $date_line,
         ];
     }
 
     return [
         sprintf(__('Week %d', 'fromscratch'), $week_no),
-        fs_dashboard_analytics_chart_date_label($monday->getTimestamp()),
+        $date_line,
     ];
 }
 
