@@ -815,6 +815,25 @@ function fs_dashboard_analytics_row_is_today(string $date_ymd): bool
 }
 
 /**
+ * Whether a Y-m-d row is calendar yesterday in the site timezone.
+ */
+function fs_dashboard_analytics_row_is_yesterday(string $date_ymd): bool
+{
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date_ymd)) {
+        return false;
+    }
+    $tz = wp_timezone();
+    $row = DateTimeImmutable::createFromFormat('Y-m-d', $date_ymd, $tz);
+    if ($row === false) {
+        return false;
+    }
+    $row = $row->setTime(12, 0);
+    $yesterday = (new DateTimeImmutable('now', $tz))->modify('-1 day');
+
+    return $row->format('Y-m-d') === $yesterday->format('Y-m-d');
+}
+
+/**
  * Whether a Y-m-d row belongs to the current ISO-style week (Monday week start) in the site timezone.
  */
 function fs_dashboard_analytics_row_is_current_week(string $date_ymd): bool
@@ -928,6 +947,57 @@ function fs_dashboard_analytics_chart_date_label(int $timestamp): string
 }
 
 /**
+ * Daily chart x-axis: two lines — “Today” / “Yesterday” / weekday, then date (site timezone).
+ *
+ * @return array{0:string,1:string}|string
+ */
+function fs_dashboard_analytics_daily_axis_label(array $r)
+{
+    $date = (string) ($r['date'] ?? '');
+    $ts = $date !== '' ? strtotime($date . ' 00:00:00') : false;
+    if (!$ts) {
+        return $date;
+    }
+    $ts = (int) $ts;
+    $date_line = fs_dashboard_analytics_chart_date_label($ts);
+    if (fs_dashboard_analytics_row_is_today($date)) {
+        return [__('Today', 'fromscratch'), $date_line];
+    }
+    if (fs_dashboard_analytics_row_is_yesterday($date)) {
+        return [__('Yesterday', 'fromscratch'), $date_line];
+    }
+
+    return [wp_date('l', $ts), $date_line];
+}
+
+/**
+ * Weekly chart x-axis: “This week” + range for the current week; otherwise “Week N” + Monday date.
+ *
+ * @return array{0:string,1:string}|string
+ */
+function fs_dashboard_analytics_weekly_axis_label(array $r)
+{
+    $date = (string) ($r['date'] ?? '');
+    $ts = $date !== '' ? strtotime($date . ' 00:00:00') : false;
+    if (!$ts) {
+        return $date;
+    }
+    $monday = (new DateTimeImmutable('@' . (int) $ts))->setTimezone(wp_timezone())->modify('monday this week');
+    $week_no = (int) $monday->format('W');
+    if (fs_dashboard_analytics_row_is_current_week($date)) {
+        return [
+            __('This week', 'fromscratch'),
+            fs_dashboard_format_week_date_range($monday),
+        ];
+    }
+
+    return [
+        sprintf(__('Week %d', 'fromscratch'), $week_no),
+        fs_dashboard_analytics_chart_date_label($monday->getTimestamp()),
+    ];
+}
+
+/**
  * Reusable Chart.js line chart config.
  *
  * @param array<int, string|array<int, string>> $labels
@@ -1031,17 +1101,7 @@ function fs_render_dashboard_statistics_page(): void
     }
 
     $rows = $matomo_rows;
-    $labels = array_map(static function ($r) {
-        $date = (string) ($r['date'] ?? '');
-        $ts = $date !== '' ? strtotime($date . ' 00:00:00') : false;
-        if (!$ts) {
-            return $date;
-        }
-        return [
-            wp_date('l', $ts),
-            fs_dashboard_analytics_chart_date_label((int) $ts),
-        ];
-    }, $rows);
+    $labels = array_map('fs_dashboard_analytics_daily_axis_label', $rows);
     $unique = array_map(static fn($r) => (int) ($r['unique'] ?? 0), $rows);
     $visits = array_map(static fn($r) => (int) ($r['visits'] ?? 0), $rows);
     $pageviews = array_map(static fn($r) => (int) ($r['pageviews'] ?? 0), $rows);
@@ -1091,19 +1151,7 @@ function fs_render_dashboard_statistics_page(): void
     $week_rows = $series['weekly'] ?? [];
     $week_chart_config = [];
     if (!empty($week_rows)) {
-        $week_labels = array_map(static function ($r) {
-            $date = (string) ($r['date'] ?? '');
-            $ts = $date !== '' ? strtotime($date . ' 00:00:00') : false;
-            if (!$ts) {
-                return $date;
-            }
-            $monday = (new DateTimeImmutable('@' . $ts))->setTimezone(wp_timezone())->modify('monday this week');
-            $week_no = (int) $monday->format('W');
-            return [
-                sprintf(__('Week %d', 'fromscratch'), $week_no),
-                fs_dashboard_analytics_chart_date_label($monday->getTimestamp()),
-            ];
-        }, $week_rows);
+        $week_labels = array_map('fs_dashboard_analytics_weekly_axis_label', $week_rows);
 
         $week_unique = array_map(static fn($r) => (int) ($r['unique'] ?? 0), $week_rows);
         $week_visits = array_map(static fn($r) => (int) ($r['visits'] ?? 0), $week_rows);
@@ -1329,14 +1377,14 @@ function fs_render_dashboard_statistics_page(): void
                                     <?php if ($week_range !== '') : ?>
                                         <?= esc_html($week_label) ?>
                                         <?php if ($is_current_week) : ?>
-                                            <span class="fs-stats-period-current"><?= esc_html__('(current)', 'fromscratch') ?></span>
+                                            <span class="fs-stats-period-current"><?= esc_html__('(Current)', 'fromscratch') ?></span>
                                         <?php endif; ?>
                                         <br>
                                         <span class="fs-week-range"><?= esc_html($week_range) ?></span>
                                     <?php else : ?>
                                         <?= esc_html($week_label) ?>
                                         <?php if ($is_current_week) : ?>
-                                            <span class="fs-stats-period-current"><?= esc_html__('(current)', 'fromscratch') ?></span>
+                                            <span class="fs-stats-period-current"><?= esc_html__('(Current)', 'fromscratch') ?></span>
                                         <?php endif; ?>
                                     <?php endif; ?>
                                 </td>

@@ -48,7 +48,11 @@ function initCharts() {
         var idx = items[0].dataIndex;
         var labels = items[0].chart && items[0].chart.data ? items[0].chart.data.labels : null;
         var raw = labels && typeof idx === 'number' ? labels[idx] : items[0].label;
-        return raw || '';
+        if (raw == null) return '';
+        if (Array.isArray(raw)) {
+          return raw.join('\n');
+        }
+        return String(raw);
       };
     }
     if (!config.options.plugins.tooltip.callbacks.label) {
