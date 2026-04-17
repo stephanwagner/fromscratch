@@ -6,5 +6,8 @@ import './utils/design-color-preview';
 import './utils/image-picker';
 import './utils/tabs';
 
+// Media
+import './media/media-folders';
+
 // Pages
 import './pages/install-theme';
