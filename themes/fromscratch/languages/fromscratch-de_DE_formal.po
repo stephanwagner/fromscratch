@@ -1673,13 +1673,13 @@ msgid "%d s"
 msgstr "%d s"
 
 msgid "%d min"
-msgstr "%d Min."
+msgstr "%d min"
 
 msgid "%1$d min %2$d s"
-msgstr "%1$d Min. %2$d s"
+msgstr "%1$d min %2$d s"
 
 msgid "%1$d h %2$d min"
-msgstr "%1$d Std. %2$d Min."
+msgstr "%1$d h %2$d min"
 
 # Admin bar
 msgid "View Site"

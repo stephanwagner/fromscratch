@@ -20,11 +20,11 @@ function fs_dashboard_get_analytics_settings(): array
         'colors' => [
             [
                 'fill' => '#2284e5',
-                'transparent' => '#2284e530',
+                'transparent' => '#2284e535',
             ],
             [
                 'fill' => '#8f70cc',
-                'transparent' => '#8f70cc30',
+                'transparent' => '#8f70cc35',
             ],
             [
                 'fill' => '#ff6673',
@@ -689,7 +689,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'days' => $days,
         'weeks' => $weeks,
         // Bump when bulk URLs/segments change so transients are not stale.
-        'bulk_schema' => 12,
+        'bulk_schema' => 14,
     ]));
 
     $bypass_cache = is_admin()
