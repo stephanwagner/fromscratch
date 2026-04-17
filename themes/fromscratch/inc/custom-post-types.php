@@ -183,6 +183,38 @@ function fs_cpt_is_ordered(string $post_type): bool
 }
 
 /**
+ * Resolve current post type in admin contexts (including Quick Edit AJAX).
+ */
+function fs_cpt_current_admin_post_type(): string
+{
+	if (isset($_REQUEST['post_type'])) {
+		$pt = sanitize_key((string) wp_unslash($_REQUEST['post_type']));
+		if ($pt !== '') {
+			return $pt;
+		}
+	}
+	if (isset($_REQUEST['post_ID'])) {
+		$post_id = (int) $_REQUEST['post_ID'];
+		$pt = $post_id > 0 ? get_post_type($post_id) : '';
+		if (is_string($pt) && $pt !== '') {
+			return sanitize_key($pt);
+		}
+	}
+	global $typenow;
+	if (is_string($typenow) && $typenow !== '') {
+		return sanitize_key($typenow);
+	}
+	if (function_exists('get_current_screen')) {
+		$screen = get_current_screen();
+		if ($screen && isset($screen->post_type) && is_string($screen->post_type) && $screen->post_type !== '') {
+			return sanitize_key($screen->post_type);
+		}
+	}
+
+	return '';
+}
+
+/**
  * Admin list: default sort by menu_order for ordered CPTs.
  */
 add_action('pre_get_posts', function (\WP_Query $query): void {
@@ -296,7 +328,10 @@ add_action('save_post', function (int $post_id, \WP_Post $post): void {
  * Add reorder column for ordered CPTs.
  */
 add_filter('manage_posts_columns', function (array $columns): array {
-	$post_type = isset($_GET['post_type']) ? sanitize_key((string) wp_unslash($_GET['post_type'])) : 'post';
+	$post_type = fs_cpt_current_admin_post_type();
+	if ($post_type === '') {
+		$post_type = 'post';
+	}
 	if (!fs_cpt_is_ordered($post_type)) {
 		return $columns;
 	}
@@ -378,7 +413,7 @@ add_action('admin_init', function (): void {
 	if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
 		return;
 	}
-	$post_type = isset($_GET['post_type']) ? sanitize_key((string) wp_unslash($_GET['post_type'])) : '';
+	$post_type = fs_cpt_current_admin_post_type();
 	if ($post_type === '' || !fs_cpt_is_ordered($post_type)) {
 		return;
 	}
@@ -447,7 +482,7 @@ add_action('admin_head', function (): void {
 	if ($pagenow !== 'edit.php') {
 		return;
 	}
-	$post_type = isset($_GET['post_type']) ? sanitize_key((string) wp_unslash($_GET['post_type'])) : '';
+	$post_type = fs_cpt_current_admin_post_type();
 	if ($post_type === '' || !fs_cpt_is_ordered($post_type)) {
 		return;
 	}
@@ -473,7 +508,7 @@ add_action('admin_footer', function (): void {
 	if ($pagenow !== 'edit.php') {
 		return;
 	}
-	$post_type = isset($_GET['post_type']) ? sanitize_key((string) wp_unslash($_GET['post_type'])) : '';
+	$post_type = fs_cpt_current_admin_post_type();
 	if ($post_type === '' || !fs_cpt_is_ordered($post_type)) {
 		return;
 	}
