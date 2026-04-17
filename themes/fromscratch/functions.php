@@ -53,6 +53,7 @@ require_once 'inc/matomo.php';
 require_once 'inc/security/password-protection.php';
 require_once 'inc/security/maintenance-mode.php';
 require_once 'inc/security/login-limit.php';
+require_once 'inc/security/rest-api.php';
 
 // Optional features
 if (fs_theme_feature_enabled('svg')) {
