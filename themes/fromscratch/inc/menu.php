@@ -2,11 +2,13 @@
 
 defined('ABSPATH') || exit;
 
-require_once get_template_directory() . '/config/nav-walker.php';
+require_once get_template_directory() . '/inc/menu-walker.php';
 
 /**
  * Accessible submenu toggle behavior for FS_Walker_Nav_Menu.
  * Keeps markup framework-agnostic and progressive-enhancement friendly.
+ * 
+ * TODO: Move to js files
  */
 add_action('wp_footer', function (): void {
 	if (is_admin()) {

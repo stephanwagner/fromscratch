@@ -42,7 +42,7 @@ require_once 'inc/helpers/page-blocker.php';
 // Features
 require_once 'inc/login-client-logo.php';
 require_once 'inc/assets.php';
-require_once 'inc/cpt.php';
+require_once 'inc/custom-post-types.php';
 require_once 'inc/exclude-from-search.php';
 
 // Mail (SMTP / SendGrid from Developer › System)

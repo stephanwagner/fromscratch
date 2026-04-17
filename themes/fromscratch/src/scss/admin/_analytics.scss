@@ -7,6 +7,12 @@
   box-sizing: border-box;
 }
 
+.fs-analytics-summary-notice {
+  a {
+    text-decoration: none;
+  }
+}
+
 .fs-analytics-page .fs-analytics-summary-notice.notice.inline {
   margin: 12px 0 14px;
   padding: 10px 12px;
