@@ -210,6 +210,9 @@ add_action('save_post', function (int $post_id, \WP_Post $post): void {
 	if (isset($running[$post_id])) {
 		return;
 	}
+	if (!empty($running['bulk'])) {
+		return;
+	}
 	if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
 		return;
 	}
@@ -220,6 +223,52 @@ add_action('save_post', function (int $post_id, \WP_Post $post): void {
 		return;
 	}
 	if ((int) $post->menu_order !== 0) {
+		$desired_order = (int) $post->menu_order;
+		$duplicates = get_posts([
+			'post_type'      => $post->post_type,
+			'post_status'    => 'any',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+			'orderby'        => ['menu_order' => 'ASC', 'date' => 'ASC', 'ID' => 'ASC'],
+			'order'          => 'ASC',
+			'exclude'        => [$post_id],
+		]);
+		$has_collision = false;
+		foreach ((array) $duplicates as $duplicate_id) {
+			if ((int) get_post_field('menu_order', (int) $duplicate_id) === $desired_order) {
+				$has_collision = true;
+				break;
+			}
+		}
+		if (!$has_collision) {
+			return;
+		}
+
+		$to_shift = get_posts([
+			'post_type'      => $post->post_type,
+			'post_status'    => 'any',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+			'orderby'        => ['menu_order' => 'DESC', 'date' => 'DESC', 'ID' => 'DESC'],
+			'order'          => 'DESC',
+			'exclude'        => [$post_id],
+		]);
+
+		$running['bulk'] = true;
+		foreach ((array) $to_shift as $shift_id) {
+			$shift_id = (int) $shift_id;
+			$current_order = (int) get_post_field('menu_order', $shift_id);
+			if ($current_order < $desired_order) {
+				continue;
+			}
+			$running[$shift_id] = true;
+			wp_update_post([
+				'ID'         => $shift_id,
+				'menu_order' => $current_order + 1,
+			]);
+			unset($running[$shift_id]);
+		}
+		unset($running['bulk']);
 		return;
 	}
 
