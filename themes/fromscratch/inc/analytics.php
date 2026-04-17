@@ -522,6 +522,83 @@ function fs_dashboard_matomo_is_excluded_top_page_row(string $url, string $label
 }
 
 /**
+ * Rows from Referrers.getWebsites or Referrers.getSearchEngines (nb_visits). Omits rows with no URL after normalization.
+ *
+ * @param mixed $payload
+ *
+ * @return array<int, array{label:string,url:string,hits:int}>
+ */
+function fs_dashboard_matomo_parse_referrer_table_rows($payload): array
+{
+    if (!is_array($payload)) {
+        return [];
+    }
+    if (isset($payload['value']) && is_array($payload['value'])) {
+        $payload = $payload['value'];
+    }
+    if (isset($payload['result']) && $payload['result'] === 'error') {
+        return [];
+    }
+    $out = [];
+    foreach ($payload as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+        $label = isset($row['label']) ? trim((string) $row['label']) : '';
+        $url = isset($row['url']) ? trim((string) $row['url']) : '';
+        if ($label === '') {
+            continue;
+        }
+        if ($url === '' && preg_match('/^[a-z0-9.-]+\.[a-z]{2,}$/iu', $label)) {
+            $url = 'https://' . $label;
+        }
+        if ($url === '') {
+            continue;
+        }
+        $visits = (int) ($row['nb_visits'] ?? $row['sum_nb_visits'] ?? 0);
+        $out[] = [
+            'label' => $label,
+            'url' => $url,
+            'hits' => max(0, $visits),
+        ];
+    }
+
+    return $out;
+}
+
+/**
+ * Merge website + search-engine referrer rows by highest nb_visits per URL, then global top $limit.
+ *
+ * @return array<int, array{label:string,url:string,hits:int}>
+ */
+function fs_dashboard_matomo_merge_top_referrers(array $website_rows, array $engine_rows, int $limit = 10): array
+{
+    $by_url = [];
+    foreach (array_merge($website_rows, $engine_rows) as $row) {
+        if (!is_array($row) || !isset($row['url'], $row['hits'])) {
+            continue;
+        }
+        $key = strtolower((string) $row['url']);
+        if ($key === '') {
+            continue;
+        }
+        $h = (int) $row['hits'];
+        if (!isset($by_url[$key]) || (int) $by_url[$key]['hits'] < $h) {
+            $by_url[$key] = $row;
+        }
+    }
+    $merged = array_values($by_url);
+    if ($merged === []) {
+        return [];
+    }
+    usort($merged, static function (array $a, array $b): int {
+        return ((int) ($b['hits'] ?? 0)) <=> ((int) ($a['hits'] ?? 0));
+    });
+
+    return array_slice($merged, 0, max(0, $limit));
+}
+
+/**
  * Bulk Matomo request: daily/weekly series, 90-day devices, top pages & referrers, visits summary.
  *
  * @return array{
@@ -556,7 +633,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'days' => $days,
         'weeks' => $weeks,
         // Bump when bulk URLs/segments change so transients are not stale.
-        'bulk_schema' => 9,
+        'bulk_schema' => 10,
     ]));
 
     $bypass_cache = is_admin()
@@ -618,7 +695,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         )),
         // Top pages: previous 90 days.
         'urls[5]' => rawurlencode(sprintf(
-            'method=Actions.getPageUrls&period=range&date=previous90&idSite=%d&flat=1&filter_limit=40',
+            'method=Actions.getPageUrls&period=range&date=previous90&idSite=%d&flat=1&filter_limit=30',
             (int) $settings['site_id']
         )),
         // Site-wide average visit duration (seconds), previous 90 days.
@@ -626,9 +703,13 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
             'method=VisitsSummary.get&period=range&date=previous90&idSite=%d',
             (int) $settings['site_id']
         )),
-        // Top referrers (websites): previous 90 days.
+        // Referrers: websites + search engines (merged client-side into one top 10).
         'urls[7]' => rawurlencode(sprintf(
-            'method=Referrers.getWebsites&period=range&date=previous90&idSite=%d&filter_limit=40',
+            'method=Referrers.getWebsites&period=range&date=previous90&idSite=%d&filter_limit=30',
+            (int) $settings['site_id']
+        )),
+        'urls[8]' => rawurlencode(sprintf(
+            'method=Referrers.getSearchEngines&period=range&date=previous90&idSite=%d&filter_limit=30',
             (int) $settings['site_id']
         )),
     ];
@@ -821,34 +902,9 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         $out['pages'] = array_slice($pages, 0, 10);
     }
 
-    // Top referrers: website referrers; Matomo reports visits per row (nb_visits).
-    $referrers_payload = $data[7] ?? [];
-    if (is_array($referrers_payload) && isset($referrers_payload['value']) && is_array($referrers_payload['value'])) {
-        $referrers_payload = $referrers_payload['value'];
-    }
-    if (is_array($referrers_payload)) {
-        $referrers = [];
-        foreach ($referrers_payload as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-            $label = isset($row['label']) ? (string) $row['label'] : '';
-            $url = isset($row['url']) ? (string) $row['url'] : '';
-            $metric = (int) ($row['nb_visits'] ?? $row['sum_nb_visits'] ?? 0);
-            if ($label === '') {
-                continue;
-            }
-            if ($url === '' && preg_match('/^[a-z0-9.-]+\.[a-z]{2,}$/iu', $label)) {
-                $url = 'https://' . $label;
-            }
-            $referrers[] = [
-                'label' => $label,
-                'url' => $url,
-                'hits' => max(0, $metric),
-            ];
-        }
-        $out['referrers'] = array_slice($referrers, 0, 10);
-    }
+    $website_refs = fs_dashboard_matomo_parse_referrer_table_rows($data[7] ?? []);
+    $engine_refs = fs_dashboard_matomo_parse_referrer_table_rows($data[8] ?? []);
+    $out['referrers'] = fs_dashboard_matomo_merge_top_referrers($website_refs, $engine_refs, 10);
 
     $out['visits_summary_90d'] = fs_dashboard_matomo_parse_visits_summary_90d($data[6] ?? []);
 
