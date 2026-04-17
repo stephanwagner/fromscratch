@@ -20,11 +20,11 @@ function fs_dashboard_get_analytics_settings(): array
         'colors' => [
             [
                 'fill' => '#2284e5',
-                'transparent' => '#2284e540',
+                'transparent' => '#2284e530',
             ],
             [
                 'fill' => '#8f70cc',
-                'transparent' => '#8f70cc40',
+                'transparent' => '#8f70cc30',
             ],
             [
                 'fill' => '#ff6673',
@@ -599,6 +599,60 @@ function fs_dashboard_matomo_merge_top_referrers(array $website_rows, array $eng
 }
 
 /**
+ * First day of recording from SitesManager.getSiteFromId: prefers start_date (tracking from), else ts_created.
+ *
+ * @param mixed $payload
+ */
+function fs_dashboard_matomo_parse_site_first_recording_ts($payload): ?int
+{
+    if (!is_array($payload)) {
+        return null;
+    }
+    if (isset($payload['result']) && $payload['result'] === 'error') {
+        return null;
+    }
+    if (isset($payload['value']) && is_array($payload['value'])) {
+        $payload = $payload['value'];
+    }
+    $row = $payload;
+    if (isset($payload[0]) && is_array($payload[0])) {
+        $row = $payload[0];
+    }
+    if (!is_array($row)) {
+        return null;
+    }
+    $start = isset($row['start_date']) ? trim((string) $row['start_date']) : '';
+    if ($start !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $start)) {
+        $dt = DateTimeImmutable::createFromFormat('Y-m-d', $start, wp_timezone());
+        if ($dt !== false) {
+            return $dt->setTime(0, 0, 0)->getTimestamp();
+        }
+    }
+    if (isset($row['ts_created']) && $row['ts_created'] !== '') {
+        $tc = $row['ts_created'];
+        if (is_numeric($tc)) {
+            $ts = (int) $tc;
+            return $ts > 0 ? $ts : null;
+        }
+        $parsed = strtotime((string) $tc);
+        return $parsed > 0 ? $parsed : null;
+    }
+
+    return null;
+}
+
+/**
+ * @return array{nb_visits:int,since_ts:int|null}
+ */
+function fs_dashboard_default_alltime_summary(): array
+{
+    return [
+        'nb_visits' => 0,
+        'since_ts' => null,
+    ];
+}
+
+/**
  * Bulk Matomo request: daily/weekly series, 90-day devices, top pages & referrers, visits summary.
  *
  * @return array{
@@ -607,7 +661,8 @@ function fs_dashboard_matomo_merge_top_referrers(array $website_rows, array $eng
  *   devices: array{desktop:int,mobile:int,tablet:int},
  *   pages: array<int, array{label:string,url:string,hits:int}>,
  *   referrers: array<int, array{label:string,url:string,hits:int}>,
- *   visits_summary_90d: array{avg_time_on_site:int,nb_visits:int,nb_actions:int,nb_uniq_visitors:int,bounce_count:int}
+ *   visits_summary_90d: array{avg_time_on_site:int,nb_visits:int,nb_actions:int,nb_uniq_visitors:int,bounce_count:int},
+ *   alltime_summary: array{nb_visits:int,since_ts:int|null}
  * }
  */
 function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8): array
@@ -623,6 +678,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
             'pages' => [],
             'referrers' => [],
             'visits_summary_90d' => fs_dashboard_default_visits_summary_90d(),
+            'alltime_summary' => fs_dashboard_default_alltime_summary(),
         ];
     }
 
@@ -633,7 +689,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'days' => $days,
         'weeks' => $weeks,
         // Bump when bulk URLs/segments change so transients are not stale.
-        'bulk_schema' => 10,
+        'bulk_schema' => 12,
     ]));
 
     $bypass_cache = is_admin()
@@ -644,12 +700,13 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         $cached = get_transient($cache_key);
         if (
             is_array($cached)
-            && isset($cached['daily'], $cached['weekly'], $cached['devices'], $cached['pages'], $cached['referrers'], $cached['visits_summary_90d'])
+            && isset($cached['daily'], $cached['weekly'], $cached['devices'], $cached['pages'], $cached['referrers'], $cached['visits_summary_90d'], $cached['alltime_summary'])
             && is_array($cached['daily'])
             && is_array($cached['weekly'])
             && is_array($cached['devices'])
             && is_array($cached['pages'])
             && is_array($cached['referrers'])
+            && is_array($cached['alltime_summary'])
         ) {
             return $cached;
         }
@@ -712,6 +769,14 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
             'method=Referrers.getSearchEngines&period=range&date=previous90&idSite=%d&filter_limit=30',
             (int) $settings['site_id']
         )),
+        'urls[9]' => rawurlencode(sprintf(
+            'method=SitesManager.getSiteFromId&idSite=%d',
+            (int) $settings['site_id']
+        )),
+        'urls[10]' => rawurlencode(sprintf(
+            'method=VisitsSummary.get&period=range&date=2000-01-01,today&idSite=%d',
+            (int) $settings['site_id']
+        )),
     ];
     $bulk_url = $bulk_base . '?' . http_build_query($bulk_query, '', '&', PHP_QUERY_RFC3986);
 
@@ -726,6 +791,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'pages' => [],
         'referrers' => [],
         'visits_summary_90d' => fs_dashboard_default_visits_summary_90d(),
+        'alltime_summary' => fs_dashboard_default_alltime_summary(),
     ];
     if (is_wp_error($response)) {
         fs_dashboard_set_last_matomo_error($response->get_error_message());
@@ -847,6 +913,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'pages' => [],
         'referrers' => [],
         'visits_summary_90d' => fs_dashboard_default_visits_summary_90d(),
+        'alltime_summary' => fs_dashboard_default_alltime_summary(),
     ];
 
     $range_visits = static function ($payload): int {
@@ -907,6 +974,12 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
     $out['referrers'] = fs_dashboard_matomo_merge_top_referrers($website_refs, $engine_refs, 10);
 
     $out['visits_summary_90d'] = fs_dashboard_matomo_parse_visits_summary_90d($data[6] ?? []);
+
+    $alltime_stats = fs_dashboard_matomo_parse_visits_summary_90d($data[10] ?? []);
+    $out['alltime_summary'] = [
+        'nb_visits' => (int) ($alltime_stats['nb_visits'] ?? 0),
+        'since_ts' => fs_dashboard_matomo_parse_site_first_recording_ts($data[9] ?? []),
+    ];
 
     fs_dashboard_set_last_matomo_error('');
     set_transient($cache_key, $out, HOUR_IN_SECONDS);
@@ -1441,17 +1514,28 @@ function fs_render_dashboard_statistics_page(): void
         <?php
         $matomo_settings = fs_dashboard_matomo_settings();
         $matomo_login_url = $matomo_settings ? $matomo_settings['url'] : '';
-        $total_visits = array_sum(array_map(static fn($r) => (int) ($r['visits'] ?? 0), $rows));
-        $total_pageviews = array_sum(array_map(static fn($r) => (int) ($r['pageviews'] ?? 0), $rows));
+        $alltime = is_array($series['alltime_summary'] ?? null)
+            ? array_merge(fs_dashboard_default_alltime_summary(), $series['alltime_summary'])
+            : fs_dashboard_default_alltime_summary();
+        $alltime_visits = (int) ($alltime['nb_visits'] ?? 0);
+        $since_ts = isset($alltime['since_ts']) && $alltime['since_ts'] !== null ? (int) $alltime['since_ts'] : 0;
         ?>
         <div class="notice inline fs-analytics-summary-notice">
             <div style="margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
                 <div>
-                    <strong><?= esc_html__('Total', 'fromscratch') ?>:</strong>
-                    <?= esc_html(sprintf(__('%1$s visits', 'fromscratch'), number_format_i18n((int) $total_visits))) ?>
-                    · <?= esc_html(sprintf(__('%1$s page views', 'fromscratch'), number_format_i18n((int) $total_pageviews))) ?>
+                    <strong><?= esc_html__('All-time totals', 'fromscratch') ?>:</strong>
+                    <?= esc_html(sprintf(__('%1$s visits', 'fromscratch'), number_format_i18n($alltime_visits))) ?>
                     <?php if ($matomo_login_url !== '') : ?>
                         · <a href="<?= esc_url($matomo_login_url) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html__('Open Matomo', 'fromscratch') ?></a>
+                    <?php endif; ?>
+                    <?php if ($since_ts > 0) : ?>
+                        <div class="fs-analytics-summary-since">
+                            <?= esc_html(sprintf(
+                                /* translators: %s: first date visits are recorded from (localized) */
+                                __('Since %s', 'fromscratch'),
+                                wp_date((string) get_option('date_format'), $since_ts)
+                            )) ?>
+                        </div>
                     <?php endif; ?>
                 </div>
                 <?php if (current_user_can('manage_options')) : ?>

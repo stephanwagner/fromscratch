@@ -1544,6 +1544,12 @@ msgid "Optional additional _paq commands. One command per line."
 msgstr "Optionale zusätzliche _paq-Befehle. Ein Befehl pro Zeile."
 
 # Dashboard > Analytics (Matomo)
+msgid "All-time totals"
+msgstr "Gesamtwerte"
+
+msgid "Since %s"
+msgstr "Seit %s"
+
 msgid "Analytics"
 msgstr "Statistiken"
 
