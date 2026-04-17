@@ -1692,7 +1692,7 @@ msgstr "%1$d h %2$d min"
 
 # Admin bar
 msgid "View Site"
-msgstr "Site ansehen"
+msgstr "Seite ansehen"
 
 msgid "Dashboard"
 msgstr "Dashboard"
