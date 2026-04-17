@@ -1,6 +1,40 @@
 <?php
 
 /**
+ * Settings
+ */
+function fs_dashboard_get_analytics_settings(): array
+{
+    return [
+        'lineChart' => [
+            'borderWidth' => 2,
+            'tension' => 0.3,
+            'pointRadius' => 3,
+            'pointHoverRadius' => 4,
+        ],
+        'barChart' => [
+            'borderWidth' => 2,
+            'maxBarThickness' => 56,
+            'borderRadius' => 8,
+        ],
+        'colors' => [
+            [
+                'fill' => '#2284e5',
+                'transparent' => '#2284e540',
+            ],
+            [
+                'fill' => '#8f70cc',
+                'transparent' => '#8f70cc40',
+            ],
+            [
+                'fill' => '#ff6673',
+                'transparent' => '#ff667340',
+            ],
+        ],
+    ];
+}
+
+/**
  * Dashboard > Analytics page.
  */
 add_action('admin_menu', function (): void {
@@ -404,7 +438,7 @@ function fs_dashboard_render_top_pages_table(array $pages): void
                         <span class="fs-stats-metric__value"><?= esc_html(number_format_i18n($hits)) ?></span>
                         <span class="fs-stats-metric__bar" aria-hidden="true">
                             <span class="fs-stats-metric__track">
-                                <span class="fs-stats-metric__fill fs-stats-metric__fill--pageviews" style="width: <?= $w ?>%;"></span>
+                                <span class="fs-stats-metric__fill fs-stats-metric__fill--pageviews" style="width: <?= $w ?>%; background-color: <?= esc_attr(fs_dashboard_get_analytics_settings()['colors'][2]['fill']) ?>;"></span>
                             </span>
                         </span>
                     </td>
@@ -865,7 +899,7 @@ function fs_dashboard_render_stats_metric_cells(array $row, array $maxima): void
         ['key' => 'visits', 'class' => 'visits'],
         ['key' => 'pageviews', 'class' => 'pageviews'],
     ];
-    foreach ($cells as $cell) {
+    foreach ($cells as $index => $cell) {
         $k = $cell['key'];
         $val = (int) ($row[$k] ?? 0);
         $width = (int) ($w[$k] ?? 0);
@@ -875,7 +909,9 @@ function fs_dashboard_render_stats_metric_cells(array $row, array $maxima): void
             <span class="fs-stats-metric__value"><?= esc_html(number_format_i18n($val)) ?></span>
             <span class="fs-stats-metric__bar" aria-hidden="true">
                 <span class="fs-stats-metric__track">
-                    <span class="fs-stats-metric__fill fs-stats-metric__fill--<?= esc_attr($cls) ?>" style="width: <?= $width ?>%;"></span>
+                    <span
+                        class="fs-stats-metric__fill fs-stats-metric__fill--<?= esc_attr($cls) ?>"
+                        style="width: <?= $width ?>%; background-color: <?= esc_attr(fs_dashboard_get_analytics_settings()['colors'][$index]['fill']) ?>;"></span>
                 </span>
             </span>
         </td>
@@ -1013,39 +1049,42 @@ function fs_render_dashboard_statistics_page(): void
         [
             'label' => __('Unique visitors', 'fromscratch'),
             'data' => $unique,
-            'borderColor' => '#2e8ae5',
-            'backgroundColor' => '#2e8ae5',
-            'borderWidth' => 3,
-            'tension' => 0.3,
-            'fill' => false,
-            'pointRadius' => 3.5,
-            'pointHoverRadius' => 4.5,
-            'pointBackgroundColor' => '#2e8ae5',
+            'borderWidth' => fs_dashboard_get_analytics_settings()['lineChart']['borderWidth'],
+            'tension' => fs_dashboard_get_analytics_settings()['lineChart']['tension'],
+            'pointRadius' => fs_dashboard_get_analytics_settings()['lineChart']['pointRadius'],
+            'pointHoverRadius' => fs_dashboard_get_analytics_settings()['lineChart']['pointHoverRadius'],
+            'fill' => true,
+            'backgroundColor' => fs_dashboard_get_analytics_settings()['colors'][0]['transparent'],
+            'borderColor' => fs_dashboard_get_analytics_settings()['colors'][0]['fill'],
+            'fillColor' => fs_dashboard_get_analytics_settings()['colors'][0]['transparent'],
+            'pointBackgroundColor' => fs_dashboard_get_analytics_settings()['colors'][0]['fill'],
         ],
         [
             'label' => __('Visits', 'fromscratch'),
             'data' => $visits,
-            'borderColor' => '#99ccff',
-            'backgroundColor' => '#99ccff',
-            'borderWidth' => 3,
-            'tension' => 0.3,
-            'fill' => false,
-            'pointRadius' => 3.5,
-            'pointHoverRadius' => 4.5,
-            'pointBackgroundColor' => '#99ccff',
+            'borderWidth' => fs_dashboard_get_analytics_settings()['lineChart']['borderWidth'],
+            'tension' => fs_dashboard_get_analytics_settings()['lineChart']['tension'],
+            'pointRadius' => fs_dashboard_get_analytics_settings()['lineChart']['pointRadius'],
+            'pointHoverRadius' => fs_dashboard_get_analytics_settings()['lineChart']['pointHoverRadius'],
+            'fill' => true,
+            'backgroundColor' => fs_dashboard_get_analytics_settings()['colors'][1]['transparent'],
+            'borderColor' => fs_dashboard_get_analytics_settings()['colors'][1]['fill'],
+            'fillColor' => fs_dashboard_get_analytics_settings()['colors'][1]['transparent'],
+            'pointBackgroundColor' => fs_dashboard_get_analytics_settings()['colors'][1]['fill'],
         ],
         [
             'label' => __('Page views', 'fromscratch'),
             'data' => $pageviews,
-            'borderColor' => '#ff6673',
-            'backgroundColor' => '#ff6673',
-            'borderWidth' => 3,
-            'tension' => 0.3,
-            'fill' => false,
-            'pointRadius' => 3.5,
-            'pointHoverRadius' => 4.5,
-            'pointBackgroundColor' => '#ff6673',
-        ]
+            'borderWidth' => fs_dashboard_get_analytics_settings()['lineChart']['borderWidth'],
+            'tension' => fs_dashboard_get_analytics_settings()['lineChart']['tension'],
+            'pointRadius' => fs_dashboard_get_analytics_settings()['lineChart']['pointRadius'],
+            'pointHoverRadius' => fs_dashboard_get_analytics_settings()['lineChart']['pointHoverRadius'],
+            'fill' => true,
+            'backgroundColor' => fs_dashboard_get_analytics_settings()['colors'][2]['transparent'],
+            'borderColor' => fs_dashboard_get_analytics_settings()['colors'][2]['fill'],
+            'fillColor' => fs_dashboard_get_analytics_settings()['colors'][2]['transparent'],
+            'pointBackgroundColor' => fs_dashboard_get_analytics_settings()['colors'][2]['fill'],
+        ],
     ];
     $line_chart_config = fs_dashboard_line_chart_config($labels, $datasets);
 
@@ -1073,38 +1112,38 @@ function fs_render_dashboard_statistics_page(): void
             [
                 'label' => __('Unique visitors', 'fromscratch'),
                 'data' => $week_unique,
-                'borderColor' => '#2e8ae5',
-                'backgroundColor' => '#2e8ae5',
-                'borderWidth' => 3,
-                'tension' => 0.3,
-                'fill' => false,
-                'pointRadius' => 3.5,
-                'pointHoverRadius' => 4.5,
-                'pointBackgroundColor' => '#2e8ae5',
+                'borderWidth' => fs_dashboard_get_analytics_settings()['lineChart']['borderWidth'],
+                'tension' => fs_dashboard_get_analytics_settings()['lineChart']['tension'],
+                'pointRadius' => fs_dashboard_get_analytics_settings()['lineChart']['pointRadius'],
+                'pointHoverRadius' => fs_dashboard_get_analytics_settings()['lineChart']['pointHoverRadius'],
+                'fill' => true,
+                'backgroundColor' => fs_dashboard_get_analytics_settings()['colors'][0]['transparent'],
+                'borderColor' => fs_dashboard_get_analytics_settings()['colors'][0]['fill'],
+                'pointBackgroundColor' => fs_dashboard_get_analytics_settings()['colors'][0]['fill'],
             ],
             [
                 'label' => __('Visits', 'fromscratch'),
                 'data' => $week_visits,
-                'borderColor' => '#99ccff',
-                'backgroundColor' => '#99ccff',
-                'borderWidth' => 3,
-                'tension' => 0.3,
-                'fill' => false,
-                'pointRadius' => 3.5,
-                'pointHoverRadius' => 4.5,
-                'pointBackgroundColor' => '#99ccff',
+                'borderWidth' => fs_dashboard_get_analytics_settings()['lineChart']['borderWidth'],
+                'tension' => fs_dashboard_get_analytics_settings()['lineChart']['tension'],
+                'pointRadius' => fs_dashboard_get_analytics_settings()['lineChart']['pointRadius'],
+                'pointHoverRadius' => fs_dashboard_get_analytics_settings()['lineChart']['pointHoverRadius'],
+                'fill' => true,
+                'backgroundColor' => fs_dashboard_get_analytics_settings()['colors'][1]['transparent'],
+                'borderColor' => fs_dashboard_get_analytics_settings()['colors'][1]['fill'],
+                'pointBackgroundColor' => fs_dashboard_get_analytics_settings()['colors'][1]['fill'],
             ],
             [
                 'label' => __('Page views', 'fromscratch'),
                 'data' => $week_pageviews,
-                'borderColor' => '#ff6673',
-                'backgroundColor' => '#ff6673',
-                'borderWidth' => 3,
-                'tension' => 0.3,
-                'fill' => false,
-                'pointRadius' => 3.5,
-                'pointHoverRadius' => 4.5,
-                'pointBackgroundColor' => '#ff6673',
+                'borderWidth' => fs_dashboard_get_analytics_settings()['lineChart']['borderWidth'],
+                'tension' => fs_dashboard_get_analytics_settings()['lineChart']['tension'],
+                'pointRadius' => fs_dashboard_get_analytics_settings()['lineChart']['pointRadius'],
+                'pointHoverRadius' => fs_dashboard_get_analytics_settings()['lineChart']['pointHoverRadius'],
+                'fill' => true,
+                'backgroundColor' => fs_dashboard_get_analytics_settings()['colors'][2]['transparent'],
+                'borderColor' => fs_dashboard_get_analytics_settings()['colors'][2]['fill'],
+                'pointBackgroundColor' => fs_dashboard_get_analytics_settings()['colors'][2]['fill'],
             ],
         ];
         $week_chart_config = fs_dashboard_line_chart_config($week_labels, $week_datasets);
@@ -1136,18 +1175,26 @@ function fs_render_dashboard_statistics_page(): void
                         $device_mobile,
                         $device_tablet,
                     ],
-                    'backgroundColor' => ['#ff667399', '#2e8ae599', '#99ccff99'],
-                    'borderColor' => ['#ff6673', '#2e8ae5', '#99ccff'],
-                    'borderWidth' => 2,
+                    'backgroundColor' => [
+                        fs_dashboard_get_analytics_settings()['colors'][2]['transparent'],
+                        fs_dashboard_get_analytics_settings()['colors'][0]['transparent'],
+                        fs_dashboard_get_analytics_settings()['colors'][1]['transparent'],
+                    ],
+                    'borderColor' => [
+                        fs_dashboard_get_analytics_settings()['colors'][2]['fill'],
+                        fs_dashboard_get_analytics_settings()['colors'][0]['fill'],
+                        fs_dashboard_get_analytics_settings()['colors'][1]['fill'],
+                    ],
+                    'borderWidth' => fs_dashboard_get_analytics_settings()['barChart']['borderWidth'],
                     'borderRadius' => [
-                        'topLeft' => 8,
-                        'topRight' => 8,
+                        'topLeft' => fs_dashboard_get_analytics_settings()['barChart']['borderRadius'],
+                        'topRight' => fs_dashboard_get_analytics_settings()['barChart']['borderRadius'],
                     ],
                 ],
             ],
         ],
         'options' => [
-            'maxBarThickness' => 64,
+            'maxBarThickness' => fs_dashboard_get_analytics_settings()['barChart']['maxBarThickness'],
             'responsive' => true,
             'maintainAspectRatio' => false,
             'plugins' => [

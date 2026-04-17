@@ -1653,7 +1653,7 @@ msgid "Rank"
 msgstr "Rang"
 
 msgid "Hits"
-msgstr "Treffer"
+msgstr "Aufrufe"
 
 msgid "%d s"
 msgstr "%d s"
