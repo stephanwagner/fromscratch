@@ -26,6 +26,10 @@
   border-radius: 6px;
   padding: 16px;
   word-break: break-word;
+
+  canvas {
+    display: block;
+  }
 }
 
 .fs-chart-container--table {
@@ -132,11 +136,6 @@
   }
 }
 
-/* Second analytics row: pages | referrers (devices+overview are the row above) */
-.fs-chart-wrapper-flex--pages-referrers {
-  margin-top: 24px;
-}
-
 .fs-chart-container-flex {
   width: calc(50% - 12px);
 
@@ -157,8 +156,10 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 4px 16px;
-  padding: 8px 0;
+  padding: 12px 0;
   border-top: 1px solid #e8e8ea;
+  margin: 0;
+  line-height: 18px;
 
   &:first-child {
     padding-top: 0;
@@ -167,7 +168,6 @@
 
   &:last-child {
     padding-bottom: 0;
-    margin-bottom: 0;
   }
 }
 

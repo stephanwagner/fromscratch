@@ -294,19 +294,103 @@ function fs_dashboard_default_visits_summary_90d(): array
 }
 
 /**
+ * VisitFrequency.get (previous 90 days): new vs returning visits and actions per visit.
+ *
+ * @return array{
+ *   nb_visits_new:int,
+ *   nb_visits_returning:int,
+ *   returning_visits_pct:int|null,
+ *   nb_actions_per_visit_new:float|null,
+ *   nb_actions_per_visit_returning:float|null
+ * }
+ */
+function fs_dashboard_matomo_parse_visit_frequency_90d($payload): array
+{
+    $empty = [
+        'nb_visits_new' => 0,
+        'nb_visits_returning' => 0,
+        'returning_visits_pct' => null,
+        'nb_actions_per_visit_new' => null,
+        'nb_actions_per_visit_returning' => null,
+    ];
+    if (!is_array($payload)) {
+        return $empty;
+    }
+    if (isset($payload['value']) && is_array($payload['value'])) {
+        $payload = $payload['value'];
+    }
+    if (isset($payload['result']) && $payload['result'] === 'error') {
+        return $empty;
+    }
+
+    $n = max(0, (int) ($payload['nb_visits_new'] ?? 0));
+    $r = max(0, (int) ($payload['nb_visits_returning'] ?? 0));
+    $total = $n + $r;
+    $returning_pct = $total > 0 ? (int) round(($r / $total) * 100) : null;
+
+    $apv_new = null;
+    if (isset($payload['nb_actions_per_visit_new']) && $payload['nb_actions_per_visit_new'] !== '') {
+        $apv_new = round((float) $payload['nb_actions_per_visit_new'], 2);
+    }
+    $apv_ret = null;
+    if (isset($payload['nb_actions_per_visit_returning']) && $payload['nb_actions_per_visit_returning'] !== '') {
+        $apv_ret = round((float) $payload['nb_actions_per_visit_returning'], 2);
+    }
+
+    return [
+        'nb_visits_new' => $n,
+        'nb_visits_returning' => $r,
+        'returning_visits_pct' => $returning_pct,
+        'nb_actions_per_visit_new' => $apv_new,
+        'nb_actions_per_visit_returning' => $apv_ret,
+    ];
+}
+
+/**
+ * @return array{
+ *   nb_visits_new:int,
+ *   nb_visits_returning:int,
+ *   returning_visits_pct:int|null,
+ *   nb_actions_per_visit_new:float|null,
+ *   nb_actions_per_visit_returning:float|null
+ * }
+ */
+function fs_dashboard_default_visit_frequency_90d(): array
+{
+    return [
+        'nb_visits_new' => 0,
+        'nb_visits_returning' => 0,
+        'returning_visits_pct' => null,
+        'nb_actions_per_visit_new' => null,
+        'nb_actions_per_visit_returning' => null,
+    ];
+}
+
+/**
  * Boxed list: 90-day site summary under the devices chart.
  *
  * @param array{avg_time_on_site?:int,nb_visits?:int,nb_actions?:int,nb_uniq_visitors?:int,bounce_count?:int} $s
+ * @param array{
+ *   nb_visits_new?:int,
+ *   nb_visits_returning?:int,
+ *   returning_visits_pct?:int|null,
+ *   nb_actions_per_visit_new?:float|null,
+ *   nb_actions_per_visit_returning?:float|null
+ * } $visit_frequency
  */
-function fs_dashboard_render_visits_summary_90d_box(array $s): void
+function fs_dashboard_render_visits_summary_90d_box(array $s, array $visit_frequency = []): void
 {
     $s = array_merge(fs_dashboard_default_visits_summary_90d(), $s);
+    $vf = array_merge(fs_dashboard_default_visit_frequency_90d(), $visit_frequency);
     $avg = (int) $s['avg_time_on_site'];
     $visits = (int) $s['nb_visits'];
     $actions = (int) $s['nb_actions'];
     $bounce = (int) $s['bounce_count'];
     $bounce_pct = $visits > 0 ? (int) round(($bounce / $visits) * 100) : null;
     $apv = $visits > 0 ? round($actions / $visits, 1) : null;
+    $ret_pct = isset($vf['returning_visits_pct']) && $vf['returning_visits_pct'] !== null ? (int) $vf['returning_visits_pct'] : null;
+    $apv_new = $vf['nb_actions_per_visit_new'] ?? null;
+    $apv_ret = $vf['nb_actions_per_visit_returning'] ?? null;
 ?>
     <div class="fs-chart-container">
         <ul class="fs-visits-summary-list">
@@ -319,8 +403,24 @@ function fs_dashboard_render_visits_summary_90d_box(array $s): void
                 <span class="fs-visits-summary-list__value"><?= $bounce_pct === null ? '–' : esc_html(sprintf(__('%d%%', 'fromscratch'), $bounce_pct)) ?></span>
             </li>
             <li>
+                <span class="fs-visits-summary-list__label"><?= esc_html__(
+                    /* translators: VisitFrequency: share of all visits (90 days) that are from returning visitors; value column shows e.g. 25%%. */
+                    'Returning visitors',
+                    'fromscratch'
+                ) ?></span>
+                <span class="fs-visits-summary-list__value"><?= $ret_pct === null ? '–' : esc_html($ret_pct) . ' %' ?></span>
+            </li>
+            <li>
                 <span class="fs-visits-summary-list__label"><?= esc_html__('Actions per visit', 'fromscratch') ?></span>
                 <span class="fs-visits-summary-list__value"><?= $apv === null ? '–' : esc_html(number_format_i18n($apv, 1)) ?></span>
+            </li>
+            <li>
+                <span class="fs-visits-summary-list__label"><?= esc_html__('Actions per visit (new visitors)', 'fromscratch') ?></span>
+                <span class="fs-visits-summary-list__value"><?= $apv_new === null ? '–' : esc_html(number_format_i18n((float) $apv_new, 1)) ?></span>
+            </li>
+            <li>
+                <span class="fs-visits-summary-list__label"><?= esc_html__('Actions per visit (returning visitors)', 'fromscratch') ?></span>
+                <span class="fs-visits-summary-list__value"><?= $apv_ret === null ? '–' : esc_html(number_format_i18n((float) $apv_ret, 1)) ?></span>
             </li>
         </ul>
     </div>
@@ -662,6 +762,7 @@ function fs_dashboard_default_alltime_summary(): array
  *   pages: array<int, array{label:string,url:string,hits:int}>,
  *   referrers: array<int, array{label:string,url:string,hits:int}>,
  *   visits_summary_90d: array{avg_time_on_site:int,nb_visits:int,nb_actions:int,nb_uniq_visitors:int,bounce_count:int},
+ *   visit_frequency_90d: array{nb_visits_new:int,nb_visits_returning:int,returning_visits_pct:int|null,nb_actions_per_visit_new:float|null,nb_actions_per_visit_returning:float|null},
  *   alltime_summary: array{nb_visits:int,since_ts:int|null}
  * }
  */
@@ -678,6 +779,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
             'pages' => [],
             'referrers' => [],
             'visits_summary_90d' => fs_dashboard_default_visits_summary_90d(),
+            'visit_frequency_90d' => fs_dashboard_default_visit_frequency_90d(),
             'alltime_summary' => fs_dashboard_default_alltime_summary(),
         ];
     }
@@ -689,7 +791,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'days' => $days,
         'weeks' => $weeks,
         // Bump when bulk URLs/segments change so transients are not stale.
-        'bulk_schema' => 14,
+        'bulk_schema' => 15,
     ]));
 
     $bypass_cache = is_admin()
@@ -700,7 +802,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         $cached = get_transient($cache_key);
         if (
             is_array($cached)
-            && isset($cached['daily'], $cached['weekly'], $cached['devices'], $cached['pages'], $cached['referrers'], $cached['visits_summary_90d'], $cached['alltime_summary'])
+            && isset($cached['daily'], $cached['weekly'], $cached['devices'], $cached['pages'], $cached['referrers'], $cached['visits_summary_90d'], $cached['visit_frequency_90d'], $cached['alltime_summary'])
             && is_array($cached['daily'])
             && is_array($cached['weekly'])
             && is_array($cached['devices'])
@@ -777,6 +879,11 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
             'method=VisitsSummary.get&period=range&date=2000-01-01,today&idSite=%d',
             (int) $settings['site_id']
         )),
+        // New vs returning visitors (VisitFrequency), previous 90 days.
+        'urls[11]' => rawurlencode(sprintf(
+            'method=VisitFrequency.get&period=range&date=previous90&idSite=%d',
+            (int) $settings['site_id']
+        )),
     ];
     $bulk_url = $bulk_base . '?' . http_build_query($bulk_query, '', '&', PHP_QUERY_RFC3986);
 
@@ -791,6 +898,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'pages' => [],
         'referrers' => [],
         'visits_summary_90d' => fs_dashboard_default_visits_summary_90d(),
+        'visit_frequency_90d' => fs_dashboard_default_visit_frequency_90d(),
         'alltime_summary' => fs_dashboard_default_alltime_summary(),
     ];
     if (is_wp_error($response)) {
@@ -913,6 +1021,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'pages' => [],
         'referrers' => [],
         'visits_summary_90d' => fs_dashboard_default_visits_summary_90d(),
+        'visit_frequency_90d' => fs_dashboard_default_visit_frequency_90d(),
         'alltime_summary' => fs_dashboard_default_alltime_summary(),
     ];
 
@@ -974,6 +1083,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
     $out['referrers'] = fs_dashboard_matomo_merge_top_referrers($website_refs, $engine_refs, 10);
 
     $out['visits_summary_90d'] = fs_dashboard_matomo_parse_visits_summary_90d($data[6] ?? []);
+    $out['visit_frequency_90d'] = fs_dashboard_matomo_parse_visit_frequency_90d($data[11] ?? []);
 
     $alltime_stats = fs_dashboard_matomo_parse_visits_summary_90d($data[10] ?? []);
     $out['alltime_summary'] = [
@@ -1487,6 +1597,9 @@ function fs_render_dashboard_statistics_page(): void
     $visits_summary_90d = is_array($series['visits_summary_90d'] ?? null)
         ? array_merge(fs_dashboard_default_visits_summary_90d(), $series['visits_summary_90d'])
         : fs_dashboard_default_visits_summary_90d();
+    $visit_frequency_90d = is_array($series['visit_frequency_90d'] ?? null)
+        ? array_merge(fs_dashboard_default_visit_frequency_90d(), $series['visit_frequency_90d'])
+        : fs_dashboard_default_visit_frequency_90d();
     ?>
     <div class="wrap fs-analytics-page">
         <h1><?= esc_html__('Analytics', 'fromscratch') ?></h1>
@@ -1637,14 +1750,14 @@ function fs_render_dashboard_statistics_page(): void
                 <div class="fs-chart-container">
                     <canvas
                         id="fs-stats-chart-devices"
-                        height="240"
+                        height="236"
                         data-chart="bar"
                         data-chart-config="<?= esc_attr(wp_json_encode($devices_chart_config)) ?>"></canvas>
                 </div>
             </div>
             <div class="fs-chart-container-flex">
                 <h2 style="margin-top: 0; margin-bottom: 12px;"><?= esc_html__('Overview (last 90 days)', 'fromscratch') ?></h2>
-                <?php fs_dashboard_render_visits_summary_90d_box($visits_summary_90d); ?>
+                <?php fs_dashboard_render_visits_summary_90d_box($visits_summary_90d, $visit_frequency_90d); ?>
             </div>
         </div>
 

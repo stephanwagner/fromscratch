@@ -1660,8 +1660,17 @@ msgstr "Übersicht (letzte 90 Tage)"
 msgid "Bounce rate"
 msgstr "Absprungrate"
 
+msgid "Returning visitors"
+msgstr "Wiederkehrende Besucher"
+
 msgid "Actions per visit"
 msgstr "Aktionen pro Besuch"
+
+msgid "Actions per visit (new visitors)"
+msgstr "Aktionen pro Besuch (Neue Besucher)"
+
+msgid "Actions per visit (returning visitors)"
+msgstr "Aktionen pro Besuch (Wiederkehrende Besucher)"
 
 msgid "Rank"
 msgstr "Rang"
