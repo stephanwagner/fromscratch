@@ -125,6 +125,11 @@
   }
 }
 
+/* Second analytics row: pages | referrers (devices+overview are the row above) */
+.fs-chart-wrapper-flex--pages-referrers {
+  margin-top: 24px;
+}
+
 .fs-chart-container-flex {
   width: calc(50% - 12px);
 

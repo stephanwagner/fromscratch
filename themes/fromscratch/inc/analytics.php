@@ -226,15 +226,7 @@ function fs_dashboard_get_matomo_daily_visits(int $days = 7): array
 }
 
 /**
- * Fetch Analytics Matomo data in one call.
- *
- * @return array{
- *   daily: array<int, array{date:string,unique:int,visits:int,pageviews:int}>,
- *   weekly: array<int, array{date:string,unique:int,visits:int,pageviews:int}>,
- *   devices: array{desktop:int,mobile:int,tablet:int},
- *   pages: array<int, array{label:string,url:string,hits:int}>,
- *   visits_summary_90d: array{avg_time_on_site:int,nb_visits:int,nb_actions:int,nb_uniq_visitors:int,bounce_count:int}
- * }
+ * Normalize a VisitsSummary.get API payload to a single stats row.
  */
 function fs_dashboard_matomo_normalize_visits_summary_payload($payload): ?array
 {
@@ -450,6 +442,61 @@ function fs_dashboard_render_top_pages_table(array $pages): void
 }
 
 /**
+ * @param array<int, array{label:string,url:string,hits:int}> $referrers
+ */
+function fs_dashboard_render_top_referrers_table(array $referrers): void
+{
+    if ($referrers === []) {
+        return;
+    }
+    $max_hits = fs_dashboard_top_pages_max_hits($referrers);
+?>
+    <table class="widefat striped fs-stats-table fs-top-pages-table" style="margin: 0;">
+        <thead>
+            <tr>
+                <th scope="col" class="fs-top-pages-table__rank">
+                    <span class="screen-reader-text"><?= esc_html__('Rank', 'fromscratch') ?></span>
+                </th>
+                <th scope="col" class="fs-top-pages-table__page"><?= esc_html__('Referrer', 'fromscratch') ?></th>
+                <th scope="col" class="fs-stats-metric fs-stats-metric--pageviews"><?= esc_html__('Hits', 'fromscratch') ?></th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            $i = 0;
+            foreach ($referrers as $row) :
+                $i++;
+                $label = (string) ($row['label'] ?? '');
+                $url = (string) ($row['url'] ?? '');
+                $hits = (int) ($row['hits'] ?? 0);
+                $text = $label !== '' ? $label : $url;
+                $w = $max_hits <= 0 ? 0 : (int) min(100, max(0, (int) round(($hits / $max_hits) * 100)));
+            ?>
+                <tr>
+                    <td class="fs-top-pages-table__rank"><?= esc_html((string) $i) ?></td>
+                    <td class="fs-top-pages-table__page">
+                        <?php if ($url !== '') : ?>
+                            <a href="<?= esc_url($url) ?>" target="_blank" rel="noopener noreferrer" title="<?= esc_attr($text) ?>"><?= esc_html($text) ?></a>
+                        <?php else : ?>
+                            <span title="<?= esc_attr($text) ?>"><?= esc_html($text) ?></span>
+                        <?php endif; ?>
+                    </td>
+                    <td class="fs-stats-metric fs-stats-metric--pageviews">
+                        <span class="fs-stats-metric__value"><?= esc_html(number_format_i18n($hits)) ?></span>
+                        <span class="fs-stats-metric__bar" aria-hidden="true">
+                            <span class="fs-stats-metric__track">
+                                <span class="fs-stats-metric__fill fs-stats-metric__fill--pageviews" style="width: <?= $w ?>%; background-color: <?= esc_attr(fs_dashboard_get_analytics_settings()['colors'][2]['fill']) ?>;"></span>
+                            </span>
+                        </span>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+    <?php
+}
+
+/**
  * Skip WordPress Customizer / preview URLs that pollute top pages (e.g. customize_changeset_uuid=…).
  */
 function fs_dashboard_matomo_is_excluded_top_page_row(string $url, string $label): bool
@@ -474,6 +521,18 @@ function fs_dashboard_matomo_is_excluded_top_page_row(string $url, string $label
     return false;
 }
 
+/**
+ * Bulk Matomo request: daily/weekly series, 90-day devices, top pages & referrers, visits summary.
+ *
+ * @return array{
+ *   daily: array<int, array{date:string,unique:int,visits:int,pageviews:int}>,
+ *   weekly: array<int, array{date:string,unique:int,visits:int,pageviews:int}>,
+ *   devices: array{desktop:int,mobile:int,tablet:int},
+ *   pages: array<int, array{label:string,url:string,hits:int}>,
+ *   referrers: array<int, array{label:string,url:string,hits:int}>,
+ *   visits_summary_90d: array{avg_time_on_site:int,nb_visits:int,nb_actions:int,nb_uniq_visitors:int,bounce_count:int}
+ * }
+ */
 function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8): array
 {
     $days = max(1, min(365, $days));
@@ -485,6 +544,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
             'weekly' => [],
             'devices' => ['desktop' => 0, 'mobile' => 0, 'tablet' => 0],
             'pages' => [],
+            'referrers' => [],
             'visits_summary_90d' => fs_dashboard_default_visits_summary_90d(),
         ];
     }
@@ -496,7 +556,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'days' => $days,
         'weeks' => $weeks,
         // Bump when bulk URLs/segments change so transients are not stale.
-        'bulk_schema' => 7,
+        'bulk_schema' => 8,
     ]));
 
     $bypass_cache = is_admin()
@@ -507,11 +567,12 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         $cached = get_transient($cache_key);
         if (
             is_array($cached)
-            && isset($cached['daily'], $cached['weekly'], $cached['devices'], $cached['pages'], $cached['visits_summary_90d'])
+            && isset($cached['daily'], $cached['weekly'], $cached['devices'], $cached['pages'], $cached['referrers'], $cached['visits_summary_90d'])
             && is_array($cached['daily'])
             && is_array($cached['weekly'])
             && is_array($cached['devices'])
             && is_array($cached['pages'])
+            && is_array($cached['referrers'])
         ) {
             return $cached;
         }
@@ -565,6 +626,11 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
             'method=VisitsSummary.get&period=range&date=previous90&idSite=%d',
             (int) $settings['site_id']
         )),
+        // Top referrers (websites): previous 90 days.
+        'urls[7]' => rawurlencode(sprintf(
+            'method=Referrers.getWebsites&period=range&date=previous90&idSite=%d&filter_limit=40',
+            (int) $settings['site_id']
+        )),
     ];
     $bulk_url = $bulk_base . '?' . http_build_query($bulk_query, '', '&', PHP_QUERY_RFC3986);
 
@@ -577,6 +643,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'weekly' => [],
         'devices' => ['desktop' => 0, 'mobile' => 0, 'tablet' => 0],
         'pages' => [],
+        'referrers' => [],
         'visits_summary_90d' => fs_dashboard_default_visits_summary_90d(),
     ];
     if (is_wp_error($response)) {
@@ -697,6 +764,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'weekly' => $map_rows($data[1] ?? [], $weeks, 'week'),
         'devices' => ['desktop' => 0, 'mobile' => 0, 'tablet' => 0],
         'pages' => [],
+        'referrers' => [],
         'visits_summary_90d' => fs_dashboard_default_visits_summary_90d(),
     ];
 
@@ -751,6 +819,35 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
             ];
         }
         $out['pages'] = array_slice($pages, 0, 10);
+    }
+
+    // Top referrers: range previous 90 days (website referrers).
+    $referrers_payload = $data[7] ?? [];
+    if (is_array($referrers_payload) && isset($referrers_payload['value']) && is_array($referrers_payload['value'])) {
+        $referrers_payload = $referrers_payload['value'];
+    }
+    if (is_array($referrers_payload)) {
+        $referrers = [];
+        foreach ($referrers_payload as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $label = isset($row['label']) ? (string) $row['label'] : '';
+            $url = isset($row['url']) ? (string) $row['url'] : '';
+            $visits = (int) ($row['nb_visits'] ?? $row['sum_nb_visits'] ?? 0);
+            if ($label === '') {
+                continue;
+            }
+            if ($url === '' && preg_match('/^[a-z0-9.-]+\.[a-z]{2,}$/iu', $label)) {
+                $url = 'https://' . $label;
+            }
+            $referrers[] = [
+                'label' => $label,
+                'url' => $url,
+                'hits' => max(0, $visits),
+            ];
+        }
+        $out['referrers'] = array_slice($referrers, 0, 10);
     }
 
     $out['visits_summary_90d'] = fs_dashboard_matomo_parse_visits_summary_90d($data[6] ?? []);
@@ -1278,6 +1375,7 @@ function fs_render_dashboard_statistics_page(): void
     ];
 
     $top_pages = is_array($series['pages'] ?? null) ? $series['pages'] : [];
+    $top_referrers = is_array($series['referrers'] ?? null) ? $series['referrers'] : [];
     $visits_summary_90d = is_array($series['visits_summary_90d'] ?? null)
         ? array_merge(fs_dashboard_default_visits_summary_90d(), $series['visits_summary_90d'])
         : fs_dashboard_default_visits_summary_90d();
@@ -1415,15 +1513,29 @@ function fs_render_dashboard_statistics_page(): void
                         data-chart="bar"
                         data-chart-config="<?= esc_attr(wp_json_encode($devices_chart_config)) ?>"></canvas>
                 </div>
-                <h2 style="margin-top: 24px; margin-bottom: 12px;"><?= esc_html__('Overview (last 90 days)', 'fromscratch') ?></h2>
+            </div>
+            <div class="fs-chart-container-flex">
+                <h2 style="margin-top: 0; margin-bottom: 12px;"><?= esc_html__('Overview (last 90 days)', 'fromscratch') ?></h2>
                 <?php fs_dashboard_render_visits_summary_90d_box($visits_summary_90d); ?>
             </div>
+        </div>
 
+        <div class="fs-chart-wrapper-flex fs-chart-wrapper-flex--pages-referrers">
             <div class="fs-chart-container-flex">
                 <h2 style="margin-top: 0; margin-bottom: 12px;"><?= esc_html__('Top 10 pages (last 90 days)', 'fromscratch') ?></h2>
                 <div class="fs-chart-container fs-chart-container--table">
                     <?php if (!empty($top_pages)) : ?>
                         <?php fs_dashboard_render_top_pages_table($top_pages); ?>
+                    <?php else : ?>
+                        <p class="fs-top-pages-empty"><?= esc_html__('No data available.', 'fromscratch') ?></p>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <div class="fs-chart-container-flex">
+                <h2 style="margin-top: 0; margin-bottom: 12px;"><?= esc_html__('Top 10 referrers (last 90 days)', 'fromscratch') ?></h2>
+                <div class="fs-chart-container fs-chart-container--table">
+                    <?php if (!empty($top_referrers)) : ?>
+                        <?php fs_dashboard_render_top_referrers_table($top_referrers); ?>
                     <?php else : ?>
                         <p class="fs-top-pages-empty"><?= esc_html__('No data available.', 'fromscratch') ?></p>
                     <?php endif; ?>
