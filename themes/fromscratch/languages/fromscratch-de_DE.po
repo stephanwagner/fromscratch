@@ -1543,10 +1543,6 @@ msgstr "Tracking-Einstellungen"
 msgid "Optional additional _paq commands. One command per line."
 msgstr "Optionale zusätzliche _paq-Befehle. Ein Befehl pro Zeile."
 
-# Dashboard > Analytics (Matomo)
-msgid "All-time totals"
-msgstr "Gesamtwerte"
-
 msgid "Since %s"
 msgstr "Seit %s"
 
@@ -1644,10 +1640,10 @@ msgid "Devices (last 90 days)"
 msgstr "Geräte (letzte 90 Tage)"
 
 msgid "Top 10 pages (last 90 days)"
-msgstr "Top-10-Seiten (letzte 90 Tage)"
+msgstr "Top 10 Seiten (letzte 90 Tage)"
 
 msgid "Top 10 referrers (last 90 days)"
-msgstr "Top-10-Quellen (letzte 90 Tage)"
+msgstr "Top 10 Quellen (letzte 90 Tage)"
 
 msgid "Referrer"
 msgstr "Quelle"

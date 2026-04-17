@@ -1313,27 +1313,6 @@ function fs_render_dashboard_statistics_page(): void
     }
     $series = fs_dashboard_get_matomo_daily_and_weekly(8, 8);
     $matomo_rows = $series['daily'] ?? [];
-    if (empty($matomo_rows)) {
-    ?>
-        <div class="wrap fs-analytics-page">
-            <h1><?= esc_html__('Analytics', 'fromscratch') ?></h1>
-            <div class="notice notice-warning">
-                <p><strong><?= esc_html__('Not enough data available.', 'fromscratch') ?></strong></p>
-                <p><?= esc_html__('Please wait until enough data is available. This usually takes a day or two.', 'fromscratch') ?></p>
-            </div>
-            <?php
-            $err = fs_dashboard_get_last_matomo_error();
-            if ($err !== '') :
-            ?>
-                <div class="notice notice-error">
-                    <p><strong><?= esc_html__('Matomo error', 'fromscratch') ?></strong></p>
-                    <p><?= esc_html($err) ?></p>
-                </div>
-            <?php endif; ?>
-        </div>
-    <?php
-        return;
-    }
 
     $rows = $matomo_rows;
     $labels = array_map('fs_dashboard_analytics_daily_axis_label', $rows);
@@ -1512,6 +1491,15 @@ function fs_render_dashboard_statistics_page(): void
     <div class="wrap fs-analytics-page">
         <h1><?= esc_html__('Analytics', 'fromscratch') ?></h1>
         <?php
+        $matomo_err = fs_dashboard_get_last_matomo_error();
+        if ($matomo_err !== '') :
+            ?>
+            <div class="notice notice-error">
+                <p><strong><?= esc_html__('Matomo error', 'fromscratch') ?></strong></p>
+                <p><?= esc_html($matomo_err) ?></p>
+            </div>
+            <?php
+        endif;
         $matomo_settings = fs_dashboard_matomo_settings();
         $matomo_login_url = $matomo_settings ? $matomo_settings['url'] : '';
         $alltime = is_array($series['alltime_summary'] ?? null)
@@ -1521,9 +1509,9 @@ function fs_render_dashboard_statistics_page(): void
         $since_ts = isset($alltime['since_ts']) && $alltime['since_ts'] !== null ? (int) $alltime['since_ts'] : 0;
         ?>
         <div class="notice inline fs-analytics-summary-notice">
-            <div style="margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+            <div style="margin: 0; display: flex; flex-wrap: wrap; gap: 8px;">
                 <div>
-                    <strong><?= esc_html__('All-time totals', 'fromscratch') ?>:</strong>
+                    <strong><?= esc_html__('Total', 'fromscratch') ?>:</strong>
                     <?= esc_html(sprintf(__('%1$s visits', 'fromscratch'), number_format_i18n($alltime_visits))) ?>
                     <?php if ($matomo_login_url !== '') : ?>
                         · <a href="<?= esc_url($matomo_login_url) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html__('Open Matomo', 'fromscratch') ?></a>
