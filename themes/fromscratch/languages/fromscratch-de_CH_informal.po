@@ -1644,7 +1644,7 @@ msgid "Top 10 referrers (last 90 days)"
 msgstr "Top-10-Quellen (letzte 90 Tage)"
 
 msgid "Referrer"
-msgstr "Verweisquelle"
+msgstr "Quelle"
 
 msgid "No data available."
 msgstr "Keine Daten verfügbar."

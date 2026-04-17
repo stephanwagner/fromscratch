@@ -252,7 +252,7 @@ function fs_dashboard_matomo_normalize_visits_summary_payload($payload): ?array
 }
 
 /**
- * Metrics from VisitsSummary.get (range previous90), same request as average time.
+ * Metrics from VisitsSummary.get (range last90), same request as average time.
  *
  * @return array{avg_time_on_site:int,nb_visits:int,nb_actions:int,nb_uniq_visitors:int,bounce_count:int}
  */
@@ -458,7 +458,7 @@ function fs_dashboard_render_top_referrers_table(array $referrers): void
                     <span class="screen-reader-text"><?= esc_html__('Rank', 'fromscratch') ?></span>
                 </th>
                 <th scope="col" class="fs-top-pages-table__page"><?= esc_html__('Referrer', 'fromscratch') ?></th>
-                <th scope="col" class="fs-stats-metric fs-stats-metric--pageviews"><?= esc_html__('Hits', 'fromscratch') ?></th>
+                <th scope="col" class="fs-stats-metric fs-stats-metric--pageviews"><?= esc_html__('Visits', 'fromscratch') ?></th>
             </tr>
         </thead>
         <tbody>
@@ -556,7 +556,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         'days' => $days,
         'weeks' => $weeks,
         // Bump when bulk URLs/segments change so transients are not stale.
-        'bulk_schema' => 8,
+        'bulk_schema' => 9,
     ]));
 
     $bypass_cache = is_admin()
@@ -821,7 +821,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         $out['pages'] = array_slice($pages, 0, 10);
     }
 
-    // Top referrers: range previous 90 days (website referrers).
+    // Top referrers: website referrers; Matomo reports visits per row (nb_visits).
     $referrers_payload = $data[7] ?? [];
     if (is_array($referrers_payload) && isset($referrers_payload['value']) && is_array($referrers_payload['value'])) {
         $referrers_payload = $referrers_payload['value'];
@@ -834,7 +834,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
             }
             $label = isset($row['label']) ? (string) $row['label'] : '';
             $url = isset($row['url']) ? (string) $row['url'] : '';
-            $visits = (int) ($row['nb_visits'] ?? $row['sum_nb_visits'] ?? 0);
+            $metric = (int) ($row['nb_visits'] ?? $row['sum_nb_visits'] ?? 0);
             if ($label === '') {
                 continue;
             }
@@ -844,7 +844,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
             $referrers[] = [
                 'label' => $label,
                 'url' => $url,
-                'hits' => max(0, $visits),
+                'hits' => max(0, $metric),
             ];
         }
         $out['referrers'] = array_slice($referrers, 0, 10);
