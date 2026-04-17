@@ -902,6 +902,12 @@ msgstr "Nach oben"
 msgid "Move down"
 msgstr "Nach unten"
 
+msgid "Move to top"
+msgstr "An den Anfang"
+
+msgid "Move to bottom"
+msgstr "An das Ende"
+
 msgid "Add language"
 msgstr "Sprache hinzufügen"
 

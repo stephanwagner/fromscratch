@@ -432,7 +432,7 @@ add_action('manage_posts_custom_column', function (string $column, int $post_id)
 	};
 	$order = (int) get_post_field('menu_order', $post_id);
 	echo '<div class="fs-cpt-reorder-menu"><span class="fs-cpt-reorder-menu__order">' . esc_html((string) $order) . '</span>';
-	echo '<button type="button" class="button button-small fs-cpt-reorder-menu__toggle" aria-expanded="false" aria-label="' . esc_attr__('Reorder', 'fromscratch') . '" title="' . esc_attr__('Reorder', 'fromscratch') . '"><svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M334.5-442.35Q324-452.7 324-468v-258l-80 80q-11 11-25.67 11-14.66 0-25.33-11-11-10.67-11-25.33Q182-686 193-697l142-142q5.4-5 11.7-7.5 6.3-2.5 13.5-2.5t13.5 2.5Q380-844 385-839l142 142q11 11 11 25t-11 25.48Q516-636 501.5-636T476-647l-80-79v258q0 15.3-10.29 25.65Q375.42-432 360.21-432t-25.71-10.35ZM586.3-113.5Q580-116 575-121L433-263q-11-10.91-10.5-25.45.5-14.55 11.5-26.03Q445-325 459.5-325t25.5 11l79 80v-258q0-15.3 10.29-25.65Q584.58-528 599.79-528t25.71 10.35Q636-507.3 636-492v258l80-80q11-11 25.67-11 14.66 0 25.33 11 11 10.67 11 25.33Q778-274 767-263L625-121q-5.4 5-11.7 7.5-6.3 2.5-13.5 2.5t-13.5-2.5Z"/></svg></button>';
+	echo '<button type="button" class="button button-small button-icon fs-cpt-reorder-menu__toggle" aria-expanded="false" aria-label="' . esc_attr__('Reorder', 'fromscratch') . '" title="' . esc_attr__('Reorder', 'fromscratch') . '"><svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M334.5-442.35Q324-452.7 324-468v-258l-80 80q-11 11-25.67 11-14.66 0-25.33-11-11-10.67-11-25.33Q182-686 193-697l142-142q5.4-5 11.7-7.5 6.3-2.5 13.5-2.5t13.5 2.5Q380-844 385-839l142 142q11 11 11 25t-11 25.48Q516-636 501.5-636T476-647l-80-79v258q0 15.3-10.29 25.65Q375.42-432 360.21-432t-25.71-10.35ZM586.3-113.5Q580-116 575-121L433-263q-11-10.91-10.5-25.45.5-14.55 11.5-26.03Q445-325 459.5-325t25.5 11l79 80v-258q0-15.3 10.29-25.65Q584.58-528 599.79-528t25.71 10.35Q636-507.3 636-492v258l80-80q11-11 25.67-11 14.66 0 25.33 11 11 10.67 11 25.33Q778-274 767-263L625-121q-5.4 5-11.7 7.5-6.3 2.5-13.5 2.5t-13.5-2.5Z"/></svg></button>';
 	echo '<div class="fs-cpt-reorder-menu__popover" hidden>';
 	echo $mk('up', __('Move up', 'fromscratch'), 'dashicons-arrow-up-alt2', $is_first);
 	echo $mk('down', __('Move down', 'fromscratch'), 'dashicons-arrow-down-alt2', $is_last);
@@ -451,11 +451,13 @@ add_action('admin_head', function (): void {
 	if ($post_type === '' || !fs_cpt_is_ordered($post_type)) {
 		return;
 	}
+	// TODO in scss
 	echo '<style>
-	.column-fs_cpt_reorder{width:115px}
-	td.fs_cpt_reorder.column-fs_cpt_reorder{white-space:nowrap}
-	.fs-cpt-reorder-menu{position:relative;display:inline-flex;align-items:center;gap:6px}
-	.fs-cpt-reorder-menu__order{display:inline-block;min-width:18px;text-align:right;font-variant-numeric:tabular-nums}
+	.column-fs_cpt_reorder{width:115px; text-align: right;}
+	th.column-fs_cpt_reorder a {display: flex; align-items: center; justify-content: flex-end;}
+	td.fs_cpt_reorder.column-fs_cpt_reorder{white-space:nowrap;}
+	.fs-cpt-reorder-menu{position:relative;display:inline-flex;align-items:center;gap:8px}
+	.fs-cpt-reorder-menu__order{display:inline-block;min-width:18px;text-align:right;font-variant-numeric:tabular-nums;}
 	.fs-cpt-reorder-menu__toggle .dashicons{font-size:16px;line-height:18px;width:16px;height:16px}
 	.fs-cpt-reorder-menu__popover{position:absolute;right:100%;top:0;z-index:1000;display:flex;gap:4px;flex-direction:column;padding:6px;margin-left:6px;min-width:170px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
 	.fs-cpt-reorder-menu__popover[hidden]{display:none}

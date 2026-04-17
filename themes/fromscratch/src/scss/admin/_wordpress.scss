@@ -17,6 +17,33 @@ h2.title+p.description {
   margin-top: -4px;
 }
 
+// Buttons
+
+.wp-core-ui .button {
+  &.button-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    width: 30px;
+
+    svg {
+      display: block;
+      width: 24px;
+      height: 24px;
+    }
+
+    &.button-small {
+      width: 26px;
+
+      svg {
+        width: 20px;
+        height: 20px;
+      }
+    }
+  }
+}
+
 // Tables
 
 table.widefat {
