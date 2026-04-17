@@ -19,6 +19,7 @@ require_once 'inc/menu.php';
 require_once 'inc/design.php';
 require_once 'inc/redirects.php';
 require_once 'inc/analytics.php';
+require_once 'inc/admin-bar.php';
 
 // User rights + theme settings + developer settings (needed on frontend for admin bar performance node)
 require_once 'inc/user-rights.php';
