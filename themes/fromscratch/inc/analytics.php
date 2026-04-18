@@ -1400,7 +1400,7 @@ function fs_dashboard_line_chart_config(array $labels, array $datasets): array
 
 function fs_dashboard_stats_page_slug(): string
 {
-    return 'fromscratch-analytics';
+    return 'fs-analytics';
 }
 
 function fs_dashboard_statistics_url(): string
