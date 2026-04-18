@@ -173,24 +173,6 @@ function fs_excerpt_more(): string
 add_filter('excerpt_more', 'fs_excerpt_more');
 
 /**
- * Frontend CPT archives: respect menu_order when the type uses ordered lists (has_order).
- * Posts per page comes from Settings → Reading (“Blog pages show at most”), i.e. option `posts_per_page`.
- */
-add_action('pre_get_posts', function (\WP_Query $query): void {
-	if (is_admin() || !$query->is_main_query() || !$query->is_post_type_archive()) {
-		return;
-	}
-	$pt = $query->get('post_type');
-	if (is_array($pt)) {
-		$pt = (string) reset($pt);
-	}
-	if (!is_string($pt) || $pt === '' || !function_exists('fs_cpt_is_ordered') || !fs_cpt_is_ordered($pt)) {
-		return;
-	}
-	$query->set('orderby', ['menu_order' => 'ASC', 'date' => 'DESC']);
-}, 15);
-
-/**
  * Add custom colors and sizes
  */
 add_filter('wp_theme_json_data_default', function ($theme_json) {

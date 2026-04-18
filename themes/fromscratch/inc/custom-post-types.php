@@ -56,6 +56,7 @@ function fs_register_cpts(): void
 		}
 		$has_order = !empty($args['has_order']);
 		unset($args['has_order']);
+		unset($args['orderby'], $args['order']);
 		// Convenience config: has_categories => true adds built-in category taxonomy.
 		$has_categories = !empty($args['has_categories']);
 		unset($args['has_categories']);
@@ -197,6 +198,70 @@ function fs_cpt_is_ordered(string $post_type): bool
 	$map = fs_cpt_ordered_map();
 	return isset($map[$post_type]) && $map[$post_type] === true;
 }
+
+/**
+ * Frontend CPT archives: order from config (orderby / order).
+ * Defaults: date DESC; if has_order then menu_order ASC (override with order DESC).
+ *
+ * @param \WP_Query $query Main query.
+ */
+function fs_cpt_pre_get_posts_order(\WP_Query $query): void
+{
+	if (is_admin() || !$query->is_main_query() || !$query->is_post_type_archive()) {
+		return;
+	}
+	$pt = $query->get('post_type');
+	if (is_array($pt)) {
+		$pt = (string) reset($pt);
+	}
+	if (!is_string($pt) || $pt === '') {
+		return;
+	}
+	$cpts = fs_config_cpt('cpts');
+	if (!is_array($cpts) || !isset($cpts[$pt]) || !is_array($cpts[$pt])) {
+		return;
+	}
+	$cfg = $cpts[$pt];
+	$has_order = !empty($cfg['has_order']);
+
+	$raw_orderby = isset($cfg['orderby']) && is_string($cfg['orderby'])
+		? strtolower(trim($cfg['orderby']))
+		: '';
+	if ($raw_orderby === 'publish_date' || $raw_orderby === 'published') {
+		$raw_orderby = 'date';
+	}
+	$allowed = ['date', 'title', 'menu_order'];
+	if ($raw_orderby === '' || !in_array($raw_orderby, $allowed, true)) {
+		$raw_orderby = $has_order ? 'menu_order' : 'date';
+	}
+
+	$raw_order = isset($cfg['order']) && is_string($cfg['order'])
+		? strtoupper(trim($cfg['order']))
+		: '';
+	if ($raw_order !== 'ASC' && $raw_order !== 'DESC') {
+		if ($raw_orderby === 'menu_order') {
+			$raw_order = 'ASC';
+		} elseif ($raw_orderby === 'date') {
+			$raw_order = 'DESC';
+		} else {
+			$raw_order = 'ASC';
+		}
+	}
+
+	if ($raw_orderby === 'menu_order') {
+		$query->set('orderby', ['menu_order' => $raw_order, 'date' => 'DESC']);
+		return;
+	}
+	if ($raw_orderby === 'title') {
+		$query->set('orderby', 'title');
+		$query->set('order', $raw_order);
+		return;
+	}
+	$query->set('orderby', 'date');
+	$query->set('order', $raw_order);
+}
+
+add_action('pre_get_posts', 'fs_cpt_pre_get_posts_order', 15);
 
 /**
  * Resolve current post type in admin contexts (including Quick Edit AJAX).
