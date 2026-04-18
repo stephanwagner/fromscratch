@@ -1721,9 +1721,6 @@ add_action('template_redirect', function (): void {
 		return;
 	}
 
-	$path = $post->post_type === 'page' ? get_page_uri($post->ID) : $post->post_name;
-	$path = trim($path, '/');
-
 	// TODO function that checks if any page is a frontpage
 	$front_id = (int) get_option('page_on_front');
 	$post_group  = (int) get_post_meta($post->ID, FS_TRANSLATION_GROUP_META, true) ?: $post->ID;
@@ -1732,10 +1729,14 @@ add_action('template_redirect', function (): void {
 
 	if ($is_homepage) {
 		$canonical = $lang !== $default ? $lang : ($prefix_default ? $lang : '');
-	} elseif ($path !== '') {
-		$canonical = $lang !== $default ? $lang . '/' . $path : ($prefix_default ? $lang . '/' . $path : $path);
 	} else {
-		$canonical = $lang !== $default ? $lang : ($prefix_default ? $lang : '');
+		// Full URL path (CPT rewrite base + slug, hierarchical pages, language prefix via post_link filters).
+		// Using only post_name breaks CPTs (e.g. projects/slug vs slug) and caused redirect loops.
+		$permalink = get_permalink($post);
+		if (!$permalink) {
+			return;
+		}
+		$canonical = trim(wp_make_link_relative($permalink), '/');
 	}
 
 	if ($current_path !== $canonical) {

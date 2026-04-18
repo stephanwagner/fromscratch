@@ -1229,6 +1229,18 @@ msgstr "Auszug „Weiterlesen“-Text"
 msgid "Text shown after the excerpt when it is truncated (e.g. …). Leave blank for none."
 msgstr "Text, der nach dem Auszug angezeigt wird, wenn er gekürzt wurde (z. B. …). Leer lassen für keinen."
 
+msgid "Posts per page"
+msgstr "Beiträge pro Seite"
+
+msgid "How many posts appear per page on the blog, archives, and search results."
+msgstr "Legt fest, wie viele Beiträge pro Seite im Blog, in Archiven und in Suchergebnissen angezeigt werden."
+
+msgid "Posts per page"
+msgstr "Beiträge pro Seite"
+
+msgid "Same as Settings → Reading → “Blog pages show at most”."
+msgstr "Entspricht den Einstellungen unter Lesen → „Blogseiten zeigen maximal“."
+
 # SVG upload
 msgid "SVG file must be under %1$s. You tried to upload a file of %2$s."
 msgstr "Die SVG-Datei muss unter %1$s liegen. Du hast eine Datei mit %2$s hochgeladen."

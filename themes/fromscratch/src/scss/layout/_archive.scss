@@ -1,0 +1,135 @@
+@use '../core' as *;
+
+.archive__header {
+  margin-bottom: 2rem;
+}
+
+.archive__heading {
+  margin: 0 0 0.75rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.archive__description {
+  max-width: 48rem;
+  color: color-mix(in srgb, $defaultTextColor 85%, transparent);
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.archive__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.archive__item {
+  display: grid;
+  grid-template-columns: minmax(0, 160px) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid color-mix(in srgb, $defaultTextColor 12%, transparent);
+
+  &:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  @media (max-width: $mobileBreakpoint) {
+    grid-template-columns: 1fr;
+  }
+
+  &:not(.has-post-thumbnail) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.archive__thumb-link {
+  display: block;
+  border-radius: 4px;
+  overflow: hidden;
+  background: color-mix(in srgb, $defaultTextColor 6%, transparent);
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, $defaultTextColor 40%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+.archive__thumb {
+  width: 100%;
+  height: auto;
+  vertical-align: middle;
+  display: block;
+}
+
+.archive__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+
+  a {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.archive__excerpt {
+  margin: 0 0 0.75rem;
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.archive__more {
+  margin: 0;
+}
+
+.archive__readmore {
+  font-weight: 500;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.archive__pagination {
+  margin-top: 2.5rem;
+
+  .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem 1rem;
+  }
+
+  a,
+  span {
+    display: inline-block;
+    padding: 0.35rem 0.65rem;
+    border-radius: 4px;
+    text-decoration: none;
+  }
+
+  a:hover {
+    background: color-mix(in srgb, $defaultTextColor 8%, transparent);
+  }
+
+  .page-numbers.current {
+    font-weight: 600;
+  }
+}
+
+.archive__empty {
+  margin: 0;
+}

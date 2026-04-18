@@ -251,6 +251,10 @@ add_action('admin_init', function () {
 		'type' => 'string',
 		'sanitize_callback' => 'sanitize_text_field',
 	]);
+	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'posts_per_page', [
+		'type' => 'integer',
+		'sanitize_callback' => 'fs_sanitize_posts_per_page',
+	]);
 	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_client_logo', [
 		'type' => 'integer',
 		'sanitize_callback' => 'fs_sanitize_client_logo',
@@ -394,6 +398,23 @@ function fs_sanitize_excerpt_length($value): string
 	}
 	$n = absint($value);
 	return (string) ($n > 0 ? $n : '');
+}
+
+/**
+ * Core option `posts_per_page` (Settings → Reading). Same value saved from Theme → General.
+ *
+ * @param mixed $value Raw value from form.
+ */
+function fs_sanitize_posts_per_page($value): int
+{
+	if ($value === '' || $value === null) {
+		return max(1, (int) get_option('posts_per_page', 10));
+	}
+	$n = absint($value);
+	if ($n < 1) {
+		$n = 1;
+	}
+	return min($n, 999);
 }
 
 function fs_sanitize_client_logo($value): int
@@ -751,6 +772,23 @@ function theme_settings_page(): void
 							?>
 							<input type="text" name="fromscratch_excerpt_more" id="fromscratch_excerpt_more" value="<?= esc_attr($excerpt_more_val) ?>" class="small-text" maxlength="20">
 							<p class="description"><?= esc_html__('Text shown after the excerpt when it is truncated (e.g. …). Leave blank for none.', 'fromscratch') ?></p>
+						</td>
+					</tr>
+				</table>
+
+				<hr>
+
+				<h2 class="title"><?= esc_html__('Posts per page', 'fromscratch') ?></h2>
+				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('How many posts appear per page on the blog, archives, and search results.', 'fromscratch') ?></p>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row">
+							<label for="posts_per_page"><?= esc_html__('Posts per page', 'fromscratch') ?></label>
+						</th>
+						<td>
+							<?php $posts_per_page_val = max(1, (int) get_option('posts_per_page', 10)); ?>
+							<input type="number" name="posts_per_page" id="posts_per_page" value="<?= esc_attr((string) $posts_per_page_val) ?>" min="1" max="999" step="1" class="small-text">
+							<p class="description"><?= esc_html__('Same as Settings → Reading → “Blog pages show at most”.', 'fromscratch') ?></p>
 						</td>
 					</tr>
 				</table>
