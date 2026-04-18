@@ -38,6 +38,22 @@ function fs_register_cpts(): void
 			continue;
 		}
 		$args = array_merge($defaults, $args);
+		// Convenience: `url` => 'projects' sets rewrite slug (same as rewrite => ['slug' => 'projects']).
+		if (isset($args['url'])) {
+			$url_raw = $args['url'];
+			unset($args['url']);
+			if (is_string($url_raw) && $url_raw !== '') {
+				$url_slug = sanitize_title($url_raw);
+				$rewrite = $args['rewrite'] ?? true;
+				if ($rewrite !== false) {
+					if ($rewrite === true) {
+						$args['rewrite'] = ['slug' => $url_slug];
+					} elseif (is_array($rewrite) && !isset($rewrite['slug'])) {
+						$args['rewrite'] = array_merge($rewrite, ['slug' => $url_slug]);
+					}
+				}
+			}
+		}
 		$has_order = !empty($args['has_order']);
 		unset($args['has_order']);
 		// Convenience config: has_categories => true adds built-in category taxonomy.
