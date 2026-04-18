@@ -239,11 +239,6 @@ body.-menu-block-scroll {
   margin-left: auto;
   border-radius: 50%;
   background: color('primary');
-  display: none;
-
-  @media (max-width: $mobileBreakpoint) {
-    display: block;
-  }
 
   body.-page-init & {
     transition: transition('background-color');
