@@ -217,6 +217,9 @@ function fs_cpt_pre_get_posts_order(\WP_Query $query): void
 	if (!is_string($pt) || $pt === '') {
 		return;
 	}
+	if (defined('FS_EVENT_POST_TYPE') && $pt === FS_EVENT_POST_TYPE) {
+		return;
+	}
 	$cpts = fs_config_cpt('cpts');
 	if (!is_array($cpts) || !isset($cpts[$pt]) || !is_array($cpts[$pt])) {
 		return;

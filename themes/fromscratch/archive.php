@@ -11,6 +11,8 @@ if (is_post_type_archive()) {
 		$archive_heading = $pto->labels->name;
 	}
 }
+
+$is_event_archive = defined('FS_EVENT_POST_TYPE') && is_post_type_archive(FS_EVENT_POST_TYPE);
 ?>
 
 <div class="content__wrapper">
@@ -21,31 +23,39 @@ if (is_post_type_archive()) {
 		</header>
 
 		<?php if (have_posts()) : ?>
-			<div class="archive__list">
-				<?php
-				while (have_posts()) {
-					the_post();
-				?>
-					<article id="post-<?php the_ID(); ?>" <?php post_class('archive__item'); ?>>
-						<?php if (has_post_thumbnail()) : ?>
-							<a class="archive__thumb-link" href="<?php the_permalink(); ?>" tabindex="-1" aria-hidden="true">
-								<?php the_post_thumbnail('small', ['class' => 'archive__thumb', 'loading' => 'lazy']); ?>
-							</a>
-						<?php endif; ?>
-						<div class="archive__body">
-							<h2 class="archive__title">
-								<a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
-							</h2>
-							<div class="archive__excerpt"><?php the_excerpt(); ?></div>
-							<p class="archive__more">
-								<a class="archive__readmore" href="<?php the_permalink(); ?>"><?php esc_html_e('Read more', 'fromscratch'); ?></a>
-							</p>
-						</div>
-					</article>
-				<?php
-				}
-				?>
-			</div>
+			<?php if ($is_event_archive) : ?>
+				<div class="event-archive">
+					<?php
+					$month_marker = '';
+					while (have_posts()) {
+						the_post();
+						$start_ts = (int) get_post_meta(get_the_ID(), FS_EVENT_META_START_TS, true);
+						if ($start_ts > 0) {
+							$month_label = wp_date('F Y', $start_ts);
+						} else {
+							$sd = get_post_meta(get_the_ID(), FS_EVENT_META_START_DATE, true);
+							$month_label = is_string($sd) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $sd)
+								? wp_date('F Y', strtotime($sd . ' 12:00:00'))
+								: '';
+						}
+						if ($month_label !== '' && $month_label !== $month_marker) {
+							$month_marker = $month_label;
+							echo '<h2 class="event-archive__month">' . esc_html($month_label) . '</h2>';
+						}
+						get_template_part('template-parts/content', 'event');
+					}
+					?>
+				</div>
+			<?php else : ?>
+				<div class="archive__list">
+					<?php
+					while (have_posts()) {
+						the_post();
+						get_template_part('template-parts/content', 'archive');
+					}
+					?>
+				</div>
+			<?php endif; ?>
 
 			<nav class="archive__pagination" aria-label="<?php esc_attr_e('Posts pagination', 'fromscratch'); ?>">
 				<?php
@@ -57,7 +67,7 @@ if (is_post_type_archive()) {
 				?>
 			</nav>
 		<?php else : ?>
-			<p class="archive__empty"><?php esc_html_e('No posts found.', 'fromscratch'); ?></p>
+			<p class="archive__empty"><?php echo $is_event_archive ? esc_html__('No events found.', 'fromscratch') : esc_html__('No posts found.', 'fromscratch'); ?></p>
 		<?php endif; ?>
 
 	</div>

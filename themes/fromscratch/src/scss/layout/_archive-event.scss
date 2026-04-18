@@ -1,0 +1,37 @@
+@use '../core' as *;
+
+.event-archive {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.event-archive__month {
+  margin: 2rem 0 1rem;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: color-mix(in srgb, $defaultTextColor 88%, transparent);
+
+  &:first-child {
+    margin-top: 0;
+  }
+}
+
+.event-archive__item {
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid color-mix(in srgb, $defaultTextColor 12%, transparent);
+
+  &:last-child {
+    border-bottom: 0;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+}
+
+.event-archive__range {
+  margin: 0 0 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: color-mix(in srgb, $defaultTextColor 75%, transparent);
+}
