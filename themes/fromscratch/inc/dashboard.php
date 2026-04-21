@@ -154,6 +154,47 @@ function fs_dashboard_panel()
 			Crafted with care by <a href="https://stephanwagner.me" target="_blank" rel="noopener">Stephan Wagner</a> from <a href="https://bytesandstripes.com/en" target="_blank" rel="noopener">bytes and stripes</a>.
 		</p>
 
+		<?php
+		$suspicious_ips = function_exists('fs_blocked_ips_suspicious_list') ? fs_blocked_ips_suspicious_list() : [];
+		if (!empty($suspicious_ips)) :
+		?>
+			<div class="notice notice-warning inline" style="margin: 16px 0;">
+				<p style="margin-bottom: 6px"><strong><?php esc_html_e('Suspicious login attempts', 'fromscratch'); ?></strong></p>
+				<p style="margin-top: 0"><?php esc_html_e('The following IPs exceeded the configured threshold.', 'fromscratch'); ?></p>
+				<ul style="list-style: none; padding-left: 0; margin: 8px 0;">
+					<?php foreach ($suspicious_ips as $ip => $row) :
+						$attempts = (int) ($row['attempts'] ?? 0);
+					?>
+						<li style="margin-bottom: 8px">
+							<code><?php echo esc_html($ip); ?></code> – <?php echo (int) $attempts; ?> <?php echo esc_html(_n('attempt', 'attempts', $attempts, 'fromscratch')); ?>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+				<p style="margin-top: 8px;"><a href="<?php echo esc_url($security_url); ?>#fs-security-blocked-ips"><?php esc_html_e('Manage in Developer → Security', 'fromscratch'); ?></a></p>
+			</div>
+		<?php endif; ?>
+
+		<?php if ($is_developer && (int) get_option('blog_public', 1) === 0) : ?>
+			<div class="notice notice-warning inline" style="margin: 16px 0;">
+				<p><strong><?php esc_html_e('Search engines are asked not to index this site.', 'fromscratch'); ?></strong></p>
+				<p style="margin-top: -4px;"><a href="<?php echo esc_url($system_url); ?>"><?php esc_html_e('Enable search engine indexing in Developer → System', 'fromscratch'); ?></a></p>
+			</div>
+		<?php endif; ?>
+
+		<?php if ($is_developer && get_option('fromscratch_site_password_protection') === '1') : ?>
+			<div class="notice notice-info inline" style="margin: 16px 0;">
+				<p><strong><?php esc_html_e('Password protection is active.', 'fromscratch'); ?></strong></p>
+				<p style="margin-top: -4px;"><a href="<?php echo esc_url($security_url); ?>"><?php esc_html_e('Manage in Developer → Security', 'fromscratch'); ?></a></p>
+			</div>
+		<?php endif; ?>
+
+		<?php if ($is_developer && get_option('fromscratch_maintenance_mode') === '1') : ?>
+			<div class="notice notice-info inline" style="margin: 16px 0;">
+				<p><strong><?php esc_html_e('Maintenance mode is active.', 'fromscratch'); ?></strong></p>
+				<p style="margin-top: -4px;"><a href="<?php echo esc_url($security_url); ?>"><?php esc_html_e('Manage in Developer → Security', 'fromscratch'); ?></a></p>
+			</div>
+		<?php endif; ?>
+
 		<div class="fs-dashboard__sections -flex">
 
 			<?php if (!empty($pinned_pages)) : ?>
@@ -248,52 +289,6 @@ function fs_dashboard_panel()
 						</tr>
 					<?php endforeach; ?>
 				</table>
-			</div>
-		<?php endif; ?>
-
-		<?php
-		$suspicious_ips = function_exists('fs_blocked_ips_suspicious_list') ? fs_blocked_ips_suspicious_list() : [];
-		if (!empty($suspicious_ips)) :
-		?>
-			<div class="notice notice-warning inline" style="margin: 0 0 1em 0;">
-				<p><strong><?php esc_html_e('Suspicious login attempts', 'fromscratch'); ?></strong></p>
-				<p><?php esc_html_e('The following IPs exceeded the configured threshold and can be blocked.', 'fromscratch'); ?></p>
-				<ul style="list-style: none; padding-left: 0;">
-					<?php foreach ($suspicious_ips as $ip => $row) :
-						$attempts = (int) ($row['attempts'] ?? 0);
-					?>
-						<li style="margin-bottom: 0.5em;">
-							<code><?php echo esc_html($ip); ?></code> – <?php echo (int) $attempts; ?> <?php echo esc_html(_n('attempt', 'attempts', $attempts, 'fromscratch')); ?>
-							<form method="post" action="<?php echo esc_url($security_url); ?>" style="display: inline; margin-left: 8px;">
-								<?php wp_nonce_field('fromscratch_block_ip'); ?>
-								<input type="hidden" name="fromscratch_block_ip" value="<?php echo esc_attr($ip); ?>">
-								<button type="submit" name="fromscratch_do_block_ip" value="1" class="button button-small"><?php esc_html_e('Block IP', 'fromscratch'); ?></button>
-							</form>
-						</li>
-					<?php endforeach; ?>
-				</ul>
-				<p><a href="<?php echo esc_url($security_url); ?>"><?php esc_html_e('Manage on Security page', 'fromscratch'); ?></a></p>
-			</div>
-		<?php endif; ?>
-
-		<?php if ($is_developer && (int) get_option('blog_public', 1) === 0) : ?>
-			<div class="notice notice-warning inline" style="margin: 0 0 1em 0;">
-				<p><strong><?php esc_html_e('Search engines are asked not to index this site.', 'fromscratch'); ?></strong></p>
-				<p><a href="<?php echo esc_url($system_url); ?>"><?php esc_html_e('Enable search engine indexing in Developer → System', 'fromscratch'); ?></a></p>
-			</div>
-		<?php endif; ?>
-
-		<?php if ($is_developer && get_option('fromscratch_site_password_protection') === '1') : ?>
-			<div class="notice notice-info inline" style="margin: 0 0 1em 0;">
-				<p><strong><?php esc_html_e('Password protection is active.', 'fromscratch'); ?></strong></p>
-				<p><a href="<?php echo esc_url($security_url); ?>"><?php esc_html_e('Manage in Developer → Security', 'fromscratch'); ?></a></p>
-			</div>
-		<?php endif; ?>
-
-		<?php if ($is_developer && get_option('fromscratch_maintenance_mode') === '1') : ?>
-			<div class="notice notice-info inline" style="margin: 0 0 1em 0;">
-				<p><strong><?php esc_html_e('Maintenance mode is active.', 'fromscratch'); ?></strong></p>
-				<p><a href="<?php echo esc_url($security_url); ?>"><?php esc_html_e('Manage in Developer → Security', 'fromscratch'); ?></a></p>
 			</div>
 		<?php endif; ?>
 

@@ -227,7 +227,7 @@ function fs_render_developer_security(): void
 
 		<?php if (function_exists('fs_theme_feature_enabled') && fs_theme_feature_enabled('blocked_ips')) : ?>
 			<hr class="fs-page-settings-divider">
-			<form method="post" action="" class="fs-page-settings-form">
+			<form id="fs-security-blocked-ips" method="post" action="" class="fs-page-settings-form">
 				<?php wp_nonce_field('fromscratch_security_blocked_ips'); ?>
 				<input type="hidden" name="fromscratch_save_blocked_ips" value="1">
 				<h2 class="title"><?= esc_html__('Blocked IP addresses', 'fromscratch') ?></h2>

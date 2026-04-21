@@ -1653,6 +1653,12 @@ msgstr "(Aktuell)"
 msgid "(Today)"
 msgstr "(Heute)"
 
+msgid "Scheduled posts"
+msgstr "Geplante Beiträge"
+
+msgid "Expiring posts"
+msgstr "Ablaufende Beiträge"
+
 msgid "Today"
 msgstr "Heute"
 
@@ -1731,3 +1737,15 @@ msgstr "Dashboard"
 
 msgid "Quick links"
 msgstr "Schnellzugriff"
+
+msgid "Enable search engine indexing in Developer → System"
+msgstr "Suchmaschinen-Indexierung unter Entwickler → System aktivieren"
+
+msgid "Manage in Developer → Security"
+msgstr "Unter Entwickler → Sicherheit verwalten"
+
+msgid "Suspicious login attempts"
+msgstr "Verdächtige Anmeldeversuche"
+
+msgid "The following IPs exceeded the configured threshold."
+msgstr "Die folgenden IPs haben den konfigurierten Schwellenwert überschritten."
