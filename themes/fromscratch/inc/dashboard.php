@@ -155,24 +155,28 @@ function fs_dashboard_panel()
 		</p>
 
 		<?php
-		$suspicious_ips = function_exists('fs_blocked_ips_suspicious_list') ? fs_blocked_ips_suspicious_list() : [];
-		if (!empty($suspicious_ips)) :
+		if (fs_theme_feature_enabled('blocked_ips')) {
+			$suspicious_ips = function_exists('fs_blocked_ips_suspicious_list') ? fs_blocked_ips_suspicious_list() : [];
+			if (!empty($suspicious_ips)) :
 		?>
-			<div class="notice notice-warning inline" style="margin: 16px 0;">
-				<p style="margin-bottom: 6px"><strong><?php esc_html_e('Suspicious login attempts', 'fromscratch'); ?></strong></p>
-				<p style="margin-top: 0"><?php esc_html_e('The following IPs exceeded the configured threshold.', 'fromscratch'); ?></p>
-				<ul style="list-style: none; padding-left: 0; margin: 8px 0;">
-					<?php foreach ($suspicious_ips as $ip => $row) :
-						$attempts = (int) ($row['attempts'] ?? 0);
-					?>
-						<li style="margin-bottom: 8px">
-							<code><?php echo esc_html($ip); ?></code> – <?php echo (int) $attempts; ?> <?php echo esc_html(_n('attempt', 'attempts', $attempts, 'fromscratch')); ?>
-						</li>
-					<?php endforeach; ?>
-				</ul>
-				<p style="margin-top: 8px;"><a href="<?php echo esc_url($security_url); ?>#fs-security-blocked-ips"><?php esc_html_e('Manage in Developer → Security', 'fromscratch'); ?></a></p>
-			</div>
-		<?php endif; ?>
+				<div class="notice notice-warning inline" style="margin: 16px 0;">
+					<p style="margin-bottom: 6px"><strong><?php esc_html_e('Suspicious login attempts', 'fromscratch'); ?></strong></p>
+					<p style="margin-top: 0"><?php esc_html_e('The following IPs exceeded the configured threshold.', 'fromscratch'); ?></p>
+					<ul style="list-style: none; padding-left: 0; margin: 8px 0;">
+						<?php foreach ($suspicious_ips as $ip => $row) :
+							$attempts = (int) ($row['attempts'] ?? 0);
+						?>
+							<li style="margin-bottom: 8px">
+								<code><?php echo esc_html($ip); ?></code> – <?php echo (int) $attempts; ?> <?php echo esc_html(_n('attempt', 'attempts', $attempts, 'fromscratch')); ?>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+					<p style="margin-top: 8px;"><a href="<?php echo esc_url($security_url); ?>#fs-security-blocked-ips"><?php esc_html_e('Manage in Developer → Security', 'fromscratch'); ?></a></p>
+				</div>
+		<?php
+			endif;
+		}
+		?>
 
 		<?php if ($is_developer && (int) get_option('blog_public', 1) === 0) : ?>
 			<div class="notice notice-warning inline" style="margin: 16px 0;">
@@ -226,23 +230,24 @@ function fs_dashboard_panel()
 				</ul>
 			</div>
 
-			<div class="fs-dashboard__section -stats" data-fs-dashboard-stats data-fs-stats-cached="<?= $matomo_stats_cached ? '1' : '0' ?>">
-				<div class="fs-dashboard__section-title"><?= esc_html__('Analytics', 'fromscratch') ?></div>
-				<ul class="fs-dashboard__section-list -limit">
-					<li>
-						<strong><?= esc_html__('Today', 'fromscratch') ?>:</strong>
-						<span data-fs-stat="today"><?= esc_html($matomo_today_html) ?></span>
-					</li>
-					<li>
-						<strong><?= esc_html__('Yesterday', 'fromscratch') ?>:</strong>
-						<span data-fs-stat="yesterday"><?= esc_html($matomo_yesterday_html) ?></span>
-					</li>
-					<li>
-						<a href="<?= esc_url($stats_url) ?>"><?= esc_html__('Open analytics', 'fromscratch') ?></a>
-					</li>
-				</ul>
-			</div>
-
+			<?php if (fs_theme_feature_enabled('matomo')) : ?>
+				<div class="fs-dashboard__section -stats" data-fs-dashboard-stats data-fs-stats-cached="<?= $matomo_stats_cached ? '1' : '0' ?>">
+					<div class="fs-dashboard__section-title"><?= esc_html__('Analytics', 'fromscratch') ?></div>
+					<ul class="fs-dashboard__section-list -limit">
+						<li>
+							<strong><?= esc_html__('Today', 'fromscratch') ?>:</strong>
+							<span data-fs-stat="today"><?= esc_html($matomo_today_html) ?></span>
+						</li>
+						<li>
+							<strong><?= esc_html__('Yesterday', 'fromscratch') ?>:</strong>
+							<span data-fs-stat="yesterday"><?= esc_html($matomo_yesterday_html) ?></span>
+						</li>
+						<li>
+							<a href="<?= esc_url($stats_url) ?>"><?= esc_html__('Open analytics', 'fromscratch') ?></a>
+						</li>
+					</ul>
+				</div>
+			<?php endif; ?>
 		</div>
 
 		<?php if (!empty($scheduled)) : ?>
