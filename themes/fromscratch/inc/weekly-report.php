@@ -32,6 +32,136 @@ function fs_weekly_report_next_monday_timestamp(): int
 }
 
 /**
+ * @return array{went_live_last_week: array<int,array{title:string,url:string,date:string}>, scheduled_upcoming: array<int,array{title:string,url:string,date:string}>, expired_last_week: array<int,array{title:string,url:string,date:string}>, expiring_upcoming: array<int,array{title:string,url:string,date:string}>}
+ */
+function fs_weekly_report_build_insights(\DateTimeImmutable $last_monday, \DateTimeImmutable $this_monday): array
+{
+	$out = [
+		'went_live_last_week' => [],
+		'scheduled_upcoming' => [],
+		'expired_last_week' => [],
+		'expiring_upcoming' => [],
+	];
+	if (!function_exists('fs_theme_post_types')) {
+		return $out;
+	}
+	$post_types = fs_theme_post_types();
+	$last_week_start = $last_monday->format('Y-m-d H:i:s');
+	$last_week_end = $this_monday->modify('-1 second')->format('Y-m-d H:i:s');
+
+	$scheduled = get_posts([
+		'post_type' => $post_types,
+		'post_status' => 'future',
+		'posts_per_page' => 10,
+		'orderby' => 'date',
+		'order' => 'ASC',
+	]);
+	foreach ($scheduled as $p) {
+		$out['scheduled_upcoming'][] = [
+			'title' => (string) (get_the_title((int) $p->ID) ?: __('(no title)', 'fromscratch')),
+			'url' => (string) get_permalink((int) $p->ID),
+			'date' => (string) get_date_from_gmt((string) $p->post_date_gmt, get_option('date_format') . ' ' . get_option('time_format')),
+		];
+	}
+
+	$went_live = get_posts([
+		'post_type' => $post_types,
+		'post_status' => 'publish',
+		'posts_per_page' => 10,
+		'orderby' => 'date',
+		'order' => 'DESC',
+		'date_query' => [
+			[
+				'after' => $last_week_start,
+				'before' => $last_week_end,
+				'inclusive' => true,
+				'column' => 'post_date',
+			],
+		],
+	]);
+	foreach ($went_live as $p) {
+		$out['went_live_last_week'][] = [
+			'title' => (string) (get_the_title((int) $p->ID) ?: __('(no title)', 'fromscratch')),
+			'url' => (string) get_permalink((int) $p->ID),
+			'date' => (string) get_the_date(get_option('date_format') . ' ' . get_option('time_format'), (int) $p->ID),
+		];
+	}
+
+	if (
+		function_exists('fs_theme_feature_enabled')
+		&& fs_theme_feature_enabled('post_expirator')
+		&& defined('FS_EXPIRATION_META_KEY')
+		&& defined('FS_EXPIRATION_ENABLED_KEY')
+	) {
+		$expiring = get_posts([
+			'post_type' => $post_types,
+			'post_status' => ['publish', 'future', 'draft', 'private', 'pending'],
+			'posts_per_page' => 200,
+			'orderby' => 'meta_value',
+			'meta_key' => FS_EXPIRATION_META_KEY,
+			'order' => 'ASC',
+			'meta_query' => [
+				'relation' => 'AND',
+				[
+					'key' => FS_EXPIRATION_ENABLED_KEY,
+					'value' => '1',
+				],
+				[
+					'key' => FS_EXPIRATION_META_KEY,
+					'compare' => '!=',
+					'value' => '',
+				],
+			],
+		]);
+		$now_ts = time();
+		$last_week_start_ts = $last_monday->getTimestamp();
+		$this_monday_ts = $this_monday->getTimestamp();
+		foreach ($expiring as $p) {
+			$raw = (string) get_post_meta((int) $p->ID, FS_EXPIRATION_META_KEY, true);
+			$ts = fs_weekly_report_parse_expiration_timestamp($raw);
+			if ($ts === null) {
+				continue;
+			}
+			$row = [
+				'title' => (string) (get_the_title((int) $p->ID) ?: __('(no title)', 'fromscratch')),
+				'url' => (string) get_permalink((int) $p->ID),
+				'date' => wp_date(get_option('date_format') . ' ' . get_option('time_format'), $ts),
+			];
+			if ($ts >= $this_monday_ts) {
+				if (count($out['expiring_upcoming']) < 10) {
+					$out['expiring_upcoming'][] = $row;
+				}
+				continue;
+			}
+			if ($ts >= $last_week_start_ts && $ts < $this_monday_ts) {
+				if (count($out['expired_last_week']) < 10) {
+					$out['expired_last_week'][] = $row;
+				}
+			}
+		}
+	}
+
+	return $out;
+}
+
+/**
+ * Parse post-expirator `Y-m-d H:i` into timestamp (site timezone).
+ */
+function fs_weekly_report_parse_expiration_timestamp(string $raw): ?int
+{
+	if ($raw === '') {
+		return null;
+	}
+	$tz = function_exists('wp_timezone') ? wp_timezone() : new \DateTimeZone(wp_timezone_string() ?: 'UTC');
+	$dt = \DateTimeImmutable::createFromFormat('Y-m-d H:i', $raw, $tz);
+	if (!$dt instanceof \DateTimeImmutable) {
+		return null;
+	}
+
+	return $dt->getTimestamp();
+}
+
+/**
  * Build the HTML body for weekly report.
  */
 function fs_weekly_report_build_html(): string
@@ -46,11 +176,12 @@ function fs_weekly_report_build_html(): string
 	$this_monday = $today->modify('monday this week')->setTime(0, 0, 0);
 	$last_monday = $this_monday->modify('-7 days');
 	$last_sunday = $this_monday->modify('-1 day');
+	$insights = fs_weekly_report_build_insights($last_monday, $this_monday);
 
-	$html = '';
-	$html .= '<h2>' . esc_html($site_name) . ' - ' . esc_html__('Weekly report', 'fromscratch') . '</h2>';
-	$html .= '<p><strong>' . esc_html__('Generated', 'fromscratch') . ':</strong> ' . esc_html($date_now) . '</p>';
-	$html .= '<p><a href="' . esc_url($site_url) . '">' . esc_html($site_url) . '</a></p>';
+	$daily = [];
+	$weekly = [];
+	$daily_chart_url = '';
+	$weekly_chart_url = '';
 
 	if ($matomo_on && function_exists('fs_dashboard_get_matomo_daily_and_weekly')) {
 		// Fetch a little extra; then filter to full periods only.
@@ -86,39 +217,133 @@ function fs_weekly_report_build_html(): string
 		if (count($weekly) > 8) {
 			$weekly = array_slice($weekly, -8);
 		}
-
-		$html .= '<h3>' . esc_html__('Daily statistics (last week, 7 days)', 'fromscratch') . '</h3>';
-		$html .= '<table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse;">';
-		$html .= '<tr><th align="left">' . esc_html__('Date', 'fromscratch') . '</th><th align="right">' . esc_html__('Unique visitors', 'fromscratch') . '</th><th align="right">' . esc_html__('Visits', 'fromscratch') . '</th><th align="right">' . esc_html__('Page views', 'fromscratch') . '</th></tr>';
-		foreach ($daily as $row) {
-			$label = isset($row['date']) ? wp_date(get_option('date_format'), strtotime((string) $row['date'])) : '';
-			$html .= '<tr>';
-			$html .= '<td>' . esc_html($label) . '</td>';
-			$html .= '<td align="right">' . esc_html(number_format_i18n((int) ($row['unique'] ?? 0))) . '</td>';
-			$html .= '<td align="right">' . esc_html(number_format_i18n((int) ($row['visits'] ?? 0))) . '</td>';
-			$html .= '<td align="right">' . esc_html(number_format_i18n((int) ($row['pageviews'] ?? 0))) . '</td>';
-			$html .= '</tr>';
-		}
-		$html .= '</table>';
-
-		$html .= '<h3 style="margin-top:16px;">' . esc_html__('Weekly statistics (last 8 completed weeks)', 'fromscratch') . '</h3>';
-		$html .= '<table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse;">';
-		$html .= '<tr><th align="left">' . esc_html__('Week', 'fromscratch') . '</th><th align="right">' . esc_html__('Unique visitors', 'fromscratch') . '</th><th align="right">' . esc_html__('Visits', 'fromscratch') . '</th><th align="right">' . esc_html__('Page views', 'fromscratch') . '</th></tr>';
-		foreach ($weekly as $row) {
-			$label = isset($row['date']) ? (string) $row['date'] : '';
-			$html .= '<tr>';
-			$html .= '<td>' . esc_html($label) . '</td>';
-			$html .= '<td align="right">' . esc_html(number_format_i18n((int) ($row['unique'] ?? 0))) . '</td>';
-			$html .= '<td align="right">' . esc_html(number_format_i18n((int) ($row['visits'] ?? 0))) . '</td>';
-			$html .= '<td align="right">' . esc_html(number_format_i18n((int) ($row['pageviews'] ?? 0))) . '</td>';
-			$html .= '</tr>';
-		}
-		$html .= '</table>';
+		$daily_chart_url = fs_weekly_report_build_chart_url(
+			array_map(static function ($row) {
+				if (function_exists('fs_dashboard_analytics_daily_axis_label')) {
+					return fs_dashboard_analytics_daily_axis_label((array) $row);
+				}
+				return isset($row['date']) ? (string) $row['date'] : '';
+			}, $daily),
+			[
+				[
+					'label' => __('Unique visitors', 'fromscratch'),
+					'data' => array_map(static fn($r) => (int) ($r['unique'] ?? 0), $daily),
+					'color' => '#2284e5',
+					'transparent' => '#2284e535',
+				],
+				[
+					'label' => __('Visits', 'fromscratch'),
+					'data' => array_map(static fn($r) => (int) ($r['visits'] ?? 0), $daily),
+					'color' => '#8f70cc',
+					'transparent' => '#8f70cc35',
+				],
+				[
+					'label' => __('Page views', 'fromscratch'),
+					'data' => array_map(static fn($r) => (int) ($r['pageviews'] ?? 0), $daily),
+					'color' => '#ff6673',
+					'transparent' => '#ff667340',
+				],
+			],
+			'line'
+		);
+		$weekly_chart_url = fs_weekly_report_build_chart_url(
+			array_map(static function ($row) {
+				if (function_exists('fs_dashboard_analytics_weekly_axis_label')) {
+					return fs_dashboard_analytics_weekly_axis_label((array) $row);
+				}
+				$d = isset($row['date']) ? (string) $row['date'] : '';
+				if ($d === '') {
+					return '';
+				}
+				$ts = strtotime($d);
+				return $ts ? wp_date('d.m', $ts) : $d;
+			}, $weekly),
+			[
+				[
+					'label' => __('Unique visitors', 'fromscratch'),
+					'data' => array_map(static fn($r) => (int) ($r['unique'] ?? 0), $weekly),
+					'color' => '#2284e5',
+					'transparent' => '#2284e535',
+				],
+				[
+					'label' => __('Visits', 'fromscratch'),
+					'data' => array_map(static fn($r) => (int) ($r['visits'] ?? 0), $weekly),
+					'color' => '#8f70cc',
+					'transparent' => '#8f70cc35',
+				],
+				[
+					'label' => __('Page views', 'fromscratch'),
+					'data' => array_map(static fn($r) => (int) ($r['pageviews'] ?? 0), $weekly),
+					'color' => '#ff6673',
+					'transparent' => '#ff667340',
+				],
+			],
+			'line'
+		);
+	}
+	$template_html = fs_get_email_template('weekly-report', [
+		'site_name' => $site_name,
+		'site_url' => $site_url,
+		'date_now' => $date_now,
+		'stats_url' => $stats_url,
+		'insights' => $insights,
+		'daily' => $daily,
+		'weekly' => $weekly,
+		'daily_chart_url' => $daily_chart_url,
+		'weekly_chart_url' => $weekly_chart_url,
+		'matomo_enabled' => $matomo_on,
+	]);
+	if ($template_html !== '') {
+		return $template_html;
 	}
 
-	$html .= '<p style="margin-top:16px;"><a href="' . esc_url($stats_url) . '">' . esc_html__('Open analytics', 'fromscratch') . '</a></p>';
+	return '<h2>' . esc_html($site_name) . ' - ' . esc_html__('Weekly report', 'fromscratch') . '</h2>';
+}
 
-	return $html;
+/**
+ * Build chart image URL via QuickChart (Chart.js v4 config).
+ *
+ * @param array<int, string|array<int,string>> $labels
+ * @param array<int, array{label:string,data:array<int,int>,color:string,transparent:string}> $series
+ */
+function fs_weekly_report_build_chart_url(array $labels, array $series, string $type = 'line'): string
+{
+	if ($labels === [] || $series === []) {
+		return '';
+	}
+	$datasets = [];
+	foreach ($series as $s) {
+		$datasets[] = [
+			'label' => $s['label'],
+			'data' => $s['data'],
+			'borderColor' => $s['color'],
+			'backgroundColor' => $s['transparent'],
+			'fill' => true,
+			'tension' => 0.3,
+			'pointRadius' => 3,
+			'pointHoverRadius' => 4,
+			'pointBackgroundColor' => $s['color'],
+			'borderWidth' => 2,
+		];
+	}
+	$config = [
+		'type' => $type,
+		'data' => [
+			'labels' => $labels,
+			'datasets' => $datasets,
+		],
+		'options' => [
+			'plugins' => [
+				'legend' => ['display' => false],
+			],
+			'scales' => [
+				'x' => ['ticks' => ['color' => '#888'], 'grid' => ['color' => '#8888884d']],
+				'y' => ['beginAtZero' => true, 'ticks' => ['color' => '#888'], 'grid' => ['color' => '#8888884d']],
+			],
+		],
+	];
+
+	return 'https://quickchart.io/chart?version=4&width=600&height=300&devicePixelRatio=2&c=' . rawurlencode(wp_json_encode($config));
 }
 
 /**
