@@ -79,6 +79,16 @@ div.fromscratch-seo-panel {
   }
 }
 
+// Summary slot: exclude from search + page options (same pattern — PluginPostStatusInfo + CheckboxControl only)
+
+.fromscratch-exclude-from-search,
+.fromscratch-page-show-title,
+.fromscratch-page-pin-dashboard {
+  .components-base-control {
+    width: 100%;
+  }
+}
+
 // Languages
 
 .fromscratch-languages-readonly-label {
@@ -105,14 +115,6 @@ div.fromscratch-seo-panel {
     line-height: 1.4;
     color: #646970;
     font-style: normal;
-  }
-}
-
-// Exclude from search
-
-.fromscratch-exclude-from-search {
-  .components-base-control {
-    width: 100%;
   }
 }
 

@@ -1235,9 +1235,6 @@ msgstr "Beiträge pro Seite"
 msgid "How many posts appear per page on the blog, archives, and search results."
 msgstr "Legt fest, wie viele Beiträge pro Seite im Blog, in Archiven und in Suchergebnissen angezeigt werden."
 
-msgid "Posts per page"
-msgstr "Beiträge pro Seite"
-
 msgid "Same as Settings → Reading → “Blog pages show at most”."
 msgstr "Entspricht den Einstellungen unter Lesen → „Blogseiten zeigen maximal“."
 
@@ -1259,6 +1256,16 @@ msgstr "Klein"
 # Exclude from search
 msgid "Exclude from search"
 msgstr "Von der Suche ausschließen"
+
+# Page sidebar (page editor)
+msgid "Show page title"
+msgstr "Seitentitel anzeigen"
+
+msgid "Pin to dashboard"
+msgstr "Im Dashboard anheften"
+
+msgid "Pinned"
+msgstr "Angeheftet"
 
 # Post expirator (empty expiration button)
 msgctxt "expiration date empty"

@@ -123,13 +123,34 @@ function fs_dashboard_panel()
 			],
 		]);
 	}
+
+	$pinned_pages = [];
+	if (defined('FS_PIN_TO_DASHBOARD_META') && function_exists('fs_pin_to_dashboard_post_types')) {
+		$pin_types = fs_pin_to_dashboard_post_types();
+		if ($pin_types !== []) {
+			$pinned_pages = get_posts([
+				'post_type' => $pin_types,
+				'post_status' => 'publish',
+				'posts_per_page' => -1,
+				'orderby' => 'title',
+				'order' => 'ASC',
+				'meta_query' => [
+					[
+						'key' => FS_PIN_TO_DASHBOARD_META,
+						'value' => '1',
+						'compare' => '=',
+					],
+				],
+			]);
+		}
+	}
 ?>
 	<div class="fs-dashboard__panel">
 
 		<h2 class="fs-dashboard__title">FromScratch</h2>
 
 		<p class="fs-dashboard__description">
-			A developer-first foundation built for flexibility and control – crafted with care by <a href="https://bytesandstripes.com/en" target="_blank" rel="noopener">bytes and stripes</a>.
+			A developer-first foundation built for flexibility and control – crafted with care by <a href="https://stephanwagner.me" target="_blank" rel="noopener">Stephan Wagner</a> from <a href="https://bytesandstripes.com/en" target="_blank" rel="noopener">bytes and stripes</a>.
 		</p>
 
 		<div class="fs-dashboard__sections">
@@ -151,6 +172,19 @@ function fs_dashboard_panel()
 				<span data-fs-stat="yesterday"><?= esc_html($matomo_yesterday_html) ?></span><br>
 				<a href="<?= esc_url($stats_url) ?>"><?= esc_html__('Open analytics', 'fromscratch') ?></a>
 			</div>
+
+			<?php if (!empty($pinned_pages)) : ?>
+				<div class="fs-dashboard__section -pinned">
+					<strong><?= esc_html__('Pinned', 'fromscratch') ?></strong>
+					<ul>
+						<?php foreach ($pinned_pages as $pinned) : ?>
+							<li>
+								<a href="<?= esc_url(get_permalink($pinned)) ?>"><?= esc_html(get_the_title($pinned) ?: __('(no title)', 'fromscratch')) ?></a>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				</div>
+			<?php endif; ?>
 
 		</div>
 

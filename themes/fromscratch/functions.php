@@ -45,6 +45,7 @@ require_once 'inc/assets.php';
 require_once 'inc/custom-post-types.php';
 require_once 'inc/events.php';
 require_once 'inc/exclude-from-search.php';
+require_once 'inc/page-editor-options.php';
 
 // Mail (SMTP / SendGrid from Developer › System)
 require_once 'inc/mail.php';
