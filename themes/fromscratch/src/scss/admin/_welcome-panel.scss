@@ -21,3 +21,77 @@ p.fs-dashboard__description {
   font-size: 14px;
   margin: 8px 0 16px;
 }
+
+.fs-dashboard__sections {
+  &.-flex {
+    display: flex;
+    gap: 48px;
+  }
+}
+
+.fs-dashboard__section {
+  &.-limit {
+    max-width: 220px;
+  }
+
+  &.-margin {
+    margin-top: 16px;
+  }
+}
+
+.fs-dashboard__section-title {
+  font-weight: 600;
+}
+
+.fs-dashboard__section-list {
+  margin: 8px 0 0;
+
+  li {
+    margin: 0 0 8px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .fs-dashboard__section.-limit & {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}
+
+
+.fs-dashboard__section-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 8px 0 0;
+
+  td {
+    padding: 0 12px 8px 0;
+    text-align: left;
+    vertical-align: top;
+
+    &:last-child {
+      padding-right: 0;
+    }
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+
+  a {
+    text-decoration: none;
+  }
+}
+
+.fs-dashboard__section-cell {
+  padding: 0;
+
+  &.-date {
+    color: #646970;
+    white-space: nowrap;
+    width: 0;
+  }
+}

@@ -201,6 +201,12 @@ msgstr "Seiten"
 msgid "Create pages"
 msgstr "Seiten anlegen"
 
+msgid "Create page"
+msgstr "Seite erstellen"
+
+msgid "Create post"
+msgstr "Beitrag erstellen"
+
 msgid "Pages will only be created if they don't exist yet."
 msgstr "Seiten werden nur erstellt, wenn sie noch nicht existieren."
 
@@ -1263,7 +1269,7 @@ msgid "Pin to dashboard"
 msgstr "Im Dashboard anheften"
 
 msgid "Pinned"
-msgstr "Angeheftet"
+msgstr "Fixiert"
 
 # Post expirator (empty expiration button)
 msgctxt "expiration date empty"
@@ -1572,6 +1578,9 @@ msgstr "Seit %s"
 msgid "Analytics"
 msgstr "Statistiken"
 
+msgid "Open analytics"
+msgstr "Statistiken öffnen"
+
 msgid "Matomo: invalid or missing auth token."
 msgstr "Matomo: Ungültiges oder fehlendes Auth-Token."
 
@@ -1643,6 +1652,12 @@ msgstr "(Aktuell)"
 
 msgid "(Today)"
 msgstr "(Heute)"
+
+msgid "Scheduled posts"
+msgstr "Geplante Beiträge"
+
+msgid "Expiring posts"
+msgstr "Ablaufende Beiträge"
 
 msgid "Today"
 msgstr "Heute"
@@ -1719,3 +1734,6 @@ msgstr "Seite ansehen"
 
 msgid "Dashboard"
 msgstr "Dashboard"
+
+msgid "Quick links"
+msgstr "Schnellzugriff"

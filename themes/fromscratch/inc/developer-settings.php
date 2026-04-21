@@ -36,7 +36,7 @@ function fs_developer_settings_available_tabs(): array
 /** Page slug for a tab. System = fs-developer; others = fs-developer-features, etc. */
 function fs_developer_settings_page_slug(string $tab): string
 {
-	return $tab === 'system' ? 'fs-developer' : 'fs-developer-' . $tab;
+	return $tab === 'system' ? 'fs-developer-settings' : 'fs-developer-' . $tab;
 }
 
 /** Current tab derived from $_GET['page'] (e.g. fs-developer-features → features). */
@@ -44,7 +44,7 @@ function fs_developer_settings_current_tab_from_page(): string
 {
 	$page = isset($_GET['page']) ? sanitize_key($_GET['page']) : '';
 	$available = array_keys(fs_developer_settings_available_tabs());
-	if ($page === 'fs-developer') {
+	if ($page === 'fs-developer-settings') {
 		return 'system';
 	}
 	$prefix = 'fs-developer-';
@@ -86,10 +86,10 @@ function fs_developer_settings_load_hook(string $page_slug): string
 foreach (fs_developer_settings_page_slugs() as $slug) {
 	add_action(fs_developer_settings_load_hook($slug), function () use ($slug) {
 		global $title;
-		$tab = $slug === 'fs-developer' ? 'system' : substr($slug, strlen('fs-developer-'));
+		$tab = $slug === 'fs-developer-settings' ? 'system' : substr($slug, strlen('fs-developer-'));
 		$tabs = fs_developer_settings_available_tabs();
 		$label = $tabs[$tab]['label'] ?? $slug;
-		$title = $slug === 'fs-developer' ? __('Developer', 'fromscratch') : sprintf(__('Developer › %s', 'fromscratch'), $label);
+		$title = $slug === 'fs-developer-settings' ? __('Developer', 'fromscratch') : sprintf(__('Developer › %s', 'fromscratch'), $label);
 		if (!current_user_can('manage_options')) {
 			return;
 		}
@@ -205,7 +205,7 @@ add_action('admin_menu', function () {
 	if (!function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
 		return;
 	}
-	$hide = array_diff(fs_developer_settings_page_slugs(), ['fs-developer']);
+	$hide = array_diff(fs_developer_settings_page_slugs(), ['fs-developer-settings']);
 	foreach ($submenu['options-general.php'] as $i => $item) {
 		if (isset($item[2]) && in_array($item[2], $hide, true)) {
 			unset($submenu['options-general.php'][$i]);
@@ -275,7 +275,7 @@ add_filter('submenu_file', function ($submenu_file, $parent_file) {
 	}
 	$page = sanitize_key($_GET['page']);
 	if (in_array($page, fs_developer_settings_page_slugs(), true)) {
-		return 'fs-developer';
+		return 'fs-developer-settings';
 	}
 	if (
 		$page === 'redis-cache'
@@ -286,7 +286,7 @@ add_filter('submenu_file', function ($submenu_file, $parent_file) {
 		&& fs_is_developer_user((int) get_current_user_id())
 		&& (class_exists('\RedisCache\Plugin') || defined('WP_REDIS_VERSION') || function_exists('redis_cache_enable'))
 	) {
-		return 'fs-developer';
+		return 'fs-developer-settings';
 	}
 	return $submenu_file;
 }, 10, 2);

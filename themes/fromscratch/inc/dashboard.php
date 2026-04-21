@@ -150,33 +150,16 @@ function fs_dashboard_panel()
 		<h2 class="fs-dashboard__title">FromScratch</h2>
 
 		<p class="fs-dashboard__description">
-			A developer-first foundation built for flexibility and control – crafted with care by <a href="https://stephanwagner.me" target="_blank" rel="noopener">Stephan Wagner</a> from <a href="https://bytesandstripes.com/en" target="_blank" rel="noopener">bytes and stripes</a>.
+			A developer-first foundation built for flexibility and control.<br>
+			Crafted with care by <a href="https://stephanwagner.me" target="_blank" rel="noopener">Stephan Wagner</a> from <a href="https://bytesandstripes.com/en" target="_blank" rel="noopener">bytes and stripes</a>.
 		</p>
 
-		<div class="fs-dashboard__sections">
-
-			<div class="fs-dashboard__section -links">
-				<ul>
-					<li><a href="<?= esc_url(admin_url('options-general.php?page=fs-theme-settings')) ?>"><?= esc_html__('Theme settings', 'fromscratch') ?></a></li>
-					<?php if ($is_developer) : ?>
-						<li><a href="<?= esc_url(admin_url('options-general.php?page=fs-developer-settings')) ?>"><?= esc_html__('Developer settings', 'fromscratch') ?></a></li>
-					<?php endif; ?>
-					<li><a href="<?= esc_url(admin_url('post-new.php?post_type=page')) ?>"><?= esc_html__('Create page', 'fromscratch') ?></a></li>
-				</ul>
-			</div>
-
-			<div class="fs-dashboard__section -stats" data-fs-dashboard-stats data-fs-stats-cached="<?= $matomo_stats_cached ? '1' : '0' ?>">
-				<strong><?= esc_html__('Today', 'fromscratch') ?>:</strong>
-				<span data-fs-stat="today"><?= esc_html($matomo_today_html) ?></span><br>
-				<strong><?= esc_html__('Yesterday', 'fromscratch') ?>:</strong>
-				<span data-fs-stat="yesterday"><?= esc_html($matomo_yesterday_html) ?></span><br>
-				<a href="<?= esc_url($stats_url) ?>"><?= esc_html__('Open analytics', 'fromscratch') ?></a>
-			</div>
+		<div class="fs-dashboard__sections -flex">
 
 			<?php if (!empty($pinned_pages)) : ?>
 				<div class="fs-dashboard__section -pinned">
-					<strong><?= esc_html__('Pinned', 'fromscratch') ?></strong>
-					<ul>
+					<div class="fs-dashboard__section-title"><?= esc_html__('Pinned', 'fromscratch') ?></div>
+					<ul class="fs-dashboard__section-list -limit">
 						<?php foreach ($pinned_pages as $pinned) : ?>
 							<li>
 								<a href="<?= esc_url(get_permalink($pinned)) ?>"><?= esc_html(get_the_title($pinned) ?: __('(no title)', 'fromscratch')) ?></a>
@@ -186,26 +169,63 @@ function fs_dashboard_panel()
 				</div>
 			<?php endif; ?>
 
+			<div class="fs-dashboard__section -links">
+				<div class="fs-dashboard__section-title"><?= esc_html__('Quick links', 'fromscratch') ?></div>
+				<ul class="fs-dashboard__section-list -limit">
+					<li><a href="<?= esc_url(admin_url('options-general.php?page=fs-theme-settings')) ?>"><?= esc_html__('Theme settings', 'fromscratch') ?></a></li>
+					<?php if ($is_developer) : ?>
+						<li><a href="<?= esc_url(admin_url('options-general.php?page=fs-developer-settings')) ?>"><?= esc_html__('Developer settings', 'fromscratch') ?></a></li>
+					<?php endif; ?>
+					<?php if (fs_theme_feature_enabled('blogs') && current_user_can('edit_posts')) : ?>
+						<li><a href="<?= esc_url(admin_url('post-new.php?post_type=post')) ?>"><?= esc_html__('Create post', 'fromscratch') ?></a></li>
+					<?php endif; ?>
+					<?php if (current_user_can('edit_pages')) : ?>
+						<li><a href="<?= esc_url(admin_url('post-new.php?post_type=page')) ?>"><?= esc_html__('Create page', 'fromscratch') ?></a></li>
+					<?php endif; ?>
+				</ul>
+			</div>
+
+			<div class="fs-dashboard__section -stats" data-fs-dashboard-stats data-fs-stats-cached="<?= $matomo_stats_cached ? '1' : '0' ?>">
+				<div class="fs-dashboard__section-title"><?= esc_html__('Analytics', 'fromscratch') ?></div>
+				<ul class="fs-dashboard__section-list -limit">
+					<li>
+						<strong><?= esc_html__('Today', 'fromscratch') ?>:</strong>
+						<span data-fs-stat="today"><?= esc_html($matomo_today_html) ?></span>
+					</li>
+					<li>
+						<strong><?= esc_html__('Yesterday', 'fromscratch') ?>:</strong>
+						<span data-fs-stat="yesterday"><?= esc_html($matomo_yesterday_html) ?></span>
+					</li>
+					<li>
+						<a href="<?= esc_url($stats_url) ?>"><?= esc_html__('Open analytics', 'fromscratch') ?></a>
+					</li>
+				</ul>
+			</div>
+
 		</div>
 
 		<?php if (!empty($scheduled)) : ?>
-			<div class="notice inline" style="margin: 0 0 1em 0;">
-				<p><strong><?= esc_html__('Scheduled posts', 'fromscratch') ?></strong></p>
-				<ul style="margin: 0 0 0 16px;">
+			<div class="fs-dashboard__section -margin">
+				<div class="fs-dashboard__section-title"><?= esc_html__('Scheduled posts', 'fromscratch') ?></div>
+				<table class="fs-dashboard__section-table">
 					<?php foreach ($scheduled as $item) : ?>
-						<li>
-							<a href="<?= esc_url(get_edit_post_link((int) $item->ID)) ?>"><?= esc_html(get_the_title((int) $item->ID) ?: __('(no title)', 'fromscratch')) ?></a>
-							<span style="color:#646970;"> – <?= esc_html(get_date_from_gmt((string) $item->post_date_gmt, get_option('date_format') . ' ' . get_option('time_format'))) ?></span>
-						</li>
+						<tr>
+							<td class="fs-dashboard__section-cell -date">
+								<?= esc_html(get_date_from_gmt((string) $item->post_date_gmt, get_option('date_format') . ' ' . get_option('time_format'))) ?>
+							</td>
+							<td class="fs-dashboard__section-cell -title">
+								<a href="<?= esc_url(get_edit_post_link((int) $item->ID)) ?>"><?= esc_html(get_the_title((int) $item->ID) ?: __('(no title)', 'fromscratch')) ?></a>
+							</td>
+						</tr>
 					<?php endforeach; ?>
-				</ul>
+				</table>
 			</div>
 		<?php endif; ?>
 
 		<?php if (!empty($expiring_published)) : ?>
-			<div class="notice inline" style="margin: 0 0 1em 0;">
-				<p><strong><?= esc_html__('Published with expiration', 'fromscratch') ?></strong></p>
-				<ul style="margin: 0 0 0 16px;">
+			<div class="fs-dashboard__section -margin">
+				<div class="fs-dashboard__section-title"><?= esc_html__('Expiring posts', 'fromscratch') ?></div>
+				<table class="fs-dashboard__section-table">
 					<?php
 					foreach ($expiring_published as $item) :
 						$exp_raw = get_post_meta((int) $item->ID, FS_EXPIRATION_META_KEY, true);
@@ -217,15 +237,17 @@ function fs_dashboard_panel()
 								$exp_label = wp_date(get_option('date_format') . ' ' . get_option('time_format'), $dt->getTimestamp());
 							}
 						}
-						?>
-						<li>
-							<a href="<?= esc_url(get_edit_post_link((int) $item->ID)) ?>"><?= esc_html(get_the_title((int) $item->ID) ?: __('(no title)', 'fromscratch')) ?></a>
-							<?php if ($exp_label !== '') : ?>
-								<span style="color:#646970;"> – <?= esc_html(sprintf(__('expires %s', 'fromscratch'), $exp_label)) ?></span>
-							<?php endif; ?>
-						</li>
+					?>
+						<tr>
+							<td class="fs-dashboard__section-cell -date">
+								<?= $exp_label ?>
+							</td>
+							<td class="fs-dashboard__section-cell -title">
+								<a href="<?= esc_url(get_edit_post_link((int) $item->ID)) ?>"><?= esc_html(get_the_title((int) $item->ID) ?: __('(no title)', 'fromscratch')) ?></a>
+							</td>
+						</tr>
 					<?php endforeach; ?>
-				</ul>
+				</table>
 			</div>
 		<?php endif; ?>
 
@@ -274,10 +296,6 @@ function fs_dashboard_panel()
 				<p><a href="<?php echo esc_url($security_url); ?>"><?php esc_html_e('Manage in Developer → Security', 'fromscratch'); ?></a></p>
 			</div>
 		<?php endif; ?>
-
-		<p class="fs-dashboard__description">
-
-		</p>
 
 	</div>
 <?php
