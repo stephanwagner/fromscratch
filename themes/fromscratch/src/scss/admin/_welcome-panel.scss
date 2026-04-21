@@ -10,3 +10,14 @@
 .welcome-panel-close {
   display: none !important;
 }
+
+// Dashboard panel
+
+h2.fs-dashboard__title {
+  font-size: 28px;
+}
+
+p.fs-dashboard__description {
+  font-size: 14px;
+  margin: 8px 0 16px;
+}
