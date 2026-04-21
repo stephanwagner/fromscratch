@@ -17,26 +17,19 @@
     const postId = props.postId;
     const cfg = props.cfg || {};
 
-    const [meta, setMeta] = useEntityProp(
-      'postType',
-      postType,
-      'meta',
-      postId
-    );
+    const [meta, setMeta] = useEntityProp('postType', postType, 'meta', postId);
     if (!meta || typeof setMeta !== 'function') {
       return null;
     }
 
     var v = meta[META_KEY];
     var checked =
-      v === undefined ||
-      v === null ||
-      v === true ||
-      v === '1' ||
-      v === 1;
+      v === undefined || v === null || v === true || v === '1' || v === 1;
+
+    var label = cfg.labelShowTitlePage || 'Show page title';
 
     return el(CheckboxControl, {
-      label: cfg.labelShowTitle || 'Show page title',
+      label: label,
       checked: checked,
       onChange: function (val) {
         setMeta(
@@ -60,11 +53,15 @@
       typeof fromscratchPageSidebarOptions !== 'undefined'
         ? fromscratchPageSidebarOptions
         : {};
+    var allowed =
+      cfg.showTitlePostTypes && Array.isArray(cfg.showTitlePostTypes)
+        ? cfg.showTitlePostTypes
+        : ['page'];
 
     if (!PluginPostStatusInfo) {
       return null;
     }
-    if (postType !== 'page' || !postId) {
+    if (!postType || allowed.indexOf(postType) === -1 || !postId) {
       return null;
     }
 

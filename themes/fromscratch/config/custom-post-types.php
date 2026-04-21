@@ -10,8 +10,15 @@
  * Archive listing (frontend only):
  * - `orderby`: `date` | `title` | `menu_order` (optional). Default: `date` unless `has_order` is true, then `menu_order`.
  * - `order`: `ASC` | `DESC` (optional). Sensible defaults per orderby (date DESC, title ASC, menu_order ASC).
+ *
+ * Title visibility (optional, default false everywhere except pages — see built-in `post` below):
+ * - `has_page_title_toggle` — when true, editors get “Show title” in Summary and the singular template can hide the &lt;h1&gt;.
  */
 return [
+	'post' => [
+		'has_page_title_toggle' => false,
+		// TODO allow more options here
+	],
 	'cpts' => [
 		// Example: uncomment and adjust to add a "Project" post type.
 		// 'project' => [
@@ -34,6 +41,7 @@ return [
 		// 	'has_order' => false,
 		// 	'has_archive' => true,
 		// 	'has_categories' => true,
+		//  'has_page_title_toggle' => false,
 		// 	'menu_position' => 5,
 		// 	'url' => 'projects',
 		// 	'orderby' => 'date',

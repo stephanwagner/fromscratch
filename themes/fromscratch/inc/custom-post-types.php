@@ -60,6 +60,7 @@ function fs_register_cpts(): void
 		// Convenience config: has_categories => true adds built-in category taxonomy.
 		$has_categories = !empty($args['has_categories']);
 		unset($args['has_categories']);
+		unset($args['has_page_title_toggle']);
 		if ($has_categories) {
 			$taxonomies = isset($args['taxonomies']) && is_array($args['taxonomies']) ? $args['taxonomies'] : [];
 			if (!in_array('category', $taxonomies, true)) {
