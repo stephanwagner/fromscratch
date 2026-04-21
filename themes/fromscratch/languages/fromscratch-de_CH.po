@@ -1197,8 +1197,8 @@ msgstr "Suchmaschinen bitten, diese Seite nicht zu indexieren."
 msgid "Client logo"
 msgstr "Kundenlogo"
 
-msgid "Shown on the login page instead of the WordPress logo."
-msgstr "Wird auf der Anmeldeseite anstelle des WordPress-Logos angezeigt."
+msgid "Shown on the login page instead of the WordPress logo. Also used for branding in emails."
+msgstr "Wird auf der Anmeldeseite anstelle des WordPress-Logos angezeigt. Wird auch für das Branding in E-Mails verwendet."
 
 # Theme settings: Fallback OG image (General tab)
 msgid "Fallback OG image"

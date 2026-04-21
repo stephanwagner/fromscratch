@@ -802,6 +802,8 @@ function theme_settings_page(): void
 		<?php endif; ?>
 
 		<?php if ($tab === 'general') : ?>
+
+
 			<?php
 			$client_logo_id = (int) get_option('fromscratch_client_logo', 0);
 			$client_logo_url = $client_logo_id > 0 ? wp_get_attachment_image_url($client_logo_id, 'medium') : '';
@@ -827,7 +829,7 @@ function theme_settings_page(): void
 					<tr>
 						<th scope="row"><label for="fromscratch_report_email"><?= esc_html__('Report emails', 'fromscratch') ?></label></th>
 						<td>
-							<textarea name="fromscratch_report_email" id="fromscratch_report_email" rows="4" class="regular-text" style="width: 100%; max-width: 420px;"><?= esc_textarea((string) get_option('fromscratch_report_email', '')) ?></textarea>
+							<textarea name="fromscratch_report_email" id="fromscratch_report_email" rows="3" class="regular-text" style="width: 100%; max-width: 420px;"><?= esc_textarea((string) get_option('fromscratch_report_email', '')) ?></textarea>
 							<p class="description"><?= esc_html__('One email address per line.', 'fromscratch') ?></p>
 						</td>
 					</tr>
@@ -847,11 +849,70 @@ function theme_settings_page(): void
 						</td>
 					</tr>
 				</table>
+				<div class="fs-submit-row">
+					<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
+				</div>
+
+				<hr>
+
+				<h2 class="title"><?= esc_html__('Posts per page', 'fromscratch') ?></h2>
+				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('How many posts appear per page on the blog, archives, and search results.', 'fromscratch') ?></p>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row">
+							<label for="posts_per_page"><?= esc_html__('Posts per page', 'fromscratch') ?></label>
+						</th>
+						<td>
+							<?php $posts_per_page_val = max(1, (int) get_option('posts_per_page', 10)); ?>
+							<input type="number" name="posts_per_page" id="posts_per_page" value="<?= esc_attr((string) $posts_per_page_val) ?>" min="1" max="999" step="1" class="small-text">
+							<p class="description"><?= esc_html__('Same as Settings → Reading → “Blog pages show at most”.', 'fromscratch') ?></p>
+						</td>
+					</tr>
+				</table>
+				<div class="fs-submit-row">
+					<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
+				</div>
+
+				<hr>
+
+				<h2 class="title"><?= esc_html__('Excerpt', 'fromscratch') ?></h2>
+				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Defines how automatically generated excerpts are shortened.', 'fromscratch') ?></p>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row">
+							<label for="fromscratch_excerpt_length"><?= esc_html__('Excerpt length', 'fromscratch') ?></label>
+						</th>
+						<td>
+							<?php
+							$excerpt_length_opt = get_option('fromscratch_excerpt_length', '');
+							$excerpt_length_val = $excerpt_length_opt !== '' ? $excerpt_length_opt : '60';
+							?>
+							<input type="number" name="fromscratch_excerpt_length" id="fromscratch_excerpt_length" value="<?= esc_attr($excerpt_length_val) ?>" min="1" max="999" step="1" class="small-text">
+							<p class="description"><?= esc_html__('Number of words used when trimming excerpts.', 'fromscratch') ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row">
+							<label for="fromscratch_excerpt_more"><?= esc_html__('Excerpt "more" text', 'fromscratch') ?></label>
+						</th>
+						<td>
+							<?php
+							$excerpt_more_opt = get_option('fromscratch_excerpt_more');
+							$excerpt_more_val = $excerpt_more_opt !== false ? $excerpt_more_opt : '…';
+							?>
+							<input type="text" name="fromscratch_excerpt_more" id="fromscratch_excerpt_more" value="<?= esc_attr($excerpt_more_val) ?>" class="small-text" maxlength="20">
+							<p class="description"><?= esc_html__('Text shown after the excerpt when it is truncated (e.g. …). Leave blank for none.', 'fromscratch') ?></p>
+						</td>
+					</tr>
+				</table>
+				<div class="fs-submit-row">
+					<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
+				</div>
 
 				<hr>
 
 				<h2 class="title"><?= esc_html__('Client logo', 'fromscratch') ?></h2>
-				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Shown on the login page instead of the WordPress logo.', 'fromscratch') ?></p>
+				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Shown on the login page instead of the WordPress logo. Also used for branding in emails.', 'fromscratch') ?></p>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><?= esc_html__('Image', 'fromscratch') ?></th>
@@ -893,56 +954,6 @@ function theme_settings_page(): void
 									<button type="button" class="button" data-fs-image-picker-remove<?= $og_fallback_id <= 0 ? ' style="display:none;"' : '' ?>><?= esc_html__('Remove', 'fromscratch') ?></button>
 								</p>
 							</div>
-						</td>
-					</tr>
-				</table>
-
-				<hr>
-
-				<h2 class="title"><?= esc_html__('Excerpt', 'fromscratch') ?></h2>
-				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Defines how automatically generated excerpts are shortened.', 'fromscratch') ?></p>
-				<table class="form-table" role="presentation">
-					<tr>
-						<th scope="row">
-							<label for="fromscratch_excerpt_length"><?= esc_html__('Excerpt length', 'fromscratch') ?></label>
-						</th>
-						<td>
-							<?php
-							$excerpt_length_opt = get_option('fromscratch_excerpt_length', '');
-							$excerpt_length_val = $excerpt_length_opt !== '' ? $excerpt_length_opt : '60';
-							?>
-							<input type="number" name="fromscratch_excerpt_length" id="fromscratch_excerpt_length" value="<?= esc_attr($excerpt_length_val) ?>" min="1" max="999" step="1" class="small-text">
-							<p class="description"><?= esc_html__('Number of words used when trimming excerpts.', 'fromscratch') ?></p>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row">
-							<label for="fromscratch_excerpt_more"><?= esc_html__('Excerpt "more" text', 'fromscratch') ?></label>
-						</th>
-						<td>
-							<?php
-							$excerpt_more_opt = get_option('fromscratch_excerpt_more');
-							$excerpt_more_val = $excerpt_more_opt !== false ? $excerpt_more_opt : '…';
-							?>
-							<input type="text" name="fromscratch_excerpt_more" id="fromscratch_excerpt_more" value="<?= esc_attr($excerpt_more_val) ?>" class="small-text" maxlength="20">
-							<p class="description"><?= esc_html__('Text shown after the excerpt when it is truncated (e.g. …). Leave blank for none.', 'fromscratch') ?></p>
-						</td>
-					</tr>
-				</table>
-
-				<hr>
-
-				<h2 class="title"><?= esc_html__('Posts per page', 'fromscratch') ?></h2>
-				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('How many posts appear per page on the blog, archives, and search results.', 'fromscratch') ?></p>
-				<table class="form-table" role="presentation">
-					<tr>
-						<th scope="row">
-							<label for="posts_per_page"><?= esc_html__('Posts per page', 'fromscratch') ?></label>
-						</th>
-						<td>
-							<?php $posts_per_page_val = max(1, (int) get_option('posts_per_page', 10)); ?>
-							<input type="number" name="posts_per_page" id="posts_per_page" value="<?= esc_attr((string) $posts_per_page_val) ?>" min="1" max="999" step="1" class="small-text">
-							<p class="description"><?= esc_html__('Same as Settings → Reading → “Blog pages show at most”.', 'fromscratch') ?></p>
 						</td>
 					</tr>
 				</table>
