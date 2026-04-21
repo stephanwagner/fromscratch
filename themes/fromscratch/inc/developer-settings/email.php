@@ -48,8 +48,10 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 		if (is_email($admin_email)) {
 			update_option('admin_email', $admin_email);
 		}
-		$report_email = isset($_POST['fromscratch_report_email']) ? sanitize_email(wp_unslash($_POST['fromscratch_report_email'])) : '';
-		update_option('fromscratch_report_email', is_email($report_email) ? $report_email : '');
+		$report_email = isset($_POST['fromscratch_report_email']) ? wp_unslash($_POST['fromscratch_report_email']) : '';
+		if (function_exists('fs_sanitize_report_email_list')) {
+			update_option('fromscratch_report_email', fs_sanitize_report_email_list($report_email));
+		}
 		$developer_email = isset($_POST['fromscratch_developer_email']) ? sanitize_email(wp_unslash($_POST['fromscratch_developer_email'])) : '';
 		update_option('fromscratch_developer_email', is_email($developer_email) ? $developer_email : '');
 		set_transient('fromscratch_email_saved', '1', 30);
@@ -198,8 +200,8 @@ function fs_render_developer_email(): void
 				<tr>
 					<th scope="row"><label for="fromscratch_report_email"><?= esc_html__('Report email', 'fromscratch') ?></label></th>
 					<td>
-						<input type="email" name="fromscratch_report_email" id="fromscratch_report_email" value="<?= esc_attr(get_option('fromscratch_report_email', '')) ?>" class="regular-text" autocomplete="email">
-						<p class="description"><?= esc_html__('Used for automated reports such as weekly analytics summaries.', 'fromscratch') ?></p>
+						<textarea name="fromscratch_report_email" id="fromscratch_report_email" rows="3" class="regular-text" style="width: 100%; max-width: 420px;"><?= esc_textarea((string) get_option('fromscratch_report_email', '')) ?></textarea>
+						<p class="description"><?= esc_html__('Used for automated reports such as weekly analytics summaries. One email address per line.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 				<tr>

@@ -97,6 +97,47 @@ add_action('admin_init', function () {
 	exit;
 }, 1);
 
+// General tab: send weekly report immediately to developer email (manual test/send).
+add_action('admin_init', function () {
+	global $pagenow;
+	if (!current_user_can('manage_options') || $_SERVER['REQUEST_METHOD'] !== 'POST') {
+		return;
+	}
+	if ($pagenow !== 'options-general.php' || (isset($_GET['page']) ? $_GET['page'] : '') !== 'fs-theme-settings') {
+		return;
+	}
+	$tab = isset($_GET['tab']) ? sanitize_key((string) $_GET['tab']) : 'general';
+	if ($tab !== 'general') {
+		return;
+	}
+	if (empty($_POST['fromscratch_send_weekly_report_to_developer'])) {
+		return;
+	}
+	if (empty($_POST['_wpnonce']) || !wp_verify_nonce((string) $_POST['_wpnonce'], 'fromscratch_send_weekly_report_to_developer')) {
+		return;
+	}
+	$url = admin_url('options-general.php?page=fs-theme-settings&tab=general');
+	$developer_email = function_exists('fs_developer_email') ? fs_developer_email() : '';
+	if ($developer_email === '' || !is_email($developer_email)) {
+		set_transient('fromscratch_weekly_report_send_error', __('Developer email is missing or invalid.', 'fromscratch'), 30);
+		wp_safe_redirect($url);
+		exit;
+	}
+	if (!function_exists('fs_weekly_report_send')) {
+		set_transient('fromscratch_weekly_report_send_error', __('Weekly report sender is not available.', 'fromscratch'), 30);
+		wp_safe_redirect($url);
+		exit;
+	}
+	$sent = fs_weekly_report_send([$developer_email]);
+	if ($sent) {
+		set_transient('fromscratch_weekly_report_send_success', $developer_email, 30);
+	} else {
+		set_transient('fromscratch_weekly_report_send_error', __('Weekly report email could not be sent.', 'fromscratch'), 30);
+	}
+	wp_safe_redirect($url);
+	exit;
+}, 2);
+
 // AJAX: toggle "Show developer options" on Content tab (saved per user).
 add_action('wp_ajax_fromscratch_toggle_content_developer_options', function () {
 	if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'fromscratch_toggle_content_developer_options')) {
@@ -207,7 +248,7 @@ add_action('admin_init', function () {
 	]);
 	register_setting(FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL, 'fromscratch_report_email', [
 		'type' => 'string',
-		'sanitize_callback' => 'sanitize_email',
+		'sanitize_callback' => 'fs_sanitize_report_email_list',
 	]);
 	register_setting(FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL, 'fromscratch_developer_email', [
 		'type' => 'string',
@@ -222,8 +263,57 @@ add_action('admin_init', function () {
  */
 function fs_report_email(): string
 {
-	$email = get_option('fromscratch_report_email', '');
-	return is_string($email) && is_email($email) ? $email : '';
+	$list = fs_report_emails();
+	return $list[0] ?? '';
+}
+
+/**
+ * Parse and sanitize report recipient list (one email per line).
+ *
+ * @param mixed $value Raw option value.
+ * @return string
+ */
+function fs_sanitize_report_email_list($value): string
+{
+	$text = is_string($value) ? $value : '';
+	$lines = preg_split('/\r\n|\r|\n/', $text);
+	if (!is_array($lines)) {
+		return '';
+	}
+	$out = [];
+	foreach ($lines as $line) {
+		$email = sanitize_email(trim((string) $line));
+		if ($email === '' || !is_email($email)) {
+			continue;
+		}
+		$out[] = strtolower($email);
+	}
+	$out = array_values(array_unique($out));
+	return implode("\n", $out);
+}
+
+/**
+ * @return array<int, string> Report recipient emails.
+ */
+function fs_report_emails(): array
+{
+	$raw = get_option('fromscratch_report_email', '');
+	if (!is_string($raw) || trim($raw) === '') {
+		return [];
+	}
+	$lines = preg_split('/\r\n|\r|\n/', $raw);
+	if (!is_array($lines)) {
+		return [];
+	}
+	$out = [];
+	foreach ($lines as $line) {
+		$email = sanitize_email(trim((string) $line));
+		if ($email === '' || !is_email($email)) {
+			continue;
+		}
+		$out[] = strtolower($email);
+	}
+	return array_values(array_unique($out));
 }
 
 /**
@@ -262,6 +352,16 @@ add_action('admin_init', function () {
 	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_og_image_fallback', [
 		'type' => 'integer',
 		'sanitize_callback' => 'fs_sanitize_og_image_fallback',
+	]);
+	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_weekly_report_enabled', [
+		'type' => 'string',
+		'sanitize_callback' => static function ($value): string {
+			return !empty($value) ? '1' : '0';
+		},
+	]);
+	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_report_email', [
+		'type' => 'string',
+		'sanitize_callback' => 'fs_sanitize_report_email_list',
 	]);
 }, 5);
 
@@ -665,6 +765,14 @@ function theme_settings_page(): void
 	if ($css_saved !== false) {
 		delete_transient('fromscratch_css_saved');
 	}
+	$weekly_send_success = get_transient('fromscratch_weekly_report_send_success');
+	if ($weekly_send_success !== false) {
+		delete_transient('fromscratch_weekly_report_send_success');
+	}
+	$weekly_send_error = get_transient('fromscratch_weekly_report_send_error');
+	if ($weekly_send_error !== false) {
+		delete_transient('fromscratch_weekly_report_send_error');
+	}
 ?>
 	<div class="wrap">
 		<h1><?= esc_html__('Theme settings', 'fromscratch') ?></h1>
@@ -673,8 +781,14 @@ function theme_settings_page(): void
 		if ($redirects_saved !== false || $css_saved !== false) {
 			$notices[] = __('Settings saved.', 'fromscratch');
 		}
+		if ($weekly_send_success !== false) {
+			$notices[] = sprintf(__('Weekly report email sent to %s.', 'fromscratch'), (string) $weekly_send_success);
+		}
+		if ($weekly_send_error !== false) {
+			$notices[] = (string) $weekly_send_error;
+		}
 		foreach ($notices as $msg) : ?>
-			<div class="notice notice-success is-dismissible">
+			<div class="notice <?= ($weekly_send_error !== false && $msg === (string) $weekly_send_error) ? 'notice-error' : 'notice-success' ?> is-dismissible">
 				<p><strong><?= esc_html($msg) ?></strong></p>
 			</div>
 		<?php endforeach; ?>
@@ -693,9 +807,49 @@ function theme_settings_page(): void
 			$client_logo_url = $client_logo_id > 0 ? wp_get_attachment_image_url($client_logo_id, 'medium') : '';
 			$og_fallback_id = (int) get_option('fromscratch_og_image_fallback', 0);
 			$og_fallback_url = $og_fallback_id > 0 ? wp_get_attachment_image_url($og_fallback_id, 'medium') : '';
+			$weekly_test_developer_email = function_exists('fs_developer_email') ? fs_developer_email() : '';
 			?>
 			<form method="post" action="options.php" class="fs-page-settings-form">
 				<?php settings_fields(FS_THEME_OPTION_GROUP_GENERAL); ?>
+				<h2 class="title"><?= esc_html__('Weekly report email', 'fromscratch') ?></h2>
+				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Sends a weekly summary every Monday with analytics (when Matomo is enabled).', 'fromscratch') ?></p>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><?= esc_html__('Enable report email', 'fromscratch') ?></th>
+						<td>
+							<label>
+								<input type="hidden" name="fromscratch_weekly_report_enabled" value="0">
+								<input type="checkbox" name="fromscratch_weekly_report_enabled" value="1" <?= checked(get_option('fromscratch_weekly_report_enabled', '0'), '1', false) ?>>
+								<?= esc_html__('Enable weekly email report', 'fromscratch') ?>
+							</label>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="fromscratch_report_email"><?= esc_html__('Report emails', 'fromscratch') ?></label></th>
+						<td>
+							<textarea name="fromscratch_report_email" id="fromscratch_report_email" rows="4" class="regular-text" style="width: 100%; max-width: 420px;"><?= esc_textarea((string) get_option('fromscratch_report_email', '')) ?></textarea>
+							<p class="description"><?= esc_html__('One email address per line.', 'fromscratch') ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?= esc_html__('Test email', 'fromscratch') ?></th>
+						<td>
+							<div>
+								<button type="submit" form="fs-send-weekly-report-to-developer" class="button"><?= esc_html__('Send email to developer', 'fromscratch') ?></button>
+							</div>
+							<p class="description">
+								<?= esc_html(sprintf(
+									/* translators: %s: developer email address */
+									__('Sends a current report to: %s', 'fromscratch'),
+									$weekly_test_developer_email !== '' ? $weekly_test_developer_email : __('(not configured)', 'fromscratch')
+								)) ?>
+							</p>
+						</td>
+					</tr>
+				</table>
+
+				<hr>
+
 				<h2 class="title"><?= esc_html__('Client logo', 'fromscratch') ?></h2>
 				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Shown on the login page instead of the WordPress logo.', 'fromscratch') ?></p>
 				<table class="form-table" role="presentation">
@@ -795,6 +949,10 @@ function theme_settings_page(): void
 				<div class="fs-submit-row">
 					<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
 				</div>
+			</form>
+			<form method="post" action="<?= esc_url(admin_url('options-general.php?page=fs-theme-settings&tab=general')) ?>" id="fs-send-weekly-report-to-developer" style="display:none;">
+				<?php wp_nonce_field('fromscratch_send_weekly_report_to_developer'); ?>
+				<input type="hidden" name="fromscratch_send_weekly_report_to_developer" value="1">
 			</form>
 		<?php elseif ($tab === 'texts') : ?>
 			<form method="post" action="options.php" class="fs-page-settings-form" id="fs-content-form">
@@ -897,9 +1055,9 @@ function theme_settings_page(): void
 								if (data.success) {
 									btn.setAttribute('data-fs-content-developer-options-visible', newVisible ? '1' : '0');
 									btn.textContent = newVisible ? '<?= esc_js(__('Hide developer options', 'fromscratch')) ?>' : '<?= esc_js(__('Show developer options', 'fromscratch')) ?>';
-document.querySelectorAll('[data-fs-content-developer-options-container]').forEach(function(el) {
-									el.classList.toggle('fs-content-developer-options-hidden', !newVisible);
-								});
+									document.querySelectorAll('[data-fs-content-developer-options-container]').forEach(function(el) {
+										el.classList.toggle('fs-content-developer-options-hidden', !newVisible);
+									});
 								}
 							});
 					});
@@ -1089,7 +1247,7 @@ document.querySelectorAll('[data-fs-content-developer-options-container]').forEa
 				<h2 class="title"><?= esc_html__('Design', 'fromscratch') ?></h2>
 				<p class="description"><?= esc_html__('Define design values used across the website.', 'fromscratch') ?></p>
 				<p class="description"><?= esc_html__('Changes are automatically applied wherever they are used.', 'fromscratch') ?></p>
-				
+
 				<hr>
 
 				<?php settings_fields(FS_THEME_OPTION_GROUP_DESIGN); ?>
@@ -1143,7 +1301,7 @@ document.querySelectorAll('[data-fs-content-developer-options-container]').forEa
 																<label for="fromscratch_design_<?= esc_attr($var_id) ?>" class="screen-reader-text"><?= esc_html($var_title) ?></label>
 																<input type="text" name="<?= $input_name ?>" id="fromscratch_design_<?= esc_attr($var_id) ?>" value="<?= esc_attr($override) ?>" placeholder="<?= esc_attr($default) ?>" class="code fs-code-small fromscratch-design-input <?= esc_attr($type_class) ?>" <?= $var_type === 'color' ? 'maxlength="22" data-design-color-input' : '' ?>>
 																<?php if ($var_type === 'color') : ?>
-																	<span class="fromscratch-design-color-preview<?= $preview_color === '' ? ' -empty' : '' ?>"<?= $preview_color !== '' ? ' style="background-color: ' . esc_attr($preview_color) . ';"' : '' ?> aria-hidden="true" data-design-color-preview></span>
+																	<span class="fromscratch-design-color-preview<?= $preview_color === '' ? ' -empty' : '' ?>" <?= $preview_color !== '' ? ' style="background-color: ' . esc_attr($preview_color) . ';"' : '' ?> aria-hidden="true" data-design-color-preview></span>
 																<?php endif; ?>
 																<span class="fromscratch-design-field-description"><?= esc_html($var_title) ?></span>
 															</div>
