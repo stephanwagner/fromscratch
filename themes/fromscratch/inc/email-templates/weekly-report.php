@@ -187,7 +187,7 @@ defined('ABSPATH') || exit;
 									text-wrap: balance;
 									max-width: 320px;
 								">
-									<?= wp_kses(__('Visitors and page views<div class="fs-mail__small-mobile-inline">of the last week</div>', 'fromscratch'), ['br' => [], 'div' => ['class' => []]]) ?>
+									<?= wp_kses(__('Visitors and page views <div class="fs-mail__small-mobile-inline">of the last week</div>', 'fromscratch'), ['br' => [], 'div' => ['class' => []]]) ?>
 								</div>
 								<?php if (!empty($daily_chart_url)) : ?>
 									<img
@@ -212,10 +212,10 @@ defined('ABSPATH') || exit;
 									line-height: 1.4;
 									">
 									<tr>
-										<th align="left" style="border-bottom:2px solid #e2e8f0; padding: 0 6px 6px;"></th>
-										<th align="right" style="border-bottom:2px solid #e2e8f0; padding: 0 6px 6px; text-align: center; font-weight: bold; color: #2284e5;"><?= wp_kses(__('Unique<br>visitors', 'fromscratch'), ['br' => []]) ?></th>
-										<th align="right" style="border-bottom:2px solid #e2e8f0; padding: 0 6px 6px; text-align: center; font-weight: bold; color: #8f70cc;"><?= wp_kses(__('Visits<br>total', 'fromscratch'), ['br' => []]) ?></th>
-										<th align="right" style="border-bottom:2px solid #e2e8f0; padding: 0 6px 6px; text-align: center; font-weight: bold; color: #ff6673;"><?= wp_kses(__('Page<br>views', 'fromscratch'), ['br' => []]) ?></th>
+										<th align="left" style="border-bottom:2px solid #e2e8f0;"></th>
+										<th align="right" style="border-bottom:2px solid #e2e8f0; padding: 0 4px 6px; text-align: center; font-weight: bold; color: #2284e5;"><?= wp_kses(__('Unique<br>visitors', 'fromscratch'), ['br' => []]) ?></th>
+										<th align="right" style="border-bottom:2px solid #e2e8f0; padding: 0 4px 6px; text-align: center; font-weight: bold; color: #8f70cc;"><?= wp_kses(__('Visits<br>total', 'fromscratch'), ['br' => []]) ?></th>
+										<th align="right" style="border-bottom:2px solid #e2e8f0; padding: 0 4px 6px; text-align: center; font-weight: bold; color: #ff6673;"><?= wp_kses(__('Page<br>views', 'fromscratch'), ['br' => []]) ?></th>
 									</tr>
 									<?php foreach (($daily ?? []) as $row) : ?>
 										<?php
@@ -226,14 +226,14 @@ defined('ABSPATH') || exit;
 											$dd = \DateTimeImmutable::createFromFormat('Y-m-d', $date_str, wp_timezone());
 											if ($dd instanceof \DateTimeImmutable) {
 												$daily_weekday = wp_date('l', $dd->getTimestamp());
-												$daily_written = wp_date('j. F Y', $dd->getTimestamp());
+												$daily_written = wp_date('j. M Y', $dd->getTimestamp());
 											}
 										}
 										?>
 										<tr>
-											<td style="border-bottom:2px solid #eef2f7;line-height:1.4; padding: 6px 6px 6px 0;"><b style="font-weight: bold;"><?php if ($daily_weekday !== '') : ?><?= esc_html($daily_weekday) ?></b><br><span style="color:#64748b;"><?= esc_html($daily_written) ?></span><?php endif; ?></td>
+											<td style="border-bottom:2px solid #eef2f7;line-height:1.4; padding: 6px 0"><b style="font-weight: bold;"><?php if ($daily_weekday !== '') : ?><?= esc_html($daily_weekday) ?></b><br><span style="color:#64748b;"><?= esc_html($daily_written) ?></span><?php endif; ?></td>
 											<td align="right" style="border-bottom:2px solid #eef2f7; padding: 6px; text-align: center; font-weight: bold;"><?= esc_html(number_format_i18n((int) ($row['unique'] ?? 0))) ?></td>
-											<td align="right" style="border-bottom:2px solid #eef2f7; padding: 6px;text-align: center;"><?= esc_html(number_format_i18n((int) ($row['visits'] ?? 0))) ?></td>
+											<td align="right" style="border-bottom:2px solid #eef2f7; padding: 6px; text-align: center;"><?= esc_html(number_format_i18n((int) ($row['visits'] ?? 0))) ?></td>
 											<td align="right" style="border-bottom:2px solid #eef2f7; padding: 6px; text-align: center;"><?= esc_html(number_format_i18n((int) ($row['pageviews'] ?? 0))) ?></td>
 										</tr>
 									<?php endforeach; ?>
@@ -250,7 +250,7 @@ defined('ABSPATH') || exit;
 									text-align: center;
 									text-wrap: balance;
 								">
-									<?= wp_kses(__('Visitors and page views<div class="fs-mail__small-mobile-inline">of the last 8 weeks</div>', 'fromscratch'), ['br' => [], 'div' => ['class' => []]]) ?>
+									<?= wp_kses(__('Visitors and page views <div class="fs-mail__small-mobile-inline">of the last 8 weeks</div>', 'fromscratch'), ['br' => [], 'div' => ['class' => []]]) ?>
 								</div>
 								<?php if (!empty($weekly_chart_url)) : ?>
 									<img
@@ -275,10 +275,10 @@ defined('ABSPATH') || exit;
 									line-height: 1.4;
 									">
 									<tr>
-										<th align="left" style="border-bottom:2px solid #e2e8f0; padding: 0 6px 6px;"></th>
-										<th align="right" style="border-bottom:2px solid #e2e8f0; padding: 0 6px 6px; text-align: center; font-weight: bold; color: #2284e5;"><?= wp_kses(__('Unique<br>visitors', 'fromscratch'), ['br' => []]) ?></th>
-										<th align="right" style="border-bottom:2px solid #e2e8f0; padding: 0 6px 6px; text-align: center; font-weight: bold; color: #8f70cc;"><?= wp_kses(__('Visits<br>total', 'fromscratch'), ['br' => []]) ?></th>
-										<th align="right" style="border-bottom:2px solid #e2e8f0; padding: 0 6px 6px; text-align: center; font-weight: bold; color: #ff6673;"><?= wp_kses(__('Page<br>views', 'fromscratch'), ['br' => []]) ?></th>
+										<th align="left" style="border-bottom:2px solid #e2e8f0;"></th>
+										<th align="right" style="border-bottom:2px solid #e2e8f0; padding: 0 4px 6px; text-align: center; font-weight: bold; color: #2284e5;"><?= wp_kses(__('Unique<br>visitors', 'fromscratch'), ['br' => []]) ?></th>
+										<th align="right" style="border-bottom:2px solid #e2e8f0; padding: 0 4px 6px; text-align: center; font-weight: bold; color: #8f70cc;"><?= wp_kses(__('Visits<br>total', 'fromscratch'), ['br' => []]) ?></th>
+										<th align="right" style="border-bottom:2px solid #e2e8f0; padding: 0 4px 6px; text-align: center; font-weight: bold; color: #ff6673;"><?= wp_kses(__('Page<br>views', 'fromscratch'), ['br' => []]) ?></th>
 									</tr>
 									<?php foreach (($weekly ?? []) as $row) : ?>
 										<?php
@@ -291,12 +291,12 @@ defined('ABSPATH') || exit;
 												$monday = $wd->modify('monday this week');
 												$week_no = (int) $monday->format('W');
 												$week_line = sprintf(__('Week %d', 'fromscratch'), $week_no);
-												$monday_written = wp_date('j. F Y', $monday->getTimestamp());
+												$monday_written = wp_date('j. M Y', $monday->getTimestamp());
 											}
 										}
 										?>
 										<tr>
-											<td style="border-bottom:2px solid #eef2f7;line-height:1.4; padding: 6px 6px 6px 0;"><b style="font-weight: bold;"><?php if ($week_line !== '') : ?><?= esc_html($week_line) ?></b><br><span style="color:#64748b;"><?= esc_html($monday_written) ?></span><?php endif; ?></td>
+											<td style="border-bottom:2px solid #eef2f7;line-height:1.4; padding: 6px 0"><b style="font-weight: bold;"><?php if ($week_line !== '') : ?><?= esc_html($week_line) ?></b><br><span style="color:#64748b;"><?= esc_html($monday_written) ?></span><?php endif; ?></td>
 											<td align="right" style="border-bottom:2px solid #eef2f7; padding: 6px; text-align: center; font-weight: bold;"><?= esc_html(number_format_i18n((int) ($row['unique'] ?? 0))) ?></td>
 											<td align="right" style="border-bottom:2px solid #eef2f7; padding: 6px; text-align: center;"><?= esc_html(number_format_i18n((int) ($row['visits'] ?? 0))) ?></td>
 											<td align="right" style="border-bottom:2px solid #eef2f7; padding: 6px; text-align: center;"><?= esc_html(number_format_i18n((int) ($row['pageviews'] ?? 0))) ?></td>

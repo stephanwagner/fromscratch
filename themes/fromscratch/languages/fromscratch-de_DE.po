@@ -1758,11 +1758,11 @@ msgstr "Die folgenden IPs haben den konfigurierten Schwellenwert überschritten.
 msgid "Your weekly website report"
 msgstr "Ihr wöchentlicher Website-Bericht"
 
-msgid "Visitors and page views<div class=\"fs-mail__small-mobile-inline\">of the last week</div>"
-msgstr "Besucherzahlen und Seitenaufrufe<div class=\"fs-mail__small-mobile-inline\">der letzten Woche</div>"
+msgid "Visitors and page views <div class=\"fs-mail__small-mobile-inline\">of the last week</div>"
+msgstr "Besucherzahlen und Seitenaufrufe <div class=\"fs-mail__small-mobile-inline\">der letzten Woche</div>"
 
-msgid "Visitors and page views<div class=\"fs-mail__small-mobile-inline\">of the last 8 weeks</div>"
-msgstr "Besucherzahlen und Seitenaufrufe<div class=\"fs-mail__small-mobile-inline\">der letzten 8 Wochen</div>"
+msgid "Visitors and page views <div class=\"fs-mail__small-mobile-inline\">of the last 8 weeks</div>"
+msgstr "Besucherzahlen und Seitenaufrufe <div class=\"fs-mail__small-mobile-inline\">der letzten 8 Wochen</div>"
 
 msgid "Unique<br>visitors"
 msgstr "Eindeutige<br>Besucher"
