@@ -1581,6 +1581,9 @@ msgstr "Statistiken"
 msgid "Open analytics"
 msgstr "Statistiken öffnen"
 
+msgid "Open Admin Dashboard"
+msgstr "Admin Dashboard öffnen"
+
 msgid "Matomo: invalid or missing auth token."
 msgstr "Matomo: Ungültiges oder fehlendes Auth-Token."
 
@@ -1749,3 +1752,26 @@ msgstr "Verdächtige Anmeldeversuche"
 
 msgid "The following IPs exceeded the configured threshold."
 msgstr "Die folgenden IPs haben den konfigurierten Schwellenwert überschritten."
+
+# Report email
+
+msgid "Your weekly website report"
+msgstr "Ihr wöchentlicher Website-Bericht"
+
+msgid "Visitors and page views<div class=\"fs-mail__small-mobile-inline\">of the last week</div>"
+msgstr "Besucherzahlen und Seitenaufrufe<div class=\"fs-mail__small-mobile-inline\">der letzten Woche</div>"
+
+msgid "Visitors and page views<div class=\"fs-mail__small-mobile-inline\">of the last 8 weeks</div>"
+msgstr "Besucherzahlen und Seitenaufrufe<div class=\"fs-mail__small-mobile-inline\">der letzten 8 Wochen</div>"
+
+msgid "Unique<br>visitors"
+msgstr "Eindeutige<br>Besucher"
+
+msgid "Visits<br>total"
+msgstr "Besuche<br>gesamt"
+
+msgid "Page<br>views"
+msgstr "Seiten-<br>aufrufe"
+
+msgid "If you no longer want to receive these reports, <a href=\"%1$s\">log in to WordPress</a> and disable weekly reports, or contact the <a href=\"%2$s\">developer</a> or <a href=\"%3$s\">admin</a>."
+msgstr "Wenn Sie diese Berichte nicht mehr erhalten möchten, <a href=\"%1$s\">melden Sie sich in WordPress an</a> und deaktivieren Sie die wöchentlichen Berichte oder kontaktieren Sie den <a href=\"%2$s\">Entwickler</a> bzw. den <a href=\"%3$s\">Administrator</a>."

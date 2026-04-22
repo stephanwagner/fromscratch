@@ -167,8 +167,13 @@ function fs_weekly_report_parse_expiration_timestamp(string $raw): ?int
 function fs_weekly_report_build_html(): string
 {
 	$site_name = get_bloginfo('name');
-	$site_url = home_url('/');
+	$site_url = admin_url();
 	$stats_url = function_exists('fs_dashboard_statistics_url') ? fs_dashboard_statistics_url() : admin_url();
+	$theme_settings_url = admin_url('options-general.php?page=fs-theme-settings');
+	$developer_email = function_exists('fs_developer_email') ? fs_developer_email() : '';
+	$admin_email = get_option('admin_email', '');
+	$developer_email_link = (is_string($developer_email) && is_email($developer_email)) ? ('mailto:' . $developer_email) : '';
+	$admin_email_link = (is_string($admin_email) && is_email($admin_email)) ? ('mailto:' . $admin_email) : '';
 	$date_now = wp_date(get_option('date_format') . ' ' . get_option('time_format'));
 	$matomo_on = function_exists('fs_theme_feature_enabled') && fs_theme_feature_enabled('matomo');
 	$tz = function_exists('wp_timezone') ? wp_timezone() : new \DateTimeZone(wp_timezone_string() ?: 'UTC');
@@ -218,11 +223,20 @@ function fs_weekly_report_build_html(): string
 			$weekly = array_slice($weekly, -8);
 		}
 		$daily_chart_url = fs_weekly_report_build_chart_url(
-			array_map(static function ($row) {
-				if (function_exists('fs_dashboard_analytics_daily_axis_label')) {
-					return fs_dashboard_analytics_daily_axis_label((array) $row);
+			array_map(static function ($row) use ($tz): array {
+				$date = isset($row['date']) ? (string) $row['date'] : '';
+				if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+					return ['', ''];
 				}
-				return isset($row['date']) ? (string) $row['date'] : '';
+				$dt = new \DateTimeImmutable($date . ' 12:00:00', $tz);
+				$ts = $dt->getTimestamp();
+				$week_monday = $dt->modify('monday this week');
+				$week_no = (int) $week_monday->format('W');
+
+				return [
+					wp_date('l', $ts),
+					wp_date('d.m.Y', $ts),
+				];
 			}, $daily),
 			[
 				[
@@ -247,16 +261,19 @@ function fs_weekly_report_build_html(): string
 			'line'
 		);
 		$weekly_chart_url = fs_weekly_report_build_chart_url(
-			array_map(static function ($row) {
-				if (function_exists('fs_dashboard_analytics_weekly_axis_label')) {
-					return fs_dashboard_analytics_weekly_axis_label((array) $row);
-				}
+			array_map(static function ($row) use ($tz): array {
 				$d = isset($row['date']) ? (string) $row['date'] : '';
-				if ($d === '') {
-					return '';
+				if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $d)) {
+					return ['', ''];
 				}
-				$ts = strtotime($d);
-				return $ts ? wp_date('d.m', $ts) : $d;
+				$monday = (new \DateTimeImmutable($d . ' 12:00:00', $tz))->modify('monday this week');
+				$m_ts = $monday->getTimestamp();
+				$week_no = (int) $monday->format('W');
+
+				return [
+					sprintf(__('Week %d', 'fromscratch'), $week_no),
+					wp_date('d.m.Y', $m_ts),
+				];
 			}, $weekly),
 			[
 				[
@@ -283,8 +300,8 @@ function fs_weekly_report_build_html(): string
 	}
 	$template_html = fs_get_email_template('weekly-report', [
 		'site_name' => $site_name,
-		'site_url' => $site_url,
 		'date_now' => $date_now,
+		'site_url' => $site_url,
 		'stats_url' => $stats_url,
 		'insights' => $insights,
 		'daily' => $daily,
@@ -292,6 +309,9 @@ function fs_weekly_report_build_html(): string
 		'daily_chart_url' => $daily_chart_url,
 		'weekly_chart_url' => $weekly_chart_url,
 		'matomo_enabled' => $matomo_on,
+		'theme_settings_url' => $theme_settings_url,
+		'developer_email_link' => $developer_email_link,
+		'admin_email_link' => $admin_email_link,
 	]);
 	if ($template_html !== '') {
 		return $template_html;

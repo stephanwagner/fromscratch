@@ -4,23 +4,132 @@ defined('ABSPATH') || exit;
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title><?= esc_html__('Weekly report', 'fromscratch') ?></title>
+	<title><?= esc_html__('Weekly website report', 'fromscratch') ?></title>
+
+	<style type="text/css">
+		body,
+		table,
+		td {
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+			-webkit-font-smoothing: antialiased;
+			-moz-osx-font-smoothing: grayscale;
+			-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+		}
+
+		.fs-mail-weekly-report-wrapper {
+			background: #f1f5f9;
+			padding: 32px;
+		}
+
+		.fs-mail-weekly-report-container {
+			padding: 32px
+		}
+
+		.fs-mail__button:hover {
+			text-decoration: none !important;
+			color: #fff !important;
+			background: #559cff !important;
+		}
+
+		.fs-mail-weekly-report-footer-text a {
+			color: #94a3b8;
+			text-decoration: underline;
+			transition: color 280ms;
+		}
+
+		.fs-mail-weekly-report-footer-text a:hover {
+			color: #559cff;
+		}
+
+		@media (max-width: 900px) {
+			.fs-mail-weekly-report-wrapper {
+				padding: 24px;
+			}
+
+			.fs-mail-weekly-report-container {
+				padding: 24px;
+			}
+		}
+
+		@media (max-width: 600px) {
+
+			.fs-mail-weekly-report-wrapper {
+				padding: 16px;
+			}
+
+			.fs-mail-weekly-report-container {
+				padding: 24px 16px;
+			}
+		}
+
+		@media (max-width: 400px) {
+			.fs-mail-weekly-report-wrapper {
+				padding: 16px 8px;
+			}
+
+			.fs-mail-weekly-report-container {
+				padding: 24px 12px;
+			}
+
+			.fs-mail__small-mobile-inline {
+				display: inline !important;
+			}
+		}
+	</style>
 </head>
-<body style="margin:0;padding:0;background:#f1f5f9;color:#1f2937;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-	<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f5f9;padding:24px;">
+
+<body style="
+	margin: 0;
+	padding: 0;
+	background: #f1f5f9;
+	color: #1f2937;
+	font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+	font-size: 16px;
+	line-height: 1.5;
+	-webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+">
+	<table
+		class="fs-mail-weekly-report-wrapper"
+		role="presentation"
+		width="100%"
+		cellpadding="0"
+		cellspacing="0"
+		border="0">
 		<tr>
 			<td align="center">
-				<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:760px;background:#fff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;">
+				<table
+					class="fs-mail-weekly-report-container"
+					role="presentation"
+					width="100%"
+					cellpadding="0"
+					cellspacing="0"
+					border="0"
+					style="
+				max-width: 660px;
+				background: #fff;
+				border:2px solid #e2e8f0;
+				border-radius: 16px;
+				overflow: hidden;
+				">
 					<tr>
-						<td style="padding:24px 24px 12px;">
-							<h1 style="margin:0 0 8px;font-size:24px;line-height:1.3;"><?= esc_html__('Weekly report', 'fromscratch') ?></h1>
-							<p style="margin:0;color:#64748b;font-size:14px;">
-								<strong><?= esc_html($site_name ?? '') ?></strong> -
-								<?= esc_html__('Generated', 'fromscratch') ?>: <?= esc_html($date_now ?? '') ?>
-							</p>
+						<td>
+							<h1
+								style="
+								margin: 0;
+								font-size: 24px;
+								line-height: 1.3;
+								font-weight: bold;
+								text-wrap: balance;
+								text-align: center
+								">
+								<?= esc_html__('Your weekly website report', 'fromscratch') ?>
+							</h1>
 						</td>
 					</tr>
 					<tr>
@@ -68,48 +177,129 @@ defined('ABSPATH') || exit;
 					</tr>
 					<?php if (!empty($matomo_enabled)) : ?>
 						<tr>
-							<td style="padding:0 24px 16px;">
-								<h2 style="margin:0 0 10px;font-size:18px;"><?= esc_html__('Daily statistics (last week, 7 days)', 'fromscratch') ?></h2>
+							<td>
+								<div
+									style="
+									margin: 32px auto 16px;
+									font-size: 16px;
+									color: #64748b;
+									text-align: center;
+									text-wrap: balance;
+									max-width: 320px;
+								">
+									<?= wp_kses(__('Visitors and page views<div class="fs-mail__small-mobile-inline">of the last week</div>', 'fromscratch'), ['br' => [], 'div' => ['class' => []]]) ?>
+								</div>
 								<?php if (!empty($daily_chart_url)) : ?>
-									<img src="<?= esc_url($daily_chart_url) ?>" alt="<?= esc_attr__('Daily chart', 'fromscratch') ?>" style="display:block;width:100%;max-width:100%;height:auto;border-radius:8px;border:1px solid #e2e8f0;">
+									<img
+										src="<?= esc_url($daily_chart_url) ?>"
+										alt=""
+										style="display: block;
+										width: 100%;
+										max-width: 100%;
+										height: auto;
+									">
 								<?php endif; ?>
-								<table role="presentation" width="100%" cellpadding="6" cellspacing="0" border="0" style="margin-top:10px;border-collapse:collapse;font-size:13px;">
-									<tr style="background:#f8fafc;">
-										<th align="left" style="border-bottom:1px solid #e2e8f0;"><?= esc_html__('Date', 'fromscratch') ?></th>
-										<th align="right" style="border-bottom:1px solid #e2e8f0;"><?= esc_html__('Unique visitors', 'fromscratch') ?></th>
-										<th align="right" style="border-bottom:1px solid #e2e8f0;"><?= esc_html__('Visits', 'fromscratch') ?></th>
-										<th align="right" style="border-bottom:1px solid #e2e8f0;"><?= esc_html__('Page views', 'fromscratch') ?></th>
+								<table
+									role="presentation"
+									width="100%" 
+									cellpadding="0"
+									cellspacing="0"
+									border="0"
+									style="
+									margin-top:24px;
+									border-collapse:collapse;
+									font-size:13px;
+									line-height: 1.4;
+									">
+									<tr>
+										<th align="left" style="border-bottom:2px solid #e2e8f0; padding: 0 6px 6px;"></th>
+										<th align="right" style="border-bottom:2px solid #e2e8f0; padding: 0 6px 6px; text-align: center; font-weight: bold; color: #2284e5;"><?= wp_kses(__('Unique<br>visitors', 'fromscratch'), ['br' => []]) ?></th>
+										<th align="right" style="border-bottom:2px solid #e2e8f0; padding: 0 6px 6px; text-align: center; font-weight: bold; color: #8f70cc;"><?= wp_kses(__('Visits<br>total', 'fromscratch'), ['br' => []]) ?></th>
+										<th align="right" style="border-bottom:2px solid #e2e8f0; padding: 0 6px 6px; text-align: center; font-weight: bold; color: #ff6673;"><?= wp_kses(__('Page<br>views', 'fromscratch'), ['br' => []]) ?></th>
 									</tr>
 									<?php foreach (($daily ?? []) as $row) : ?>
+										<?php
+										$date_str = isset($row['date']) ? (string) $row['date'] : '';
+										$daily_weekday = '';
+										$daily_written = '';
+										if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date_str)) {
+											$dd = \DateTimeImmutable::createFromFormat('Y-m-d', $date_str, wp_timezone());
+											if ($dd instanceof \DateTimeImmutable) {
+												$daily_weekday = wp_date('l', $dd->getTimestamp());
+												$daily_written = wp_date('j. F Y', $dd->getTimestamp());
+											}
+										}
+										?>
 										<tr>
-											<td style="border-bottom:1px solid #eef2f7;"><?= esc_html(isset($row['date']) ? wp_date(get_option('date_format'), strtotime((string) $row['date'])) : '') ?></td>
-											<td align="right" style="border-bottom:1px solid #eef2f7;"><?= esc_html(number_format_i18n((int) ($row['unique'] ?? 0))) ?></td>
-											<td align="right" style="border-bottom:1px solid #eef2f7;"><?= esc_html(number_format_i18n((int) ($row['visits'] ?? 0))) ?></td>
-											<td align="right" style="border-bottom:1px solid #eef2f7;"><?= esc_html(number_format_i18n((int) ($row['pageviews'] ?? 0))) ?></td>
+											<td style="border-bottom:2px solid #eef2f7;line-height:1.4; padding: 6px 6px 6px 0;"><b style="font-weight: bold;"><?php if ($daily_weekday !== '') : ?><?= esc_html($daily_weekday) ?></b><br><span style="color:#64748b;"><?= esc_html($daily_written) ?></span><?php endif; ?></td>
+											<td align="right" style="border-bottom:2px solid #eef2f7; padding: 6px; text-align: center; font-weight: bold;"><?= esc_html(number_format_i18n((int) ($row['unique'] ?? 0))) ?></td>
+											<td align="right" style="border-bottom:2px solid #eef2f7; padding: 6px;text-align: center;"><?= esc_html(number_format_i18n((int) ($row['visits'] ?? 0))) ?></td>
+											<td align="right" style="border-bottom:2px solid #eef2f7; padding: 6px; text-align: center;"><?= esc_html(number_format_i18n((int) ($row['pageviews'] ?? 0))) ?></td>
 										</tr>
 									<?php endforeach; ?>
 								</table>
 							</td>
 						</tr>
 						<tr>
-							<td style="padding:0 24px 16px;">
-								<h2 style="margin:0 0 10px;font-size:18px;"><?= esc_html__('Weekly statistics (last 8 completed weeks)', 'fromscratch') ?></h2>
+							<td>
+								<div
+									style="
+									margin: 32px auto 16px;
+									font-size: 16px;
+									color: #64748b;
+									text-align: center;
+									text-wrap: balance;
+								">
+									<?= wp_kses(__('Visitors and page views<div class="fs-mail__small-mobile-inline">of the last 8 weeks</div>', 'fromscratch'), ['br' => [], 'div' => ['class' => []]]) ?>
+								</div>
 								<?php if (!empty($weekly_chart_url)) : ?>
-									<img src="<?= esc_url($weekly_chart_url) ?>" alt="<?= esc_attr__('Weekly chart', 'fromscratch') ?>" style="display:block;width:100%;max-width:100%;height:auto;border-radius:8px;border:1px solid #e2e8f0;">
+									<img
+										src="<?= esc_url($weekly_chart_url) ?>"
+										alt=""
+										style="
+										display: block;
+										width: 100%;
+										max-width: 100%;
+										height: auto;">
 								<?php endif; ?>
-								<table role="presentation" width="100%" cellpadding="6" cellspacing="0" border="0" style="margin-top:10px;border-collapse:collapse;font-size:13px;">
-									<tr style="background:#f8fafc;">
-										<th align="left" style="border-bottom:1px solid #e2e8f0;"><?= esc_html__('Week', 'fromscratch') ?></th>
-										<th align="right" style="border-bottom:1px solid #e2e8f0;"><?= esc_html__('Unique visitors', 'fromscratch') ?></th>
-										<th align="right" style="border-bottom:1px solid #e2e8f0;"><?= esc_html__('Visits', 'fromscratch') ?></th>
-										<th align="right" style="border-bottom:1px solid #e2e8f0;"><?= esc_html__('Page views', 'fromscratch') ?></th>
+								<table
+									role="presentation"
+									width="100%"
+									cellpadding="0"
+									cellspacing="0"
+									border="0"
+									style="
+									margin-top:24px;
+									border-collapse:collapse;
+									font-size:13px;
+									line-height: 1.4;
+									">
+									<tr>
+										<th align="left" style="border-bottom:2px solid #e2e8f0; padding: 0 6px 6px;"></th>
+										<th align="right" style="border-bottom:2px solid #e2e8f0; padding: 0 6px 6px; text-align: center; font-weight: bold; color: #2284e5;"><?= wp_kses(__('Unique<br>visitors', 'fromscratch'), ['br' => []]) ?></th>
+										<th align="right" style="border-bottom:2px solid #e2e8f0; padding: 0 6px 6px; text-align: center; font-weight: bold; color: #8f70cc;"><?= wp_kses(__('Visits<br>total', 'fromscratch'), ['br' => []]) ?></th>
+										<th align="right" style="border-bottom:2px solid #e2e8f0; padding: 0 6px 6px; text-align: center; font-weight: bold; color: #ff6673;"><?= wp_kses(__('Page<br>views', 'fromscratch'), ['br' => []]) ?></th>
 									</tr>
 									<?php foreach (($weekly ?? []) as $row) : ?>
+										<?php
+										$w_date = isset($row['date']) ? (string) $row['date'] : '';
+										$week_line = '';
+										$monday_written = '';
+										if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $w_date)) {
+											$wd = \DateTimeImmutable::createFromFormat('Y-m-d', $w_date, wp_timezone());
+											if ($wd instanceof \DateTimeImmutable) {
+												$monday = $wd->modify('monday this week');
+												$week_no = (int) $monday->format('W');
+												$week_line = sprintf(__('Week %d', 'fromscratch'), $week_no);
+												$monday_written = wp_date('j. F Y', $monday->getTimestamp());
+											}
+										}
+										?>
 										<tr>
-											<td style="border-bottom:1px solid #eef2f7;"><?= esc_html((string) ($row['date'] ?? '')) ?></td>
-											<td align="right" style="border-bottom:1px solid #eef2f7;"><?= esc_html(number_format_i18n((int) ($row['unique'] ?? 0))) ?></td>
-											<td align="right" style="border-bottom:1px solid #eef2f7;"><?= esc_html(number_format_i18n((int) ($row['visits'] ?? 0))) ?></td>
-											<td align="right" style="border-bottom:1px solid #eef2f7;"><?= esc_html(number_format_i18n((int) ($row['pageviews'] ?? 0))) ?></td>
+											<td style="border-bottom:2px solid #eef2f7;line-height:1.4; padding: 6px 6px 6px 0;"><b style="font-weight: bold;"><?php if ($week_line !== '') : ?><?= esc_html($week_line) ?></b><br><span style="color:#64748b;"><?= esc_html($monday_written) ?></span><?php endif; ?></td>
+											<td align="right" style="border-bottom:2px solid #eef2f7; padding: 6px; text-align: center; font-weight: bold;"><?= esc_html(number_format_i18n((int) ($row['unique'] ?? 0))) ?></td>
+											<td align="right" style="border-bottom:2px solid #eef2f7; padding: 6px; text-align: center;"><?= esc_html(number_format_i18n((int) ($row['visits'] ?? 0))) ?></td>
+											<td align="right" style="border-bottom:2px solid #eef2f7; padding: 6px; text-align: center;"><?= esc_html(number_format_i18n((int) ($row['pageviews'] ?? 0))) ?></td>
 										</tr>
 									<?php endforeach; ?>
 								</table>
@@ -117,18 +307,98 @@ defined('ABSPATH') || exit;
 						</tr>
 					<?php endif; ?>
 					<tr>
-						<td style="padding:8px 24px 24px;">
-							<p style="margin:0 0 8px;">
-								<a href="<?= esc_url($stats_url ?? '') ?>" style="display:inline-block;padding:10px 16px;border-radius:22px;background:#e2e8f0;color:#1f2937;text-decoration:none;"><?= esc_html__('Open analytics', 'fromscratch') ?></a>
-							</p>
-							<p style="margin:0;color:#94a3b8;font-size:12px;">
-								<a href="<?= esc_url($site_url ?? '') ?>" style="color:#94a3b8;"><?= esc_html($site_url ?? '') ?></a>
-							</p>
+						<td>
+							<div
+								style="
+                      padding-top: 32px;
+                    ">
+								<?php if (!empty($stats_url)) : ?>
+									<div
+										style="
+                        font-size: 17px;
+                        line-height: 1.4;
+                        text-align: center;
+                      ">
+										<a
+											href="<?= esc_url($stats_url ?? '') ?>"
+											class="fs-mail__button"
+											style="
+                          color: #1f2937;
+                          text-decoration: none;
+                          padding: 8px 24px;
+                          border-radius: 32px;
+                          background: #e2e8f0;
+                          display: inline-block;
+                          transition: background-color 280ms, color 280ms;
+                        ">
+											<?= esc_html__('Open analytics', 'fromscratch') ?>
+										</a>
+									</div>
+								<?php endif; ?>
+
+								<div
+									style="
+                        margin-top: 16px;
+                        font-size: 17px;
+                        line-height: 1.4;
+                        text-align: center;
+                      ">
+									<a
+										href="<?= esc_url($site_url ?? '') ?>"
+										class="fs-mail__button"
+										style="
+                          color: #1f2937;
+                          text-decoration: none;
+                          padding: 8px 24px;
+                          border-radius: 32px;
+                          background: #e2e8f0;
+                          display: inline-block;
+                          transition: background-color 280ms, color 280ms;
+                        ">
+										<?= esc_html__('Open admin dashboard', 'fromscratch') ?>
+									</a>
+								</div>
+							</div>
 						</td>
 					</tr>
 				</table>
 			</td>
 		</tr>
+		<tr>
+			<td
+				align="center"
+				class="fs-mail-weekly-report-footer-text"
+				style="
+              padding: 16px 0 0;
+              color: #94a3b8;
+              font-size: 13px;
+			  text-wrap: balance;
+            ">
+				<div style="max-width: 600px; padding: 0 24px;">
+					<?php
+					$footer_message = __(
+						'If you no longer want to receive these reports, <a href="%1$s">log in to WordPress</a> and disable weekly reports, or contact the <a href="%2$s">developer</a> or <a href="%3$s">admin</a>.',
+						'fromscratch'
+					);
+
+					echo wp_kses(
+						sprintf(
+							$footer_message,
+							esc_url($theme_settings_url ?? ''),
+							esc_url($developer_email_link ?? ''),
+							esc_url($admin_email_link ?? '')
+						),
+						[
+							'a' => [
+								'href' => [],
+							],
+						]
+					);
+					?>
+				</div>
+			</td>
+		</tr>
 	</table>
 </body>
+
 </html>
