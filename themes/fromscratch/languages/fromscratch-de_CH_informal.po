@@ -1581,7 +1581,7 @@ msgstr "Statistiken"
 msgid "Open analytics"
 msgstr "Statistiken öffnen"
 
-msgid "Open Admin Dashboard"
+msgid "Open admin dashboard"
 msgstr "Admin Dashboard öffnen"
 
 msgid "Matomo: invalid or missing auth token."
