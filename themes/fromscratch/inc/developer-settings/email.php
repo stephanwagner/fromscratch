@@ -42,15 +42,11 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 
 	$url = admin_url('options-general.php?page=' . fs_developer_settings_page_slug('email'));
 
-	// Email addresses (admin, report, developer)
+	// Email addresses (admin, developer)
 	if (!empty($_POST['option_page']) && $_POST['option_page'] === FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL . '-options')) {
 		$admin_email = isset($_POST['admin_email']) ? sanitize_email(wp_unslash($_POST['admin_email'])) : '';
 		if (is_email($admin_email)) {
 			update_option('admin_email', $admin_email);
-		}
-		$report_email = isset($_POST['fromscratch_report_email']) ? wp_unslash($_POST['fromscratch_report_email']) : '';
-		if (function_exists('fs_sanitize_report_email_list')) {
-			update_option('fromscratch_report_email', fs_sanitize_report_email_list($report_email));
 		}
 		$developer_email = isset($_POST['fromscratch_developer_email']) ? sanitize_email(wp_unslash($_POST['fromscratch_developer_email'])) : '';
 		update_option('fromscratch_developer_email', is_email($developer_email) ? $developer_email : '');
@@ -199,13 +195,6 @@ function fs_render_developer_email(): void
 					<td>
 						<input type="email" name="admin_email" id="admin_email" value="<?= esc_attr(get_option('admin_email')) ?>" class="regular-text" autocomplete="email">
 						<p class="description"><?= esc_html__('WordPress default admin email used for WordPress core notifications.', 'fromscratch') ?></p>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row"><label for="fromscratch_report_email"><?= esc_html__('Report email', 'fromscratch') ?></label></th>
-					<td>
-						<textarea name="fromscratch_report_email" id="fromscratch_report_email" rows="3" class="regular-text"><?= esc_textarea((string) get_option('fromscratch_report_email', '')) ?></textarea>
-						<p class="description"><?= esc_html__('Used for automated reports such as weekly analytics summaries. One email address per line.', 'fromscratch') ?></p>
 					</td>
 				</tr>
 				<tr>

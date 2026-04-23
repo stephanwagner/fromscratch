@@ -383,14 +383,8 @@ msgstr "Admin-E-Mail"
 msgid "WordPress default admin email used for WordPress core notifications."
 msgstr "Standard Admin-E-Mail von WordPress für Systembenachrichtigungen."
 
-msgid "Report email"
-msgstr "Bericht-E-Mail"
-
-msgid "Used for automated reports such as weekly analytics summaries. One email address per line."
-msgstr "Wird für automatische Berichte wie wöchentliche Analyse-Zusammenfassungen verwendet. Eine E-Mail-Adresse pro Zeile."
-
 msgid "Developer email"
-msgstr "Entwickler E-Mail"
+msgstr "Entwickler-E-Mail"
 
 msgid "Used for system alerts, error notifications and security warnings."
 msgstr "Wird für Systemmeldungen, Fehlerbenachrichtigungen und Sicherheitshinweise verwendet."
