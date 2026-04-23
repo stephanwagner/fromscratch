@@ -10,7 +10,7 @@ const mode = process.env.MODE || 'prod';
 const prod = mode === 'prod';
 
 // Base path
-const base = `themes/${theme}`;
+const base = `theme/${theme}`;
 
 export default [
   /**
