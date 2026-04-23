@@ -47,6 +47,12 @@ host('production')
 	->set('repository', $repository)
 	->set('deploy_path', '~/httpdocs/fromscratch/production/theme');
 
+// Remove executables
+
+task('deploy:remove-executables', function () {
+	run('cd {{release_path}} && rm -fr compile_po.sh db.sh');
+})->desc('Remove executables');
+
 // Task: Deploy version file
 
 task('deploy:version-file', function () {
@@ -94,6 +100,7 @@ task('deploy:clear-cache', function () use ($phpPath) {
 
 task('deploy', [
 	'deploy:prepare',
+	'deploy:remove-executables',
 	'deploy:version-file',
 	'deploy:build-assets',
 	'deploy:wp-cli',
