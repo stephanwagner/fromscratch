@@ -1,6 +1,21 @@
 <?php
 
 /**
+ * Single Matomo bulk fetch dimensions (dashboard widget, Analytics screen, weekly email).
+ */
+const FS_MATOMO_STATS_CANONICAL_DAYS = 14;
+const FS_MATOMO_STATS_CANONICAL_WEEKS = 9;
+
+/**
+ * Transient holding raw today/yesterday visit totals for the wp-admin dashboard widget.
+ * Derived from FS_MATOMO_STATS_CANONICAL_* daily series (no separate Matomo requests).
+ */
+const FS_MATOMO_DASHBOARD_VISITS_TRANSIENT = 'fs_dashboard_matomo_stats_counts_v3';
+
+/** Prevents stacking multiple wp-cron jobs for the same dashboard refresh. */
+const FS_MATOMO_BACKGROUND_REFRESH_LOCK = 'fs_matomo_bg_refresh_lock';
+
+/**
  * Settings
  */
 function fs_dashboard_get_analytics_settings(): array
@@ -107,122 +122,103 @@ function fs_dashboard_get_last_matomo_error(): string
 }
 
 /**
- * Fetch daily Matomo visits for last N days.
- *
- * @return array<int, array{date:string,unique:int,visits:int,pageviews:int}>
+ * Transient key for the Matomo day/week bulk response (must match fs_dashboard_get_matomo_daily_and_weekly).
  */
-function fs_dashboard_get_matomo_daily_visits(int $days = 7): array
+function fs_dashboard_matomo_bulk_cache_key(int $days, int $weeks): string
 {
-    $days = max(1, min(365, $days));
     $settings = fs_dashboard_matomo_settings();
-    if ($settings === null || !function_exists('wp_remote_get')) {
-        return [];
+    if ($settings === null) {
+        return '';
     }
+    $days = max(1, min(365, $days));
+    $weeks = max(1, min(104, $weeks));
 
-    $cache_key = 'fromscratch_matomo_daily_' . md5(wp_json_encode([
+    return 'fromscratch_matomo_day_week_' . md5(wp_json_encode([
         'url' => $settings['url'],
         'site_id' => (int) $settings['site_id'],
         'token' => $settings['token'],
         'days' => $days,
+        'weeks' => $weeks,
+        'bulk_schema' => 17,
     ]));
-    $bypass_cache = is_admin()
-        && current_user_can('manage_options')
-        && isset($_GET['no_cache'])
-        && (string) $_GET['no_cache'] !== '';
-    if (!$bypass_cache) {
-        $cached = get_transient($cache_key);
-        if (is_array($cached)) {
-            return $cached;
-        }
+}
+
+/**
+ * Store today / yesterday visit counts for the admin home screen (integers, 1h TTL).
+ *
+ * @param array<int, array{date:string,unique:int,visits:int,pageviews:int}> $daily
+ */
+function fs_matomo_sync_dashboard_quick_stats_from_daily(array $daily): void
+{
+    $n = count($daily);
+    if ($n === 0) {
+        set_transient(FS_MATOMO_DASHBOARD_VISITS_TRANSIENT, ['today' => 0, 'yesterday' => 0], HOUR_IN_SECONDS);
+
+        return;
+    }
+    $today = (int) ($daily[$n - 1]['visits'] ?? 0);
+    $yesterday = $n >= 2 ? (int) ($daily[$n - 2]['visits'] ?? 0) : 0;
+    set_transient(FS_MATOMO_DASHBOARD_VISITS_TRANSIENT, ['today' => $today, 'yesterday' => $yesterday], HOUR_IN_SECONDS);
+}
+
+/**
+ * Invalidate canonical bulk cache and fetch everything in one Matomo round-trip.
+ *
+ * @return array<string, mixed>
+ */
+function fs_matomo_statistics_refresh_full(): array
+{
+    $key = fs_dashboard_matomo_bulk_cache_key(FS_MATOMO_STATS_CANONICAL_DAYS, FS_MATOMO_STATS_CANONICAL_WEEKS);
+    if ($key !== '') {
+        delete_transient($key);
     }
 
-    $series = [];
+    return fs_matomo_get_statistics();
+}
+
+/**
+ * Single entry point for Matomo analytics (one bulk API request, cached 1 hour).
+ * Dashboard “today / yesterday” are derived from the `daily` series — no second HTTP call.
+ *
+ * @return array<string, mixed>
+ */
+function fs_matomo_get_statistics(): array
+{
+    return fs_dashboard_get_matomo_daily_and_weekly(FS_MATOMO_STATS_CANONICAL_DAYS, FS_MATOMO_STATS_CANONICAL_WEEKS);
+}
+
+/** wp-cron: runs full Matomo refresh requested from the dashboard home (non-blocking). */
+add_action('fs_matomo_background_statistics_refresh', static function (): void {
+    try {
+        if (function_exists('fs_matomo_statistics_refresh_full')) {
+            fs_matomo_statistics_refresh_full();
+        }
+    } finally {
+        delete_transient(FS_MATOMO_BACKGROUND_REFRESH_LOCK);
+    }
+});
+
+/**
+ * Last N calendar dates ending on "today" in the WordPress site timezone (oldest first).
+ * Matomo day keys follow the tracked site's calendar; WP timezone usually matches that site.
+ *
+ * @return array<int, string> Y-m-d
+ */
+function fs_dashboard_matomo_site_calendar_dates(int $days): array
+{
+    $days = max(1, min(365, $days));
+    $tz = function_exists('wp_timezone') ? wp_timezone() : new \DateTimeZone('UTC');
+    try {
+        $today = new \DateTimeImmutable('today', $tz);
+    } catch (\Exception $e) {
+        $today = (new \DateTimeImmutable('now', $tz))->setTime(0, 0, 0);
+    }
+    $keys = [];
     for ($i = $days - 1; $i >= 0; $i--) {
-        $key = gmdate('Y-m-d', time() - ($i * DAY_IN_SECONDS));
-        $series[$key] = ['unique' => 0, 'visits' => 0, 'pageviews' => 0];
+        $keys[] = $today->modify('-' . $i . ' days')->format('Y-m-d');
     }
 
-    $bulk_base = $settings['url'] . 'index.php';
-    $bulk_query = [
-        'module' => 'API',
-        'method' => 'API.getBulkRequest',
-        'format' => 'JSON',
-        'token_auth' => $settings['token'],
-        'urls[0]' => rawurlencode(sprintf(
-            'method=VisitsSummary.get&period=day&date=last%d&idSite=%d',
-            $days,
-            (int) $settings['site_id']
-        )),
-    ];
-    $bulk_url = $bulk_base . '?' . http_build_query($bulk_query, '', '&', PHP_QUERY_RFC3986);
-
-    $response = wp_remote_get($bulk_url, [
-        'timeout' => 10,
-        'headers' => ['Accept' => 'application/json'],
-    ]);
-    if (is_wp_error($response)) {
-        fs_dashboard_set_last_matomo_error($response->get_error_message());
-        set_transient($cache_key, [], 5 * MINUTE_IN_SECONDS);
-        return [];
-    }
-    $status_code = (int) wp_remote_retrieve_response_code($response);
-    $body = (string) wp_remote_retrieve_body($response);
-    $data = json_decode($body, true);
-
-    if ($status_code === 401) {
-        $msg = is_array($data) ? (string) ($data['message'] ?? '') : '';
-        if ($msg === '') {
-            $msg = 'HTTP 401 (Unauthorized)';
-        }
-        fs_dashboard_set_last_matomo_error(__('Matomo: invalid or missing auth token.', 'fromscratch') . ' ' . $msg);
-        set_transient($cache_key, [], 5 * MINUTE_IN_SECONDS);
-        return [];
-    }
-    if (is_array($data) && (($data['result'] ?? '') === 'error')) {
-        fs_dashboard_set_last_matomo_error((string) ($data['message'] ?? __('Matomo API error', 'fromscratch')));
-        set_transient($cache_key, [], 5 * MINUTE_IN_SECONDS);
-        return [];
-    }
-    if (!is_array($data) || !isset($data[0]) || !is_array($data[0])) {
-        fs_dashboard_set_last_matomo_error(__('Unexpected Matomo response format.', 'fromscratch'));
-        set_transient($cache_key, [], 5 * MINUTE_IN_SECONDS);
-        return [];
-    }
-
-    foreach ($data[0] as $date => $value) {
-        if (!is_string($date) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-            continue;
-        }
-        $unique = 0;
-        $visits = 0;
-        $pageviews = 0;
-        if (is_array($value)) {
-            $unique = (int) ($value['nb_uniq_visitors'] ?? 0);
-            $visits = (int) ($value['nb_visits'] ?? 0);
-            $pageviews = (int) ($value['nb_actions'] ?? 0);
-        } elseif (is_numeric($value)) {
-            $visits = (int) $value;
-        }
-        if (array_key_exists($date, $series)) {
-            $series[$date]['unique'] = max(0, $unique);
-            $series[$date]['visits'] = max(0, $visits);
-            $series[$date]['pageviews'] = max(0, $pageviews);
-        }
-    }
-
-    $out = [];
-    foreach ($series as $date => $row) {
-        $out[] = [
-            'date' => $date,
-            'unique' => (int) ($row['unique'] ?? 0),
-            'visits' => (int) ($row['visits'] ?? 0),
-            'pageviews' => (int) ($row['pageviews'] ?? 0),
-        ];
-    }
-
-    fs_dashboard_set_last_matomo_error('');
-    set_transient($cache_key, $out, HOUR_IN_SECONDS);
-    return $out;
+    return $keys;
 }
 
 /**
@@ -753,7 +749,8 @@ function fs_dashboard_default_alltime_summary(): array
 }
 
 /**
- * Bulk Matomo request: daily/weekly series, 90-day devices, top pages & referrers, visits summary.
+ * Bulk Matomo request (single HTTP round-trip): daily/weekly series, devices, pages, referrers, summaries.
+ * Results are cached for one hour (HOUR_IN_SECONDS). Prefer {@see fs_matomo_get_statistics()} for the canonical bundle instead of arbitrary dimensions here.
  *
  * @return array{
  *   daily: array<int, array{date:string,unique:int,visits:int,pageviews:int}>,
@@ -784,15 +781,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
         ];
     }
 
-    $cache_key = 'fromscratch_matomo_day_week_' . md5(wp_json_encode([
-        'url' => $settings['url'],
-        'site_id' => (int) $settings['site_id'],
-        'token' => $settings['token'],
-        'days' => $days,
-        'weeks' => $weeks,
-        // Bump when bulk URLs/segments change so transients are not stale.
-        'bulk_schema' => 15,
-    ]));
+    $cache_key = fs_dashboard_matomo_bulk_cache_key($days, $weeks);
 
     $bypass_cache = is_admin()
         && current_user_can('manage_options')
@@ -810,6 +799,10 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
             && is_array($cached['referrers'])
             && is_array($cached['alltime_summary'])
         ) {
+            if ($days === FS_MATOMO_STATS_CANONICAL_DAYS && $weeks === FS_MATOMO_STATS_CANONICAL_WEEKS) {
+                fs_matomo_sync_dashboard_quick_stats_from_daily($cached['daily']);
+            }
+
             return $cached;
         }
     }
@@ -939,12 +932,11 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
             $payload = $payload['value'];
         }
 
-        // For daily we prefill missing dates with 0.
+        // For daily we prefill missing dates with 0 (site timezone, same as Matomo day labels).
         // For weekly we do NOT prefill: API keys are week ranges; `date=lastN` includes the current week.
         $series = [];
         if ($mode !== 'week') {
-            for ($i = $daysOrWeeks - 1; $i >= 0; $i--) {
-                $key = gmdate('Y-m-d', time() - ($i * DAY_IN_SECONDS));
+            foreach (fs_dashboard_matomo_site_calendar_dates($daysOrWeeks) as $key) {
                 $series[$key] = ['unique' => 0, 'visits' => 0, 'pageviews' => 0];
             }
         }
@@ -1093,6 +1085,10 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
 
     fs_dashboard_set_last_matomo_error('');
     set_transient($cache_key, $out, HOUR_IN_SECONDS);
+    if ($days === FS_MATOMO_STATS_CANONICAL_DAYS && $weeks === FS_MATOMO_STATS_CANONICAL_WEEKS) {
+        fs_matomo_sync_dashboard_quick_stats_from_daily($out['daily'] ?? []);
+    }
+
     return $out;
 }
 
@@ -1421,8 +1417,9 @@ function fs_render_dashboard_statistics_page(): void
     if (!current_user_can('edit_posts')) {
         wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'fromscratch'));
     }
-    $series = fs_dashboard_get_matomo_daily_and_weekly(8, 8);
-    $matomo_rows = $series['daily'] ?? [];
+    // Loads immediately on cache miss / ?no_cache=1 (blocking); same data as dashboard after refresh.
+    $series = fs_matomo_get_statistics();
+    $matomo_rows = array_slice($series['daily'] ?? [], -8);
 
     $rows = $matomo_rows;
     $labels = array_map('fs_dashboard_analytics_daily_axis_label', $rows);
@@ -1472,7 +1469,7 @@ function fs_render_dashboard_statistics_page(): void
     ];
     $line_chart_config = fs_dashboard_line_chart_config($labels, $datasets);
 
-    $week_rows = $series['weekly'] ?? [];
+    $week_rows = array_slice($series['weekly'] ?? [], -8);
     $week_chart_config = [];
     if (!empty($week_rows)) {
         $week_labels = array_map('fs_dashboard_analytics_weekly_axis_label', $week_rows);

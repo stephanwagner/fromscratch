@@ -191,9 +191,9 @@ function fs_weekly_report_build_html(): string
 	$daily_chart_url = '';
 	$weekly_chart_url = '';
 
-	if ($matomo_on && function_exists('fs_dashboard_get_matomo_daily_and_weekly')) {
+	if ($matomo_on && function_exists('fs_matomo_get_statistics')) {
 		// Fetch a little extra; then filter to full periods only.
-		$series = fs_dashboard_get_matomo_daily_and_weekly(14, 9);
+		$series = fs_matomo_get_statistics();
 		$daily_src = isset($series['daily']) && is_array($series['daily']) ? $series['daily'] : [];
 		$weekly_src = isset($series['weekly']) && is_array($series['weekly']) ? $series['weekly'] : [];
 		$daily = [];

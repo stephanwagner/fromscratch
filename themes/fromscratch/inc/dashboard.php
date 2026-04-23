@@ -2,9 +2,6 @@
 
 defined('ABSPATH') || exit;
 
-/** Transient: raw today/yesterday visit counts (locale applied when formatting for output). */
-const FS_DASHBOARD_MATOMO_STATS_CACHE_KEY = 'fs_dashboard_matomo_stats_counts';
-
 /**
  * @param array{today: int, yesterday: int} $counts
  * @return array{today: string, yesterday: string}
@@ -313,9 +310,11 @@ function fs_dashboard_enqueue_matomo_stats(string $hook_suffix): void
 	wp_register_script('fs-dashboard-matomo', false, [], null, true);
 	wp_enqueue_script('fs-dashboard-matomo');
 	wp_localize_script('fs-dashboard-matomo', 'fsDashboardMatomo', [
-		'ajaxUrl'         => admin_url('admin-ajax.php'),
-		'nonce'           => wp_create_nonce('fs_dashboard_matomo_stats'),
-		'pollIntervalMs'  => HOUR_IN_SECONDS * 1000,
+		'ajaxUrl'            => admin_url('admin-ajax.php'),
+		'nonce'              => wp_create_nonce('fs_dashboard_matomo_stats'),
+		'pollIntervalMs'     => HOUR_IN_SECONDS * 1000,
+		'pollPendingMs'      => 2500,
+		'pollPendingMaxPolls'=> 48,
 	]);
 	$inline = <<<'JS'
 (function () {
@@ -326,23 +325,12 @@ function fs_dashboard_enqueue_matomo_stats(string $hook_suffix): void
 			return;
 		}
 		var pollMs = cfg.pollIntervalMs || 3600000;
+		var pendMs = cfg.pollPendingMs || 2500;
+		var pendMax = cfg.pollPendingMaxPolls || 48;
+		var pendTimer = null;
+		var pendPolls = 0;
 
-		function applyStats(res) {
-			if (!res || !res.success || !res.data) {
-				return;
-			}
-			var t = wrap.querySelector('[data-fs-stat="today"]');
-			var y = wrap.querySelector('[data-fs-stat="yesterday"]');
-			if (t && res.data.today != null) {
-				t.textContent = res.data.today;
-			}
-			if (y && res.data.yesterday != null) {
-				y.textContent = res.data.yesterday;
-			}
-			wrap.setAttribute('data-fs-stats-cached', '1');
-		}
-
-		function fetchStats() {
+		function fetchStatsBody() {
 			var params = new URLSearchParams();
 			params.append('action', 'fs_dashboard_matomo_stats');
 			params.append('nonce', cfg.nonce);
@@ -351,11 +339,71 @@ function fs_dashboard_enqueue_matomo_stats(string $hook_suffix): void
 				credentials: 'same-origin',
 				headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
 				body: params.toString()
-			})
-				.then(function (r) {
-					return r.json();
-				})
-				.then(applyStats);
+			}).then(function (r) {
+				return r.json();
+			});
+		}
+
+		function applyStats(res) {
+			if (!res || !res.success || !res.data) {
+				return false;
+			}
+			var d = res.data;
+			var t = wrap.querySelector('[data-fs-stat="today"]');
+			var y = wrap.querySelector('[data-fs-stat="yesterday"]');
+			if (d.pending) {
+				if (t && d.today != null) {
+					t.textContent = d.today;
+				}
+				if (y && d.yesterday != null) {
+					y.textContent = d.yesterday;
+				}
+				return false;
+			}
+			if (t && d.today != null) {
+				t.textContent = d.today;
+			}
+			if (y && d.yesterday != null) {
+				y.textContent = d.yesterday;
+			}
+			wrap.setAttribute('data-fs-stats-cached', '1');
+			return true;
+		}
+
+		function stopPendingPoll() {
+			if (pendTimer) {
+				clearInterval(pendTimer);
+				pendTimer = null;
+			}
+			pendPolls = 0;
+		}
+
+		function startPendingPoll() {
+			if (pendTimer) {
+				return;
+			}
+			pendPolls = 0;
+			pendTimer = setInterval(function () {
+				pendPolls += 1;
+				if (pendPolls > pendMax) {
+					stopPendingPoll();
+					return;
+				}
+				fetchStatsBody().then(function (res) {
+					if (applyStats(res)) {
+						stopPendingPoll();
+					}
+				});
+			}, pendMs);
+		}
+
+		function fetchStats() {
+			fetchStatsBody().then(function (res) {
+				var ok = applyStats(res);
+				if (!ok && res && res.success && res.data && res.data.pending) {
+					startPendingPoll();
+				}
+			});
 		}
 
 		if (wrap.getAttribute('data-fs-stats-cached') !== '1') {
@@ -375,7 +423,7 @@ add_action('admin_enqueue_scripts', 'fs_dashboard_enqueue_matomo_stats', 20);
  */
 function fs_dashboard_matomo_stats_get_cached_counts(): ?array
 {
-	$c = get_transient(FS_DASHBOARD_MATOMO_STATS_CACHE_KEY);
+	$c = get_transient(FS_MATOMO_DASHBOARD_VISITS_TRANSIENT);
 	if (!is_array($c) || !array_key_exists('today', $c) || !array_key_exists('yesterday', $c)) {
 		return null;
 	}
@@ -387,47 +435,39 @@ function fs_dashboard_matomo_stats_get_cached_counts(): ?array
 }
 
 /**
- * Load counts from Matomo and store for one hour (used by AJAX miss and hourly cron).
- *
- * @return array{today: int, yesterday: int}
+ * Queue a wp-cron run to fetch all Matomo statistics (does not block the current HTTP response).
  */
-function fs_dashboard_matomo_stats_refresh_counts(): array
+function fs_dashboard_matomo_stats_schedule_background_refresh(): void
 {
-	$zero = ['today' => 0, 'yesterday' => 0];
-	if (!function_exists('fs_dashboard_get_matomo_daily_visits')) {
-		set_transient(FS_DASHBOARD_MATOMO_STATS_CACHE_KEY, $zero, HOUR_IN_SECONDS);
-		return $zero;
+	if (!function_exists('fs_matomo_statistics_refresh_full') || !defined('FS_MATOMO_BACKGROUND_REFRESH_LOCK')) {
+		return;
 	}
+	if (get_transient(FS_MATOMO_BACKGROUND_REFRESH_LOCK)) {
+		if (function_exists('spawn_cron')) {
+			spawn_cron();
+		}
 
-	$today_matomo = fs_dashboard_get_matomo_daily_visits(1);
-	$yesterday_matomo = fs_dashboard_get_matomo_daily_visits(2);
-	$today_visits = !empty($today_matomo) ? (int) ($today_matomo[0]['visits'] ?? 0) : 0;
-	$yesterday_visits = !empty($yesterday_matomo) ? (int) ($yesterday_matomo[0]['visits'] ?? 0) : 0;
-
-	$out = [
-		'today'     => $today_visits,
-		'yesterday' => $yesterday_visits,
-	];
-	set_transient(FS_DASHBOARD_MATOMO_STATS_CACHE_KEY, $out, HOUR_IN_SECONDS);
-
-	return $out;
+		return;
+	}
+	set_transient(FS_MATOMO_BACKGROUND_REFRESH_LOCK, '1', 90);
+	wp_schedule_single_event(time(), 'fs_matomo_background_statistics_refresh');
+	if (function_exists('spawn_cron')) {
+		spawn_cron();
+	}
 }
 
-/** Hourly: refresh dashboard Matomo stats cache in the background. */
-add_action('fs_dashboard_matomo_stats_hourly', 'fs_dashboard_matomo_stats_refresh_counts');
-
+/** Stop legacy hourly Matomo cron (replaced by on-demand full refresh). */
 add_action('init', function (): void {
 	if (wp_installing()) {
 		return;
 	}
-	if (wp_next_scheduled('fs_dashboard_matomo_stats_hourly')) {
-		return;
+	while (($t = wp_next_scheduled('fs_dashboard_matomo_stats_hourly')) !== false) {
+		wp_unschedule_event((int) $t, 'fs_dashboard_matomo_stats_hourly');
 	}
-	wp_schedule_event(time(), 'hourly', 'fs_dashboard_matomo_stats_hourly');
-}, 30);
+}, 25);
 
 /**
- * AJAX: formatted visit lines for dashboard (Matomo). Reads 1h transient when possible.
+ * AJAX: formatted visit lines for dashboard (Matomo). Cached 1 hour; cache miss queues a cron refresh (non-blocking).
  */
 function fs_dashboard_ajax_matomo_stats(): void
 {
@@ -437,11 +477,19 @@ function fs_dashboard_ajax_matomo_stats(): void
 	}
 
 	$counts = fs_dashboard_matomo_stats_get_cached_counts();
-	if ($counts === null) {
-		$counts = fs_dashboard_matomo_stats_refresh_counts();
+	if ($counts !== null) {
+		wp_send_json_success(fs_dashboard_matomo_stats_format_lines($counts));
+
+		return;
 	}
 
-	wp_send_json_success(fs_dashboard_matomo_stats_format_lines($counts));
+	fs_dashboard_matomo_stats_schedule_background_refresh();
+	$dash = html_entity_decode('&#8211;', ENT_QUOTES | ENT_HTML5, 'UTF-8');
+	wp_send_json_success([
+		'pending' => true,
+		'today' => $dash,
+		'yesterday' => $dash,
+	]);
 }
 
 add_action('wp_ajax_fs_dashboard_matomo_stats', 'fs_dashboard_ajax_matomo_stats');
