@@ -9,29 +9,35 @@ require 'recipe/common.php';
 $serverIP = '94.130.121.246';
 $phpPath = '/opt/plesk/php/8.4/bin/php';
 $repository = 'git@github.com:stephanwagner/fromscratch.git';
+$wpThemeSlug = 'fromscratch';
 
 set('bin/php', $phpPath);
 
 set('git_ssh_command', 'ssh');
 
-set('remote_user', 'stephanwagner');
+set('remote_user', 'bytesandstripes');
 
 set('keep_releases', 3);
 
 set('release_name', date('Y-m-d_H-i-s'));
 
+set('wp_theme_slug', $wpThemeSlug);
+
+set('wp_path', '{{deploy_path}}/../wordpress');
+
+set('wp_cli_path', '{{deploy_path}}/shared/wp');
+
+set('wp_theme_path', '{{wp_path}}/wp-content/themes/{{wp_theme_slug}}');
+
 // Shared files and folders
 
-add('shared_files', [
-]);
+add('shared_files', []);
 
-add('shared_dirs', [
-]);
+add('shared_dirs', []);
 
 // Writable folders
 
-add('writable_dirs', [
-]);
+add('writable_dirs', []);
 
 // Hosts
 
@@ -75,26 +81,32 @@ task('deploy:build-assets', function () {
 // Task ensure WP CLI is installed
 
 task('deploy:wp-cli', function () {
-    $hasWpCli = test('command -v wp');
+    if (!test('[ -f {{wp_cli_path}} ]')) {
+        writeln('Installing WP-CLI...');
 
-    if (!$hasWpCli) {
-        writeln('Installing WP-CLI locally...');
-
-        run('mkdir -p ~/bin');
-        run('curl -sS https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o ~/bin/wp');
-        run('chmod +x ~/bin/wp');
+        run('mkdir -p $(dirname {{wp_cli_path}})');
+        run('curl -sS https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o {{wp_cli_path}}');
+        run('chmod +x {{wp_cli_path}}');
     }
+
+    run('{{wp_cli_path}} cli update');
 });
 
 // Task: Clear cache
 
 task('deploy:clear-cache', function () use ($phpPath) {
 	// Clear WordPress cache
-	run('cd {{release_path}} && wp cache flush');
+	// TODO run('{{wp_cli_path}} cache flush --path={{wp_path}}');
 
 	// Clear Nginx cache
 	// TODO run('rm -rf /var/cache/nginx/*');
 })->desc('Clear cache');
+
+// Task: Link theme
+
+task('deploy:link-theme', function () {
+    run('ln -nfs {{deploy_path}}/current/theme/{{wp_theme_slug}} {{wp_theme_path}}');
+})->desc('Link theme');
 
 // Deploy tasks
 
@@ -110,4 +122,5 @@ task('deploy', [
 
 // Hooks
 
+after('deploy:publish', 'deploy:link-theme');
 after('deploy:failed', 'deploy:unlock');
