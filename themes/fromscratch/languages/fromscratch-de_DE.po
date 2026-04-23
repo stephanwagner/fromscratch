@@ -1761,6 +1761,18 @@ msgstr "Ihr wöchentlicher Website-Bericht"
 msgid "Weekly website report – %s"
 msgstr "Wöchentlicher Bericht – %s"
 
+msgid "Pages or posts published last week"
+msgstr "Seiten oder Beiträge, die letzte Woche veröffentlicht wurden"
+
+msgid "Upcoming scheduled pages or posts"
+msgstr "Geplante Seiten oder Beiträge"
+
+msgid "Expired pages or posts last week"
+msgstr "Letzte Woche abgelaufene Seiten oder Beiträge"
+
+msgid "Upcoming expirations"
+msgstr "Bevorstehende Abläufe"
+
 msgid "Visitors and page views <div class=\"fs-mail__small-mobile-inline\">of the last week</div>"
 msgstr "Besucherzahlen und Seitenaufrufe <div class=\"fs-mail__small-mobile-inline\">der letzten Woche</div>"
 
