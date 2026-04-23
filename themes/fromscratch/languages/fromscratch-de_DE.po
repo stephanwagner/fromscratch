@@ -1758,6 +1758,9 @@ msgstr "Die folgenden IPs haben den konfigurierten Schwellenwert überschritten.
 msgid "Your weekly website report"
 msgstr "Ihr wöchentlicher Website-Bericht"
 
+msgid "Weekly website report – %s"
+msgstr "Wöchentlicher Bericht – %s"
+
 msgid "Visitors and page views <div class=\"fs-mail__small-mobile-inline\">of the last week</div>"
 msgstr "Besucherzahlen und Seitenaufrufe <div class=\"fs-mail__small-mobile-inline\">der letzten Woche</div>"
 
@@ -1772,6 +1775,12 @@ msgstr "Besuche<br>gesamt"
 
 msgid "Page<br>views"
 msgstr "Seiten-<br>aufrufe"
+
+msgid "Everything stayed unchanged last week, no content updates to show."
+msgstr "Letzte Woche ist alles beim Alten geblieben, es gibt keine Aktualisierungen anzuzeigen."
+
+msgid "Visitor statistics for this report are not enabled yet. A <a href=\"%s\">developer</a> can turn on analytics in <a href=\"%s\">WordPress</a> to show visiter charts and key numbers in future emails."
+msgstr "Für diesen Bericht sind noch keine Besucherstatistiken aktiviert. Ein <a href=\"%s\">Entwickler</a> kann die Statistik in <a href=\"%s\">WordPress</a> aktivieren, damit künftige E-Mails Besucherzahlen und wichtige Kennzahlen enthalten."
 
 msgid "If you no longer want to receive these reports, <a href=\"%1$s\">log in to WordPress</a> and disable weekly reports, or contact the <a href=\"%2$s\">developer</a> or <a href=\"%3$s\">admin</a>."
 msgstr "Wenn Sie diese Berichte nicht mehr erhalten möchten, <a href=\"%1$s\">melden Sie sich in WordPress an</a> und deaktivieren Sie die wöchentlichen Berichte oder kontaktieren Sie den <a href=\"%2$s\">Entwickler</a> bzw. den <a href=\"%3$s\">Administrator</a>."

@@ -168,9 +168,11 @@ function fs_weekly_report_parse_expiration_timestamp(string $raw): ?int
 function fs_weekly_report_build_html(): string
 {
 	$site_name = get_bloginfo('name');
-	$site_url = admin_url();
+	$site_url = home_url();
+	$admin_url = admin_url();
 	$stats_url = function_exists('fs_dashboard_statistics_url') ? fs_dashboard_statistics_url() : admin_url();
 	$theme_settings_url = admin_url('options-general.php?page=fs-theme-settings');
+	$developer_settings_url = admin_url('options-general.php?page=fs-developer-settings');
 	$developer_email = function_exists('fs_developer_email') ? fs_developer_email() : '';
 	$admin_email = get_option('admin_email', '');
 	$developer_email_link = (is_string($developer_email) && is_email($developer_email)) ? ('mailto:' . $developer_email) : '';
@@ -303,6 +305,7 @@ function fs_weekly_report_build_html(): string
 		'site_name' => $site_name,
 		'date_now' => $date_now,
 		'site_url' => $site_url,
+		'admin_url' => $admin_url,
 		'stats_url' => $stats_url,
 		'insights' => $insights,
 		'daily' => $daily,
@@ -311,6 +314,7 @@ function fs_weekly_report_build_html(): string
 		'weekly_chart_url' => $weekly_chart_url,
 		'matomo_enabled' => $matomo_on,
 		'theme_settings_url' => $theme_settings_url,
+		'developer_settings_url' => $developer_settings_url,
 		'developer_email_link' => $developer_email_link,
 		'admin_email_link' => $admin_email_link,
 	]);
@@ -382,7 +386,7 @@ function fs_weekly_report_send(array $emails): bool
 	}
 	$subject = sprintf(
 		/* translators: %s: site name */
-		__('Weekly report - %s', 'fromscratch'),
+		__('Weekly website report – %s', 'fromscratch'),
 		get_bloginfo('name')
 	);
 	$body = fs_weekly_report_build_html();

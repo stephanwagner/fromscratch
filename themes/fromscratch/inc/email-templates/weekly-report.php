@@ -149,47 +149,77 @@ defined('ABSPATH') || exit;
 						</td>
 					</tr>
 					<?php
-					foreach (
-						[
-							'went_live_last_week' => __('Pages or posts published last week', 'fromscratch'),
-							'scheduled_upcoming' => __('Upcoming scheduled pages or posts', 'fromscratch'),
-							'expired_last_week' => __('Expired pages or posts last week', 'fromscratch'),
-							'expiring_upcoming' => __('Upcoming expirations', 'fromscratch'),
-						] as $key => $label
-					) {
-						if (!empty($insights[$key])) {
+					$insights = is_array($insights ?? null) ? $insights : [];
+
+					$has_insights = !empty($insights['went_live_last_week'])
+						|| !empty($insights['scheduled_upcoming'])
+						|| !empty($insights['expired_last_week'])
+						|| !empty($insights['expiring_upcoming']);
+
+					$has_matomo = !empty($matomo_enabled);
+
+					if (!$has_insights && !$has_matomo) {
 					?>
-							<tr>
-								<td>
-									<div
-										style="
+						<tr>
+							<td>
+								<div
+									style="
+									margin: 32px auto 0;
+									font-size: 16px;
+									line-height: 1.5;
+									color: #64748b;
+									text-align: center;
+									text-wrap: balance;
+									max-width: 400px;
+								">
+									<?= esc_html__('Everything stayed unchanged last week, no content updates to show.', 'fromscratch') ?>
+								</div>
+							</td>
+						</tr>
+						<?php
+					} else {
+						foreach (
+							[
+								'went_live_last_week' => __('Pages or posts published last week', 'fromscratch'),
+								'scheduled_upcoming' => __('Upcoming scheduled pages or posts', 'fromscratch'),
+								'expired_last_week' => __('Expired pages or posts last week', 'fromscratch'),
+								'expiring_upcoming' => __('Upcoming expirations', 'fromscratch'),
+							] as $key => $label
+						) {
+							if (!empty($insights[$key])) {
+						?>
+								<tr>
+									<td>
+										<div
+											style="
 										margin: 24px auto 6px;
 										font-size: 16px;
 										color: #64748b;
 										text-wrap: balance;
 									">
-										<?= esc_html($label) ?>
-									</div>
-									<table
-										role="presentation"
-										width="100%"
-										cellpadding="0"
-										cellspacing="0"
-										style="
+											<?= esc_html($label) ?>
+										</div>
+										<table
+											role="presentation"
+											width="100%"
+											cellpadding="0"
+											cellspacing="0"
+											style="
 											border: 0;
 											border-collapse: collapse;
 											font-size: 13px;
 										">
-										<?php foreach ($insights[$key] as $row) { ?>
-											<tr>
-												<td style="padding: 2px 6px 2px 0; white-space: nowrap; color: #72839b;"><?= esc_html((string) ($row['date'] ?? '')) ?></td>
-												<td style="padding: 2px 0 2px 6px;" class="fs-mail-weekly-report-has-link" width="100%"><a href="<?= esc_url((string) ($row['url'] ?? '')) ?>"><?= esc_html((string) ($row['title'] ?? '')) ?></a></td>
-											</tr>
-										<?php } ?>
-									</table>
-								</td>
-							</tr>
+											<?php foreach ($insights[$key] as $row) { ?>
+												<tr>
+													<td style="padding: 2px 6px 2px 0; white-space: nowrap; color: #72839b;"><?= esc_html((string) ($row['date'] ?? '')) ?></td>
+													<td style="padding: 2px 0 2px 6px;" class="fs-mail-weekly-report-has-link" width="100%"><a href="<?= esc_url((string) ($row['url'] ?? '')) ?>"><?= esc_html((string) ($row['title'] ?? '')) ?></a></td>
+												</tr>
+											<?php } ?>
+										</table>
+									</td>
+								</tr>
 					<?php
+							}
 						}
 					}
 					?>
@@ -326,6 +356,36 @@ defined('ABSPATH') || exit;
 								</table>
 							</td>
 						</tr>
+					<?php else : ?>
+						<tr>
+							<td>
+								<div
+									class="fs-mail-weekly-report-has-link"
+									style="
+									margin: 32px auto 0;
+									font-size: 16px;
+									line-height: 1.5;
+									color: #64748b;
+									text-align: center;
+									text-wrap: balance;
+								">
+									<?php
+									$matomo_info = __(
+										'Visitor statistics for this report are not enabled yet. A <a href="%s">developer</a> can turn on analytics in <a href="%s">WordPress</a> to show visiter charts and key numbers in future emails.',
+										'fromscratch'
+									);
+									echo wp_kses(
+										sprintf($matomo_info, esc_url($developer_email_link ?? ''), esc_url($developer_settings_url ?? '')),
+										[
+											'a' => [
+												'href' => [],
+											],
+										]
+									);
+									?>
+								</div>
+							</td>
+						</tr>
 					<?php endif; ?>
 					<tr>
 						<td>
@@ -334,7 +394,7 @@ defined('ABSPATH') || exit;
                       padding-top: 32px;
 					  text-align: center;
                     ">
-								<?php if (!empty($stats_url)) : ?>
+								<?php if ($has_matomo && !empty($stats_url)) : ?>
 									<div
 										style="
 								font-size: 17px;
@@ -342,7 +402,7 @@ defined('ABSPATH') || exit;
 								text-align: center;
 							">
 										<a
-											href="<?= esc_url($stats_url ?? '') ?>"
+											href="<?= esc_url($stats_url) ?>"
 											class="fs-mail__button"
 											style="
 									color: #1f2937;
@@ -360,13 +420,15 @@ defined('ABSPATH') || exit;
 
 								<div
 									style="
-							margin-top: 16px;
-							font-size: 17px;
-							line-height: 1.4;
-							text-align: center;
-						">
+										<?php if ($has_matomo && !empty($stats_url)) { ?>
+										margin-top: 16px;
+										<?php } ?>
+										font-size: 17px;
+										line-height: 1.4;
+										text-align: center;
+									">
 									<a
-										href="<?= esc_url($site_url ?? '') ?>"
+										href="<?= esc_url($admin_url) ?>"
 										class="fs-mail__button"
 										style="
 								color: #1f2937;
