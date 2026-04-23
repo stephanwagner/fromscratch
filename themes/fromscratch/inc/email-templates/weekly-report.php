@@ -1,7 +1,4 @@
-<?php
-$has_heading = isset($email_heading) && is_string($email_heading) && trim($email_heading) !== '';
-?>
-<?php if ($has_heading) : ?>
+<?php defined('ABSPATH') || exit; ?>
 <h1
 	style="
 								margin: 0;
@@ -11,10 +8,8 @@ $has_heading = isset($email_heading) && is_string($email_heading) && trim($email
 								text-wrap: balance;
 								text-align: center;
 								">
-	<?= esc_html(trim($email_heading)) ?>
+	<?= esc_html__('Your weekly website report', 'fromscratch') ?>
 </h1>
-<?php endif; ?>
-
 <?php
 $insights = is_array($insights ?? null) ? $insights : [];
 

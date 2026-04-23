@@ -837,7 +837,7 @@ function theme_settings_page(): void
 					<tr>
 						<th scope="row"><label for="fromscratch_report_email"><?= esc_html__('Report recipents', 'fromscratch') ?></label></th>
 						<td>
-							<textarea name="fromscratch_report_email" id="fromscratch_report_email" rows="3" class="regular-text" style="width: 100%; max-width: 420px;" placeholder="<?= esc_attr__('stephanwagner.me+bericht@gmail.com', 'fromscratch') ?>"><?= esc_textarea((string) get_option('fromscratch_report_email', '')) ?></textarea>
+							<textarea name="fromscratch_report_email" id="fromscratch_report_email" rows="3" class="regular-text"><?= esc_textarea((string) get_option('fromscratch_report_email', '')) ?></textarea>
 							<p class="description"><?= esc_html__('One email address per line.', 'fromscratch') ?></p>
 						</td>
 					</tr>

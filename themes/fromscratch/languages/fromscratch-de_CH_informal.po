@@ -464,6 +464,18 @@ msgstr "Erstelle einen API-Schlüssel im SendGrid-Dashboard mit Sendeberechtigun
 msgid "Test email"
 msgstr "Test E-Mail"
 
+msgid "This is a test email from %s."
+msgstr "Das ist eine Test E-Mail von %s."
+
+msgid "If you received this, your mail delivery settings are working."
+msgstr "Wenn du diese E-Mail erhalten hast, funktionieren deine Einstellungen für die E-Mail-Zustellung."
+
+msgid "Sent to:"
+msgstr "Empfänger:"
+
+msgid "Sent at:"
+msgstr "Abgeschickt am:"
+
 msgid "Send to"
 msgstr "Senden an"
 

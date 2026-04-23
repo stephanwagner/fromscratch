@@ -322,7 +322,6 @@ function fs_weekly_report_build_html(): string
 			__('Weekly website report – %s', 'fromscratch'),
 			$site_name
 		),
-		'email_heading' => __('Your weekly website report', 'fromscratch'),
 		'email_html_lang' => str_replace('_', '-', determine_locale()),
 		'email_footer_html' => wp_kses(
 			sprintf(

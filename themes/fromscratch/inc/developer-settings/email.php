@@ -111,9 +111,8 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 			'to_email'  => $to,
 			'sent_at'  => $sent_at,
 			'email_page_title' => $test_title,
-			'email_heading' => $test_title,
 			'email_html_lang' => str_replace('_', '-', determine_locale()),
-			'email_footer_html' => '<p>' . esc_html__('This email was sent to verify your mail delivery settings.', 'fromscratch') . '</p>',
+			'email_footer_html' => esc_html__('This email was sent to verify your mail delivery settings.', 'fromscratch'),
 		]);
 		if ($body === '') {
 			set_transient('fromscratch_email_test_mail_error', __('Test email template could not be loaded.', 'fromscratch'), 30);
@@ -205,7 +204,7 @@ function fs_render_developer_email(): void
 				<tr>
 					<th scope="row"><label for="fromscratch_report_email"><?= esc_html__('Report email', 'fromscratch') ?></label></th>
 					<td>
-						<textarea name="fromscratch_report_email" id="fromscratch_report_email" rows="3" class="regular-text" style="width: 100%; max-width: 420px;"><?= esc_textarea((string) get_option('fromscratch_report_email', '')) ?></textarea>
+						<textarea name="fromscratch_report_email" id="fromscratch_report_email" rows="3" class="regular-text"><?= esc_textarea((string) get_option('fromscratch_report_email', '')) ?></textarea>
 						<p class="description"><?= esc_html__('Used for automated reports such as weekly analytics summaries. One email address per line.', 'fromscratch') ?></p>
 					</td>
 				</tr>

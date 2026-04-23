@@ -26,7 +26,6 @@ function fs_get_email_template(string $name, array $args = []): string
  *
  * The caller sets copy; each part is shown only when the string is non-empty (after trim):
  * - email_page_title — `<title>`
- * - email_heading — main `<h1>` in templates that support it (weekly-report, test-mail)
  * - email_footer_html — footer row (sanitized with wp_kses_post)
  * - email_html_lang — `<html lang>`; defaults from site locale when omitted or empty
  *
