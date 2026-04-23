@@ -390,7 +390,7 @@ msgid "Used for automated reports such as weekly analytics summaries. One email 
 msgstr "Wird für automatische Berichte wie wöchentliche Analyse-Zusammenfassungen verwendet. Eine E-Mail-Adresse pro Zeile."
 
 msgid "Developer email"
-msgstr "Entwickler-E-Mail"
+msgstr "Entwickler E-Mail"
 
 msgid "Used for system alerts, error notifications and security warnings."
 msgstr "Wird für Systemmeldungen, Fehlerbenachrichtigungen und Sicherheitshinweise verwendet."
@@ -462,28 +462,28 @@ msgid "Create an API key in the SendGrid dashboard with send permissions."
 msgstr "Erstelle einen API-Schlüssel im SendGrid-Dashboard mit Sendeberechtigungen."
 
 msgid "Test email"
-msgstr "Test-E-Mail"
+msgstr "Test E-Mail"
 
 msgid "Send to"
 msgstr "Senden an"
 
 msgid "Leave empty to use the developer email."
-msgstr "Leer lassen, um die Entwickler-E-Mail zu verwenden."
+msgstr "Leer lassen, um die Entwickler E-Mail zu verwenden."
 
-msgid "Send test mail"
-msgstr "Test-E-Mail senden"
+msgid "Send test email"
+msgstr "Test E-Mail senden"
 
 msgid "Please enter a valid email address before sending a test."
 msgstr "Bitte gib eine gültige E-Mail-Adresse ein, bevor du einen Test sendest."
 
 msgid "Test email template could not be loaded."
-msgstr "Test-E-Mail-Vorlage konnte nicht geladen werden."
+msgstr "Test E-Mail-Vorlage konnte nicht geladen werden."
 
 msgid "Test email from %s"
-msgstr "Test-E-Mail von %s"
+msgstr "Test E-Mail von %s"
 
 msgid "The test email could not be sent."
-msgstr "Die Test-E-Mail konnte nicht gesendet werden."
+msgstr "Die Test E-Mail konnte nicht gesendet werden."
 
 msgid "Reason: %s"
 msgstr "Grund: %s"
@@ -492,7 +492,7 @@ msgid "Check your mail delivery settings or try SMTP / SendGrid."
 msgstr "Überprüfe deine Einstellungen für die E-Mail-Zustellung oder probiere SMTP / SendGrid."
 
 msgid "Test email sent to %s."
-msgstr "Test-E-Mail an %s gesendet."
+msgstr "Test E-Mail an %s gesendet."
 
 msgid "the address"
 msgstr "die Adresse"
@@ -1759,7 +1759,7 @@ msgid "Your weekly website report"
 msgstr "Ihr wöchentlicher Website-Bericht"
 
 msgid "Weekly website report – %s"
-msgstr "Wöchentlicher Bericht – %s"
+msgstr "Wöchentlicher Website-Bericht – %s"
 
 msgid "Pages or posts published last week"
 msgstr "Seiten oder Beiträge, die letzte Woche veröffentlicht wurden"
@@ -1796,6 +1796,42 @@ msgstr "Für diesen Bericht sind noch keine Besucherstatistiken aktiviert. Ein <
 
 msgid "If you no longer want to receive these reports, <a href=\"%1$s\">log in to WordPress</a> and disable weekly reports, or contact the <a href=\"%2$s\">developer</a> or <a href=\"%3$s\">admin</a>."
 msgstr "Wenn Sie diese Berichte nicht mehr erhalten möchten, <a href=\"%1$s\">melden Sie sich in WordPress an</a> und deaktivieren Sie die wöchentlichen Berichte oder kontaktieren Sie den <a href=\"%2$s\">Entwickler</a> bzw. den <a href=\"%3$s\">Administrator</a>."
+
+msgid "Send email"
+msgstr "E-Mail senden"
+
+msgid "Recipient email"
+msgstr "Empfänger-E-Mail"
+
+msgid "Weekly website report"
+msgstr "Wöchentlicher Website-Bericht"
+
+msgid "Weekly reports"
+msgstr "Wöchentliche Berichte"
+
+msgid "Sends a weekly summary every Monday with analytics (when Matomo is enabled)."
+msgstr "Versendet jeden Montag eine Wochenübersicht mit Analysen (wenn Matomo aktiviert ist)."
+
+msgid "Enable reports"
+msgstr "Website-Berichte aktivieren"
+
+msgid "Report recipents"
+msgstr "Berichte Empfänger"
+
+msgid "One email address per line."
+msgstr "Eine E-Mail-Adresse pro Zeile."
+
+msgid "stephanwagner.me+bericht@gmail.com"
+msgstr "stephanwagner.me+bericht@gmail.com"
+
+msgid "Sends the current weekly report to provided email address."
+msgstr "Sendet den aktuellen Wochenbericht an die angegebene E-Mail-Adresse."
+
+msgid "Please enter a valid email address, or configure the developer email as the default."
+msgstr "Bitte geben Sie eine gültige E-Mail-Adresse ein oder hinterlegen Sie die Entwickler E-Mail als Standard."
+
+msgid "Weekly website report sent to %s."
+msgstr "Wöchentlicher Bericht wurde an %s gesendet."
 
 msgid "(no title)"
 msgstr "(ohne Titel)"

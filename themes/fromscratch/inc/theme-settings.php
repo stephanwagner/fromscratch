@@ -117,9 +117,17 @@ add_action('admin_init', function () {
 		return;
 	}
 	$url = admin_url('options-general.php?page=fs-theme-settings&tab=general');
+	$posted = isset($_POST['fromscratch_weekly_report_test_recipient'])
+		? sanitize_email(wp_unslash((string) $_POST['fromscratch_weekly_report_test_recipient']))
+		: '';
 	$developer_email = function_exists('fs_developer_email') ? fs_developer_email() : '';
-	if ($developer_email === '' || !is_email($developer_email)) {
-		set_transient('fromscratch_weekly_report_send_error', __('Developer email is missing or invalid.', 'fromscratch'), 30);
+	$recipient = $posted !== '' ? $posted : $developer_email;
+	if ($recipient === '' || !is_email($recipient)) {
+		set_transient(
+			'fromscratch_weekly_report_send_error',
+			__('Please enter a valid email address, or configure the developer email as the default.', 'fromscratch'),
+			30
+		);
 		wp_safe_redirect($url);
 		exit;
 	}
@@ -128,11 +136,11 @@ add_action('admin_init', function () {
 		wp_safe_redirect($url);
 		exit;
 	}
-	$sent = fs_weekly_report_send([$developer_email]);
+	$sent = fs_weekly_report_send([$recipient]);
 	if ($sent) {
-		set_transient('fromscratch_weekly_report_send_success', $developer_email, 30);
+		set_transient('fromscratch_weekly_report_send_success', $recipient, 30);
 	} else {
-		set_transient('fromscratch_weekly_report_send_error', __('Weekly report email could not be sent.', 'fromscratch'), 30);
+		set_transient('fromscratch_weekly_report_send_error', __('Weekly website report could not be sent.', 'fromscratch'), 30);
 	}
 	wp_safe_redirect($url);
 	exit;
@@ -782,7 +790,7 @@ function theme_settings_page(): void
 			$notices[] = __('Settings saved.', 'fromscratch');
 		}
 		if ($weekly_send_success !== false) {
-			$notices[] = sprintf(__('Weekly report email sent to %s.', 'fromscratch'), (string) $weekly_send_success);
+			$notices[] = sprintf(__('Weekly website report sent to %s.', 'fromscratch'), (string) $weekly_send_success);
 		}
 		if ($weekly_send_error !== false) {
 			$notices[] = (string) $weekly_send_error;
@@ -813,38 +821,45 @@ function theme_settings_page(): void
 			?>
 			<form method="post" action="options.php" class="fs-page-settings-form">
 				<?php settings_fields(FS_THEME_OPTION_GROUP_GENERAL); ?>
-				<h2 class="title"><?= esc_html__('Weekly report email', 'fromscratch') ?></h2>
+				<h2 class="title"><?= esc_html__('Weekly website report', 'fromscratch') ?></h2>
 				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Sends a weekly summary every Monday with analytics (when Matomo is enabled).', 'fromscratch') ?></p>
 				<table class="form-table" role="presentation">
 					<tr>
-						<th scope="row"><?= esc_html__('Enable report email', 'fromscratch') ?></th>
+						<th scope="row"><?= esc_html__('Weekly reports', 'fromscratch') ?></th>
 						<td>
 							<label>
 								<input type="hidden" name="fromscratch_weekly_report_enabled" value="0">
 								<input type="checkbox" name="fromscratch_weekly_report_enabled" value="1" <?= checked(get_option('fromscratch_weekly_report_enabled', '0'), '1', false) ?>>
-								<?= esc_html__('Enable weekly email report', 'fromscratch') ?>
+								<?= esc_html__('Enable reports', 'fromscratch') ?>
 							</label>
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><label for="fromscratch_report_email"><?= esc_html__('Report emails', 'fromscratch') ?></label></th>
+						<th scope="row"><label for="fromscratch_report_email"><?= esc_html__('Report recipents', 'fromscratch') ?></label></th>
 						<td>
-							<textarea name="fromscratch_report_email" id="fromscratch_report_email" rows="3" class="regular-text" style="width: 100%; max-width: 420px;"><?= esc_textarea((string) get_option('fromscratch_report_email', '')) ?></textarea>
+							<textarea name="fromscratch_report_email" id="fromscratch_report_email" rows="3" class="regular-text" style="width: 100%; max-width: 420px;" placeholder="<?= esc_attr__('stephanwagner.me+bericht@gmail.com', 'fromscratch') ?>"><?= esc_textarea((string) get_option('fromscratch_report_email', '')) ?></textarea>
 							<p class="description"><?= esc_html__('One email address per line.', 'fromscratch') ?></p>
 						</td>
 					</tr>
 					<tr>
 						<th scope="row"><?= esc_html__('Test email', 'fromscratch') ?></th>
 						<td>
-							<div>
-								<button type="submit" form="fs-send-weekly-report-to-developer" class="button"><?= esc_html__('Send email to developer', 'fromscratch') ?></button>
+							<div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; max-width:100%;">
+								<label for="fromscratch_weekly_report_test_recipient" class="screen-reader-text"><?= esc_html__('Recipient email', 'fromscratch') ?></label>
+								<input
+									type="email"
+									name="fromscratch_weekly_report_test_recipient"
+									id="fromscratch_weekly_report_test_recipient"
+									form="fs-send-weekly-report-to-developer"
+									value="<?= esc_attr($weekly_test_developer_email) ?>"
+									class="regular-text"
+									style="flex:1; min-width:200px; max-width:420px;"
+									autocomplete="email"
+								>
+								<button type="submit" form="fs-send-weekly-report-to-developer" class="button"><?= esc_html__('Send email', 'fromscratch') ?></button>
 							</div>
 							<p class="description">
-								<?= esc_html(sprintf(
-									/* translators: %s: developer email address */
-									__('Sends a current report to: %s', 'fromscratch'),
-									$weekly_test_developer_email !== '' ? $weekly_test_developer_email : __('(not configured)', 'fromscratch')
-								)) ?>
+								<?= esc_html__('Sends the current weekly report to provided email address.', 'fromscratch') ?>
 							</p>
 						</td>
 					</tr>

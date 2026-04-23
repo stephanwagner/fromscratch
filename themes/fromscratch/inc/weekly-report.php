@@ -372,7 +372,7 @@ function fs_weekly_report_build_chart_url(array $labels, array $series, string $
 }
 
 /**
- * Send weekly report email to one or many recipients.
+ * Send Weekly website report to one or many recipients.
  *
  * @param array<int, string> $emails Recipient list.
  */

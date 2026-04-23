@@ -351,7 +351,7 @@ function fs_render_developer_email(): void
 				</tr>
 			</table>
 			<div class="fs-submit-row">
-				<button type="submit" name="fromscratch_test_mail" class="button button-primary"><?= esc_html__('Send test mail', 'fromscratch') ?></button>
+				<button type="submit" name="fromscratch_test_mail" class="button button-primary"><?= esc_html__('Send test email', 'fromscratch') ?></button>
 			</div>
 		</form>
 	</div>
