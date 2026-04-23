@@ -22,6 +22,31 @@ function fs_get_email_template(string $name, array $args = []): string
 }
 
 /**
+ * Wrap a body template with email-header and email-footer (shared layout).
+ *
+ * The caller sets copy; each part is shown only when the string is non-empty (after trim):
+ * - email_page_title — `<title>`
+ * - email_heading — main `<h1>` in templates that support it (weekly-report, test-mail)
+ * - email_footer_html — footer row (sanitized with wp_kses_post)
+ * - email_html_lang — `<html lang>`; defaults from site locale when omitted or empty
+ *
+ * @param string $content_template Template name under inc/email-templates (without .php).
+ * @see fromscratch_email_document_args Filter to adjust $args per template.
+ */
+function fs_compose_email_document(string $content_template, array $args = []): string
+{
+	$args = apply_filters('fromscratch_email_document_args', $args, $content_template);
+	$header = fs_get_email_template('email-header', $args);
+	$footer = fs_get_email_template('email-footer', $args);
+	$body = fs_get_email_template($content_template, $args);
+	if ($header === '' || $footer === '') {
+		return $body;
+	}
+
+	return $header . $body . $footer;
+}
+
+/**
  * From address for all outgoing mail. Fallback to WordPress default when empty.
  */
 add_filter('wp_mail_from', function ($email) {

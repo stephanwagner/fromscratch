@@ -105,10 +105,15 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 		}
 		$site_name = get_bloginfo('name');
 		$sent_at = wp_date(get_option('date_format') . ' ' . get_option('time_format'));
-		$body = fs_get_email_template('test-mail', [
+		$test_title = __('Test email', 'fromscratch');
+		$body = fs_compose_email_document('test-mail', [
 			'site_name' => $site_name,
 			'to_email'  => $to,
 			'sent_at'  => $sent_at,
+			'email_page_title' => $test_title,
+			'email_heading' => $test_title,
+			'email_html_lang' => str_replace('_', '-', determine_locale()),
+			'email_footer_html' => '<p>' . esc_html__('This email was sent to verify your mail delivery settings.', 'fromscratch') . '</p>',
 		]);
 		if ($body === '') {
 			set_transient('fromscratch_email_test_mail_error', __('Test email template could not be loaded.', 'fromscratch'), 30);

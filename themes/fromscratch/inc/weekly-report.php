@@ -301,7 +301,7 @@ function fs_weekly_report_build_html(): string
 			'line'
 		);
 	}
-	$template_html = fs_get_email_template('weekly-report', [
+	$template_args = [
 		'site_name' => $site_name,
 		'date_now' => $date_now,
 		'site_url' => $site_url,
@@ -317,7 +317,31 @@ function fs_weekly_report_build_html(): string
 		'developer_settings_url' => $developer_settings_url,
 		'developer_email_link' => $developer_email_link,
 		'admin_email_link' => $admin_email_link,
-	]);
+		'email_page_title' => sprintf(
+			/* translators: %s: site name */
+			__('Weekly website report – %s', 'fromscratch'),
+			$site_name
+		),
+		'email_heading' => __('Your weekly website report', 'fromscratch'),
+		'email_html_lang' => str_replace('_', '-', determine_locale()),
+		'email_footer_html' => wp_kses(
+			sprintf(
+				__(
+					'If you no longer want to receive these reports, <a href="%1$s">log in to WordPress</a> and disable weekly reports, or contact the <a href="%2$s">developer</a> or <a href="%3$s">admin</a>.',
+					'fromscratch'
+				),
+				esc_url($theme_settings_url),
+				esc_url($developer_email_link),
+				esc_url($admin_email_link)
+			),
+			[
+				'a' => [
+					'href' => [],
+				],
+			]
+		),
+	];
+	$template_html = fs_compose_email_document('weekly-report', $template_args);
 	if ($template_html !== '') {
 		return $template_html;
 	}

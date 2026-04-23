@@ -3,29 +3,35 @@
 defined('ABSPATH') || exit;
 
 /**
- * Test mail template. Variables available: $site_name, $to_email, $sent_at.
+ * Test mail body (used inside email-header / email-footer layout).
  *
  * @var string $site_name
  * @var string $to_email
  * @var string $sent_at
+ * @var string $email_heading Optional; non-empty string shows the main &lt;h1&gt;.
  */
+$has_heading = isset($email_heading) && is_string($email_heading) && trim($email_heading) !== '';
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title><?= esc_html__('Test email', 'fromscratch') ?></title>
-</head>
-<body style="margin: 0; padding: 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, sans-serif; font-size: 16px; line-height: 1.5; color: #1e1e1e;">
-	<div style="max-width: 560px; margin: 0 auto;">
-		<h1 style="margin: 0 0 16px; font-size: 22px;"><?= esc_html__('Test email', 'fromscratch') ?></h1>
-		<p style="margin: 0 0 16px;"><?= esc_html(sprintf(__('This is a test email from %s.', 'fromscratch'), $site_name)) ?></p>
-		<p style="margin: 0 0 16px;"><?= esc_html__('If you received this, your mail delivery settings are working.', 'fromscratch') ?></p>
-		<p style="margin: 0; font-size: 14px; color: #646970;">
-			<?= esc_html__('Sent to:', 'fromscratch') ?> <?= esc_html($to_email) ?><br>
-			<?= esc_html__('Time:', 'fromscratch') ?> <?= esc_html($sent_at) ?>
-		</p>
-	</div>
-</body>
-</html>
+<div style="padding: 32px 32px 40px;">
+	<?php if ($has_heading) : ?>
+		<h1
+			style="
+				margin: 0 0 20px;
+				font-size: 24px;
+				line-height: 1.3;
+				font-weight: bold;
+				text-align: center;
+				color: #1f2937;
+			"><?= esc_html(trim($email_heading)) ?></h1>
+	<?php endif; ?>
+	<p style="margin: 0 0 16px; font-size: 16px; line-height: 1.5; color: #1f2937;">
+		<?= esc_html(sprintf(__('This is a test email from %s.', 'fromscratch'), $site_name)) ?>
+	</p>
+	<p style="margin: 0 0 16px; font-size: 16px; line-height: 1.5; color: #1f2937;">
+		<?= esc_html__('If you received this, your mail delivery settings are working.', 'fromscratch') ?>
+	</p>
+	<p style="margin: 0; font-size: 14px; line-height: 1.5; color: #64748b;">
+		<?= esc_html__('Sent to:', 'fromscratch') ?> <?= esc_html($to_email) ?><br>
+		<?= esc_html__('Time:', 'fromscratch') ?> <?= esc_html($sent_at) ?>
+	</p>
+</div>

@@ -468,7 +468,7 @@ msgid "Send to"
 msgstr "Senden an"
 
 msgid "Leave empty to use the developer email."
-msgstr "Leer lassen, um die Entwickler E-Mail zu verwenden."
+msgstr "Leer lassen, um die Entwickler-E-Mail zu verwenden."
 
 msgid "Send test email"
 msgstr "Test E-Mail senden"
@@ -493,6 +493,9 @@ msgstr "Überprüfe deine Einstellungen für die E-Mail-Zustellung oder probiere
 
 msgid "Test email sent to %s."
 msgstr "Test E-Mail an %s gesendet."
+
+msgid "This email was sent to verify your mail delivery settings."
+msgstr "Diese E-Mail wurde gesendet, um deine Einstellungen für die E-Mail-Zustellung zu prüfen."
 
 msgid "the address"
 msgstr "die Adresse"
@@ -1828,7 +1831,7 @@ msgid "Sends the current weekly report to provided email address."
 msgstr "Sendet den aktuellen Wochenbericht an die angegebene E-Mail-Adresse."
 
 msgid "Please enter a valid email address, or configure the developer email as the default."
-msgstr "Bitte geben Sie eine gültige E-Mail-Adresse ein oder hinterlegen Sie die Entwickler E-Mail als Standard."
+msgstr "Bitte geben Sie eine gültige E-Mail-Adresse ein oder hinterlegen Sie die Entwickler-E-Mail als Standard."
 
 msgid "Weekly website report sent to %s."
 msgstr "Wöchentlicher Bericht wurde an %s gesendet."
