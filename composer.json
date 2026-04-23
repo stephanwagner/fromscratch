@@ -1,0 +1,14 @@
+{
+  "name": "fromscratch/fromscratch",
+  "description": "",
+  "type": "project",
+  "license": "none",
+  "scripts": {},
+  "prefer-stable": true,
+  "config": {
+    "sort-packages": true
+  },
+  "require-dev": {
+    "deployer/deployer": "^7.5"
+  }
+}
