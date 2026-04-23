@@ -1775,3 +1775,6 @@ msgstr "Seiten-<br>aufrufe"
 
 msgid "If you no longer want to receive these reports, <a href=\"%1$s\">log in to WordPress</a> and disable weekly reports, or contact the <a href=\"%2$s\">developer</a> or <a href=\"%3$s\">admin</a>."
 msgstr "Wenn Sie diese Berichte nicht mehr erhalten möchten, <a href=\"%1$s\">melden Sie sich in WordPress an</a> und deaktivieren Sie die wöchentlichen Berichte oder kontaktieren Sie den <a href=\"%2$s\">Entwickler</a> bzw. den <a href=\"%3$s\">Administrator</a>."
+
+msgid "(no title)"
+msgstr "(ohne Titel)"

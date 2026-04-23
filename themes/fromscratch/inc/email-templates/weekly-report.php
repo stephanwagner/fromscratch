@@ -163,7 +163,7 @@ defined('ABSPATH') || exit;
 								<td>
 									<div
 										style="
-										margin: 32px auto 8px;
+										margin: 24px auto 6px;
 										font-size: 16px;
 										color: #64748b;
 										text-wrap: balance;
@@ -182,8 +182,8 @@ defined('ABSPATH') || exit;
 										">
 										<?php foreach ($insights[$key] as $row) { ?>
 											<tr>
-												<td style="padding: 3px 6px 3px 0; white-space: nowrap; color: #64748b;"><?= esc_html((string) ($row['date'] ?? '')) ?></td>
-												<td style="padding: 3px 0 3px 6px;" class="fs-mail-weekly-report-has-link" width="100%"><a href="<?= esc_url((string) ($row['url'] ?? '')) ?>"><?= esc_html((string) ($row['title'] ?? '')) ?></a></td>
+												<td style="padding: 2px 6px 2px 0; white-space: nowrap; color: #72839b;"><?= esc_html((string) ($row['date'] ?? '')) ?></td>
+												<td style="padding: 2px 0 2px 6px;" class="fs-mail-weekly-report-has-link" width="100%"><a href="<?= esc_url((string) ($row['url'] ?? '')) ?>"><?= esc_html((string) ($row['title'] ?? '')) ?></a></td>
 											</tr>
 										<?php } ?>
 									</table>
@@ -198,7 +198,7 @@ defined('ABSPATH') || exit;
 							<td>
 								<div
 									style="
-										margin: 32px auto 12px;
+										margin: 32px auto 16px;
 										font-size: 16px;
 										color: #64748b;
 										text-align: center;
@@ -225,9 +225,9 @@ defined('ABSPATH') || exit;
 									cellspacing="0"
 									style="
 										border: 0;
-										margin-top:24px;
-										border-collapse:collapse;
-										font-size:13px;
+										margin-top: 24px;
+										border-collapse: collapse;
+										font-size: 13px;
 										line-height: 1.4;
 										">
 									<tr>
@@ -250,7 +250,7 @@ defined('ABSPATH') || exit;
 										}
 										?>
 										<tr>
-											<td style="border-bottom:2px solid #e2e8f0;line-height:1.4; padding: 6px 0"><b style="font-weight: bold;"><?php if ($daily_weekday !== '') : ?><?= esc_html($daily_weekday) ?></b><br><span style="color:#64748b;"><?= esc_html($daily_written) ?></span><?php endif; ?></td>
+											<td style="border-bottom:2px solid #e2e8f0;line-height:1.4; padding: 6px 0"><b style="font-weight: bold;"><?php if ($daily_weekday !== '') : ?><?= esc_html($daily_weekday) ?></b><br><span style="color: #72839b;"><?= esc_html($daily_written) ?></span><?php endif; ?></td>
 											<td style="border-bottom:2px solid #e2e8f0; padding: 6px; text-align: center; font-weight: bold;"><?= esc_html(number_format_i18n((int) ($row['unique'] ?? 0))) ?></td>
 											<td style="border-bottom:2px solid #e2e8f0; padding: 6px; text-align: center;"><?= esc_html(number_format_i18n((int) ($row['visits'] ?? 0))) ?></td>
 											<td style="border-bottom:2px solid #e2e8f0; padding: 6px; text-align: center;"><?= esc_html(number_format_i18n((int) ($row['pageviews'] ?? 0))) ?></td>
@@ -263,7 +263,7 @@ defined('ABSPATH') || exit;
 							<td>
 								<div
 									style="
-							margin: 32px auto 12px;
+							margin: 32px auto 16px;
 							font-size: 16px;
 							color: #64748b;
 							text-align: center;
@@ -317,7 +317,7 @@ defined('ABSPATH') || exit;
 										}
 										?>
 										<tr>
-											<td style="border-bottom:2px solid #e2e8f0;line-height:1.4; padding: 6px 0"><b style="font-weight: bold;"><?php if ($week_line !== '') : ?><?= esc_html($week_line) ?></b><br><span style="color:#64748b;"><?= esc_html($monday_written) ?></span><?php endif; ?></td>
+											<td style="border-bottom:2px solid #e2e8f0;line-height:1.4; padding: 6px 0"><b style="font-weight: bold;"><?php if ($week_line !== '') : ?><?= esc_html($week_line) ?></b><br><span style="color: #72839b;"><?= esc_html($monday_written) ?></span><?php endif; ?></td>
 											<td style="border-bottom:2px solid #e2e8f0; padding: 6px; text-align: center; font-weight: bold;"><?= esc_html(number_format_i18n((int) ($row['unique'] ?? 0))) ?></td>
 											<td style="border-bottom:2px solid #e2e8f0; padding: 6px; text-align: center;"><?= esc_html(number_format_i18n((int) ($row['visits'] ?? 0))) ?></td>
 											<td style="border-bottom:2px solid #e2e8f0; padding: 6px; text-align: center;"><?= esc_html(number_format_i18n((int) ($row['pageviews'] ?? 0))) ?></td>

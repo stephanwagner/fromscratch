@@ -36,6 +36,8 @@ function fs_weekly_report_next_monday_timestamp(): int
  */
 function fs_weekly_report_build_insights(\DateTimeImmutable $last_monday, \DateTimeImmutable $this_monday): array
 {
+	$insight_date_format = 'd.m.Y H:i';
+
 	$out = [
 		'went_live_last_week' => [],
 		'scheduled_upcoming' => [],
@@ -60,7 +62,7 @@ function fs_weekly_report_build_insights(\DateTimeImmutable $last_monday, \DateT
 		$out['scheduled_upcoming'][] = [
 			'title' => (string) (get_the_title((int) $p->ID) ?: __('(no title)', 'fromscratch')),
 			'url' => (string) get_permalink((int) $p->ID),
-			'date' => (string) get_date_from_gmt((string) $p->post_date_gmt, get_option('date_format') . ' ' . get_option('time_format')),
+			'date' => (string) get_date_from_gmt((string) $p->post_date_gmt, $insight_date_format),
 		];
 	}
 
@@ -83,7 +85,7 @@ function fs_weekly_report_build_insights(\DateTimeImmutable $last_monday, \DateT
 		$out['went_live_last_week'][] = [
 			'title' => (string) (get_the_title((int) $p->ID) ?: __('(no title)', 'fromscratch')),
 			'url' => (string) get_permalink((int) $p->ID),
-			'date' => (string) get_the_date(get_option('date_format') . ' ' . get_option('time_format'), (int) $p->ID),
+			'date' => (string) get_the_date($insight_date_format, (int) $p->ID),
 		];
 	}
 
@@ -113,7 +115,6 @@ function fs_weekly_report_build_insights(\DateTimeImmutable $last_monday, \DateT
 				],
 			],
 		]);
-		$now_ts = time();
 		$last_week_start_ts = $last_monday->getTimestamp();
 		$this_monday_ts = $this_monday->getTimestamp();
 		foreach ($expiring as $p) {
@@ -125,7 +126,7 @@ function fs_weekly_report_build_insights(\DateTimeImmutable $last_monday, \DateT
 			$row = [
 				'title' => (string) (get_the_title((int) $p->ID) ?: __('(no title)', 'fromscratch')),
 				'url' => (string) get_permalink((int) $p->ID),
-				'date' => wp_date(get_option('date_format') . ' ' . get_option('time_format'), $ts),
+				'date' => (string) wp_date($insight_date_format, $ts),
 			];
 			if ($ts >= $this_monday_ts) {
 				if (count($out['expiring_upcoming']) < 10) {
@@ -437,4 +438,3 @@ add_action('init', function (): void {
 	}
 	wp_schedule_event(fs_weekly_report_next_monday_timestamp(), 'weekly', 'fs_weekly_report_weekly');
 }, 35);
-
