@@ -8,6 +8,9 @@
 # WordPress
 /wordpress
 
+# Deployment
+/deploy.config.php
+
 # Composer
 /vendor
 
