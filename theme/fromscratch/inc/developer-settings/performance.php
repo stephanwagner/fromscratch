@@ -323,7 +323,7 @@ add_action('admin_post_fs_purge_cache', function (): void {
 	// Purge cache via shell script.
 	if (function_exists('exec')) {
 		$code = 1;
-		exec('sudo /usr/local/bin/fs-purge-nginx-cache.sh 2>&1', $out, $code);
+		exec('sudo /usr/local/bin/purge-nginx-cache.sh 2>&1', $out, $code);
 		$ok = $ok && $code === 0;
 	} else {
 		$ok = false;
