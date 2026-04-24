@@ -313,9 +313,12 @@ function fs_render_developer_system(): void
 			$label = esc_html($label);
 			return '<span class="fs-system-status-icon-wrap">' . ($check ? $check_icon : $cross_icon) . '<span class="fs-system-status-icon-label">' . $label . '</span></span>';
 		};
+
 		$opcache_ext_loaded  = extension_loaded('Zend OPcache') || extension_loaded('opcache');
-		$opcache_can_inspect = function_exists('opcache_get_status');
-		$opcache_on            = fs_developer_perf_opcache_enabled();
+		$opcache_enable_read = $opcache_ext_loaded ? ini_get('opcache.enable') : null;
+		$opcache_ini_is_one  = $opcache_ext_loaded
+			&& (string) (is_scalar($opcache_enable_read) ? trim((string) $opcache_enable_read) : '') === '1';
+
 		$xdebug_on = fs_developer_perf_xdebug_enabled();
 		$memory_limit = ini_get('memory_limit');
 		$db_server = function_exists('fs_developer_perf_db_server') ? fs_developer_perf_db_server() : null;
@@ -330,9 +333,6 @@ function fs_render_developer_system(): void
 		$matomo_custom_js_value = (string) get_option('fromscratch_matomo_custom_js', '');
 		$matomo_feature_enabled = function_exists('fs_theme_feature_enabled') && fs_theme_feature_enabled('matomo');
 		$system_url = admin_url('options-general.php?page=' . fs_developer_settings_page_slug('system'));
-
-		var_dump($opcache_ext_loaded);
-		var_dump($opcache_can_inspect);
 
 		$fs_parse_bytes = function ($value): ?int {
 			if ($value === false || $value === null) {
@@ -429,24 +429,17 @@ function fs_render_developer_system(): void
 		$xdebug_warning = $xdebug_on ? __('Xdebug is enabled. Disable it in production for better performance.', 'fromscratch') : null;
 
 		$opcache_warning = null;
-		if (! $opcache_can_inspect) {
-			// The WordPress request runs under PHP-FPM/Apache, which often uses a different php.ini than the CLI where people run php -i.
-			if ($opcache_ext_loaded) {
-				$opcache_warning = __('OPcache is loaded, but its status cannot be read (e.g. opcache_get_status() is disabled in php.ini).', 'fromscratch');
-				$opcache_status  = $fs_system_status(false, esc_html__('Unknown', 'fromscratch'));
-			} else {
-				$opcache_warning = __('The Zend OPcache extension is not loaded in the PHP that runs WordPress. The php.ini you checked may be for the command-line (CLI) PHP only. Use “Open PHP info” below to see which php.ini and loaded extensions the web SAPI (PHP-FPM, Apache, etc.) is using.', 'fromscratch');
-				$opcache_status = $fs_system_status(false, esc_html__('Not loaded', 'fromscratch'));
-			}
-		} elseif ($opcache_on) {
-			$opcache_status = $fs_system_status(true, esc_html__('Enabled', 'fromscratch'));
+		if (! $opcache_ext_loaded) {
+			$opcache_warning = __('Install PHP OPcache for significantly better performance.', 'fromscratch');
+			$opcache_status  = $fs_system_status(false, esc_html__('Not installed', 'fromscratch'));
+		} elseif ($opcache_ini_is_one) {
+			$opcache_status = $fs_system_status(true, esc_html__('Active', 'fromscratch'));
 		} else {
-			$opcache_warning = __('OPcache is disabled. Enable it for significantly better performance.', 'fromscratch');
-			$opcache_status  = $fs_system_status(false, esc_html__('Disabled', 'fromscratch'));
+			$opcache_status = $fs_system_status(false, esc_html__('Unknown, See PHP info', 'fromscratch'));
 		}
 
 		$redis_enabled = fs_developer_redis_enabled();
-		$object_cache_active = function_exists('wp_using_ext_object_cache') && wp_using_ext_object_cache();
+		$object_cache_active = function_exists('wp_us§ing_ext_object_cache') && wp_using_ext_object_cache();
 		$is_redis_installed = $redis_enabled && (
 			defined('WP_REDIS_VERSION')
 			|| class_exists('\RedisCache\Plugin')

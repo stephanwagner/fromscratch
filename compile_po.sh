@@ -4,7 +4,7 @@
 find . -name ".DS_Store" -exec rm -f {} \;
 
 # Compile languages (all German variants use the same translations as de_DE)
-LANGUAGE_DIR="./themes/fromscratch/languages"
+LANGUAGE_DIR="./theme/fromscratch/languages"
 
 cp "$LANGUAGE_DIR/fromscratch-de_DE.po" "$LANGUAGE_DIR/fromscratch-de_DE_formal.po"
 cp "$LANGUAGE_DIR/fromscratch-de_DE.po" "$LANGUAGE_DIR/fromscratch-de_AT.po"

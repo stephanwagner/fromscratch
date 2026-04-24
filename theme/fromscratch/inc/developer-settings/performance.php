@@ -69,18 +69,6 @@ function fs_developer_perf_scale_config(string $metric): array
 }
 
 /**
- * Whether OPcache is available and enabled.
- */
-function fs_developer_perf_opcache_enabled(): bool
-{
-	if (!function_exists('opcache_get_status')) {
-		return false;
-	}
-	$status = opcache_get_status(false);
-	return is_array($status) && !empty($status['opcache_enabled']);
-}
-
-/**
  * Database server type and version (MySQL vs MariaDB). Returns ['type' => 'MariaDB'|'MySQL', 'version' => string] or null.
  */
 function fs_developer_perf_db_server(): ?array
