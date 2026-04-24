@@ -334,30 +334,20 @@ add_action('admin_post_fs_purge_cache', function (): void {
 		wp_cache_flush();
 	}
 
-	set_transient('fromscratch_purge_cache_notice', $ok ? '1' : '0', 30);
+	$uid = (int) get_current_user_id();
+	if ($uid > 0) {
+		fs_admin_notice(
+			$uid,
+			$ok ? 'success' : 'error',
+			$ok
+				? __('Cache purged.', 'fromscratch')
+				: __('Cache purge finished with issues.', 'fromscratch')
+		);
+	}
 
-	wp_safe_redirect(wp_get_referer() ?: home_url('/'));
+	wp_safe_redirect(wp_get_referer() ?: admin_url());
 	exit;
 }, 1);
-
-add_action('admin_notices', function (): void {
-	if (!current_user_can('manage_options')) {
-		return;
-	}
-	if (!is_admin()) {
-		return;
-	}
-	$notice = get_transient('fromscratch_purge_cache_notice');
-	if ($notice === false) {
-		return;
-	}
-	delete_transient('fromscratch_purge_cache_notice');
-?>
-	<div class="notice notice-success is-dismissible">
-		<p><strong><?= esc_html($notice === '1' ? __('Cache purged.', 'fromscratch') : __('Cache purge finished with issues.', 'fromscratch')) ?></strong></p>
-	</div>
-<?php
-}, 20);
 
 /**
  * Show performance metrics in the admin bar for developer users (backend and frontend). Click to expand details with scale per metric.

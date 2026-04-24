@@ -24,6 +24,7 @@ require_once 'inc/admin-bar.php';
 // User rights + theme settings + developer settings (needed on frontend for admin bar performance node)
 require_once 'inc/user-rights.php';
 require_once 'inc/theme-settings.php';
+require_once 'inc/admin-notice.php';
 require_once 'inc/developer-settings.php';
 
 // Admin-only
