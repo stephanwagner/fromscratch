@@ -1,6 +1,9 @@
 // Utils
 import '../utils/animations';
 
+// Service worker
+import './service-worker';
+
 // Main
 import './menu';
 import './scrolled';

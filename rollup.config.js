@@ -85,5 +85,26 @@ export default [
       }),
       prod && terser()
     ]
-  }
+  },
+
+  /**
+   * Service worker: separate bundle from main.js (worker global). Entry composes ./src/js/service-worker/index.js.
+   */
+  {
+    input: `${base}/src/js/service-worker/index.js`,
+    output: {
+      file: `${base}/assets/js/service-worker${prod ? '.min' : ''}.js`,
+      format: 'iife',
+      sourcemap: !prod,
+    },
+    plugins: [
+      resolve(),
+      babel({
+        babelHelpers: 'bundled',
+        extensions: ['.js'],
+        presets: ['@babel/preset-env'],
+      }),
+      prod && terser(),
+    ],
+  },
 ];
