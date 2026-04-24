@@ -109,10 +109,8 @@ return [
 	/**
 	 * Nginx site cache integration.
 	 * enabled: globally enable/disable cache purge actions.
-	 * purge_url: endpoint URL (relative like '/purge' or absolute URL).
 	 */
 	'nginx_site_cache' => [
 		'enabled' => true,
-		'purge_url' => '/purge',
 	],
 ];

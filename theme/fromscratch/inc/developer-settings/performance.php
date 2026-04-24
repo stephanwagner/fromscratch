@@ -268,26 +268,6 @@ function fs_developer_perf_current_ip(): string
 	return '';
 }
 
-/**
- * Nginx purge endpoint URL from config/theme.php.
- */
-function fs_developer_perf_nginx_purge_url(): string
-{
-	$url = function_exists('fs_config') ? fs_config('nginx_site_cache.purge_url') : null;
-	if (!is_string($url) || $url === '') {
-		// Backward compat with old flat config key.
-		$url = function_exists('fs_config') ? fs_config('nginx_cache_purge_url') : null;
-	}
-	if (!is_string($url) || $url === '') {
-		$url = '/purge';
-	}
-	// Allow relative endpoint URLs in config.
-	if (strpos($url, 'http://') === 0 || strpos($url, 'https://') === 0) {
-		return $url;
-	}
-	return home_url($url);
-}
-
 function fs_developer_perf_show_nginx_purge_in_admin_bar(): bool
 {
 	if (!function_exists('fs_config')) {
@@ -329,56 +309,34 @@ function fs_developer_perf_panel_guest_visible(): bool
 }
 
 /**
- * Handle page-cache purge endpoint: /?fs-purge-cache=1&_wpnonce=...
+ * Handle page-cache purge action.
+ * Endpoint: /wp-admin/admin-post.php?action=fs_purge_cache&_wpnonce=...
  */
-add_action('init', function (): void {
-	if (empty($_GET['fs-purge-cache']) || $_GET['fs-purge-cache'] !== '1') {
-		return;
+add_action('admin_post_fs_purge_cache', function (): void {
+	if (!current_user_can('manage_options')) {
+		wp_die('Unauthorized');
 	}
-	if (!is_user_logged_in() || !current_user_can('manage_options')) {
-		return;
-	}
-	$nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
-	if ($nonce === '' || !wp_verify_nonce($nonce, 'fs_purge_cache')) {
-		return;
-	}
+	check_admin_referer('fs_purge_cache');
 
-	$purge_url = fs_developer_perf_nginx_purge_url();
-
-	/**
-	 * Allow integrations to purge page/full-page caches.
-	 */
-	do_action('fromscratch_purge_page_cache');
-
-	// Trigger nginx purge endpoint.
 	$ok = true;
-	if ($purge_url !== '' && function_exists('wp_remote_get')) {
-		$response = wp_remote_get($purge_url, [
-			'timeout' => 3,
-			'redirection' => 0,
-			'blocking' => true,
-		]);
-		if (is_wp_error($response)) {
-			$ok = false;
-		} else {
-			$code = (int) wp_remote_retrieve_response_code($response);
-			$ok = $code >= 200 && $code < 500;
-		}
+
+	// Purge cache via shell script.
+	if (function_exists('exec')) {
+		$code = 1;
+		exec('sudo /usr/local/bin/fs-purge-nginx-cache.sh 2>&1', $out, $code);
+		$ok = $ok && $code === 0;
+	} else {
+		$ok = false;
 	}
 
-	// Optional: flush object cache if available.
+	// Optional object-cache flush.
 	if (function_exists('wp_cache_flush')) {
 		wp_cache_flush();
 	}
 
 	set_transient('fromscratch_purge_cache_notice', $ok ? '1' : '0', 30);
 
-	$redirect = wp_get_referer();
-	if (!$redirect) {
-		$redirect = home_url('/');
-	}
-	$redirect = remove_query_arg(['fs-purge-cache', '_wpnonce'], $redirect);
-	wp_safe_redirect($redirect);
+	wp_safe_redirect(wp_get_referer() ?: home_url('/'));
 	exit;
 }, 1);
 
@@ -426,7 +384,7 @@ add_action('admin_bar_menu', function ($admin_bar): void {
 	if ($show_perf) {
 		// Purge cache (top-level): add before performance node so it appears first in the bar.
 		if (current_user_can('manage_options') && fs_developer_perf_show_nginx_purge_in_admin_bar()) {
-			$wp_purge_url = wp_nonce_url(add_query_arg('fs-purge-cache', '1', home_url('/')), 'fs_purge_cache');
+			$wp_purge_url = wp_nonce_url(admin_url('admin-post.php?action=fs_purge_cache'), 'fs_purge_cache');
 			$purge_icon = '<svg xmlns="http://www.w3.org/2000/svg" style="width: 18px; height: 100%;" width="24px" height="24px" viewBox="0 -960 960 960" fill="currentColor"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-70q0-17 11.5-28.5T760-800q17 0 28.5 11.5T800-760v200q0 17-11.5 28.5T760-520H560q-17 0-28.5-11.5T520-560q0-17 11.5-28.5T560-600h128q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q68 0 124.5-34.5T692-367q8-14 22.5-19.5t29.5-.5q16 5 23 21t-1 30q-41 80-117 128t-169 48Z"/></svg>';
 			$admin_bar->add_node([
 				'id'    => 'fs-purge-cache',
