@@ -593,7 +593,7 @@ function fs_render_developer_system(): void
 				</p>
 				<div id="fs-perf-guest-ips-wrap" class="fs-perf-guest-ips-wrap fs-indent-checkbox" style="margin-top: 12px; <?= $guest_panel_on ? '' : 'display: none;' ?>">
 					<p style="margin-bottom: 6px;">
-						<?= esc_html__('Your current IP:', 'fromscratch') ?> <code id="fs-perf-current-ip"><?= $current_ip !== '' ? esc_html($current_ip) : – ?></code>
+						<?= esc_html__('Your current IP address:', 'fromscratch') ?> <code id="fs-perf-current-ip"><?= $current_ip !== '' ? esc_html($current_ip) : – ?></code>
 					</p>
 					<p style="margin-bottom: 0;">
 						<label for="fromscratch_perf_panel_guest_ips"><?= esc_html__('Allowed IP addresses', 'fromscratch') ?></label><br>

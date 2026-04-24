@@ -1391,9 +1391,6 @@ msgstr "Performance-Panel in der Admin-Leiste anzeigen"
 msgid "Enable performance panel for logged out users"
 msgstr "Performance-Panel für nicht angemeldete Nutzer aktivieren"
 
-msgid "Your current IP:"
-msgstr "Deine aktuelle IP:"
-
 msgid "Allowed IP addresses"
 msgstr "Erlaubte IP-Adressen"
 
