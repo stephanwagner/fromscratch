@@ -550,7 +550,7 @@ add_filter('ajax_query_attachments_args', function (array $args): array {
 		'taxonomy' => FS_MEDIA_FOLDER_TAXONOMY,
 		'field' => 'term_id',
 		'terms' => [$folder_id],
-		'include_children' => false,
+		'include_children' => true,
 	];
 
 	$args['tax_query'] = $tax_query;
