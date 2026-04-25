@@ -701,36 +701,81 @@ add_action('admin_post_fs_media_folder_create', function (): void {
  * Build tree list markup for folder sidebar.
  *
  * @param WP_Term[] $terms
+ * @param array<int,int> $display_counts
  */
-function fs_media_folders_render_list(array $terms, int $parent_id, int $depth, int $current_id, string $base_url, string $redirect_url): void
+function fs_media_folders_render_list(array $terms, array $display_counts, int $parent_id, int $depth, int $current_id, string $base_url, string $redirect_url): void
 {
 	foreach ($terms as $term) {
 		if ((int) $term->parent !== $parent_id) {
 			continue;
 		}
+		$term_id = (int) $term->term_id;
+		$display_count = isset($display_counts[$term_id]) ? (int) $display_counts[$term_id] : (int) $term->count;
 		$url = add_query_arg('fs_media_folder_id', (int) $term->term_id, $base_url);
 		$classes = ['fs-media-folders-link'];
-		if ((int) $term->term_id === $current_id) {
+		if ($term_id === $current_id) {
 			$classes[] = 'is-active';
 		}
 		$prefix = $depth > 0 ? str_repeat('- ', $depth) : '';
 		$delete_url = add_query_arg([
 			'action' => 'fs_media_folder_delete',
-			'term_id' => (int) $term->term_id,
+			'term_id' => $term_id,
 			'redirect_to' => $redirect_url,
 		], admin_url('admin-post.php'));
-		$delete_url = wp_nonce_url($delete_url, 'fs_media_folder_delete_' . (int) $term->term_id);
+		$delete_url = wp_nonce_url($delete_url, 'fs_media_folder_delete_' . $term_id);
 		echo '<li>';
 		echo '<div class="fs-media-folders-row">';
 		echo '<a class="' . esc_attr(implode(' ', $classes)) . '" href="' . esc_url($url) . '">';
 		echo '<span class="name">' . esc_html($prefix . $term->name) . '</span>';
-		echo ' <span class="count">(' . (int) $term->count . ')</span>';
+		echo ' <span class="count">(' . $display_count . ')</span>';
 		echo '</a>';
-		echo '<button type="button" class="fs-media-folder-delete-btn" aria-label="' . esc_attr__('Delete folder', 'fromscratch') . '" data-folder-name="' . esc_attr($term->name) . '" data-folder-count="' . (int) $term->count . '" data-delete-url="' . esc_url($delete_url) . '">×</button>';
+		echo '<button type="button" class="fs-media-folder-delete-btn" aria-label="' . esc_attr__('Delete folder', 'fromscratch') . '" data-folder-name="' . esc_attr($term->name) . '" data-folder-count="' . $display_count . '" data-delete-url="' . esc_url($delete_url) . '">×</button>';
 		echo '</div>';
 		echo '</li>';
-		fs_media_folders_render_list($terms, (int) $term->term_id, $depth + 1, $current_id, $base_url, $redirect_url);
+		fs_media_folders_render_list($terms, $display_counts, $term_id, $depth + 1, $current_id, $base_url, $redirect_url);
 	}
+}
+
+/**
+ * Build aggregated folder counts so parents include all descendants.
+ *
+ * @param WP_Term[] $terms
+ * @return array<int,int>
+ */
+function fs_media_folders_build_display_counts(array $terms): array
+{
+	$by_parent = [];
+	$direct = [];
+	foreach ($terms as $term) {
+		if (!$term instanceof WP_Term) {
+			continue;
+		}
+		$term_id = (int) $term->term_id;
+		$parent_id = (int) $term->parent;
+		$direct[$term_id] = (int) $term->count;
+		if (!isset($by_parent[$parent_id])) {
+			$by_parent[$parent_id] = [];
+		}
+		$by_parent[$parent_id][] = $term_id;
+	}
+	$totals = [];
+	$walk = static function (int $term_id) use (&$walk, &$totals, $by_parent, $direct): int {
+		if (isset($totals[$term_id])) {
+			return $totals[$term_id];
+		}
+		$total = isset($direct[$term_id]) ? (int) $direct[$term_id] : 0;
+		if (isset($by_parent[$term_id])) {
+			foreach ($by_parent[$term_id] as $child_id) {
+				$total += $walk((int) $child_id);
+			}
+		}
+		$totals[$term_id] = $total;
+		return $total;
+	};
+	foreach (array_keys($direct) as $term_id) {
+		$walk((int) $term_id);
+	}
+	return $totals;
 }
 
 /**
@@ -970,6 +1015,7 @@ add_action('admin_footer-upload.php', function (): void {
 	if (is_wp_error($terms)) {
 		$terms = [];
 	}
+	$display_counts = fs_media_folders_build_display_counts($terms);
 
 	$base_args = ['mode', 'post_mime_type', 'detached', 'm', 's'];
 	$base_url = admin_url('upload.php');
@@ -1013,7 +1059,7 @@ add_action('admin_footer-upload.php', function (): void {
 			</li>
 			<?php
 			$sidebar_redirect_url = remove_query_arg(['fs_media_folder_id', 'fs_media_folder_error', 'fs_media_folder_success'], $base_url);
-			fs_media_folders_render_list($terms, 0, 0, $folder_id, $sidebar_redirect_url, $sidebar_redirect_url);
+			fs_media_folders_render_list($terms, $display_counts, 0, 0, $folder_id, $sidebar_redirect_url, $sidebar_redirect_url);
 			?>
 		</ul>
 		<form method="post" action="<?= esc_url(admin_url('admin-post.php')) ?>" class="fs-media-folders-create">
