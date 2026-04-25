@@ -311,6 +311,48 @@ add_action('admin_footer', function (): void {
 ?>
 	<script>
 		(function(folders) {
+			(function(wp) {
+				if (!wp || !wp.media || !wp.media.model || !wp.media.model.Query) {
+					return;
+				}
+				if (wp.media.model.Query.prototype.__fsFolderQueryPatched) {
+					return;
+				}
+				var originalInit = wp.media.model.Query.prototype.initialize;
+				wp.media.model.Query.prototype.initialize = function() {
+					originalInit.apply(this, arguments);
+					if (this.props && typeof this.props.set === 'function') {
+						this.props.set({
+							fs_media_folder_id: this.props.get('fs_media_folder_id') || '',
+							fs_media_folder: this.props.get('fs_media_folder') || ''
+						});
+					}
+				};
+				var originalSync = wp.media.model.Query.prototype.sync;
+				wp.media.model.Query.prototype.sync = function(method, model, options) {
+					options = options || {};
+					options.data = options.data || {};
+					options.data.query = options.data.query || {};
+					var props = (this.props && typeof this.props.toJSON === 'function') ? this.props.toJSON() : {};
+					if (props.fs_media_folder_id) {
+						options.data.query.fs_media_folder_id = props.fs_media_folder_id;
+						options.data.fs_media_folder_id = props.fs_media_folder_id;
+					} else {
+						delete options.data.query.fs_media_folder_id;
+						delete options.data.fs_media_folder_id;
+					}
+					if (props.fs_media_folder) {
+						options.data.query.fs_media_folder = props.fs_media_folder;
+						options.data.fs_media_folder = props.fs_media_folder;
+					} else {
+						delete options.data.query.fs_media_folder;
+						delete options.data.fs_media_folder;
+					}
+					return originalSync.call(this, method, model, options);
+				};
+				wp.media.model.Query.prototype.__fsFolderQueryPatched = true;
+			})(window.wp);
+
 			function getActiveProps() {
 				if (!window.wp || !wp.media || !wp.media.frame) {
 					return null;
@@ -361,13 +403,28 @@ add_action('admin_footer', function (): void {
 				if (typeof props.trigger === 'function') {
 					props.trigger('change');
 				}
-				// Force refresh for modal collections that don't react to custom prop changes.
-				if (window.wp && wp.media && wp.media.frame && wp.media.frame.content && typeof wp.media.frame.content.get === 'function') {
-					var c = wp.media.frame.content.get();
-					if (c && c.collection && typeof c.collection._requery === 'function') {
-						c.collection._requery(true);
-					}
+				// Nudge collections without calling private APIs.
+				props.set({ ignore: (+new Date()) });
+
+				// Hard fetch for modal: bypass stale cached query internals.
+				if (!window.wp || !wp.media || !wp.media.ajax || !wp.media.frame || !wp.media.frame.content || typeof wp.media.frame.content.get !== 'function') {
+					return;
 				}
+				var content = wp.media.frame.content.get();
+				if (!content || !content.collection || typeof content.collection.reset !== 'function') {
+					return;
+				}
+				var collection = content.collection;
+				var query = (collection.props && typeof collection.props.toJSON === 'function')
+					? collection.props.toJSON()
+					: {};
+				query.paged = 1;
+				query.fs_media_folder_id = v;
+				query.fs_media_folder = v;
+				wp.media.ajax('query-attachments', { query: query })
+					.done(function(items) {
+						collection.reset(items || []);
+					});
 			}
 
 			function injectProofNode() {
@@ -451,6 +508,8 @@ add_action('admin_footer', function (): void {
  * Remove after modal integration is confirmed.
  */
 add_action('print_media_templates', function (): void {
+	// Disabled old probe.
+	return;
 	if (!is_admin()) {
 		return;
 	}
@@ -494,23 +553,37 @@ add_filter('ajax_query_attachments_args', function (array $args): array {
 
 	$folder_id = 0;
 	$request = wp_unslash($_REQUEST);
-	if (isset($request['query']) && is_array($request['query']) && !empty($request['query']['fs_media_folder_id'])) {
-		$folder_id = absint($request['query']['fs_media_folder_id']);
-	} elseif (isset($request['query']) && is_array($request['query']) && !empty($request['query']['fs_media_folder'])) {
-		$folder_id = absint($request['query']['fs_media_folder']);
-	} elseif (!empty($request['fs_media_folder_id'])) {
-		$folder_id = absint($request['fs_media_folder_id']);
-	} elseif (!empty($request['fs_media_folder'])) {
-		$folder_id = absint($request['fs_media_folder']);
-	} elseif (!empty($_GET['fs_media_folder_id'])) {
-		$folder_id = absint($_GET['fs_media_folder_id']);
-	} elseif (!empty($_GET['fs_media_folder'])) {
-		$folder_id = absint($_GET['fs_media_folder']);
+	$is_query_attachments_ajax = wp_doing_ajax()
+		&& isset($request['action'])
+		&& (string) $request['action'] === 'query-attachments';
+
+	if ($is_query_attachments_ajax) {
+		if (isset($request['query']) && is_array($request['query']) && !empty($request['query']['fs_media_folder_id'])) {
+			$folder_id = absint($request['query']['fs_media_folder_id']);
+		} elseif (isset($request['query']) && is_array($request['query']) && !empty($request['query']['fs_media_folder'])) {
+			$folder_id = absint($request['query']['fs_media_folder']);
+		}
+	} else {
+		if (isset($request['query']) && is_array($request['query']) && !empty($request['query']['fs_media_folder_id'])) {
+			$folder_id = absint($request['query']['fs_media_folder_id']);
+		} elseif (isset($request['query']) && is_array($request['query']) && !empty($request['query']['fs_media_folder'])) {
+			$folder_id = absint($request['query']['fs_media_folder']);
+		} elseif (!empty($request['fs_media_folder_id'])) {
+			$folder_id = absint($request['fs_media_folder_id']);
+		} elseif (!empty($request['fs_media_folder'])) {
+			$folder_id = absint($request['fs_media_folder']);
+		} elseif (!empty($_GET['fs_media_folder_id'])) {
+			$folder_id = absint($_GET['fs_media_folder_id']);
+		} elseif (!empty($_GET['fs_media_folder'])) {
+			$folder_id = absint($_GET['fs_media_folder']);
+		}
 	}
 
 	if ($folder_id <= 0 || !taxonomy_exists(FS_MEDIA_FOLDER_TAXONOMY)) {
 		return $args;
 	}
+	$args['post_type'] = 'attachment';
+	$args['post_status'] = 'inherit';
 
 	$tax_query = isset($args['tax_query']) ? (array)$args['tax_query'] : [];
 
