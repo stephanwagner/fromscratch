@@ -207,9 +207,7 @@ add_filter('media_view_settings', function (array $settings): array {
 		$settings['query'] = [];
 	}
 	// Keep both keys for media-grid compatibility across request shapes.
-	$settings['library']['fs_media_folder'] = $folder_id;
 	$settings['library']['fs_media_folder_id'] = $folder_id;
-	$settings['query']['fs_media_folder'] = $folder_id;
 	$settings['query']['fs_media_folder_id'] = $folder_id;
 
 	return $settings;
@@ -323,8 +321,7 @@ add_action('admin_footer', function (): void {
 					originalInit.apply(this, arguments);
 					if (this.props && typeof this.props.set === 'function') {
 						this.props.set({
-							fs_media_folder_id: this.props.get('fs_media_folder_id') || '',
-							fs_media_folder: this.props.get('fs_media_folder') || ''
+							fs_media_folder_id: this.props.get('fs_media_folder_id') || 0
 						});
 					}
 				};
@@ -340,13 +337,6 @@ add_action('admin_footer', function (): void {
 					} else {
 						delete options.data.query.fs_media_folder_id;
 						delete options.data.fs_media_folder_id;
-					}
-					if (props.fs_media_folder) {
-						options.data.query.fs_media_folder = props.fs_media_folder;
-						options.data.fs_media_folder = props.fs_media_folder;
-					} else {
-						delete options.data.query.fs_media_folder;
-						delete options.data.fs_media_folder;
 					}
 					return originalSync.call(this, method, model, options);
 				};
@@ -376,55 +366,46 @@ add_action('admin_footer', function (): void {
 				return null;
 			}
 
+			function getActiveState() {
+				if (!window.wp || !wp.media || !wp.media.frame || typeof wp.media.frame.state !== 'function') {
+					return null;
+				}
+				var state = wp.media.frame.state();
+				if (!state || typeof state.get !== 'function' || typeof state.set !== 'function') {
+					return null;
+				}
+				return state;
+			}
+
 			function selectedFolderId() {
 				var props = getActiveProps();
 				if (!props || typeof props.get !== 'function') {
 					return 0;
 				}
 				var raw = props.get('fs_media_folder_id');
-				if (raw === undefined || raw === null || raw === '') {
-					raw = props.get('fs_media_folder');
-				}
 				var id = parseInt(raw, 10);
 				return isNaN(id) || id < 1 ? 0 : id;
 			}
 
 			function applyFolder(id) {
-				var props = getActiveProps();
-				if (!props || typeof props.set !== 'function') {
+				var state = getActiveState();
+				if (!state || !window.wp || !wp.media || typeof wp.media.query !== 'function') {
 					return;
 				}
-				var v = id > 0 ? id : '';
-				props.set({
-					fs_media_folder_id: v,
-					fs_media_folder: v,
-					paged: 1
+				var folderId = id > 0 ? id : 0;
+				var library = wp.media.query({
+					post_type: 'attachment',
+					post_status: 'inherit',
+					orderby: 'date',
+					order: 'DESC',
+					per_page: 40,
+					paged: 1,
+					fs_media_folder_id: folderId
 				});
-				if (typeof props.trigger === 'function') {
-					props.trigger('change');
+				state.set('library', library);
+				if (window.wp.media.frame && wp.media.frame.content && typeof wp.media.frame.content.render === 'function') {
+					wp.media.frame.content.render();
 				}
-				// Nudge collections without calling private APIs.
-				props.set({ ignore: (+new Date()) });
-
-				// Hard fetch for modal: bypass stale cached query internals.
-				if (!window.wp || !wp.media || !wp.media.ajax || !wp.media.frame || !wp.media.frame.content || typeof wp.media.frame.content.get !== 'function') {
-					return;
-				}
-				var content = wp.media.frame.content.get();
-				if (!content || !content.collection || typeof content.collection.reset !== 'function') {
-					return;
-				}
-				var collection = content.collection;
-				var query = (collection.props && typeof collection.props.toJSON === 'function')
-					? collection.props.toJSON()
-					: {};
-				query.paged = 1;
-				query.fs_media_folder_id = v;
-				query.fs_media_folder = v;
-				wp.media.ajax('query-attachments', { query: query })
-					.done(function(items) {
-						collection.reset(items || []);
-					});
 			}
 
 			function injectProofNode() {
@@ -553,30 +534,8 @@ add_filter('ajax_query_attachments_args', function (array $args): array {
 
 	$folder_id = 0;
 	$request = wp_unslash($_REQUEST);
-	$is_query_attachments_ajax = wp_doing_ajax()
-		&& isset($request['action'])
-		&& (string) $request['action'] === 'query-attachments';
-
-	if ($is_query_attachments_ajax) {
-		if (isset($request['query']) && is_array($request['query']) && !empty($request['query']['fs_media_folder_id'])) {
-			$folder_id = absint($request['query']['fs_media_folder_id']);
-		} elseif (isset($request['query']) && is_array($request['query']) && !empty($request['query']['fs_media_folder'])) {
-			$folder_id = absint($request['query']['fs_media_folder']);
-		}
-	} else {
-		if (isset($request['query']) && is_array($request['query']) && !empty($request['query']['fs_media_folder_id'])) {
-			$folder_id = absint($request['query']['fs_media_folder_id']);
-		} elseif (isset($request['query']) && is_array($request['query']) && !empty($request['query']['fs_media_folder'])) {
-			$folder_id = absint($request['query']['fs_media_folder']);
-		} elseif (!empty($request['fs_media_folder_id'])) {
-			$folder_id = absint($request['fs_media_folder_id']);
-		} elseif (!empty($request['fs_media_folder'])) {
-			$folder_id = absint($request['fs_media_folder']);
-		} elseif (!empty($_GET['fs_media_folder_id'])) {
-			$folder_id = absint($_GET['fs_media_folder_id']);
-		} elseif (!empty($_GET['fs_media_folder'])) {
-			$folder_id = absint($_GET['fs_media_folder']);
-		}
+	if (isset($request['query']) && is_array($request['query']) && isset($request['query']['fs_media_folder_id'])) {
+		$folder_id = absint($request['query']['fs_media_folder_id']);
 	}
 
 	if ($folder_id <= 0 || !taxonomy_exists(FS_MEDIA_FOLDER_TAXONOMY)) {
@@ -591,7 +550,7 @@ add_filter('ajax_query_attachments_args', function (array $args): array {
 		'taxonomy' => FS_MEDIA_FOLDER_TAXONOMY,
 		'field' => 'term_id',
 		'terms' => [$folder_id],
-		'include_children' => true,
+		'include_children' => false,
 	];
 
 	$args['tax_query'] = $tax_query;
