@@ -1310,8 +1310,8 @@ msgstr "Der Debug-Modus ist aktiv. In Produktion deaktivieren."
 msgid "Xdebug is enabled. Disable it in production for better performance."
 msgstr "Xdebug ist aktiv. In Produktion für bessere Performance deaktivieren."
 
-msgid "OPcache is not loaded in this PHP. Use “Open PHP info” to see the web server’s configuration (it can differ from the command-line)."
-msgstr "OPcache ist in dieser PHP-Installation nicht geladen. Mit „PHP-Info öffnen“ siehst du die Konfiguration des Webservers (sie kann sich von der Kommandozeile unterscheiden)."
+msgid "Install PHP OPcache for significantly better performance."
+msgstr "Installiere PHP OPcache für deutlich bessere Leistung."
 
 msgid "Not loaded"
 msgstr "Nicht geladen"
