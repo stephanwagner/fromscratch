@@ -142,6 +142,128 @@ add_filter('media_view_settings', function (array $settings): array {
 });
 
 /**
+ * TEMP DEBUG: make media modal visually obvious to confirm hook execution.
+ * Remove this block after verification.
+ */
+add_action('admin_head', function (): void {
+	if (!is_admin()) {
+		return;
+	}
+	?>
+	<style id="fs-media-modal-debug-proof">
+		.media-modal {
+			outline: 8px solid #e30000 !important;
+			box-shadow: 0 0 0 6px #ffcc00 !important;
+		}
+
+		.media-modal .media-frame-title h1::before {
+			content: "FS HOOKED - ";
+			color: #e30000;
+			font-weight: 800;
+			margin-right: 4px;
+		}
+
+		.media-modal .media-frame-router,
+		.media-modal .media-toolbar {
+			background: #fff3f3 !important;
+		}
+
+		.media-modal .attachments-browser.fs-modal-sidebar-layout #fs-media-modal-proof {
+			position: absolute;
+			left: 0;
+			top: 50px;
+			bottom: 0;
+			width: 220px;
+			box-sizing: border-box;
+			overflow: auto;
+			padding: 12px;
+			background: #ff00c8;
+			color: #fff;
+			border-right: 4px solid #000;
+			box-shadow: inset -2px 0 0 #fff;
+			z-index: 3;
+		}
+
+		.media-modal .attachments-browser.fs-modal-sidebar-layout .attachments-wrapper,
+		.media-modal .attachments-browser.fs-modal-sidebar-layout .uploader-inline {
+			margin-left: 220px;
+		}
+	</style>
+	<?php
+});
+
+/**
+ * TEMP DEBUG: inject a visible node into the media modal DOM.
+ */
+add_action('admin_footer', function (): void {
+	if (!is_admin()) {
+		return;
+	}
+	?>
+	<script>
+	(function () {
+		function injectProofNode() {
+			var browser = document.querySelector('.media-modal .attachments-browser');
+			if (!browser) {
+				return;
+			}
+			if (browser.querySelector('#fs-media-modal-proof')) {
+				return;
+			}
+			browser.classList.add('fs-modal-sidebar-layout');
+			var proof = document.createElement('div');
+			proof.id = 'fs-media-modal-proof';
+			proof.innerHTML = '<div style="font-size:13px;font-weight:900;letter-spacing:.4px;margin-bottom:8px;">FS MODAL SIDEBAR ACTIVE</div><div style="font-size:12px;line-height:1.35;">This is the left area where media folders will be rendered.</div>';
+			browser.appendChild(proof);
+		}
+		injectProofNode();
+		var obs = new MutationObserver(injectProofNode);
+		obs.observe(document.body, { childList: true, subtree: true });
+	})();
+	</script>
+	<?php
+});
+
+/**
+ * Debug probe: inject a tiny marker into media modal toolbar.
+ * Remove after modal integration is confirmed.
+ */
+add_action('print_media_templates', function (): void {
+	if (!is_admin()) {
+		return;
+	}
+	?>
+	<script>
+	(function(wp) {
+		if (!wp || !wp.media || !wp.media.view || !wp.media.view.AttachmentsBrowser) {
+			return;
+		}
+		if (wp.media.view.AttachmentsBrowser.prototype.__fsModalProbePatched) {
+			return;
+		}
+		var originalCreateToolbar = wp.media.view.AttachmentsBrowser.prototype.createToolbar;
+		wp.media.view.AttachmentsBrowser.prototype.createToolbar = function() {
+			originalCreateToolbar.apply(this, arguments);
+			if (!this.toolbar || this.toolbar.get('fsModalProbe')) {
+				return;
+			}
+			var probeView = new wp.media.View({
+				tagName: 'span',
+				className: 'button button-small',
+				attributes: {
+					style: 'margin-left:8px;pointer-events:none;opacity:.85;'
+				}
+			});
+			probeView.$el.text('FS modal test');
+			this.toolbar.set('fsModalProbe', probeView, { priority: 200 });
+		};
+		wp.media.view.AttachmentsBrowser.prototype.__fsModalProbePatched = true;
+	})(window.wp);
+	</script>
+	<?php
+});
+
+/**
  * Filter media attachments in list/grid mode by selected folder.
  */
 add_filter('ajax_query_attachments_args', function (array $args): array {
