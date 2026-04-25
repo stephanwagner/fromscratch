@@ -29,8 +29,75 @@ add_action('init', function () {
 		'show_in_quick_edit' => false,
 		'show_in_rest' => true,
 		'rewrite' => false,
+		'update_count_callback' => 'fs_media_folders_update_term_count',
 	]);
 }, 10);
+
+/**
+ * Keep folder counts accurate for attachments (including inherited/unattached media).
+ *
+ * WordPress core generic callbacks can undercount attachment taxonomies depending on post status.
+ * We count relationships directly against attachment posts and ignore only trashed attachments.
+ *
+ * @param array<int|string> $tt_ids
+ */
+function fs_media_folders_update_term_count(array $tt_ids, WP_Taxonomy $taxonomy): void
+{
+	global $wpdb;
+	if (!$wpdb instanceof wpdb || empty($tt_ids)) {
+		return;
+	}
+
+	$tt_ids = array_values(array_filter(array_map('intval', $tt_ids), static fn (int $id): bool => $id > 0));
+	if (empty($tt_ids)) {
+		return;
+	}
+
+	foreach ($tt_ids as $tt_id) {
+		$count = (int) $wpdb->get_var($wpdb->prepare(
+			"SELECT COUNT(DISTINCT tr.object_id)
+			FROM {$wpdb->term_relationships} tr
+			INNER JOIN {$wpdb->posts} p ON p.ID = tr.object_id
+			WHERE tr.term_taxonomy_id = %d
+			  AND p.post_type = 'attachment'
+			  AND p.post_status <> 'trash'",
+			$tt_id
+		));
+
+		$wpdb->update(
+			$wpdb->term_taxonomy,
+			['count' => $count],
+			['term_taxonomy_id' => $tt_id],
+			['%d'],
+			['%d']
+		);
+	}
+
+	clean_term_cache($tt_ids, $taxonomy->name, false);
+}
+
+/**
+ * Recount all media-folder terms periodically so existing folders recover from stale counts.
+ */
+add_action('admin_init', function (): void {
+	if (!is_admin() || !taxonomy_exists(FS_MEDIA_FOLDER_TAXONOMY) || get_transient('fs_media_folder_counts_recounted')) {
+		return;
+	}
+	$tt_ids = get_terms([
+		'taxonomy' => FS_MEDIA_FOLDER_TAXONOMY,
+		'hide_empty' => false,
+		'fields' => 'tt_ids',
+	]);
+	if (is_wp_error($tt_ids) || empty($tt_ids) || !is_array($tt_ids)) {
+		set_transient('fs_media_folder_counts_recounted', '1', 10 * MINUTE_IN_SECONDS);
+		return;
+	}
+	$tax = get_taxonomy(FS_MEDIA_FOLDER_TAXONOMY);
+	if ($tax instanceof WP_Taxonomy) {
+		fs_media_folders_update_term_count(array_map('intval', $tt_ids), $tax);
+	}
+	set_transient('fs_media_folder_counts_recounted', '1', 10 * MINUTE_IN_SECONDS);
+});
 
 /**
  * Get active media folder filter from request.
@@ -50,6 +117,8 @@ function fs_media_folders_set_attachment_folder(int $attachment_id, $raw_folder_
 	if (!taxonomy_exists(FS_MEDIA_FOLDER_TAXONOMY) || $attachment_id <= 0) {
 		return;
 	}
+	$before_ids = wp_get_object_terms($attachment_id, FS_MEDIA_FOLDER_TAXONOMY, ['fields' => 'ids']);
+	$before_ids = is_wp_error($before_ids) ? [] : array_map('intval', $before_ids);
 
 	if (is_array($raw_folder_value)) {
 		$raw_folder_value = reset($raw_folder_value);
@@ -60,10 +129,15 @@ function fs_media_folders_set_attachment_folder(int $attachment_id, $raw_folder_
 
 	if ($folder_id <= 0) {
 		wp_set_object_terms($attachment_id, [], FS_MEDIA_FOLDER_TAXONOMY, false);
+		if (!empty($before_ids)) {
+			wp_update_term_count_now($before_ids, FS_MEDIA_FOLDER_TAXONOMY);
+		}
 		return;
 	}
 
 	wp_set_object_terms($attachment_id, [$folder_id], FS_MEDIA_FOLDER_TAXONOMY, false);
+	$refresh_ids = array_values(array_unique(array_merge($before_ids, [$folder_id])));
+	wp_update_term_count_now($refresh_ids, FS_MEDIA_FOLDER_TAXONOMY);
 }
 
 /**
@@ -238,15 +312,26 @@ add_action('admin_footer', function (): void {
 	<script>
 	(function (folders) {
 		function getActiveProps() {
-			if (!window.wp || !wp.media || !wp.media.frame || typeof wp.media.frame.state !== 'function') {
+			if (!window.wp || !wp.media || !wp.media.frame) {
 				return null;
 			}
-			var state = wp.media.frame.state();
-			if (!state || typeof state.get !== 'function') {
-				return null;
+			var frame = wp.media.frame;
+			if (frame.content && typeof frame.content.get === 'function') {
+				var content = frame.content.get();
+				if (content && content.collection && content.collection.props) {
+					return content.collection.props;
+				}
 			}
-			var lib = state.get('library');
-			return lib && lib.props ? lib.props : null;
+			if (typeof frame.state === 'function') {
+				var state = frame.state();
+				if (state && typeof state.get === 'function') {
+					var lib = state.get('library');
+					if (lib && lib.props) {
+						return lib.props;
+					}
+				}
+			}
+			return null;
 		}
 
 		function selectedFolderId() {
@@ -275,6 +360,13 @@ add_action('admin_footer', function (): void {
 			});
 			if (typeof props.trigger === 'function') {
 				props.trigger('change');
+			}
+			// Force refresh for modal collections that don't react to custom prop changes.
+			if (window.wp && wp.media && wp.media.frame && wp.media.frame.content && typeof wp.media.frame.content.get === 'function') {
+				var c = wp.media.frame.content.get();
+				if (c && c.collection && typeof c.collection._requery === 'function') {
+					c.collection._requery(true);
+				}
 			}
 		}
 
