@@ -91,90 +91,187 @@ function fs_admin_notice_print_client_assets(): void
 	$printed = true;
 	$pos = fs_admin_notice_position_vars();
 	$dismiss = esc_attr__('Dismiss notice', 'fromscratch');
-	?>
+?>
 	<style id="fs-admin-notice--base">
-	#fs-admin-notice-root.fs-admin-notice { position: fixed; z-index: 100050; left: 20px; right: 20px; top: <?= esc_attr($pos['top']) ?>; max-width: 42rem; margin: 0 auto; box-shadow: 0 1px 1px rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.1); border-radius: 1px; border-left: 4px solid var(--fs-an-border, #50575e); background: #fff; color: #1d2327; font-size: 13px; line-height: 1.5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; transform: translateY(calc(-100% - 1rem)); opacity: 0; pointer-events: none; transition: transform 0.38s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.32s ease; will-change: transform, opacity; }
-	#fs-admin-notice-root.fs-admin-notice.is-open { transform: translateY(0); opacity: 1; pointer-events: auto; }
-	#fs-admin-notice-root.fs-admin-notice.is-closed { transform: translateY(calc(-100% - 1rem)) !important; opacity: 0 !important; pointer-events: none; transition-duration: 0.28s; }
-	#fs-admin-notice-root.fs-admin-notice--success { --fs-an-border: #00a32a; background: #edfaef; }
-	#fs-admin-notice-root.fs-admin-notice--error { --fs-an-border: #d63638; background: #fcf0f1; }
-	#fs-admin-notice-root.fs-admin-notice--warning { --fs-an-border: #dba617; background: #fcf9e8; }
-	#fs-admin-notice-root.fs-admin-notice--info { --fs-an-border: #72aee6; background: #f0f6fc; }
-	#fs-admin-notice-root .fs-admin-notice__inner { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.5rem 0.75rem 0.5rem 0.5rem; }
-	#fs-admin-notice-root .fs-admin-notice__message { flex: 1; margin: 0; padding: 0.1rem 0; }
-	#fs-admin-notice-root .fs-admin-notice__dismiss { flex-shrink: 0; min-width: 1.5rem; height: 1.5rem; margin: 0.1rem 0 0; padding: 0; border: 0; background: transparent; color: #646970; cursor: pointer; font-size: 1.1rem; line-height: 1; border-radius: 2px; }
-	#fs-admin-notice-root .fs-admin-notice__dismiss:hover, #fs-admin-notice-root .fs-admin-notice__dismiss:focus { color: #1d2327; outline: 1px solid currentColor; outline-offset: 0; }
-	@media (max-width: 782px) { #fs-admin-notice-root.fs-admin-notice { top: <?= esc_attr($pos['top_mobile']) ?>; } }
+		#fs-admin-notice-root.fs-admin-notice {
+			transform: translateX(64px);
+			position: fixed;
+			z-index: 100050;
+			right: 12px;
+			left: auto;
+			top: <?= esc_attr($pos['top']) ?>;
+			max-width: min(460px, calc(100vw - 30px));
+			box-shadow: 0 1px 1px rgba(0, 0, 0, .04), 0 1px 3px rgba(0, 0, 0, .1);
+			border: 1px solid var(--fs-an-border, #50575e);
+			border-left: 4px solid var(--fs-an-border, #50575e);
+			border-radius: 6px;
+			background: #fff;
+			color: #1d2327;
+			font-size: 13px;
+			line-height: 1.5;
+			opacity: 0;
+			pointer-events: none;
+			transition: transform 320ms, opacity 320ms;
+			will-change: transform, opacity;
+		}
+
+		#fs-admin-notice-root.fs-admin-notice.is-open {
+			transform: translateX(0);
+			opacity: 1;
+			pointer-events: auto;
+		}
+
+		#fs-admin-notice-root.fs-admin-notice.is-closed {
+			opacity: 0 !important;
+			pointer-events: none;
+		}
+
+		#fs-admin-notice-root.fs-admin-notice--success {
+			--fs-an-border: #00a32a;
+			background: #edfaef;
+		}
+
+		#fs-admin-notice-root.fs-admin-notice--error {
+			--fs-an-border: #d63638;
+			background: #fcf0f1;
+		}
+
+		#fs-admin-notice-root.fs-admin-notice--warning {
+			--fs-an-border: #dba617;
+			background: #fcf9e8;
+		}
+
+		#fs-admin-notice-root.fs-admin-notice--info {
+			--fs-an-border: #72aee6;
+			background: #f0f6fc;
+		}
+
+		#fs-admin-notice-root .fs-admin-notice__inner {
+			display: flex;
+			align-items: center;
+			gap: 16px;
+			padding: 8px 8px 8px 12px;
+			font-weight: 500;
+		}
+
+		#fs-admin-notice-root .fs-admin-notice__message {
+			flex: 1;
+			margin: 0;
+			padding: 0;
+		}
+
+		#fs-admin-notice-root .fs-admin-notice__dismiss {
+			flex-shrink: 0;
+			height: 24px;
+			width: 24px;
+			margin: 0;
+			padding: 0;
+			border: 0;
+			background: transparent;
+			color: #646970;
+			cursor: pointer;
+			border-radius: 2px;
+			align-self: top;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			align-self: flex-start;
+		}
+
+		#fs-admin-notice-root .fs-admin-notice__dismiss svg {
+			display: block;
+			width: 14px;
+			height: 14px;
+		}
+
+		#fs-admin-notice-root .fs-admin-notice__dismiss:hover,
+		#fs-admin-notice-root .fs-admin-notice__dismiss:focus {
+			color: #1d2327;
+		}
+
+		@media (max-width: 782px) {
+			#fs-admin-notice-root.fs-admin-notice {
+				top: <?= esc_attr($pos['top_mobile']) ?>;
+			}
+		}
 	</style>
 	<script>
-	(function () {
-		var dismissLabel = <?= wp_json_encode($dismiss, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
-		window.fsAdminNoticeShow = window.fsAdminNoticeShow || function (type, message) {
-			var ok = { success: 1, error: 1, warning: 1, info: 1 };
-			if (!ok[type]) {
-				type = 'info';
-			}
-			message = String(message || '').replace(/^\s+|\s+$/g, '');
-			if (!message) {
-				return;
-			}
-			var existing = document.getElementById('fs-admin-notice-root');
-			if (existing && existing.parentNode) {
-				existing.parentNode.removeChild(existing);
-			}
-			var root = document.createElement('div');
-			root.id = 'fs-admin-notice-root';
-			root.className = 'fs-admin-notice fs-admin-notice--' + type;
-			root.setAttribute('role', type === 'error' ? 'alert' : 'status');
-			root.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
-			var inner = document.createElement('div');
-			inner.className = 'fs-admin-notice__inner';
-			var p = document.createElement('p');
-			p.className = 'fs-admin-notice__message';
-			p.textContent = message;
-			var btn = document.createElement('button');
-			btn.type = 'button';
-			btn.className = 'fs-admin-notice__dismiss';
-			btn.setAttribute('aria-label', dismissLabel);
-			btn.appendChild(document.createTextNode('\u00d7'));
-			inner.appendChild(p);
-			inner.appendChild(btn);
-			root.appendChild(inner);
-			document.body.appendChild(root);
-			var autoTimer = null;
-			var done = false;
-			function removeNode() {
-				if (root && root.parentNode) {
-					root.parentNode.removeChild(root);
+		(function() {
+			var dismissLabel = <?= wp_json_encode($dismiss, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+			window.fsAdminNoticeShow = window.fsAdminNoticeShow || function(type, message) {
+				var ok = {
+					success: 1,
+					error: 1,
+					warning: 1,
+					info: 1
+				};
+				if (!ok[type]) {
+					type = 'info';
 				}
-			}
-			function close() {
-				if (done) {
+				message = String(message || '').replace(/^\s+|\s+$/g, '');
+				if (!message) {
 					return;
 				}
-				done = true;
-				if (autoTimer !== null) {
-					clearTimeout(autoTimer);
-					autoTimer = null;
+				var existing = document.getElementById('fs-admin-notice-root');
+				if (existing && existing.parentNode) {
+					existing.parentNode.removeChild(existing);
 				}
-				root.classList.remove('is-open');
-				root.classList.add('is-closed');
-				setTimeout(removeNode, 320);
-			}
-			function show() {
-				requestAnimationFrame(function () {
-					requestAnimationFrame(function () {
-						root.classList.add('is-open');
-						autoTimer = setTimeout(close, 6000);
+				var root = document.createElement('div');
+				root.id = 'fs-admin-notice-root';
+				root.className = 'fs-admin-notice fs-admin-notice--' + type;
+				root.setAttribute('role', type === 'error' ? 'alert' : 'status');
+				root.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
+				var inner = document.createElement('div');
+				inner.className = 'fs-admin-notice__inner';
+				var p = document.createElement('p');
+				p.className = 'fs-admin-notice__message';
+				p.textContent = message;
+				var btn = document.createElement('button');
+				btn.type = 'button';
+				btn.className = 'fs-admin-notice__dismiss';
+				btn.setAttribute('aria-label', dismissLabel);
+				btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M480-424 284-228q-11 11-28 11t-28-11q-11-11-11-28t11-28l196-196-196-196q-11-11-11-28t11-28q11-11 28-11t28 11l196 196 196-196q11-11 28-11t28 11q11 11 11 28t-11 28L536-480l196 196q11 11 11 28t-11 28q-11 11-28 11t-28-11L480-424Z"></path></svg>';
+				inner.appendChild(p);
+				inner.appendChild(btn);
+				root.appendChild(inner);
+				document.body.appendChild(root);
+				var autoTimer = null;
+				var done = false;
+
+				function removeNode() {
+					if (root && root.parentNode) {
+						root.parentNode.removeChild(root);
+					}
+				}
+
+				function close() {
+					if (done) {
+						return;
+					}
+					done = true;
+					if (autoTimer !== null) {
+						clearTimeout(autoTimer);
+						autoTimer = null;
+					}
+					root.classList.remove('is-open');
+					root.classList.add('is-closed');
+					setTimeout(removeNode, 320);
+				}
+
+				function show() {
+					requestAnimationFrame(function() {
+						requestAnimationFrame(function() {
+							root.classList.add('is-open');
+							autoTimer = setTimeout(close, 6000);
+						});
 					});
-				});
-			}
-			show();
-			btn.addEventListener('click', close);
-		};
-	})();
+				}
+				show();
+				btn.addEventListener('click', close);
+			};
+		})();
 	</script>
-	<?php
+<?php
 }
 
 /**
@@ -202,15 +299,15 @@ function fs_admin_notice_maybe_output(): void
 	}
 	$type    = $data['type'];
 	$message = $data['message'];
-	?>
+?>
 	<script>
-	(function () {
-		if (typeof window.fsAdminNoticeShow === 'function') {
-			window.fsAdminNoticeShow(<?= wp_json_encode($type, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>, <?= wp_json_encode($message, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>);
-		}
-	})();
+		(function() {
+			if (typeof window.fsAdminNoticeShow === 'function') {
+				window.fsAdminNoticeShow(<?= wp_json_encode($type, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>, <?= wp_json_encode($message, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>);
+			}
+		})();
 	</script>
-	<?php
+<?php
 }
 
 add_action('admin_footer', 'fs_admin_notice_print_client_assets', 0);
