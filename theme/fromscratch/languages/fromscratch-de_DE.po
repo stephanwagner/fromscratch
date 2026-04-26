@@ -1894,6 +1894,9 @@ msgstr "Du hast keine Berechtigung, Medienordner anzulegen."
 msgid "Delete folder"
 msgstr "Ordner löschen"
 
+msgid "Delete folder \"%s\"?"
+msgstr "Ordner \"%s\" löschen?"
+
 msgid "Media folder taxonomy not available."
 msgstr "Medienordner-Taxonomie ist nicht verfügbar."
 

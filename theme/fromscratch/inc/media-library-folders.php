@@ -1072,7 +1072,7 @@ add_action('admin_footer-upload.php', function (): void {
 	<div id="fs-media-folder-delete-modal" class="fs-media-folder-delete-modal" aria-hidden="true">
 		<div class="fs-media-folder-delete-backdrop" data-modal-close></div>
 		<div class="fs-media-folder-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="fs-media-folder-delete-title">
-			<h2 id="fs-media-folder-delete-title"><?= esc_html__('Delete folder?', 'fromscratch') ?></h2>
+			<h2 id="fs-media-folder-delete-title"><?= esc_html__('Delete folder', 'fromscratch') ?></h2>
 			<p id="fs-media-folder-delete-text"></p>
 			<div class="fs-media-folder-delete-actions">
 				<button type="button" class="button" data-modal-close><?= esc_html__('Cancel', 'fromscratch') ?></button>
@@ -1183,10 +1183,13 @@ add_action('admin_footer-upload.php', function (): void {
 			}
 
 			function openModal(name, count, deleteUrl) {
-				var countText = parseInt(count, 10) > 0 ?
+				var countText = '';
+				countText += <?= wp_json_encode( __( 'Delete folder "%s"?', 'fromscratch' ), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ) ?>.replace('%s', name);
+				countText += ' ';
+				countText += parseInt(count, 10) > 0 ?
 					'<?= esc_js(__('This will also remove folder assignments from the contained files.', 'fromscratch')) ?>' :
 					'<?= esc_js(__('The folder is empty.', 'fromscratch')) ?>';
-				modalText.textContent = '<?= esc_js(__('Delete folder', 'fromscratch')) ?> "' + name + '"? ' + countText;
+				modalText.textContent = countText;
 				modalConfirm.setAttribute('href', deleteUrl);
 				modal.classList.add('is-open');
 				modal.setAttribute('aria-hidden', 'false');

@@ -202,11 +202,16 @@
 .upload-php .fs-media-folder-delete-dialog {
   position: relative;
   background: #fff;
-  width: min(520px, calc(100vw - 32px));
+  width: 480px;
+  max-width: calc(100vw - 64px);
   margin: 10vh auto 0;
   padding: 16px;
   border-radius: 6px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+
+  h2 {
+    margin: 0 0 12px;
+  }
 }
 
 .upload-php .fs-media-folder-delete-actions {
