@@ -1973,6 +1973,15 @@ msgstr "Ungültiger Ordner."
 msgid "Could not update folder."
 msgstr "Der Ordner konnte nicht aktualisiert werden."
 
+msgid "Folder assignment saved."
+msgstr "Ordnerzuweisung gespeichert."
+
+msgid "Could not complete the request. Try again."
+msgstr "Die Anfrage konnte nicht abgeschlossen werden. Bitte erneut versuchen."
+
+msgid "You do not have permission to do this."
+msgstr "Du hast keine Berechtigung für diese Aktion."
+
 # Event CPT: block editor document panel (inc/events.php → fromscratchEvents)
 msgid "Event"
 msgstr "Veranstaltung"

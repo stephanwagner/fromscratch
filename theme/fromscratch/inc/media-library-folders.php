@@ -768,7 +768,10 @@ add_action('wp_ajax_fs_media_folder_assign', function (): void {
 		}
 	}
 	fs_media_folders_set_attachment_folder($attachment_id, $folder_id);
-	wp_send_json_success(['folder_id' => $folder_id]);
+	wp_send_json_success([
+		'folder_id' => $folder_id,
+		'message'   => __('Folder assignment saved.', 'fromscratch'),
+	]);
 });
 
 /**
@@ -1052,7 +1055,6 @@ add_action('admin_footer-upload.php', function (): void {
 				]);
 				?>
 			</p>
-			<p class="fs-media-folder-assign-error" id="fs-media-folder-assign-error" role="alert" hidden></p>
 			<div class="fs-media-folder-assign-actions">
 				<button type="button" class="button" data-modal-close><?= esc_html__('Cancel', 'fromscratch') ?></button>
 				<button type="button" class="button button-primary" id="fs-media-folder-assign-save"><?= esc_html__('Save', 'fromscratch') ?></button>
@@ -1232,7 +1234,6 @@ add_action('admin_footer-upload.php', function (): void {
 			var assignModal = document.getElementById('fs-media-folder-assign-modal');
 			var assignFolderSelect = document.getElementById('fs_media_assign_folder_id');
 			var assignSaveBtn = document.getElementById('fs-media-folder-assign-save');
-			var assignError = document.getElementById('fs-media-folder-assign-error');
 			var assignAttachmentId = 0;
 			var assignTriggerLink = null;
 			var createModal = document.getElementById('fs-media-folder-create-modal');
@@ -1308,10 +1309,6 @@ add_action('admin_footer-upload.php', function (): void {
 				assignModal.classList.remove('is-open');
 				assignModal.setAttribute('aria-hidden', 'true');
 				assignAttachmentId = 0;
-				if (assignError) {
-					assignError.textContent = '';
-					assignError.hidden = true;
-				}
 				if (wasOpen && assignTriggerLink && typeof assignTriggerLink.focus === 'function') {
 					assignTriggerLink.focus();
 				}
@@ -1328,10 +1325,6 @@ add_action('admin_footer-upload.php', function (): void {
 				assignAttachmentId = parseInt(linkEl.getAttribute('data-attachment-id') || '0', 10) || 0;
 				var cur = parseInt(linkEl.getAttribute('data-current-folder') || '0', 10) || 0;
 				assignFolderSelect.value = String(cur);
-				if (assignError) {
-					assignError.textContent = '';
-					assignError.hidden = true;
-				}
 				assignModal.classList.add('is-open');
 				assignModal.setAttribute('aria-hidden', 'false');
 				assignFolderSelect.focus();
@@ -1403,10 +1396,6 @@ add_action('admin_footer-upload.php', function (): void {
 						return;
 					}
 					var folderVal = assignFolderSelect.value || '0';
-					if (assignError) {
-						assignError.textContent = '';
-						assignError.hidden = true;
-					}
 					assignSaveBtn.disabled = true;
 					var params = new URLSearchParams();
 					params.set('action', 'fs_media_folder_assign');
@@ -1424,31 +1413,35 @@ add_action('admin_footer-upload.php', function (): void {
 						return r.json();
 					}).then(function(payload) {
 						assignSaveBtn.disabled = false;
+						function showNotice(t, m) {
+							if (typeof window.fsAdminNoticeShow === 'function' && m) {
+								window.fsAdminNoticeShow(t, m);
+							}
+						}
 						if (payload && payload.success) {
 							var newId = payload.data && typeof payload.data.folder_id !== 'undefined' ? parseInt(payload.data.folder_id, 10) || 0 : parseInt(folderVal, 10) || 0;
 							if (assignTriggerLink) {
 								assignTriggerLink.setAttribute('data-current-folder', String(newId));
 							}
+							var okMsg = (payload.data && payload.data.message) ? String(payload.data.message) : <?= wp_json_encode(__('Folder assignment saved.', 'fromscratch'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+							showNotice('success', okMsg);
 							closeAssignModal();
 						} else {
-							var msg = <?= wp_json_encode(__('Could not update folder.', 'fromscratch'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+							var errMsg = <?= wp_json_encode(__('Could not update folder.', 'fromscratch'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 							if (payload && payload.data) {
 								if (typeof payload.data.message === 'string' && payload.data.message) {
-									msg = payload.data.message;
+									errMsg = payload.data.message;
 								} else if (payload.data[0] && typeof payload.data[0] === 'string') {
-									msg = payload.data[0];
+									errMsg = payload.data[0];
 								}
 							}
-							if (assignError) {
-								assignError.textContent = msg;
-								assignError.hidden = false;
-							}
+							showNotice('error', errMsg);
 						}
 					}).catch(function() {
 						assignSaveBtn.disabled = false;
-						if (assignError) {
-							assignError.textContent = <?= wp_json_encode(__('Could not update folder.', 'fromscratch'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
-							assignError.hidden = false;
+						var fail = <?= wp_json_encode(__('Could not complete the request. Try again.', 'fromscratch'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+						if (typeof window.fsAdminNoticeShow === 'function') {
+							window.fsAdminNoticeShow('error', fail);
 						}
 					});
 				});
