@@ -1982,6 +1982,9 @@ msgstr "Die Anfrage konnte nicht abgeschlossen werden. Bitte erneut versuchen."
 msgid "You do not have permission to do this."
 msgstr "Du hast keine Berechtigung für diese Aktion."
 
+msgid "Not in a folder"
+msgstr "Ohne Ordner"
+
 # Event CPT: block editor document panel (inc/events.php → fromscratchEvents)
 msgid "Event"
 msgstr "Veranstaltung"

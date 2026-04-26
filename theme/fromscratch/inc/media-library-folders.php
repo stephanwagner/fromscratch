@@ -108,6 +108,41 @@ function fs_media_folders_current_id(): int
 }
 
 /**
+ * Whether the library is filtered to attachments with no fs_media_folder term.
+ */
+function fs_media_folders_is_unassigned_filter(): bool
+{
+	return isset($_GET['fs_media_folder_unassigned']) && (string) wp_unslash($_GET['fs_media_folder_unassigned']) === '1';
+}
+
+/**
+ * Count attachments that have no media folder assigned.
+ */
+function fs_media_folders_count_unassigned(): int
+{
+	if (!taxonomy_exists(FS_MEDIA_FOLDER_TAXONOMY)) {
+		return 0;
+	}
+	$q = new WP_Query([
+		'post_type'              => 'attachment',
+		'post_status'            => 'inherit',
+		'posts_per_page'         => 1,
+		'fields'                 => 'ids',
+		'no_found_rows'          => false,
+		'update_post_meta_cache' => false,
+		'update_post_term_cache' => false,
+		'tax_query'              => [
+			[
+				'taxonomy' => FS_MEDIA_FOLDER_TAXONOMY,
+				'operator' => 'NOT EXISTS',
+			],
+		],
+	]);
+
+	return (int) $q->found_posts;
+}
+
+/**
  * Assign an attachment to a folder term (or clear it).
  *
  * @param mixed $raw_folder_value
@@ -195,17 +230,24 @@ add_filter('media_view_settings', function (array $settings): array {
 		return $settings;
 	}
 
-	$folder_id = fs_media_folders_current_id();
-	if ($folder_id <= 0) {
-		return $settings;
-	}
-
 	if (!isset($settings['library']) || !is_array($settings['library'])) {
 		$settings['library'] = [];
 	}
 	if (!isset($settings['query']) || !is_array($settings['query'])) {
 		$settings['query'] = [];
 	}
+
+	if (fs_media_folders_is_unassigned_filter()) {
+		$settings['library']['fs_media_folder_unassigned'] = 1;
+		$settings['query']['fs_media_folder_unassigned'] = 1;
+		return $settings;
+	}
+
+	$folder_id = fs_media_folders_current_id();
+	if ($folder_id <= 0) {
+		return $settings;
+	}
+
 	// Keep both keys for media-grid compatibility across request shapes.
 	$settings['library']['fs_media_folder_id'] = $folder_id;
 	$settings['query']['fs_media_folder_id'] = $folder_id;
@@ -372,6 +414,7 @@ add_action('admin_footer', function (): void {
 		'i18n' => [
 			'heading' => __('Folders', 'fromscratch'),
 			'allFiles' => __('All files', 'fromscratch'),
+			'notInFolder' => __('Not in a folder', 'fromscratch'),
 		],
 	];
 ?>
@@ -398,7 +441,8 @@ add_action('admin_footer', function (): void {
 					originalInit.apply(this, arguments);
 					if (this.props && typeof this.props.set === 'function') {
 						this.props.set({
-							fs_media_folder_id: this.props.get('fs_media_folder_id') || 0
+							fs_media_folder_id: this.props.get('fs_media_folder_id') || 0,
+							fs_media_folder_unassigned: this.props.get('fs_media_folder_unassigned') || 0
 						});
 					}
 				};
@@ -408,6 +452,13 @@ add_action('admin_footer', function (): void {
 					options.data = options.data || {};
 					options.data.query = options.data.query || {};
 					var props = (this.props && typeof this.props.toJSON === 'function') ? this.props.toJSON() : {};
+					if (props.fs_media_folder_unassigned) {
+						options.data.query.fs_media_folder_unassigned = 1;
+						options.data.fs_media_folder_unassigned = 1;
+					} else {
+						delete options.data.query.fs_media_folder_unassigned;
+						delete options.data.fs_media_folder_unassigned;
+					}
 					if (props.fs_media_folder_id) {
 						options.data.query.fs_media_folder_id = props.fs_media_folder_id;
 						options.data.fs_media_folder_id = props.fs_media_folder_id;
@@ -454,6 +505,15 @@ add_action('admin_footer', function (): void {
 				return state;
 			}
 
+			function isUnassignedFilterActive() {
+				var props = getActiveProps();
+				if (!props || typeof props.get !== 'function') {
+					return false;
+				}
+				var u = props.get('fs_media_folder_unassigned');
+				return u === 1 || u === '1' || u === true;
+			}
+
 			function selectedFolderId() {
 				var props = getActiveProps();
 				if (!props || typeof props.get !== 'function') {
@@ -464,13 +524,13 @@ add_action('admin_footer', function (): void {
 				return isNaN(id) || id < 1 ? 0 : id;
 			}
 
-			function applyFolder(id) {
+			function applyFolder(id, unassignedOnly) {
 				var state = getActiveState();
 				if (!state || !window.wp || !wp.media || typeof wp.media.query !== 'function') {
 					return;
 				}
 				var folderId = id > 0 ? id : 0;
-				var library = wp.media.query({
+				var queryArgs = {
 					post_type: 'attachment',
 					post_status: 'inherit',
 					orderby: 'date',
@@ -478,7 +538,12 @@ add_action('admin_footer', function (): void {
 					per_page: 40,
 					paged: 1,
 					fs_media_folder_id: folderId
-				});
+				};
+				if (unassignedOnly) {
+					queryArgs.fs_media_folder_unassigned = 1;
+					queryArgs.fs_media_folder_id = 0;
+				}
+				var library = wp.media.query(queryArgs);
 				state.set('library', library);
 				if (window.wp.media.frame && wp.media.frame.content && typeof wp.media.frame.content.render === 'function') {
 					wp.media.frame.content.render();
@@ -531,6 +596,7 @@ add_action('admin_footer', function (): void {
 				var html = '<div class="fs-media-modal-folders__heading">' + fsEsc(L.heading || 'Folders') + '</div>';
 				html += '<ul class="fs-media-modal-folders__list">';
 				html += '<li class="fs-media-modal-folders__item"><button type="button" class="fs-media-modal-folder-btn" data-folder-id="0">' + fsEsc(L.allFiles || 'All files') + '</button></li>';
+				html += '<li class="fs-media-modal-folders__item"><button type="button" class="fs-media-modal-folder-btn" data-folder-id="0" data-fs-unassigned="1">' + fsEsc(L.notInFolder || 'Not in a folder') + '</button></li>';
 				for (var i = 0; i < folders.length; i++) {
 					var f = folders[i];
 					if (!f || typeof f.name !== 'string') {
@@ -553,11 +619,21 @@ add_action('admin_footer', function (): void {
 
 				function repaintActive() {
 					var active = selectedFolderId();
+					var unassigned = isUnassignedFilterActive();
 					var buttons = panel.querySelectorAll('.fs-media-modal-folder-btn');
 					for (var bi = 0; bi < buttons.length; bi++) {
 						var b = buttons[bi];
+						var isUn = b.getAttribute('data-fs-unassigned') === '1';
 						var bid = parseInt(b.getAttribute('data-folder-id') || '0', 10);
-						if (bid === active) {
+						var on = false;
+						if (isUn) {
+							on = unassigned;
+						} else if (bid === 0) {
+							on = !unassigned && active === 0;
+						} else {
+							on = !unassigned && bid === active;
+						}
+						if (on) {
 							b.classList.add('is-active');
 						} else {
 							b.classList.remove('is-active');
@@ -571,11 +647,15 @@ add_action('admin_footer', function (): void {
 						return;
 					}
 					e.preventDefault();
-					var id = parseInt(btn.getAttribute('data-folder-id') || '0', 10);
-					if (isNaN(id) || id < 0) {
-						id = 0;
+					if (btn.getAttribute('data-fs-unassigned') === '1') {
+						applyFolder(0, true);
+					} else {
+						var id = parseInt(btn.getAttribute('data-folder-id') || '0', 10);
+						if (isNaN(id) || id < 0) {
+							id = 0;
+						}
+						applyFolder(id, false);
 					}
-					applyFolder(id);
 					repaintActive();
 				});
 				repaintActive();
@@ -599,14 +679,40 @@ add_action('admin_footer', function (): void {
  * Filter media attachments in list/grid mode by selected folder.
  */
 add_filter('ajax_query_attachments_args', function (array $args): array {
+	if (!taxonomy_exists(FS_MEDIA_FOLDER_TAXONOMY)) {
+		return $args;
+	}
+
+	$request = wp_unslash($_REQUEST);
+	$unassigned = false;
+	$raw_un = null;
+	if (isset($request['query']['fs_media_folder_unassigned'])) {
+		$raw_un = $request['query']['fs_media_folder_unassigned'];
+	} elseif (isset($request['fs_media_folder_unassigned'])) {
+		$raw_un = $request['fs_media_folder_unassigned'];
+	}
+	if ($raw_un === 1 || $raw_un === '1' || $raw_un === true) {
+		$unassigned = true;
+	}
+
+	if ($unassigned) {
+		$args['post_type'] = 'attachment';
+		$args['post_status'] = 'inherit';
+		$tax_query = isset($args['tax_query']) ? (array) $args['tax_query'] : [];
+		$tax_query[] = [
+			'taxonomy' => FS_MEDIA_FOLDER_TAXONOMY,
+			'operator' => 'NOT EXISTS',
+		];
+		$args['tax_query'] = $tax_query;
+		return $args;
+	}
 
 	$folder_id = 0;
-	$request = wp_unslash($_REQUEST);
 	if (isset($request['query']) && is_array($request['query']) && isset($request['query']['fs_media_folder_id'])) {
 		$folder_id = absint($request['query']['fs_media_folder_id']);
 	}
 
-	if ($folder_id <= 0 || !taxonomy_exists(FS_MEDIA_FOLDER_TAXONOMY)) {
+	if ($folder_id <= 0) {
 		return $args;
 	}
 	$args['post_type'] = 'attachment';
@@ -637,9 +743,22 @@ add_action('pre_get_posts', function (WP_Query $query): void {
 	if ($pagenow !== 'upload.php') {
 		return;
 	}
+	if (!taxonomy_exists(FS_MEDIA_FOLDER_TAXONOMY)) {
+		return;
+	}
+
+	if (fs_media_folders_is_unassigned_filter()) {
+		$tax_query = (array) $query->get('tax_query');
+		$tax_query[] = [
+			'taxonomy' => FS_MEDIA_FOLDER_TAXONOMY,
+			'operator' => 'NOT EXISTS',
+		];
+		$query->set('tax_query', $tax_query);
+		return;
+	}
 
 	$folder_id = fs_media_folders_current_id();
-	if ($folder_id <= 0 || !taxonomy_exists(FS_MEDIA_FOLDER_TAXONOMY)) {
+	if ($folder_id <= 0) {
 		return;
 	}
 
@@ -808,7 +927,7 @@ add_action('admin_post_fs_media_folder_create', function (): void {
 		$term_id = isset($insert['term_id']) ? (int) $insert['term_id'] : 0;
 	}
 
-	$url = add_query_arg('fs_media_folder_id', $term_id, $redirect_to);
+	$url = add_query_arg('fs_media_folder_id', $term_id, remove_query_arg('fs_media_folder_unassigned', $redirect_to));
 	$url = add_query_arg('fs_media_folder_success', '1', $url);
 	wp_safe_redirect($url);
 	exit;
@@ -820,7 +939,7 @@ add_action('admin_post_fs_media_folder_create', function (): void {
  * @param WP_Term[] $terms
  * @param array<int,int> $display_counts
  */
-function fs_media_folders_render_list(array $terms, array $display_counts, int $parent_id, int $depth, int $current_id, string $base_url, string $redirect_url): void
+function fs_media_folders_render_list(array $terms, array $display_counts, int $parent_id, int $depth, int $current_id, bool $unassigned_active, string $base_url, string $redirect_url): void
 {
 	foreach ($terms as $term) {
 		if ((int) $term->parent !== $parent_id) {
@@ -828,9 +947,9 @@ function fs_media_folders_render_list(array $terms, array $display_counts, int $
 		}
 		$term_id = (int) $term->term_id;
 		$display_count = isset($display_counts[$term_id]) ? (int) $display_counts[$term_id] : (int) $term->count;
-		$url = add_query_arg('fs_media_folder_id', (int) $term->term_id, $base_url);
+		$url = add_query_arg('fs_media_folder_id', (int) $term->term_id, remove_query_arg('fs_media_folder_unassigned', $base_url));
 		$item_classes = ['fs-media-folders-item', 'fs-media-folders-link'];
-		if ($term_id === $current_id) {
+		if (!$unassigned_active && $term_id === $current_id) {
 			$item_classes[] = 'is-active';
 		}
 		$prefix = $depth > 0 ? str_repeat('– ', $depth) : '';
@@ -849,7 +968,7 @@ function fs_media_folders_render_list(array $terms, array $display_counts, int $
 		echo '<button type="button" class="fs-media-folder-delete-btn" aria-label="' . esc_attr__('Delete folder', 'fromscratch') . '" data-folder-name="' . esc_attr($term->name) . '" data-folder-count="' . $display_count . '" data-delete-url="' . esc_url($delete_url) . '"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M480-424 284-228q-11 11-28 11t-28-11q-11-11-11-28t11-28l196-196-196-196q-11-11-11-28t11-28q11-11 28-11t28 11l196 196 196-196q11-11 28-11t28 11q11 11 11 28t-11 28L536-480l196 196q11 11 11 28t-11 28q-11 11-28 11t-28-11L480-424Z"/></svg></button>';
 		echo '</div>';
 		echo '</li>';
-		fs_media_folders_render_list($terms, $display_counts, $term_id, $depth + 1, $current_id, $base_url, $redirect_url);
+		fs_media_folders_render_list($terms, $display_counts, $term_id, $depth + 1, $current_id, $unassigned_active, $base_url, $redirect_url);
 	}
 }
 
@@ -908,7 +1027,7 @@ add_action('admin_post_fs_media_folder_delete', function (): void {
 	if ($redirect_to === '') {
 		$redirect_to = admin_url('upload.php');
 	}
-	$redirect_to = remove_query_arg(['fs_media_folder_id', 'fs_media_folder', 'fs_media_folder_error', 'fs_media_folder_success'], $redirect_to);
+	$redirect_to = remove_query_arg(['fs_media_folder_id', 'fs_media_folder_unassigned', 'fs_media_folder', 'fs_media_folder_error', 'fs_media_folder_success'], $redirect_to);
 
 	$tax = get_taxonomy(FS_MEDIA_FOLDER_TAXONOMY);
 	$delete_cap = ($tax && isset($tax->cap->delete_terms)) ? $tax->cap->delete_terms : 'manage_categories';
@@ -947,6 +1066,8 @@ add_action('admin_footer-upload.php', function (): void {
 		return;
 	}
 	$folder_id = fs_media_folders_current_id();
+	$unassigned_active = fs_media_folders_is_unassigned_filter();
+	$unassigned_count = fs_media_folders_count_unassigned();
 	$terms = get_terms([
 		'taxonomy' => FS_MEDIA_FOLDER_TAXONOMY,
 		'hide_empty' => false,
@@ -1005,9 +1126,10 @@ add_action('admin_footer-upload.php', function (): void {
 		<ul class="fs-media-folders-list">
 			<li>
 				<?php
-				$all_files_url = remove_query_arg(['fs_media_folder_id', 'fs_media_folder_error', 'fs_media_folder_success'], $base_url);
+				$strip_folder_q = ['fs_media_folder_id', 'fs_media_folder_unassigned', 'fs_media_folder_error', 'fs_media_folder_success'];
+				$all_files_url = remove_query_arg($strip_folder_q, $base_url);
 				$all_item_classes = ['fs-media-folders-item', 'fs-media-folders-item--all', 'fs-media-folders-link'];
-				if ($folder_id <= 0) {
+				if ($folder_id <= 0 && !$unassigned_active) {
 					$all_item_classes[] = 'is-active';
 				}
 				?>
@@ -1017,9 +1139,24 @@ add_action('admin_footer-upload.php', function (): void {
 					</button>
 				</div>
 			</li>
+			<li>
+				<?php
+				$unassigned_url = add_query_arg('fs_media_folder_unassigned', '1', remove_query_arg($strip_folder_q, $base_url));
+				$un_item_classes = ['fs-media-folders-item', 'fs-media-folders-item--unassigned', 'fs-media-folders-link'];
+				if ($unassigned_active) {
+					$un_item_classes[] = 'is-active';
+				}
+				?>
+				<div class="<?= esc_attr(implode(' ', $un_item_classes)) ?>">
+					<a class="fs-media-folders-link" href="<?= esc_url($unassigned_url) ?>">
+						<span class="name"><?= esc_html__('Not in a folder', 'fromscratch') ?></span>
+						<span class="count">(<?= (int) $unassigned_count ?>)</span>
+					</a>
+				</div>
+			</li>
 			<?php
-			$sidebar_redirect_url = remove_query_arg(['fs_media_folder_id', 'fs_media_folder_error', 'fs_media_folder_success'], $base_url);
-			fs_media_folders_render_list($terms, $display_counts, 0, 0, $folder_id, $sidebar_redirect_url, $sidebar_redirect_url);
+			$sidebar_redirect_url = remove_query_arg($strip_folder_q, $base_url);
+			fs_media_folders_render_list($terms, $display_counts, 0, 0, $folder_id, $unassigned_active, $sidebar_redirect_url, $sidebar_redirect_url);
 			?>
 		</ul>
 	</aside>
@@ -1067,7 +1204,7 @@ add_action('admin_footer-upload.php', function (): void {
 			<h2 id="fs-media-folder-create-title"><?= esc_html__('Add folder', 'fromscratch') ?></h2>
 			<form method="post" action="<?= esc_url(admin_url('admin-post.php')) ?>" class="fs-media-folders-create" id="fs-media-folders-create-form">
 				<input type="hidden" name="action" value="fs_media_folder_create">
-				<input type="hidden" name="redirect_to" value="<?= esc_attr(remove_query_arg(['fs_media_folder_error', 'fs_media_folder_success'], $base_url)) ?>">
+				<input type="hidden" name="redirect_to" value="<?= esc_attr(remove_query_arg(['fs_media_folder_id', 'fs_media_folder_unassigned', 'fs_media_folder_error', 'fs_media_folder_success'], $base_url)) ?>">
 				<?php wp_nonce_field('fs_media_folder_create'); ?>
 				<p>
 					<label for="fs_media_folder_name" class="screen-reader-text"><?= esc_html__('Folder name', 'fromscratch') ?></label>

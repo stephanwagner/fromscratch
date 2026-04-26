@@ -37,7 +37,6 @@ body.fs-feature-media-folders {
       }
 
       .media-toolbar {
-        position: relative;
         display: flex;
         gap: 12px;
 
@@ -217,7 +216,8 @@ body.fs-feature-media-folders {
     outline-offset: 1px;
   }
 
-  .fs-media-folders-item--all>.fs-media-folders-link {
+  .fs-media-folders-item--all>.fs-media-folders-link,
+  .fs-media-folders-item--unassigned>.fs-media-folders-link {
     padding-right: 8px;
   }
 
