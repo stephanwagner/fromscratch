@@ -1844,3 +1844,106 @@ msgstr "Wöchentlicher Bericht wurde an %s gesendet."
 
 msgid "(no title)"
 msgstr "(ohne Titel)"
+
+# Media Library: media folders (inc/media-library-folders.php)
+msgid "Media folder"
+msgstr "Medienordner"
+
+msgid "Search media folders"
+msgstr "Medienordner suchen"
+
+msgid "All media folders"
+msgstr "Alle Medienordner"
+
+msgid "Parent media folder"
+msgstr "Übergeordneter Medienordner"
+
+msgid "Parent media folder:"
+msgstr "Übergeordneter Medienordner:"
+
+msgid "Edit media folder"
+msgstr "Medienordner bearbeiten"
+
+msgid "Update media folder"
+msgstr "Medienordner aktualisieren"
+
+msgid "Add new media folder"
+msgstr "Neuen Medienordner hinzufügen"
+
+msgid "New media folder name"
+msgstr "Name des neuen Medienordners"
+
+msgid "Show folders panel"
+msgstr "Ordnerleiste anzeigen"
+
+msgid "Hide folders panel"
+msgstr "Ordnerleiste ausblenden"
+
+msgid "Toggle folders panel"
+msgstr "Ordnerleiste ein- oder ausblenden"
+
+msgid "No folder"
+msgstr "Kein Ordner"
+
+msgid "Folder"
+msgstr "Ordner"
+
+msgid "Assign this file to a media folder."
+msgstr "Weise diese Datei einem Medienordner zu."
+
+msgid "You do not have permission to create media folders."
+msgstr "Du hast keine Berechtigung, Medienordner anzulegen."
+
+msgid "Delete folder"
+msgstr "Ordner löschen"
+
+msgid "Media folder taxonomy not available."
+msgstr "Medienordner-Taxonomie ist nicht verfügbar."
+
+msgid "Please enter a folder name."
+msgstr "Bitte gib einen Ordnernamen ein."
+
+msgid "Could not delete this folder."
+msgstr "Dieser Ordner konnte nicht gelöscht werden."
+
+msgid "Could not create this folder."
+msgstr "Dieser Ordner konnte nicht angelegt werden."
+
+msgid "Folder deleted."
+msgstr "Ordner gelöscht."
+
+msgid "Folder created."
+msgstr "Ordner angelegt."
+
+msgid "Folders"
+msgstr "Ordner"
+
+msgid "All files"
+msgstr "Alle Dateien"
+
+msgid "Folder name"
+msgstr "Ordnername"
+
+msgid "New folder name"
+msgstr "Name des neuen Ordners"
+
+msgid "Parent folder"
+msgstr "Übergeordneter Ordner"
+
+msgid "No parent"
+msgstr "Kein übergeordneter Ordner"
+
+msgid "Create folder"
+msgstr "Ordner anlegen"
+
+msgid "Delete folder?"
+msgstr "Ordner löschen?"
+
+msgid "Cancel"
+msgstr "Abbrechen"
+
+msgid "This will also remove folder assignments from the contained files."
+msgstr "Dadurch werden auch die Ordnerzuweisungen der enthaltenen Dateien entfernt."
+
+msgid "The folder is empty."
+msgstr "Der Ordner ist leer."

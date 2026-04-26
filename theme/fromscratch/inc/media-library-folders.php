@@ -434,9 +434,24 @@ add_action('admin_footer', function (): void {
 		}
 	};
 	$walk(0, 0);
+	$fs_modal_folders_config = [
+		'terms' => $flat,
+		'i18n' => [
+			'heading' => __('Folders', 'fromscratch'),
+			'allFiles' => __('All files', 'fromscratch'),
+		],
+	];
 ?>
 	<script>
-		(function(folders) {
+		(function(cfg) {
+			var folders = cfg.terms || [];
+			var L = cfg.i18n || {};
+			function fsEsc(s) {
+				return String(s)
+					.replace(/&/g, '&amp;')
+					.replace(/</g, '&lt;')
+					.replace(/>/g, '&gt;');
+			}
 			(function(wp) {
 				if (!wp || !wp.media || !wp.media.model || !wp.media.model.Query) {
 					return;
@@ -578,9 +593,9 @@ add_action('admin_footer', function (): void {
 				browser.classList.add('fs-modal-sidebar-layout');
 				var proof = document.createElement('div');
 				proof.id = 'fs-media-modal-proof';
-				var html = '<div style="font-size:13px;font-weight:900;letter-spacing:.4px;margin-bottom:8px;">Folders</div>';
+				var html = '<div style="font-size:13px;font-weight:900;letter-spacing:.4px;margin-bottom:8px;">' + fsEsc(L.heading || 'Folders') + '</div>';
 				html += '<ul style="list-style:none;margin:0;padding:0;">';
-				html += '<li style="margin:0 0 2px;"><button type="button" class="fs-modal-folder-btn" data-folder-id="0" style="width:100%;text-align:left;background:rgba(255,255,255,.2);border:0;color:#fff;padding:6px 8px;border-radius:4px;font-size:12px;cursor:pointer;">All files</button></li>';
+				html += '<li style="margin:0 0 2px;"><button type="button" class="fs-modal-folder-btn" data-folder-id="0" style="width:100%;text-align:left;background:rgba(255,255,255,.2);border:0;color:#fff;padding:6px 8px;border-radius:4px;font-size:12px;cursor:pointer;">' + fsEsc(L.allFiles || 'All files') + '</button></li>';
 				for (var i = 0; i < folders.length; i++) {
 					var f = folders[i];
 					if (!f || typeof f.name !== 'string') {
@@ -642,7 +657,7 @@ add_action('admin_footer', function (): void {
 				childList: true,
 				subtree: true
 			});
-		})(<?php echo wp_json_encode($flat); ?>);
+		})(<?php echo wp_json_encode($fs_modal_folders_config); ?>);
 	</script>
 <?php
 });
