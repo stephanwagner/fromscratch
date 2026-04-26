@@ -214,6 +214,134 @@ add_filter('media_view_settings', function (array $settings): array {
 });
 
 /**
+ * Shared Media Library / modal: folders panel visibility (one localStorage key for both UIs).
+ */
+add_action('admin_head', function (): void {
+	if (!is_admin()) {
+		return;
+	}
+?>
+	<style>
+		.media-modal .attachments-browser.fs-modal-sidebar-layout.is-folders-panel-collapsed #fs-media-modal-proof {
+			display: none !important;
+		}
+
+		.media-modal .attachments-browser.fs-modal-sidebar-layout.is-folders-panel-collapsed .attachments-wrapper,
+		.media-modal .attachments-browser.fs-modal-sidebar-layout.is-folders-panel-collapsed .uploader-inline {
+			margin-left: 0 !important;
+		}
+
+		.media-modal .media-toolbar .fs-media-folders-toggle {
+			margin: 0 2px 0 3px;
+			vertical-align: middle;
+		}
+		.media-modal .media-toolbar .fs-media-folders-toggle .dashicons {
+			font-size: 16px;
+			line-height: 1.2;
+			width: 16px;
+			height: 16px;
+		}
+	</style>
+	<script>
+		(function() {
+			if (window.fsMediaFolderPanel) {
+				return;
+			}
+			var key = 'fsMediaFoldersSidebarCollapsed';
+			function read() {
+				try {
+					if (window.localStorage) {
+						return window.localStorage.getItem(key) === '1';
+					}
+				} catch (err) {}
+				return false;
+			}
+			function write(v) {
+				try {
+					if (window.localStorage) {
+						window.localStorage.setItem(key, v ? '1' : '0');
+					}
+				} catch (err) {}
+			}
+			function applyToDom(collapsed) {
+				var i;
+				var layout = document.querySelector('.upload-php .fs-media-folders-layout');
+				if (layout) {
+					if (collapsed) {
+						layout.classList.add('is-collapsed');
+					} else {
+						layout.classList.remove('is-collapsed');
+					}
+				}
+				var toggles = document.querySelectorAll('.fs-media-folders-toggle');
+				for (i = 0; i < toggles.length; i++) {
+					var t = toggles[i];
+					if (collapsed) {
+						t.classList.remove('is-active');
+						t.setAttribute('aria-pressed', 'false');
+						t.setAttribute('title', '<?= esc_js(__('Show folders panel', 'fromscratch')) ?>');
+					} else {
+						t.classList.add('is-active');
+						t.setAttribute('aria-pressed', 'true');
+						t.setAttribute('title', '<?= esc_js(__('Hide folders panel', 'fromscratch')) ?>');
+					}
+				}
+				var browsers = document.querySelectorAll('.media-modal .attachments-browser.fs-modal-sidebar-layout');
+				for (i = 0; i < browsers.length; i++) {
+					var b = browsers[i];
+					if (collapsed) {
+						b.classList.add('is-folders-panel-collapsed');
+					} else {
+						b.classList.remove('is-folders-panel-collapsed');
+					}
+				}
+			}
+			function setCollapsed(v) {
+				if (read() === v) {
+					applyToDom(v);
+					return;
+				}
+				write(v);
+				applyToDom(v);
+			}
+			function toggle() {
+				setCollapsed(!read());
+			}
+			document.addEventListener('click', function(e) {
+				var btn = e.target && e.target.closest && e.target.closest('.fs-media-folders-toggle');
+				if (!btn) {
+					return;
+				}
+				e.preventDefault();
+				toggle();
+			});
+			document.addEventListener('storage', function(e) {
+				if (e && e.key === key) {
+					applyToDom(read());
+				}
+			});
+			window.fsMediaFolderPanel = {
+				key: key,
+				isCollapsed: read,
+				setCollapsed: setCollapsed,
+				applyFromStorage: function() {
+					applyToDom(read());
+				}
+			};
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', function onReady() {
+					document.removeEventListener('DOMContentLoaded', onReady);
+					applyToDom(read());
+				}, false);
+			} else {
+				applyToDom(read());
+			}
+		})();
+	</script>
+<?php
+}, 1);
+
+/**
  * TEMP DEBUG: make media modal visually obvious to confirm hook execution.
  * Remove this block after verification.
  */
@@ -408,6 +536,37 @@ add_action('admin_footer', function (): void {
 				}
 			}
 
+			function ensureModalFoldersToolbarToggle() {
+				var i;
+				var browsers = document.querySelectorAll('.media-modal .attachments-browser');
+				for (i = 0; i < browsers.length; i++) {
+					var browser = browsers[i];
+					var bar = browser.querySelector('.media-toolbar');
+					if (!bar) {
+						continue;
+					}
+					if (bar.querySelector('.fs-media-folders-toggle[data-fs-toggle-context="modal"]')) {
+						continue;
+					}
+					var secondary = bar.querySelector('.media-toolbar-secondary');
+					var btn = document.createElement('button');
+					btn.type = 'button';
+					btn.className = 'button fs-media-folders-toggle';
+					btn.setAttribute('data-fs-toggle-context', 'modal');
+					btn.setAttribute('aria-pressed', 'true');
+					btn.setAttribute('title', '<?= esc_js(__('Hide folders panel', 'fromscratch')) ?>');
+					btn.innerHTML = '<span class="dashicons dashicons-category" aria-hidden="true"></span><span class="screen-reader-text"><?= esc_js(__('Toggle folders panel', 'fromscratch')) ?></span>';
+					if (secondary && secondary.parentNode === bar) {
+						bar.insertBefore(btn, secondary);
+					} else {
+						bar.appendChild(btn);
+					}
+				}
+				if (window.fsMediaFolderPanel && typeof window.fsMediaFolderPanel.applyFromStorage === 'function') {
+					window.fsMediaFolderPanel.applyFromStorage();
+				}
+			}
+
 			function injectProofNode() {
 				var browser = document.querySelector('.media-modal .attachments-browser');
 				if (!browser) {
@@ -474,7 +633,11 @@ add_action('admin_footer', function (): void {
 				repaintActive();
 			}
 			injectProofNode();
-			var obs = new MutationObserver(injectProofNode);
+			ensureModalFoldersToolbarToggle();
+			var obs = new MutationObserver(function() {
+				injectProofNode();
+				ensureModalFoldersToolbarToggle();
+			});
 			obs.observe(document.body, {
 				childList: true,
 				subtree: true
@@ -835,6 +998,10 @@ add_action('admin_head-upload.php', function (): void {
 			margin-top: 12px;
 		}
 
+		.upload-php .fs-media-folders-layout.is-collapsed {
+			gap: 0;
+		}
+
 		.upload-php .fs-media-folders-sidebar {
 			width: 260px;
 			flex: 0 0 260px;
@@ -852,10 +1019,37 @@ add_action('admin_head-upload.php', function (): void {
 			-webkit-overflow-scrolling: touch;
 		}
 
+		.upload-php .fs-media-folders-layout.is-collapsed .fs-media-folders-sidebar {
+			display: none !important;
+		}
+
 		.upload-php .fs-media-folders-content {
 			min-width: 0;
 			flex: 1 1 auto;
 			position: relative;
+		}
+
+		.upload-php .fs-media-folders-layout.is-collapsed .fs-media-folders-content {
+			flex-basis: 100%;
+		}
+
+		.upload-php .fs-media-folders-toggle {
+			margin-left: 6px;
+			vertical-align: middle;
+			cursor: pointer;
+		}
+
+		.upload-php .fs-media-folders-toggle .dashicons {
+			font-size: 17px;
+			line-height: 1;
+			width: 17px;
+			height: 17px;
+		}
+
+		.upload-php .fs-media-folders-toggle.is-active {
+			background: #f0f6fc;
+			border-color: #72aee6;
+			color: #0a4b78;
 		}
 
 		/*
@@ -1132,6 +1326,22 @@ add_action('admin_footer-upload.php', function (): void {
 
 			sidebar.style.display = '';
 			wrap.dataset.fsMediaFoldersReady = '1';
+
+			var viewSwitch = wrap.querySelector('.view-switch');
+			var toggleButton = document.createElement('button');
+			toggleButton.type = 'button';
+			toggleButton.className = 'button fs-media-folders-toggle is-active';
+			toggleButton.setAttribute('data-fs-toggle-context', 'upload');
+			toggleButton.setAttribute('aria-pressed', 'true');
+			toggleButton.setAttribute('title', '<?= esc_js(__('Hide folders panel', 'fromscratch')) ?>');
+			toggleButton.innerHTML = '<span class="dashicons dashicons-category" aria-hidden="true"></span><span class="screen-reader-text"><?= esc_js(__('Toggle folders panel', 'fromscratch')) ?></span>';
+
+			if (viewSwitch && viewSwitch.parentNode) {
+				viewSwitch.parentNode.insertBefore(toggleButton, viewSwitch.nextSibling);
+			}
+			if (window.fsMediaFolderPanel && typeof window.fsMediaFolderPanel.applyFromStorage === 'function') {
+				window.fsMediaFolderPanel.applyFromStorage();
+			}
 
 			/*
 			 * Grid view: media-grid.js appends .media-frame as a direct child of #wp-media-grid.
