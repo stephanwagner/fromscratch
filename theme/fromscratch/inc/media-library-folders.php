@@ -326,58 +326,7 @@ add_action('admin_head', function (): void {
 }, 1);
 
 /**
- * TEMP DEBUG: make media modal visually obvious to confirm hook execution.
- * Remove this block after verification.
- */
-add_action('admin_head', function (): void {
-	if (!is_admin()) {
-		return;
-	}
-?>
-	<style id="fs-media-modal-debug-proof">
-		.media-modal {
-			outline: 8px solid #e30000 !important;
-			box-shadow: 0 0 0 6px #ffcc00 !important;
-		}
-
-		.media-modal .media-frame-title h1::before {
-			content: "FS HOOKED - ";
-			color: #e30000;
-			font-weight: 800;
-			margin-right: 4px;
-		}
-
-		.media-modal .media-frame-router,
-		.media-modal .media-toolbar {
-			background: #fff3f3 !important;
-		}
-
-		.media-modal .attachments-browser.fs-modal-sidebar-layout #fs-media-modal-proof {
-			position: absolute;
-			left: 0;
-			top: 50px;
-			bottom: 0;
-			width: 220px;
-			box-sizing: border-box;
-			overflow: auto;
-			padding: 12px;
-			background: #ff00c8;
-			color: #fff;
-			border-right: 4px solid #000;
-			box-shadow: inset -2px 0 0 #fff;
-			z-index: 3;
-		}
-
-		.media-modal .attachments-browser.fs-modal-sidebar-layout .attachments-wrapper,
-		.media-modal .attachments-browser.fs-modal-sidebar-layout .uploader-inline {
-			margin-left: 220px;
-		}
-	</style>
-<?php
-});
-
-/**
- * TEMP DEBUG: inject a visible node into the media modal DOM.
+ * Media modal: folder sidebar + query integration (admin-wide footer; only runs when modal opens).
  */
 add_action('admin_footer', function (): void {
 	if (!is_admin()) {
@@ -567,20 +516,21 @@ add_action('admin_footer', function (): void {
 				}
 			}
 
-			function injectProofNode() {
+			function injectModalFoldersPanel() {
 				var browser = document.querySelector('.media-modal .attachments-browser');
 				if (!browser) {
 					return;
 				}
-				if (browser.querySelector('#fs-media-modal-proof')) {
+				if (browser.querySelector('#fs-media-modal-folders')) {
 					return;
 				}
 				browser.classList.add('fs-modal-sidebar-layout');
-				var proof = document.createElement('div');
-				proof.id = 'fs-media-modal-proof';
-				var html = '<div style="font-size:13px;font-weight:900;letter-spacing:.4px;margin-bottom:8px;">' + fsEsc(L.heading || 'Folders') + '</div>';
-				html += '<ul style="list-style:none;margin:0;padding:0;">';
-				html += '<li style="margin:0 0 2px;"><button type="button" class="fs-modal-folder-btn" data-folder-id="0" style="width:100%;text-align:left;background:rgba(255,255,255,.2);border:0;color:#fff;padding:6px 8px;border-radius:4px;font-size:12px;cursor:pointer;">' + fsEsc(L.allFiles || 'All files') + '</button></li>';
+				var panel = document.createElement('div');
+				panel.id = 'fs-media-modal-folders';
+				panel.className = 'fs-media-modal-folders';
+				var html = '<div class="fs-media-modal-folders__heading">' + fsEsc(L.heading || 'Folders') + '</div>';
+				html += '<ul class="fs-media-modal-folders__list">';
+				html += '<li class="fs-media-modal-folders__item"><button type="button" class="fs-media-modal-folder-btn" data-folder-id="0">' + fsEsc(L.allFiles || 'All files') + '</button></li>';
 				for (var i = 0; i < folders.length; i++) {
 					var f = folders[i];
 					if (!f || typeof f.name !== 'string') {
@@ -595,30 +545,28 @@ add_action('admin_footer', function (): void {
 						depth = 0;
 					}
 					var pad = 8 + (depth * 14);
-					html += '<li style="margin:0 0 2px;"><button type="button" class="fs-modal-folder-btn" data-folder-id="' + id + '" style="width:100%;text-align:left;background:transparent;border:0;color:#fff;padding:6px 8px 6px ' + pad + 'px;border-radius:4px;font-size:12px;cursor:pointer;">' + String(f.name).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</button></li>';
+					html += '<li class="fs-media-modal-folders__item"><button type="button" class="fs-media-modal-folder-btn" data-folder-id="' + id + '" style="padding-left:' + pad + 'px">' + String(f.name).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</button></li>';
 				}
 				html += '</ul>';
-				proof.innerHTML = html;
-				browser.appendChild(proof);
+				panel.innerHTML = html;
+				browser.appendChild(panel);
 
 				function repaintActive() {
 					var active = selectedFolderId();
-					var buttons = proof.querySelectorAll('.fs-modal-folder-btn');
+					var buttons = panel.querySelectorAll('.fs-media-modal-folder-btn');
 					for (var bi = 0; bi < buttons.length; bi++) {
 						var b = buttons[bi];
-						var id = parseInt(b.getAttribute('data-folder-id') || '0', 10);
-						if (id === active) {
-							b.style.background = 'rgba(255,255,255,.35)';
-							b.style.fontWeight = '700';
+						var bid = parseInt(b.getAttribute('data-folder-id') || '0', 10);
+						if (bid === active) {
+							b.classList.add('is-active');
 						} else {
-							b.style.background = 'transparent';
-							b.style.fontWeight = '400';
+							b.classList.remove('is-active');
 						}
 					}
 				}
 
-				proof.addEventListener('click', function(e) {
-					var btn = e.target.closest('.fs-modal-folder-btn');
+				panel.addEventListener('click', function(e) {
+					var btn = e.target.closest('.fs-media-modal-folder-btn');
 					if (!btn) {
 						return;
 					}
@@ -632,10 +580,10 @@ add_action('admin_footer', function (): void {
 				});
 				repaintActive();
 			}
-			injectProofNode();
+			injectModalFoldersPanel();
 			ensureModalFoldersToolbarToggle();
 			var obs = new MutationObserver(function() {
-				injectProofNode();
+				injectModalFoldersPanel();
 				ensureModalFoldersToolbarToggle();
 			});
 			obs.observe(document.body, {
@@ -643,49 +591,6 @@ add_action('admin_footer', function (): void {
 				subtree: true
 			});
 		})(<?php echo wp_json_encode($fs_modal_folders_config); ?>);
-	</script>
-<?php
-});
-
-/**
- * Debug probe: inject a tiny marker into media modal toolbar.
- * Remove after modal integration is confirmed.
- */
-add_action('print_media_templates', function (): void {
-	// Disabled old probe.
-	return;
-	if (!is_admin()) {
-		return;
-	}
-?>
-	<script>
-		(function(wp) {
-			if (!wp || !wp.media || !wp.media.view || !wp.media.view.AttachmentsBrowser) {
-				return;
-			}
-			if (wp.media.view.AttachmentsBrowser.prototype.__fsModalProbePatched) {
-				return;
-			}
-			var originalCreateToolbar = wp.media.view.AttachmentsBrowser.prototype.createToolbar;
-			wp.media.view.AttachmentsBrowser.prototype.createToolbar = function() {
-				originalCreateToolbar.apply(this, arguments);
-				if (!this.toolbar || this.toolbar.get('fsModalProbe')) {
-					return;
-				}
-				var probeView = new wp.media.View({
-					tagName: 'span',
-					className: 'button button-small',
-					attributes: {
-						style: 'margin-left:8px;pointer-events:none;opacity:.85;'
-					}
-				});
-				probeView.$el.text('FS modal test');
-				this.toolbar.set('fsModalProbe', probeView, {
-					priority: 200
-				});
-			};
-			wp.media.view.AttachmentsBrowser.prototype.__fsModalProbePatched = true;
-		})(window.wp);
 	</script>
 <?php
 });
@@ -1222,7 +1127,6 @@ add_action('admin_footer-upload.php', function (): void {
 			sidebar.style.display = '';
 			wrap.dataset.fsMediaFoldersReady = '1';
 
-			var viewSwitch = wrap.querySelector('.view-switch');
 			var toggleButton = document.createElement('button');
 			toggleButton.type = 'button';
 			toggleButton.className = 'button fs-media-folders-toggle is-active';
@@ -1231,8 +1135,53 @@ add_action('admin_footer-upload.php', function (): void {
 			toggleButton.setAttribute('title', '<?= esc_js(__('Hide folders panel', 'fromscratch')) ?>');
 			toggleButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h207q16 0 30.5 6t25.5 17l57 57h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Z"/></svg>';
 
-			if (viewSwitch && viewSwitch.parentNode) {
-				viewSwitch.parentNode.insertBefore(toggleButton, viewSwitch);
+			/*
+			 * List view outputs .view-switch in the initial HTML. Grid (#wp-media-grid) does not:
+			 * media-grid.js injects it later, so we always need a fallback anchor.
+			 */
+			function placeUploadFoldersToggleNextToViewSwitch() {
+				var vs = wrap.querySelector('.view-switch');
+				if (!vs || !vs.parentNode) {
+					return false;
+				}
+				if (toggleButton.nextSibling === vs) {
+					return true;
+				}
+				vs.parentNode.insertBefore(toggleButton, vs);
+				return true;
+			}
+			if (!placeUploadFoldersToggleNextToViewSwitch()) {
+				if (headerEnd && headerEnd.parentNode) {
+					headerEnd.parentNode.insertBefore(toggleButton, headerEnd);
+				} else if (addButton && addButton.parentNode) {
+					addButton.parentNode.insertBefore(toggleButton, addButton.nextSibling);
+				} else {
+					wrap.insertBefore(toggleButton, layout);
+				}
+			}
+			function retryPlaceToggleNearViewSwitch() {
+				placeUploadFoldersToggleNextToViewSwitch();
+			}
+			retryPlaceToggleNearViewSwitch();
+			setTimeout(retryPlaceToggleNearViewSwitch, 0);
+			setTimeout(retryPlaceToggleNearViewSwitch, 200);
+			setTimeout(retryPlaceToggleNearViewSwitch, 800);
+			if (window.jQuery) {
+				window.jQuery(wrap).on('wp-media-grid-ready', retryPlaceToggleNearViewSwitch);
+			}
+			if (typeof MutationObserver !== 'undefined') {
+				var togglePlaceObserver = new MutationObserver(function() {
+					if (placeUploadFoldersToggleNextToViewSwitch()) {
+						togglePlaceObserver.disconnect();
+					}
+				});
+				togglePlaceObserver.observe(wrap, {
+					childList: true,
+					subtree: true
+				});
+				setTimeout(function() {
+					togglePlaceObserver.disconnect();
+				}, 15000);
 			}
 			if (window.fsMediaFolderPanel && typeof window.fsMediaFolderPanel.applyFromStorage === 'function') {
 				window.fsMediaFolderPanel.applyFromStorage();

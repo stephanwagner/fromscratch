@@ -37,10 +37,61 @@ function fs_theme_feature_default_off_when_missing(): array
 }
 
 /**
+ * Feature slug → Developer → Features option key.
+ *
+ * @return array<string, string>
+ */
+function fs_theme_feature_option_keys_map(): array
+{
+	return [
+		'blogs'                   => 'enable_blogs',
+		'remove_post_tags'        => 'enable_remove_post_tags',
+		'svg'                     => 'enable_svg',
+		'duplicate_post'          => 'enable_duplicate_post',
+		'seo'                     => 'enable_seo',
+		'post_expirator'          => 'enable_post_expirator',
+		'languages'               => 'enable_languages',
+		'blocked_ips'             => 'enable_blocked_ips',
+		'webp'                    => 'enable_webp',
+		'webp_convert_original'   => 'enable_webp_convert_original',
+		'media_folders'           => 'enable_media_folders',
+		'matomo'                  => 'enable_matomo',
+	];
+}
+
+/**
+ * Body / admin body classes for enabled features (prefix fs-feature-), for CSS scoping.
+ *
+ * @return list<string>
+ */
+function fs_theme_feature_body_classes(): array
+{
+	$classes = [];
+	foreach (array_keys(fs_theme_feature_option_keys_map()) as $slug) {
+		if (fs_theme_feature_enabled($slug)) {
+			$classes[] = 'fs-feature-' . str_replace('_', '-', $slug);
+		}
+	}
+	return $classes;
+}
+
+add_filter('body_class', function (array $classes): array {
+	return array_merge($classes, fs_theme_feature_body_classes());
+});
+
+add_filter('admin_body_class', function (string $classes): string {
+	$extra = fs_theme_feature_body_classes();
+	if ($extra === []) {
+		return $classes;
+	}
+	return $classes . ' ' . implode(' ', $extra);
+});
+
+/**
  * Check whether a theme feature is enabled (Settings → Developer → Features).
  * Uses saved option when present; otherwise central defaults or “off when missing” for backward compat.
  *
- * @param string $feature One of: blogs, remove_post_tags, svg, duplicate_post, seo, post_expirator.
+ * @param string $feature One of the keys from fs_theme_feature_option_keys_map().
  * @return bool
  */
 function fs_theme_feature_enabled(string $feature): bool
@@ -54,21 +105,7 @@ function fs_theme_feature_enabled(string $feature): bool
 		}
 	}
 
-	$map = [
-		'blogs'             => 'enable_blogs',
-		'remove_post_tags'  => 'enable_remove_post_tags',
-		'svg'               => 'enable_svg',
-		'duplicate_post'    => 'enable_duplicate_post',
-		'seo'               => 'enable_seo',
-		'post_expirator'    => 'enable_post_expirator',
-		'languages'         => 'enable_languages',
-		'blocked_ips'       => 'enable_blocked_ips',
-		'webp'              => 'enable_webp',
-		'webp_convert_original' => 'enable_webp_convert_original',
-		'media_folders'     => 'enable_media_folders',
-		'matomo'            => 'enable_matomo',
-	];
-
+	$map = fs_theme_feature_option_keys_map();
 	$key = $map[$feature] ?? '';
 	if ($key === '') {
 		return false;
