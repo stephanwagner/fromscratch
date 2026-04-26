@@ -1,0 +1,228 @@
+@use '../core' as *;
+
+// Media library
+
+.fs-media-folders-content {
+  #posts-filter {
+    .wp-filter {
+      margin-top: 0;
+    }
+  }
+}
+
+// Folders
+
+.upload-php .fs-media-folders-layout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-top: 12px;
+}
+
+.upload-php .fs-media-folders-layout.is-collapsed {
+  gap: 0;
+}
+
+.upload-php .fs-media-folders-sidebar {
+  width: 240px;
+  flex: 0 0 240px;
+  flex-shrink: 0;
+  background: #fff;
+  border: 1px solid #c3c4c7;
+  border-radius: 6px;
+  padding: 14px;
+  position: sticky;
+  top: 46px;
+  z-index: 20;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+  align-self: flex-start;
+  max-height: calc(100vh - 46px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.upload-php .fs-media-folders-layout.is-collapsed .fs-media-folders-sidebar {
+  display: none !important;
+}
+
+.upload-php .fs-media-folders-content {
+  min-width: 0;
+  flex: 1 1 auto;
+  position: relative;
+}
+
+.upload-php .fs-media-folders-layout.is-collapsed .fs-media-folders-content {
+  flex-basis: 100%;
+}
+
+.upload-php .fs-media-folders-toggle {
+  margin-right: 6px;
+  vertical-align: middle;
+  width: 30px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+  }
+}
+
+.upload-php .fs-media-folders-toggle:not(.is-active):not(:hover) {
+  background: #f6f7f7;
+  border-color: #c3c4c7;
+  color: #c3c4c7;
+}
+
+/*
+ * Grid: core positions .media-frame absolute within the content column.
+ * min-height gives the percentage heights inside the frame a basis.
+ */
+.upload-php #wp-media-grid .fs-media-folders-content {
+  min-height: 400px;
+}
+
+.upload-php .fs-media-folders-content .media-frame {
+  max-width: 100%;
+}
+
+.upload-php .fs-media-folders-sidebar h2 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.upload-php .fs-media-folders-list {
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+}
+
+.upload-php .fs-media-folders-list li {
+  margin: 0;
+}
+
+.upload-php .fs-media-folders-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.upload-php .fs-media-folders-link {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 5px 8px;
+  border-radius: 4px;
+  color: #1d2327;
+  text-decoration: none;
+}
+
+.upload-php .fs-media-folders-link:hover {
+  background: #f6f7f7;
+}
+
+.upload-php .fs-media-folders-link.is-active {
+  background: #2271b1;
+  color: #fff;
+}
+
+.upload-php .fs-media-folders-link .count {
+  opacity: 0.75;
+}
+
+.upload-php .fs-media-folder-delete-btn {
+  border: 0;
+  background: transparent;
+  color: #b32d2e;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.upload-php .fs-media-folder-delete-btn:hover {
+  background: #fcf0f1;
+}
+
+.upload-php .fs-media-folder-delete-btn:focus {
+  outline: 2px solid #2271b1;
+  outline-offset: 1px;
+}
+
+.upload-php .fs-media-folders-create p {
+  margin: 0 0 8px;
+}
+
+.upload-php .fs-media-folders-create .button {
+  width: 100%;
+}
+
+.upload-php .fs-media-folders-message {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.upload-php .fs-media-folders-message.is-error {
+  background: #fcf0f1;
+  color: #8a2424;
+}
+
+.upload-php .fs-media-folders-message.is-success {
+  background: #edfaef;
+  color: #1a5f29;
+}
+
+.upload-php .fs-media-folder-delete-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: none;
+}
+
+.upload-php .fs-media-folder-delete-modal.is-open {
+  display: block;
+}
+
+.upload-php .fs-media-folder-delete-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.upload-php .fs-media-folder-delete-dialog {
+  position: relative;
+  background: #fff;
+  width: min(520px, calc(100vw - 32px));
+  margin: 10vh auto 0;
+  padding: 16px;
+  border-radius: 6px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.upload-php .fs-media-folder-delete-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+// Modal
+
+.media-modal .attachments-browser.fs-modal-sidebar-layout.is-folders-panel-collapsed #fs-media-modal-proof {
+  display: none !important;
+}
+
+.media-modal .attachments-browser.fs-modal-sidebar-layout.is-folders-panel-collapsed .attachments-wrapper,
+.media-modal .attachments-browser.fs-modal-sidebar-layout.is-folders-panel-collapsed .uploader-inline {
+  margin-left: 0 !important;
+}

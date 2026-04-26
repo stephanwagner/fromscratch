@@ -1879,9 +1879,6 @@ msgstr "Ordnerleiste anzeigen"
 msgid "Hide folders panel"
 msgstr "Ordnerleiste ausblenden"
 
-msgid "Toggle folders panel"
-msgstr "Ordnerleiste ein- oder ausblenden"
-
 msgid "No folder"
 msgstr "Kein Ordner"
 

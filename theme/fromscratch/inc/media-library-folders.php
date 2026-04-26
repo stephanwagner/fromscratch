@@ -221,27 +221,6 @@ add_action('admin_head', function (): void {
 		return;
 	}
 ?>
-	<style>
-		.media-modal .attachments-browser.fs-modal-sidebar-layout.is-folders-panel-collapsed #fs-media-modal-proof {
-			display: none !important;
-		}
-
-		.media-modal .attachments-browser.fs-modal-sidebar-layout.is-folders-panel-collapsed .attachments-wrapper,
-		.media-modal .attachments-browser.fs-modal-sidebar-layout.is-folders-panel-collapsed .uploader-inline {
-			margin-left: 0 !important;
-		}
-
-		.media-modal .media-toolbar .fs-media-folders-toggle {
-			margin: 0 2px 0 3px;
-			vertical-align: middle;
-		}
-		.media-modal .media-toolbar .fs-media-folders-toggle .dashicons {
-			font-size: 16px;
-			line-height: 1.2;
-			width: 16px;
-			height: 16px;
-		}
-	</style>
 	<script>
 		(function() {
 			if (window.fsMediaFolderPanel) {
@@ -570,7 +549,7 @@ add_action('admin_footer', function (): void {
 					btn.setAttribute('data-fs-toggle-context', 'modal');
 					btn.setAttribute('aria-pressed', 'true');
 					btn.setAttribute('title', '<?= esc_js(__('Hide folders panel', 'fromscratch')) ?>');
-					btn.innerHTML = '<span class="dashicons dashicons-category" aria-hidden="true"></span><span class="screen-reader-text"><?= esc_js(__('Toggle folders panel', 'fromscratch')) ?></span>';
+					btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h207q16 0 30.5 6t25.5 17l57 57h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Z"/></svg>';
 					if (secondary && secondary.parentNode === bar) {
 						bar.insertBefore(btn, secondary);
 					} else {
@@ -894,7 +873,7 @@ function fs_media_folders_render_list(array $terms, array $display_counts, int $
 		if ($term_id === $current_id) {
 			$classes[] = 'is-active';
 		}
-		$prefix = $depth > 0 ? str_repeat('- ', $depth) : '';
+		$prefix = $depth > 0 ? str_repeat('– ', $depth) : '';
 		$delete_url = add_query_arg([
 			'action' => 'fs_media_folder_delete',
 			'term_id' => $term_id,
@@ -998,213 +977,6 @@ add_action('admin_post_fs_media_folder_delete', function (): void {
 
 	wp_safe_redirect(add_query_arg('fs_media_folder_success', 'deleted', $redirect_to));
 	exit;
-});
-
-/**
- * Sidebar styles for Media > Library.
- */
-add_action('admin_head-upload.php', function (): void {
-?>
-	<style>
-		.upload-php .fs-media-folders-layout {
-			display: flex;
-			gap: 20px;
-			align-items: flex-start;
-			margin-top: 12px;
-		}
-
-		.upload-php .fs-media-folders-layout.is-collapsed {
-			gap: 0;
-		}
-
-		.upload-php .fs-media-folders-sidebar {
-			width: 260px;
-			flex: 0 0 260px;
-			flex-shrink: 0;
-			background: #fff;
-			border: 1px solid #dcdcde;
-			border-radius: 6px;
-			padding: 14px;
-			position: sticky;
-			top: 46px;
-			z-index: 20;
-			align-self: flex-start;
-			max-height: calc(100vh - 46px);
-			overflow-y: auto;
-			-webkit-overflow-scrolling: touch;
-		}
-
-		.upload-php .fs-media-folders-layout.is-collapsed .fs-media-folders-sidebar {
-			display: none !important;
-		}
-
-		.upload-php .fs-media-folders-content {
-			min-width: 0;
-			flex: 1 1 auto;
-			position: relative;
-		}
-
-		.upload-php .fs-media-folders-layout.is-collapsed .fs-media-folders-content {
-			flex-basis: 100%;
-		}
-
-		.upload-php .fs-media-folders-toggle {
-			margin-left: 6px;
-			vertical-align: middle;
-			cursor: pointer;
-		}
-
-		.upload-php .fs-media-folders-toggle .dashicons {
-			font-size: 17px;
-			line-height: 1;
-			width: 17px;
-			height: 17px;
-		}
-
-		.upload-php .fs-media-folders-toggle.is-active {
-			background: #f0f6fc;
-			border-color: #72aee6;
-			color: #0a4b78;
-		}
-
-		/*
-		 * Grid: core positions .media-frame absolute within the content column.
-		 * min-height gives the percentage heights inside the frame a basis.
-		 */
-		.upload-php #wp-media-grid .fs-media-folders-content {
-			min-height: 400px;
-		}
-
-		.upload-php .fs-media-folders-content .media-frame {
-			max-width: 100%;
-		}
-
-		.upload-php .fs-media-folders-sidebar h2 {
-			margin: 0 0 10px;
-			font-size: 14px;
-			line-height: 1.4;
-		}
-
-		.upload-php .fs-media-folders-list {
-			margin: 0 0 14px;
-			padding: 0;
-			list-style: none;
-		}
-
-		.upload-php .fs-media-folders-list li {
-			margin: 0;
-		}
-
-		.upload-php .fs-media-folders-row {
-			display: flex;
-			align-items: center;
-			gap: 6px;
-		}
-
-		.upload-php .fs-media-folders-link {
-			display: block;
-			flex: 1 1 auto;
-			min-width: 0;
-			padding: 5px 8px;
-			border-radius: 4px;
-			color: #1d2327;
-			text-decoration: none;
-		}
-
-		.upload-php .fs-media-folders-link:hover {
-			background: #f6f7f7;
-		}
-
-		.upload-php .fs-media-folders-link.is-active {
-			background: #2271b1;
-			color: #fff;
-		}
-
-		.upload-php .fs-media-folders-link .count {
-			opacity: 0.75;
-		}
-
-		.upload-php .fs-media-folder-delete-btn {
-			border: 0;
-			background: transparent;
-			color: #b32d2e;
-			cursor: pointer;
-			font-size: 16px;
-			line-height: 1;
-			padding: 4px 6px;
-			border-radius: 4px;
-		}
-
-		.upload-php .fs-media-folder-delete-btn:hover {
-			background: #fcf0f1;
-		}
-
-		.upload-php .fs-media-folder-delete-btn:focus {
-			outline: 2px solid #2271b1;
-			outline-offset: 1px;
-		}
-
-		.upload-php .fs-media-folders-create p {
-			margin: 0 0 8px;
-		}
-
-		.upload-php .fs-media-folders-create .button {
-			width: 100%;
-		}
-
-		.upload-php .fs-media-folders-message {
-			margin: 0 0 10px;
-			padding: 8px 10px;
-			border-radius: 4px;
-			font-size: 12px;
-			line-height: 1.35;
-		}
-
-		.upload-php .fs-media-folders-message.is-error {
-			background: #fcf0f1;
-			color: #8a2424;
-		}
-
-		.upload-php .fs-media-folders-message.is-success {
-			background: #edfaef;
-			color: #1a5f29;
-		}
-
-		.upload-php .fs-media-folder-delete-modal {
-			position: fixed;
-			inset: 0;
-			z-index: 100000;
-			display: none;
-		}
-
-		.upload-php .fs-media-folder-delete-modal.is-open {
-			display: block;
-		}
-
-		.upload-php .fs-media-folder-delete-backdrop {
-			position: absolute;
-			inset: 0;
-			background: rgba(0, 0, 0, 0.45);
-		}
-
-		.upload-php .fs-media-folder-delete-dialog {
-			position: relative;
-			background: #fff;
-			width: min(520px, calc(100vw - 32px));
-			margin: 10vh auto 0;
-			padding: 16px;
-			border-radius: 6px;
-			box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-		}
-
-		.upload-php .fs-media-folder-delete-actions {
-			display: flex;
-			justify-content: flex-end;
-			gap: 8px;
-			margin-top: 16px;
-		}
-	</style>
-<?php
 });
 
 /**
@@ -1349,10 +1121,10 @@ add_action('admin_footer-upload.php', function (): void {
 			toggleButton.setAttribute('data-fs-toggle-context', 'upload');
 			toggleButton.setAttribute('aria-pressed', 'true');
 			toggleButton.setAttribute('title', '<?= esc_js(__('Hide folders panel', 'fromscratch')) ?>');
-			toggleButton.innerHTML = '<span class="dashicons dashicons-category" aria-hidden="true"></span><span class="screen-reader-text"><?= esc_js(__('Toggle folders panel', 'fromscratch')) ?></span>';
+			toggleButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h207q16 0 30.5 6t25.5 17l57 57h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Z"/></svg>';
 
 			if (viewSwitch && viewSwitch.parentNode) {
-				viewSwitch.parentNode.insertBefore(toggleButton, viewSwitch.nextSibling);
+				viewSwitch.parentNode.insertBefore(toggleButton, viewSwitch);
 			}
 			if (window.fsMediaFolderPanel && typeof window.fsMediaFolderPanel.applyFromStorage === 'function') {
 				window.fsMediaFolderPanel.applyFromStorage();

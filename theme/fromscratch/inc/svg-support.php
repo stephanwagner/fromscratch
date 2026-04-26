@@ -26,6 +26,10 @@ add_action('admin_head', function () {
 			height: calc(100% - 16px) !important;
 		}
 
+		table.media .column-title .media-icon img {
+			border-radius: 4px;
+		}
+
 		table.media .column-title .media-icon img[src$=".svg"],
 		table.media .column-title .media-icon img[src*=".svg?"] {
 			width: 52px;
