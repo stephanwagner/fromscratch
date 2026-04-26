@@ -1966,3 +1966,7 @@ msgstr "Startzeit"
 
 msgid "End time"
 msgstr "Endzeit"
+
+# Media Library: add folder modal title
+msgid "Add folder"
+msgstr "Ordner hinzufügen"

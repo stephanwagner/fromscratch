@@ -17,6 +17,10 @@
   gap: 16px;
   align-items: flex-start;
   margin-top: 12px;
+
+  @media (max-width: 782px) {
+    flex-direction: column;
+  }
 }
 
 .upload-php .fs-media-folders-layout.is-collapsed {
@@ -30,7 +34,7 @@
   background: #fff;
   border: 1px solid #c3c4c7;
   border-radius: 6px;
-  padding: 14px;
+  padding: 8px 12px 12px;
   position: sticky;
   top: 46px;
   z-index: 20;
@@ -39,6 +43,11 @@
   max-height: calc(100vh - 46px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+
+  @media (max-width: 782px) {
+    width: calc(100% - 12px - 12px - 1px - 1px);
+    max-width: none;
+  }
 }
 
 .upload-php .fs-media-folders-layout.is-collapsed .fs-media-folders-sidebar {
@@ -79,6 +88,14 @@
   color: #c3c4c7;
 }
 
+.compat-field-fs_media_folder_id {
+  vertical-align: top;
+}
+
+#major-publishing-actions {
+  border-radius: 0 0 6px 6px;
+}
+
 /*
  * Grid: core positions .media-frame absolute within the content column.
  * min-height gives the percentage heights inside the frame a basis.
@@ -91,14 +108,40 @@
   max-width: 100%;
 }
 
-.upload-php .fs-media-folders-sidebar h2 {
-  margin: 0 0 10px;
+.upload-php .fs-media-folders-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.upload-php .fs-media-folders-title {
+  margin: 0;
   font-size: 14px;
   line-height: 1.4;
+  font-weight: 600;
+}
+
+.upload-php .fs-media-folders-add-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.upload-php .fs-media-folders-add-btn__icon {
+  margin-left: -2px;
+
+  svg {
+    display: block;
+    width: 14px;
+    height: 14px;
+  }
 }
 
 .upload-php .fs-media-folders-list {
-  margin: 0 0 14px;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
@@ -107,61 +150,150 @@
   margin: 0;
 }
 
-.upload-php .fs-media-folders-row {
+.upload-php .fs-media-folders-item.fs-media-folders-link {
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: 6px;
+  align-items: stretch;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 20px;
 }
 
-.upload-php .fs-media-folders-link {
+.upload-php .fs-media-folders-item.fs-media-folders-link:hover:not(.is-active) {
+  background: #f6f7f7;
+}
+
+.upload-php .fs-media-folders-item.fs-media-folders-link.is-active {
+  background: #2271b1;
+}
+
+.upload-php .fs-media-folders-item>.fs-media-folders-link {
   display: block;
   flex: 1 1 auto;
   min-width: 0;
-  padding: 5px 8px;
+  padding: 5px 28px 5px 8px;
   border-radius: 4px;
   color: #1d2327;
   text-decoration: none;
 }
 
-.upload-php .fs-media-folders-link:hover {
-  background: #f6f7f7;
+.upload-php button.fs-media-folders-link {
+  appearance: none;
+  width: 100%;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  line-height: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
 }
 
-.upload-php .fs-media-folders-link.is-active {
-  background: #2271b1;
+.upload-php button.fs-media-folders-link:focus-visible {
+  outline: 2px solid #2271b1;
+  outline-offset: 1px;
+}
+
+.upload-php .fs-media-folders-item--all>.fs-media-folders-link {
+  padding-right: 8px;
+}
+
+.upload-php .fs-media-folders-item:hover>.fs-media-folders-link {
+  background: transparent;
+}
+
+.upload-php .fs-media-folders-item.fs-media-folders-link.is-active>.fs-media-folders-link {
+  background: transparent;
   color: #fff;
 }
 
-.upload-php .fs-media-folders-link .count {
+.upload-php .fs-media-folders-item>.fs-media-folders-link .count {
   opacity: 0.75;
 }
 
+.upload-php .fs-media-folders-item.fs-media-folders-link.is-active>.fs-media-folders-link .count {
+  opacity: 0.9;
+}
+
 .upload-php .fs-media-folder-delete-btn {
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  transform: translateY(-50%);
+  z-index: 1;
   border: 0;
   background: transparent;
   color: #b32d2e;
   cursor: pointer;
   font-size: 16px;
   line-height: 1;
-  padding: 4px 6px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
   border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  visibility: visible;
+  border: 1px solid transparent;
+  transition: opacity 0.12s ease, visibility 0.12s ease, background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+
+  svg {
+    display: block;
+    width: 14px;
+    height: 14px;
+  }
 }
 
-.upload-php .fs-media-folder-delete-btn:hover {
+.upload-php .fs-media-folders-item.fs-media-folders-link.is-active .fs-media-folder-delete-btn {
+  color: #fff;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .upload-php .fs-media-folder-delete-btn {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .upload-php .fs-media-folders-item:hover .fs-media-folder-delete-btn,
+  .upload-php .fs-media-folder-delete-btn:focus-visible {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+.upload-php .fs-media-folder-delete-btn:hover,
+.upload-php .fs-media-folders-item.fs-media-folders-link.is-active .fs-media-folder-delete-btn:hover,
+.upload-php .fs-media-folders-item.fs-media-folders-link.is-active .fs-media-folder-delete-btn:focus-visible {
   background: #fcf0f1;
+  border-color: #b32d2e;
+  color: #b32d2e;
 }
 
-.upload-php .fs-media-folder-delete-btn:focus {
+.upload-php .fs-media-folder-delete-btn:focus-visible {
   outline: 2px solid #2271b1;
   outline-offset: 1px;
 }
 
-.upload-php .fs-media-folders-create p {
-  margin: 0 0 8px;
+.upload-php .fs-media-folders-item.fs-media-folders-link.is-active .fs-media-folder-delete-btn:focus-visible {
+  outline-color: #fff;
 }
 
-.upload-php .fs-media-folders-create .button {
-  width: 100%;
+.upload-php .fs-media-folders-create p {
+  margin: 0 0 12px;
+}
+
+.upload-php .fs-media-folder-create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.upload-php .fs-media-folder-create-actions .button {
+  width: auto;
 }
 
 .upload-php .fs-media-folders-message {
@@ -182,24 +314,28 @@
   color: #1a5f29;
 }
 
-.upload-php .fs-media-folder-delete-modal {
+.upload-php .fs-media-folder-delete-modal,
+.upload-php .fs-media-folder-create-modal {
   position: fixed;
   inset: 0;
   z-index: 100000;
   display: none;
 }
 
-.upload-php .fs-media-folder-delete-modal.is-open {
+.upload-php .fs-media-folder-delete-modal.is-open,
+.upload-php .fs-media-folder-create-modal.is-open {
   display: block;
 }
 
-.upload-php .fs-media-folder-delete-backdrop {
+.upload-php .fs-media-folder-delete-backdrop,
+.upload-php .fs-media-folder-create-backdrop {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
 }
 
-.upload-php .fs-media-folder-delete-dialog {
+.upload-php .fs-media-folder-delete-dialog,
+.upload-php .fs-media-folder-create-dialog {
   position: relative;
   background: #fff;
   width: 480px;
@@ -219,6 +355,14 @@
   justify-content: flex-end;
   gap: 8px;
   margin-top: 16px;
+}
+
+.upload-php .fs-media-folder-create-dialog .fs-media-folders-create {
+  margin: 0;
+}
+
+.upload-php .fs-media-folder-create-dialog select {
+  max-width: 100%;
 }
 
 // Modal
