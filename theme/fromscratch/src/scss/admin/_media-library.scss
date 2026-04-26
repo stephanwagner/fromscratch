@@ -315,7 +315,8 @@
 }
 
 .upload-php .fs-media-folder-delete-modal,
-.upload-php .fs-media-folder-create-modal {
+.upload-php .fs-media-folder-create-modal,
+.upload-php .fs-media-folder-assign-modal {
   position: fixed;
   inset: 0;
   z-index: 100000;
@@ -323,19 +324,22 @@
 }
 
 .upload-php .fs-media-folder-delete-modal.is-open,
-.upload-php .fs-media-folder-create-modal.is-open {
+.upload-php .fs-media-folder-create-modal.is-open,
+.upload-php .fs-media-folder-assign-modal.is-open {
   display: block;
 }
 
 .upload-php .fs-media-folder-delete-backdrop,
-.upload-php .fs-media-folder-create-backdrop {
+.upload-php .fs-media-folder-create-backdrop,
+.upload-php .fs-media-folder-assign-backdrop {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
 }
 
 .upload-php .fs-media-folder-delete-dialog,
-.upload-php .fs-media-folder-create-dialog {
+.upload-php .fs-media-folder-create-dialog,
+.upload-php .fs-media-folder-assign-dialog {
   position: relative;
   background: #fff;
   width: 480px;
@@ -361,8 +365,30 @@
   margin: 0;
 }
 
-.upload-php .fs-media-folder-create-dialog select {
+.upload-php .fs-media-folder-create-dialog select,
+.upload-php .fs-media-folder-assign-dialog select {
   max-width: 100%;
+}
+
+.upload-php .fs-media-folder-assign-dialog .description {
+  margin: 0 0 12px;
+}
+
+.upload-php .fs-media-folder-assign-error {
+  margin: 0 0 8px;
+  color: #b32d2e;
+  font-size: 13px;
+}
+
+.upload-php .fs-media-folder-assign-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.upload-php .fs-media-folder-assign-actions .button {
+  width: auto;
 }
 
 // Modal

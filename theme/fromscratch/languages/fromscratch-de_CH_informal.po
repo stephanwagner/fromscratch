@@ -1948,6 +1948,31 @@ msgstr "Dadurch werden auch die Ordnerzuweisungen der enthaltenen Dateien entfer
 msgid "The folder is empty."
 msgstr "Der Ordner ist leer."
 
+# Media Library: assign file to folder modal (list row action + AJAX, inc/media-library-folders.php)
+msgid "Add to folder"
+msgstr "Zu Ordner hinzufügen"
+
+msgid "Choose a folder for this file. You can clear the folder by selecting “No folder”."
+msgstr "Wähle einen Ordner für diese Datei. Zum Entfernen der Zuweisung den Eintrag „Kein Ordner“ auswählen."
+
+msgid "Save"
+msgstr "Speichern"
+
+msgid "Something went wrong."
+msgstr "Etwas ist schiefgelaufen."
+
+msgid "You do not have permission to change folders."
+msgstr "Du hast keine Berechtigung, Ordner zu ändern."
+
+msgid "You cannot edit this item."
+msgstr "Du kannst dieses Element nicht bearbeiten."
+
+msgid "Invalid folder."
+msgstr "Ungültiger Ordner."
+
+msgid "Could not update folder."
+msgstr "Der Ordner konnte nicht aktualisiert werden."
+
 # Event CPT: block editor document panel (inc/events.php → fromscratchEvents)
 msgid "Event"
 msgstr "Veranstaltung"

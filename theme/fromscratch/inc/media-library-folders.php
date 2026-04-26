@@ -821,6 +821,52 @@ add_action('wp_ajax_save_attachment_compat', function (): void {
 }, 1);
 
 /**
+ * List view: add a "Folder" row action that opens a modal to assign the file to a folder.
+ */
+add_filter('media_row_actions', function (array $actions, WP_Post $post): array {
+	if (!taxonomy_exists(FS_MEDIA_FOLDER_TAXONOMY) || $post->post_type !== 'attachment') {
+		return $actions;
+	}
+	if (!current_user_can('edit_post', $post->ID)) {
+		return $actions;
+	}
+	$terms = wp_get_object_terms($post->ID, FS_MEDIA_FOLDER_TAXONOMY, ['fields' => 'ids']);
+	$current_id = !is_wp_error($terms) && !empty($terms) ? (int) $terms[0] : 0;
+	$actions['fs_media_folder'] = sprintf(
+		'<a href="#" class="fs-media-assign-folder-link" data-attachment-id="%d" data-current-folder="%d">%s</a>',
+		$post->ID,
+		$current_id,
+		esc_html__('Folder', 'fromscratch')
+	);
+	return $actions;
+}, 10, 2);
+
+/**
+ * AJAX: assign one attachment to a media folder (or clear folder when folder_id is 0).
+ */
+add_action('wp_ajax_fs_media_folder_assign', function (): void {
+	if (!taxonomy_exists(FS_MEDIA_FOLDER_TAXONOMY) || !check_ajax_referer('fs_media_folder_assign', 'nonce', false)) {
+		wp_send_json_error(['message' => __('Something went wrong.', 'fromscratch')], 403);
+	}
+	if (!current_user_can('upload_files')) {
+		wp_send_json_error(['message' => __('You do not have permission to change folders.', 'fromscratch')], 403);
+	}
+	$attachment_id = isset($_POST['attachment_id']) ? absint($_POST['attachment_id']) : 0;
+	$folder_id = isset($_POST['folder_id']) ? absint($_POST['folder_id']) : 0;
+	if ($attachment_id <= 0 || get_post_type($attachment_id) !== 'attachment' || !current_user_can('edit_post', $attachment_id)) {
+		wp_send_json_error(['message' => __('You cannot edit this item.', 'fromscratch')], 403);
+	}
+	if ($folder_id > 0) {
+		$term = get_term($folder_id, FS_MEDIA_FOLDER_TAXONOMY);
+		if (!$term instanceof WP_Term || is_wp_error($term)) {
+			wp_send_json_error(['message' => __('Invalid folder.', 'fromscratch')], 400);
+		}
+	}
+	fs_media_folders_set_attachment_folder($attachment_id, $folder_id);
+	wp_send_json_success(['folder_id' => $folder_id]);
+});
+
+/**
  * Handle sidebar "create folder" form submission.
  */
 add_action('admin_post_fs_media_folder_create', function (): void {
@@ -1080,6 +1126,34 @@ add_action('admin_footer-upload.php', function (): void {
 			</div>
 		</div>
 	</div>
+	<div id="fs-media-folder-assign-modal" class="fs-media-folder-assign-modal" aria-hidden="true" data-fs-assign-nonce="<?= esc_attr(wp_create_nonce('fs_media_folder_assign')) ?>" data-fs-ajax-url="<?= esc_url(admin_url('admin-ajax.php')) ?>">
+		<div class="fs-media-folder-assign-backdrop" data-modal-close></div>
+		<div class="fs-media-folder-assign-dialog" role="dialog" aria-modal="true" aria-labelledby="fs-media-folder-assign-title" aria-describedby="fs-media-folder-assign-desc">
+			<h2 id="fs-media-folder-assign-title"><?= esc_html__('Add to folder', 'fromscratch') ?></h2>
+			<p id="fs-media-folder-assign-desc" class="description"><?= esc_html__('Choose a folder for this file. You can clear the folder by selecting “No folder”.', 'fromscratch') ?></p>
+			<p>
+				<label for="fs_media_assign_folder_id" class="screen-reader-text"><?= esc_html__('Folder', 'fromscratch') ?></label>
+				<?php
+				wp_dropdown_categories([
+					'taxonomy' => FS_MEDIA_FOLDER_TAXONOMY,
+					'name' => 'fs_media_assign_folder_id',
+					'id' => 'fs_media_assign_folder_id',
+					'orderby' => 'name',
+					'hide_empty' => false,
+					'hierarchical' => true,
+					'show_option_none' => __('No folder', 'fromscratch'),
+					'option_none_value' => '0',
+					'value_field' => 'term_id',
+				]);
+				?>
+			</p>
+			<p class="fs-media-folder-assign-error" id="fs-media-folder-assign-error" role="alert" hidden></p>
+			<div class="fs-media-folder-assign-actions">
+				<button type="button" class="button" data-modal-close><?= esc_html__('Cancel', 'fromscratch') ?></button>
+				<button type="button" class="button button-primary" id="fs-media-folder-assign-save"><?= esc_html__('Save', 'fromscratch') ?></button>
+			</div>
+		</div>
+	</div>
 	<div id="fs-media-folder-create-modal" class="fs-media-folder-create-modal" aria-hidden="true">
 		<div class="fs-media-folder-create-backdrop" data-modal-close></div>
 		<div class="fs-media-folder-create-dialog" role="dialog" aria-modal="true" aria-labelledby="fs-media-folder-create-title">
@@ -1206,6 +1280,12 @@ add_action('admin_footer-upload.php', function (): void {
 			var modal = document.getElementById('fs-media-folder-delete-modal');
 			var modalText = document.getElementById('fs-media-folder-delete-text');
 			var modalConfirm = document.getElementById('fs-media-folder-delete-confirm');
+			var assignModal = document.getElementById('fs-media-folder-assign-modal');
+			var assignFolderSelect = document.getElementById('fs_media_assign_folder_id');
+			var assignSaveBtn = document.getElementById('fs-media-folder-assign-save');
+			var assignError = document.getElementById('fs-media-folder-assign-error');
+			var assignAttachmentId = 0;
+			var assignTriggerLink = null;
 			var createModal = document.getElementById('fs-media-folder-create-modal');
 			var createOpenBtn = document.getElementById('fs-media-folders-add-open');
 			var folderNameInput = document.getElementById('fs_media_folder_name');
@@ -1223,6 +1303,7 @@ add_action('admin_footer-upload.php', function (): void {
 				if (!modal || !modalText || !modalConfirm) {
 					return;
 				}
+				closeAssignModal();
 				closeCreateModal();
 				var countText = '';
 				countText += <?= wp_json_encode(__('Delete folder "%s"?', 'fromscratch'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>.replace('%s', name);
@@ -1256,6 +1337,7 @@ add_action('admin_footer-upload.php', function (): void {
 					return;
 				}
 				closeModal();
+				closeAssignModal();
 				createModal.classList.add('is-open');
 				createModal.setAttribute('aria-hidden', 'false');
 				createOpenBtn.setAttribute('aria-expanded', 'true');
@@ -1267,6 +1349,43 @@ add_action('admin_footer-upload.php', function (): void {
 				if (parentSel) {
 					parentSel.value = '0';
 				}
+			}
+
+			function closeAssignModal() {
+				if (!assignModal) {
+					return;
+				}
+				var wasOpen = assignModal.classList.contains('is-open');
+				assignModal.classList.remove('is-open');
+				assignModal.setAttribute('aria-hidden', 'true');
+				assignAttachmentId = 0;
+				if (assignError) {
+					assignError.textContent = '';
+					assignError.hidden = true;
+				}
+				if (wasOpen && assignTriggerLink && typeof assignTriggerLink.focus === 'function') {
+					assignTriggerLink.focus();
+				}
+				assignTriggerLink = null;
+			}
+
+			function openAssignModal(linkEl) {
+				if (!assignModal || !assignFolderSelect || !linkEl) {
+					return;
+				}
+				closeModal();
+				closeCreateModal();
+				assignTriggerLink = linkEl;
+				assignAttachmentId = parseInt(linkEl.getAttribute('data-attachment-id') || '0', 10) || 0;
+				var cur = parseInt(linkEl.getAttribute('data-current-folder') || '0', 10) || 0;
+				assignFolderSelect.value = String(cur);
+				if (assignError) {
+					assignError.textContent = '';
+					assignError.hidden = true;
+				}
+				assignModal.classList.add('is-open');
+				assignModal.setAttribute('aria-hidden', 'false');
+				assignFolderSelect.focus();
 			}
 
 			sidebar.addEventListener('click', function(e) {
@@ -1309,11 +1428,89 @@ add_action('admin_footer-upload.php', function (): void {
 					openCreateModal();
 				});
 			}
+			document.addEventListener('click', function(e) {
+				var folderLink = e.target && e.target.closest && e.target.closest('a.fs-media-assign-folder-link');
+				if (!folderLink) {
+					return;
+				}
+				e.preventDefault();
+				openAssignModal(folderLink);
+			});
+			if (assignModal) {
+				assignModal.addEventListener('click', function(e) {
+					if (e.target && e.target.hasAttribute('data-modal-close')) {
+						closeAssignModal();
+					}
+				});
+			}
+			if (assignSaveBtn && assignModal) {
+				assignSaveBtn.addEventListener('click', function() {
+					if (!assignFolderSelect || assignAttachmentId <= 0) {
+						return;
+					}
+					var nonce = assignModal.getAttribute('data-fs-assign-nonce') || '';
+					var ajaxUrl = assignModal.getAttribute('data-fs-ajax-url') || (typeof ajaxurl !== 'undefined' ? ajaxurl : '');
+					if (!ajaxUrl || !nonce) {
+						return;
+					}
+					var folderVal = assignFolderSelect.value || '0';
+					if (assignError) {
+						assignError.textContent = '';
+						assignError.hidden = true;
+					}
+					assignSaveBtn.disabled = true;
+					var params = new URLSearchParams();
+					params.set('action', 'fs_media_folder_assign');
+					params.set('nonce', nonce);
+					params.set('attachment_id', String(assignAttachmentId));
+					params.set('folder_id', folderVal);
+					fetch(ajaxUrl, {
+						method: 'POST',
+						credentials: 'same-origin',
+						headers: {
+							'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+						},
+						body: params.toString()
+					}).then(function(r) {
+						return r.json();
+					}).then(function(payload) {
+						assignSaveBtn.disabled = false;
+						if (payload && payload.success) {
+							var newId = payload.data && typeof payload.data.folder_id !== 'undefined' ? parseInt(payload.data.folder_id, 10) || 0 : parseInt(folderVal, 10) || 0;
+							if (assignTriggerLink) {
+								assignTriggerLink.setAttribute('data-current-folder', String(newId));
+							}
+							closeAssignModal();
+						} else {
+							var msg = <?= wp_json_encode(__('Could not update folder.', 'fromscratch'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+							if (payload && payload.data) {
+								if (typeof payload.data.message === 'string' && payload.data.message) {
+									msg = payload.data.message;
+								} else if (payload.data[0] && typeof payload.data[0] === 'string') {
+									msg = payload.data[0];
+								}
+							}
+							if (assignError) {
+								assignError.textContent = msg;
+								assignError.hidden = false;
+							}
+						}
+					}).catch(function() {
+						assignSaveBtn.disabled = false;
+						if (assignError) {
+							assignError.textContent = <?= wp_json_encode(__('Could not update folder.', 'fromscratch'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+							assignError.hidden = false;
+						}
+					});
+				});
+			}
 			document.addEventListener('keydown', function(e) {
 				if (e.key !== 'Escape') {
 					return;
 				}
-				if (createModal && createModal.classList.contains('is-open')) {
+				if (assignModal && assignModal.classList.contains('is-open')) {
+					closeAssignModal();
+				} else if (createModal && createModal.classList.contains('is-open')) {
 					closeCreateModal();
 				} else if (modal && modal.classList.contains('is-open')) {
 					closeModal();
