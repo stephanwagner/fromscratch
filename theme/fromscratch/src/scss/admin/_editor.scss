@@ -1,4 +1,4 @@
-// Editor panel
+// SEO panel
 
 div.fromscratch-seo-panel {
   .components-panel__row {
@@ -188,4 +188,20 @@ div.fromscratch-seo-panel {
   .components-datetime {
     width: 100%;
   }
+}
+
+// Event post type
+
+.fromscratch-event-panel {
+
+  .fs-event-date-input,
+  .fs-event-time-input {
+    width: 130px;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+.fs-event-include-times__control {
+  margin: 0 !important;
 }

@@ -1947,3 +1947,22 @@ msgstr "Dadurch werden auch die Ordnerzuweisungen der enthaltenen Dateien entfer
 
 msgid "The folder is empty."
 msgstr "Der Ordner ist leer."
+
+# Event CPT: block editor document panel (inc/events.php → fromscratchEvents)
+msgid "Event"
+msgstr "Veranstaltung"
+
+msgid "Start date"
+msgstr "Startdatum"
+
+msgid "End date"
+msgstr "Enddatum"
+
+msgid "Include times"
+msgstr "Uhrzeiten angeben"
+
+msgid "Start time"
+msgstr "Startzeit"
+
+msgid "End time"
+msgstr "Endzeit"

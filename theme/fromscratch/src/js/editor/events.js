@@ -92,7 +92,7 @@
           el('input', {
             id: 'fs-event-start-date',
             type: 'date',
-            className: 'components-text-control__input',
+            className: 'components-text-control__input fs-event-date-input fs-event-date-input--start',
             value: startDate,
             onChange: function (e) {
               var v = e.target.value;
@@ -114,7 +114,7 @@
           el('input', {
             id: 'fs-event-end-date',
             type: 'date',
-            className: 'components-text-control__input',
+            className: 'components-text-control__input fs-event-date-input fs-event-date-input--end',
             value: endDate || startDate,
             min: startDate || undefined,
             onChange: function (e) {
@@ -122,66 +122,57 @@
             }
           })
         ),
-        el(PanelRow, null, [
+        el(
+          PanelRow,
+          { className: 'fs-event-include-times' },
           el(ToggleControl, {
             key: 'toggle',
+            className: 'fs-event-include-times__control',
             label: L.includeTimesLabel || 'Include times',
             checked: timesEnabled,
             onChange: function (on) {
               onToggleTimes(on);
             }
           })
-        ]),
+        ),
         timesEnabled
           ? el(
               PanelRow,
-              null,
+              { key: 'fs-event-start-time-row' },
               el(
-                'div',
-                { style: { display: 'flex', gap: '12px', flexWrap: 'wrap', width: '100%' } },
-                el(
-                  'div',
-                  { style: { flex: '1 1 120px' } },
-                  el(
-                    'label',
-                    {
-                      className: 'components-base-control__label',
-                      htmlFor: 'fs-event-start-time'
-                    },
-                    L.startTimeLabel || 'Start time'
-                  ),
-                  el('input', {
-                    id: 'fs-event-start-time',
-                    type: 'time',
-                    className: 'components-text-control__input',
-                    value: startTime,
-                    onChange: function (e) {
-                      patch({ [META_START_TIME]: e.target.value });
-                    }
-                  })
-                ),
-                el(
-                  'div',
-                  { style: { flex: '1 1 120px' } },
-                  el(
-                    'label',
-                    {
-                      className: 'components-base-control__label',
-                      htmlFor: 'fs-event-end-time'
-                    },
-                    L.endTimeLabel || 'End time'
-                  ),
-                  el('input', {
-                    id: 'fs-event-end-time',
-                    type: 'time',
-                    className: 'components-text-control__input',
-                    value: endTime,
-                    onChange: function (e) {
-                      patch({ [META_END_TIME]: e.target.value });
-                    }
-                  })
-                )
-              )
+                'label',
+                { className: 'components-base-control__label', htmlFor: 'fs-event-start-time' },
+                L.startTimeLabel || 'Start time'
+              ),
+              el('input', {
+                id: 'fs-event-start-time',
+                type: 'time',
+                className: 'components-text-control__input fs-event-time-input fs-event-time-input--start',
+                value: startTime,
+                onChange: function (e) {
+                  patch({ [META_START_TIME]: e.target.value });
+                }
+              })
+            )
+          : null,
+        timesEnabled
+          ? el(
+              PanelRow,
+              { key: 'fs-event-end-time-row' },
+              el(
+                'label',
+                { className: 'components-base-control__label', htmlFor: 'fs-event-end-time' },
+                L.endTimeLabel || 'End time'
+              ),
+              el('input', {
+                id: 'fs-event-end-time',
+                type: 'time',
+                className: 'components-text-control__input fs-event-time-input fs-event-time-input--end',
+                value: endTime,
+                onChange: function (e) {
+                  patch({ [META_END_TIME]: e.target.value });
+                }
+              })
             )
           : null
       )
