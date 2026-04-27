@@ -21,10 +21,29 @@ function fs_dashboard_matomo_stats_format_lines(array $counts): array
 }
 
 /**
+ * Users without edit_theme_options (e.g. editors) cannot see core welcome_panel.
+ * For those users we render the same content as a normal dashboard widget.
+ */
+function fs_dashboard_show_as_widget(): bool
+{
+	return is_user_logged_in()
+		&& current_user_can('read')
+		&& !current_user_can('edit_theme_options');
+}
+
+/**
  * Remove WordPress Events and News panel
  */
 add_action('wp_dashboard_setup', function () {
 	remove_meta_box('dashboard_primary', 'dashboard', 'side');
+
+	if (fs_dashboard_show_as_widget()) {
+		wp_add_dashboard_widget(
+			'fs_dashboard_panel_widget',
+			__('FromScratch', 'fromscratch'),
+			'fs_dashboard_panel_widget_render'
+		);
+	}
 }, 20);
 
 /**
@@ -299,6 +318,16 @@ function fs_dashboard_panel()
 <?php
 }
 add_action('welcome_panel', 'fs_dashboard_panel');
+
+/**
+ * Dashboard widget renderer (fallback when welcome_panel is unavailable).
+ */
+function fs_dashboard_panel_widget_render(): void
+{
+	echo '<div class="fs-dashboard__widget">';
+	fs_dashboard_panel();
+	echo '</div>';
+}
 
 /**
  * Load Matomo visit counts after dashboard paint (non-blocking).
