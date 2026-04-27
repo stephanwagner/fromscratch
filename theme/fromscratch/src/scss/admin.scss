@@ -1,1 +1,31 @@
-@forward 'admin/app';
+// Fonts
+@forward 'fonts/fonts';
+
+// Shared
+@forward 'layout/shared/wordpress';
+@forward 'layout/shared/form-editor';
+@forward 'layout/shared/tags-editor';
+@forward 'layout/shared/wordpress-blocks-editor';
+
+// Wordpress
+@forward 'admin/wordpress';
+
+// Forms
+@forward 'admin/form';
+
+// Common
+@forward 'admin/common';
+
+// Editor
+@forward 'admin/editor';
+
+// Sections
+@forward 'admin/developer-settings';
+@forward 'admin/theme-settings';
+@forward 'admin/welcome-panel';
+@forward 'admin/languages';
+@forward 'admin/developer-settings';
+@forward 'admin/redis';
+@forward 'admin/analytics';
+@forward 'admin/custom-post-types';
+@forward 'admin/media-library';
