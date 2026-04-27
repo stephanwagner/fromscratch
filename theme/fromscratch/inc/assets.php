@@ -51,18 +51,23 @@ if (!function_exists('asset_url')) {
  * Get the hash for assets (file modification time). Path is under assets/ (e.g. /assets/css/main.css or /css/main.css).
  *
  * @param string $file Path relative to theme root, e.g. '/assets/css/main.css'.
- * @return int File modification time.
+ * @return string Hash/version string for enqueue versioning.
  */
-function fs_asset_hash(string $file): int
+function fs_asset_hash(string $file): string
 {
 	if (fs_is_debug()) {
-		return time();
+		return (string) time();
 	}
 	$path = ltrim($file, '/');
 	if ($path !== '' && strpos($path, 'assets/') !== 0) {
 		$path = 'assets/' . $path;
 	}
-	return substr(md5(filemtime(get_template_directory() . '/' . $path)), 0, 6);
+	$full = get_template_directory() . '/' . $path;
+	if (!file_exists($full)) {
+		// Never fatal on missing files; force cache miss while signaling issue.
+		return (string) time();
+	}
+	return substr(md5((string) filemtime($full)), 0, 6);
 }
 
 /**
