@@ -62,7 +62,7 @@ function fs_asset_hash(string $file): int
 	if ($path !== '' && strpos($path, 'assets/') !== 0) {
 		$path = 'assets/' . $path;
 	}
-	return filemtime(get_template_directory() . '/' . $path);
+	return substr(md5(filemtime(get_template_directory() . '/' . $path)), 0, 6);
 }
 
 /**
