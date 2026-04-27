@@ -100,7 +100,7 @@ task('deploy:clear-cache', function () {
 	}
 
 	// Clear Nginx site cache
-	// TODO run('rm -rf /var/cache/nginx/*');
+	run('rm -rf /var/cache/nginx/proxy/*');
 })->desc('Clear cache');
 
 // Task: Link theme
