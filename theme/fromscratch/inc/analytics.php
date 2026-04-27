@@ -57,10 +57,13 @@ function fs_dashboard_can_access_statistics(): bool
     if (!is_user_logged_in()) {
         return false;
     }
+    if (!function_exists('fs_theme_feature_enabled') || !fs_theme_feature_enabled('matomo')) {
+        return false;
+    }
     if (current_user_can('manage_options')) {
         return true;
     }
-    return function_exists('fs_is_developer_user') && fs_is_developer_user((int) get_current_user_id());
+    return false;
 }
 
 add_action('admin_menu', function (): void {
@@ -411,10 +414,10 @@ function fs_dashboard_render_visits_summary_90d_box(array $s, array $visit_frequ
             </li>
             <li>
                 <span class="fs-visits-summary-list__label"><?= esc_html__(
-                    /* translators: VisitFrequency: share of all visits (90 days) that are from returning visitors; value column shows e.g. 25%%. */
-                    'Returning visitors',
-                    'fromscratch'
-                ) ?></span>
+                                                                /* translators: VisitFrequency: share of all visits (90 days) that are from returning visitors; value column shows e.g. 25%%. */
+                                                                'Returning visitors',
+                                                                'fromscratch'
+                                                            ) ?></span>
                 <span class="fs-visits-summary-list__value"><?= $ret_pct === null ? '–' : esc_html($ret_pct) . ' %' ?></span>
             </li>
             <li>
@@ -545,7 +548,7 @@ function fs_dashboard_render_top_pages_table(array $pages): void
             <?php endforeach; ?>
         </tbody>
     </table>
-    <?php
+<?php
 }
 
 /**
@@ -1614,12 +1617,12 @@ function fs_render_dashboard_statistics_page(): void
         <?php
         $matomo_err = fs_dashboard_get_last_matomo_error();
         if ($matomo_err !== '') :
-            ?>
+        ?>
             <div class="notice notice-error">
                 <p><strong><?= esc_html__('Matomo error', 'fromscratch') ?></strong></p>
                 <p><?= esc_html($matomo_err) ?></p>
             </div>
-            <?php
+        <?php
         endif;
         $matomo_settings = fs_dashboard_matomo_settings();
         $matomo_login_url = $matomo_settings ? $matomo_settings['url'] : '';
