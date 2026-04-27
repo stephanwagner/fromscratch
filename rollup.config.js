@@ -88,7 +88,7 @@ export default [
   },
 
   /**
-   * Service worker: separate bundle from main.js (worker global). Entry composes ./src/js/service-worker/index.js.
+   * Service worker
    */
   {
     input: `${base}/src/js/service-worker/index.js`,
