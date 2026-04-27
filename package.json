@@ -12,7 +12,7 @@
     "build:js": "MODE=dev rollup -c && MODE=prod rollup -c",
     "build:css": "npm run build:css:dev && npm run build:css:prod",
     "build:css:dev": "sass theme/fromscratch/src/scss/main.scss:theme/fromscratch/assets/css/main.css theme/fromscratch/src/scss/admin.scss:theme/fromscratch/assets/css/admin.css theme/fromscratch/src/scss/admin-bar.scss:theme/fromscratch/assets/css/admin-bar.css --style=expanded --source-map",
-    "build:css:prod": "sass theme/fromscratch/src/scss/min:theme/fromscratch/assets/css --style=compressed --no-source-map"
+    "build:css:prod": "sass theme/fromscratch/src/scss/main.scss:theme/fromscratch/assets/css/main.min.css theme/fromscratch/src/scss/admin.scss:theme/fromscratch/assets/css/admin.min.css theme/fromscratch/src/scss/admin-bar.scss:theme/fromscratch/assets/css/admin-bar.min.css --style=compressed --no-source-map"
   },
   "dependencies": {
     "chart.js": "^4.5.1",
