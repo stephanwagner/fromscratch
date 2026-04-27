@@ -72,6 +72,9 @@ add_filter('get_user_option_meta-box-order_dashboard', function ($value, $user_i
 function fs_dashboard_panel()
 {
 	$is_developer = function_exists('fs_is_developer_user') && fs_is_developer_user((int) get_current_user_id());
+	$is_admin = current_user_can('manage_options');
+	$can_view_widget_notices = $is_admin || $is_developer;
+	$can_view_theme_settings = $is_admin || $is_developer;
 	$can_view_stats = function_exists('fs_dashboard_can_access_statistics') && fs_dashboard_can_access_statistics();
 	$system_url = admin_url('options-general.php?page=' . fs_developer_settings_page_slug('system') . '#fs-search-visibility');
 	$security_url = admin_url('options-general.php?page=fs-developer-security');
@@ -155,7 +158,7 @@ function fs_dashboard_panel()
 		</p>
 
 		<?php
-		if (fs_theme_feature_enabled('blocked_ips')) {
+		if ($can_view_widget_notices && fs_theme_feature_enabled('blocked_ips')) {
 			$suspicious_ips = function_exists('fs_blocked_ips_suspicious_list') ? fs_blocked_ips_suspicious_list() : [];
 			if (!empty($suspicious_ips)) :
 		?>
@@ -178,21 +181,21 @@ function fs_dashboard_panel()
 		}
 		?>
 
-		<?php if ($is_developer && (int) get_option('blog_public', 1) === 0) : ?>
+		<?php if ($can_view_widget_notices && (int) get_option('blog_public', 1) === 0) : ?>
 			<div class="notice notice-warning inline" style="margin: 16px 0;">
 				<p><strong><?php esc_html_e('Search engines are asked not to index this site.', 'fromscratch'); ?></strong></p>
 				<p style="margin-top: -4px;"><a href="<?php echo esc_url($system_url); ?>"><?php esc_html_e('Enable search engine indexing in Developer → System', 'fromscratch'); ?></a></p>
 			</div>
 		<?php endif; ?>
 
-		<?php if ($is_developer && get_option('fromscratch_site_password_protection') === '1') : ?>
+		<?php if ($can_view_widget_notices && get_option('fromscratch_site_password_protection') === '1') : ?>
 			<div class="notice notice-info inline" style="margin: 16px 0;">
 				<p><strong><?php esc_html_e('Password protection is active.', 'fromscratch'); ?></strong></p>
 				<p style="margin-top: -4px;"><a href="<?php echo esc_url($security_url); ?>"><?php esc_html_e('Manage in Developer → Security', 'fromscratch'); ?></a></p>
 			</div>
 		<?php endif; ?>
 
-		<?php if ($is_developer && get_option('fromscratch_maintenance_mode') === '1') : ?>
+		<?php if ($can_view_widget_notices && get_option('fromscratch_maintenance_mode') === '1') : ?>
 			<div class="notice notice-info inline" style="margin: 16px 0;">
 				<p><strong><?php esc_html_e('Maintenance mode is active.', 'fromscratch'); ?></strong></p>
 				<p style="margin-top: -4px;"><a href="<?php echo esc_url($security_url); ?>"><?php esc_html_e('Manage in Developer → Security', 'fromscratch'); ?></a></p>
@@ -204,7 +207,9 @@ function fs_dashboard_panel()
 			<div class="fs-dashboard__section -links">
 				<div class="fs-dashboard__section-title"><?= esc_html__('Quick links', 'fromscratch') ?></div>
 				<ul class="fs-dashboard__section-list -limit">
-					<li><a href="<?= esc_url(admin_url('options-general.php?page=fs-theme-settings')) ?>"><?= esc_html__('Theme settings', 'fromscratch') ?></a></li>
+					<?php if ($can_view_theme_settings) : ?>
+						<li><a href="<?= esc_url(admin_url('options-general.php?page=fs-theme-settings')) ?>"><?= esc_html__('Theme settings', 'fromscratch') ?></a></li>
+					<?php endif; ?>
 					<?php if ($is_developer) : ?>
 						<li><a href="<?= esc_url(admin_url('options-general.php?page=fs-developer-settings')) ?>"><?= esc_html__('Developer settings', 'fromscratch') ?></a></li>
 					<?php endif; ?>
