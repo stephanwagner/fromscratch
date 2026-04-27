@@ -73,7 +73,7 @@ function fs_dashboard_panel()
 {
 	$is_developer = function_exists('fs_is_developer_user') && fs_is_developer_user((int) get_current_user_id());
 	$is_admin = current_user_can('manage_options');
-	$can_view_widget_notices = $is_admin || $is_developer;
+	$can_view_widget_notices = $is_developer;
 	$can_view_theme_settings = $is_admin || $is_developer;
 	$can_view_stats = function_exists('fs_dashboard_can_access_statistics') && fs_dashboard_can_access_statistics();
 	$system_url = admin_url('options-general.php?page=' . fs_developer_settings_page_slug('system') . '#fs-search-visibility');
@@ -158,7 +158,7 @@ function fs_dashboard_panel()
 		</p>
 
 		<?php
-		if ($can_view_widget_notices && $is_developer && fs_theme_feature_enabled('blocked_ips')) {
+		if ($can_view_widget_notices && fs_theme_feature_enabled('blocked_ips')) {
 			$suspicious_ips = function_exists('fs_blocked_ips_suspicious_list') ? fs_blocked_ips_suspicious_list() : [];
 			if (!empty($suspicious_ips)) :
 		?>
