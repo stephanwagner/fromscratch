@@ -158,7 +158,7 @@ function fs_dashboard_panel()
 		</p>
 
 		<?php
-		if ($can_view_widget_notices && fs_theme_feature_enabled('blocked_ips')) {
+		if ($can_view_widget_notices && $is_developer && fs_theme_feature_enabled('blocked_ips')) {
 			$suspicious_ips = function_exists('fs_blocked_ips_suspicious_list') ? fs_blocked_ips_suspicious_list() : [];
 			if (!empty($suspicious_ips)) :
 		?>
