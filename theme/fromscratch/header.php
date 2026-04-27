@@ -30,6 +30,8 @@
 					]); ?>
 				</div>
 
+				|1|
+
 				<div class="header-menu__toggler-container" data-toggle-menu>
 					<div class="main-menu__toggler-icon-container">
 						<div class="main-menu__toggler-icon">
