@@ -95,15 +95,15 @@ task('deploy:wp-cli', function () {
 
 // Task: Clear cache
 
-task('deploy:clear-cache', function () {
+task('deploy:clear-cache', function () use ($config) {
 	// Clear WordPress cache
 	if (test('{{wp_cli_path}} core is-installed --path={{wp_path}}')) {
 		run('{{wp_cli_path}} cache flush --path={{wp_path}} || true');
 	}
 
-	// Clear Nginx site cache
-	if (isset($config['nginx_proxy_cache']['enabled']) && $config['nginx_proxy_cache']['enabled']) {
-		run('rm -rf ' . $config['nginx_proxy_cache']['path']);
+	// Clear Nginx site cache on production environment
+	if (get('stage') === 'production' && isset($config['nginx_proxy_cache']['enabled']) && $config['nginx_proxy_cache']['enabled']) {
+		run($config['nginx_proxy_cache']['command']);
 	}
 })->desc('Clear cache');
 
@@ -128,8 +128,8 @@ task('deploy', [
 
 // Hooks
 
+after('deploy:publish', 'deploy:link-theme');
 after('deploy:publish', 'deploy:wp-cli');
 after('deploy:publish', 'deploy:clear-cache');
-after('deploy:publish', 'deploy:link-theme');
 
 after('deploy:failed', 'deploy:unlock');

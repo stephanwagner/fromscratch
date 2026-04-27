@@ -66,6 +66,6 @@ return [
     // Nginx proxy cache
     'nginx_proxy_cache' => [
         'enabled' => false,
-        'path' => '/var/cache/nginx/proxy/*',
+        'command' => 'sudo /usr/local/bin/purge-nginx-cache.sh 2>&1',
     ],
 ];
