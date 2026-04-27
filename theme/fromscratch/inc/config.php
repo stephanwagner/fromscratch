@@ -87,6 +87,18 @@ function fs_config_redis_enabled(): bool
 }
 
 /**
+ * Whether comments are enabled in theme config.
+ */
+function fs_config_comments_enabled(): bool
+{
+	$v = fs_config('comments');
+	if ($v === null) {
+		return true;
+	}
+	return (bool) $v;
+}
+
+/**
  * Resolve dot-path key into config value.
  *
  * @param array $config Config array.

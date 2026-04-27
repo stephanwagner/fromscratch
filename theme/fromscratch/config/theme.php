@@ -23,6 +23,12 @@ return [
 	],
 
 	/**
+	 * Comments.
+	 * enabled: when false, comments are disabled globally in frontend and admin.
+	 */
+	'comments' => false,
+
+	/**
 	 * WordPress image threshold
 	 * Set to false to disable the generation of the scaled 'full' image.
 	 */
@@ -34,19 +40,6 @@ return [
 	 */
 	'image_sizes_extra' => [
 		['slug' => 'small', 'name' => 'Small', 'width' => 600, 'height' => 600],
-	],
-
-	/**
-	 * Redirects
-	 * Sets the redirect method.
-	 *
-	 * method: 'wordpress' = run redirects in PHP (template_redirect).
-	 *         'htaccess'  = write rules to .htaccess (Apache; file must be writable).
-	 * 
-	 * If you run Apache, use 'htaccess' for better performance.
-	 */
-	'redirects' => [
-		'method' => 'wordpress',
 	],
 
 	/**
@@ -64,26 +57,16 @@ return [
 	'webp_quality' => 82, // Lossy WebP quality 1–100
 
 	/**
-	 * Login limit
-	 * Locks out IP after N failed attempts per minute for M minutes.
+	 * Redirects
+	 * Sets the redirect method.
+	 *
+	 * method: 'wordpress' = run redirects in PHP (template_redirect).
+	 *         'htaccess'  = write rules to .htaccess (Apache; file must be writable).
+	 * 
+	 * If you run Apache, use 'htaccess' for better performance.
 	 */
-	'login_limit' => true,       // Enable login limit
-	'login_limit_attempts' => 5, // Failed attempts per minute per IP
-	'login_limit_lockout' => 3,  // Lockout duration in minutes
-
-	/**
-	 * Site password
-	 * Cookie duration in days.
-	 */
-	'site_password_cookie_days' => 14,
-
-	/**
-	 * Suspicious login attempts threshold
-	 * When an IP has at least this many attempts within the time window, it is shown as suspicious and can be blocked.
-	 */
-	'login_suspicious_attempts' => [
-		'attempts' => 10,
-		'minutes' => 30,
+	'redirects' => [
+		'method' => 'wordpress',
 	],
 
 	/**
@@ -97,6 +80,29 @@ return [
 		'Referrer-Policy' => 'strict-origin-when-cross-origin',
 		'X-Permitted-Cross-Domain-Policies' => 'none',
 	],
+
+	/**
+	 * Login limit
+	 * Locks out IP after N failed attempts per minute for M minutes.
+	 */
+	'login_limit' => true,       // Enable login limit
+	'login_limit_attempts' => 5, // Failed attempts per minute per IP
+	'login_limit_lockout' => 3,  // Lockout duration in minutes
+
+	/**
+	 * Suspicious login attempts threshold
+	 * When an IP has at least this many attempts within the time window, it is shown as suspicious and can be blocked.
+	 */
+	'login_suspicious_attempts' => [
+		'attempts' => 10,
+		'minutes' => 30,
+	],
+
+	/**
+	 * Site password
+	 * Cookie duration in days.
+	 */
+	'site_password_cookie_days' => 14,
 
 	/**
 	 * Redis integration in Developer settings.

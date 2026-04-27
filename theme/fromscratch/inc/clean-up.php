@@ -56,7 +56,7 @@ add_action('wp_enqueue_scripts', 'fs_clean_up_styles', 100);
  * Hide options on WordPress General Settings page.
  */
 add_action('load-options-general.php', function (): void {
-	add_action('admin_head', function (): void { 
+	add_action('admin_head', function (): void {
 		echo '<style>';
 		echo '.form-table tr:has(#siteurl),';
 		echo '.form-table tr:has(#home), ';
@@ -70,36 +70,38 @@ add_action('load-options-general.php', function (): void {
 /**
  * Disable and remove comments everywhere
  */
-add_filter('comments_open', '__return_false');
-add_filter('pings_open', '__return_false');
+if (!function_exists('fs_config_comments_enabled') || !fs_config_comments_enabled()) {
+	add_filter('comments_open', '__return_false');
+	add_filter('pings_open', '__return_false');
 
-add_action('admin_menu', function () {
-	remove_menu_page('edit-comments.php');
-	remove_submenu_page('options-general.php', 'options-discussion.php');
-}, 20);
+	add_action('admin_menu', function () {
+		remove_menu_page('edit-comments.php');
+		remove_submenu_page('options-general.php', 'options-discussion.php');
+	}, 20);
 
-add_action('admin_init', function () {
-	global $pagenow;
-	$blocked = ['edit-comments.php', 'options-discussion.php'];
-	if (in_array($pagenow, $blocked, true)) {
-		wp_safe_redirect(admin_url());
-		exit;
-	}
+	add_action('admin_init', function () {
+		global $pagenow;
+		$blocked = ['edit-comments.php', 'options-discussion.php'];
+		if (in_array($pagenow, $blocked, true)) {
+			wp_safe_redirect(admin_url());
+			exit;
+		}
 
-	foreach (get_post_types([], 'names') as $post_type) {
-		remove_post_type_support($post_type, 'comments');
-		remove_post_type_support($post_type, 'trackbacks');
-	}
-});
+		foreach (get_post_types([], 'names') as $post_type) {
+			remove_post_type_support($post_type, 'comments');
+			remove_post_type_support($post_type, 'trackbacks');
+		}
+	});
 
-add_action('wp_before_admin_bar_render', function () {
-	global $wp_admin_bar;
-	$wp_admin_bar->remove_menu('comments');
-});
+	add_action('wp_before_admin_bar_render', function () {
+		global $wp_admin_bar;
+		$wp_admin_bar->remove_menu('comments');
+	});
 
-add_action('template_redirect', function () {
-	if (is_comment_feed()) {
-		wp_redirect(home_url(), 301);
-		exit;
-	}
-}, 1);
+	add_action('template_redirect', function () {
+		if (is_comment_feed()) {
+			wp_redirect(home_url(), 301);
+			exit;
+		}
+	}, 1);
+}
