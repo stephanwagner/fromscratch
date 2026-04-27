@@ -9,30 +9,36 @@ require 'recipe/common.php';
 $configFile = __DIR__ . '/deploy.config.php';
 
 if (!file_exists(__DIR__ . '/deploy.config.php')) {
-    die('Missing deploy.config.php – copy deploy.config.example.php and adjust it.');
+	die('Missing deploy.config.php – copy deploy.config.example.php and adjust it.');
 }
 
 $config = require $configFile;
 
-// Variables
-
-set('bin/php', $config['phpPath']);
+// Server config
 
 set('git_ssh_command', 'ssh');
 
-set('remote_user', $config['remoteUser']);
+set('server_ip', $config['server_ip']);
 
-set('keep_releases', $config['keepReleases']);
+set('remote_user', $config['remote_user']);
 
-set('release_name', $config['releaseName']);
+set('bin/php', $config['php_path']);
 
-set('wp_theme_slug', $config['wpThemeSlug']);
+//  WordPress config
 
-set('wp_path', '{{deploy_path}}/../wordpress');
+set('theme_slug', $config['theme_slug']);
 
-set('wp_cli_path', '{{deploy_path}}/shared/wp');
+set('theme_path', $config['theme_path']);
 
-set('wp_theme_path', '{{wp_path}}/wp-content/themes/{{wp_theme_slug}}');
+set('wp_path', $config['wp_path']);
+
+set('wp_cli_path', $config['wp_cli_path']);
+
+// Release config
+
+set('keep_releases', $config['keep_releases']);
+
+set('release_name', $config['release_name']);
 
 // Shared files and folders
 
@@ -46,17 +52,13 @@ add('writable_dirs', []);
 
 // Hosts
 
-host('staging')
-	->set('stage', 'staging')
-	->set('hostname', $config['serverIP'])
-	->set('repository', $config['repository'])
-	->set('deploy_path', $config['deployPathStaging']);
-
-host('production')
-	->set('stage', 'production')
-	->set('hostname', $config['serverIP'])
-	->set('repository', $config['repository'])
-	->set('deploy_path', $config['deployPathProduction']);
+foreach ($config['environments'] as $environment => $envConfig) {
+	host($environment)
+		->set('stage', $environment)
+		->set('hostname', $config['server_ip'])
+		->set('repository', $config['repository_url'])
+		->set('deploy_path', $envConfig['deploy_path']);
+}
 
 // Task: Create deploy version file
 
@@ -100,17 +102,19 @@ task('deploy:clear-cache', function () {
 	}
 
 	// Clear Nginx site cache
-	run('rm -rf /var/cache/nginx/proxy/*');
+	if (isset($config['nginx_proxy_cache']['enabled']) && $config['nginx_proxy_cache']['enabled']) {
+		run('rm -rf ' . $config['nginx_proxy_cache']['path']);
+	}
 })->desc('Clear cache');
 
 // Task: Link theme
 
-task('deploy:link-theme', function () {
-	if (!test('[ -d {{deploy_path}}/current/theme/{{wp_theme_slug}} ]')) {
+task('deploy:link-theme', function () use ($config) {
+	if (!test('[ -d ' . $config['theme_path'] . ' ]')) {
 		throw new \Exception('Theme folder not found in release');
 	}
 
-	run('ln -nfs {{deploy_path}}/current/theme/{{wp_theme_slug}} {{wp_theme_path}}');
+	run('ln -nfs ' . $config['wp_path'] . '/wp-content/themes/' . $config['theme_slug'] . ' ' . $config['theme_path']);
 })->desc('Link theme');
 
 // Deploy tasks
