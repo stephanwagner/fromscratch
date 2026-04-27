@@ -52,15 +52,26 @@ function fs_dashboard_get_analytics_settings(): array
 /**
  * Dashboard > Analytics page.
  */
+function fs_dashboard_can_access_statistics(): bool
+{
+    if (!is_user_logged_in()) {
+        return false;
+    }
+    if (current_user_can('manage_options')) {
+        return true;
+    }
+    return function_exists('fs_is_developer_user') && fs_is_developer_user((int) get_current_user_id());
+}
+
 add_action('admin_menu', function (): void {
-    if (!current_user_can('edit_posts')) {
+    if (!fs_dashboard_can_access_statistics()) {
         return;
     }
     add_submenu_page(
         'index.php',
         __('Analytics', 'fromscratch'),
         __('Analytics', 'fromscratch'),
-        'edit_posts',
+        'read',
         fs_dashboard_stats_page_slug(),
         'fs_render_dashboard_statistics_page'
     );
@@ -1414,7 +1425,7 @@ function fs_dashboard_statistics_reload_url(): string
 
 function fs_render_dashboard_statistics_page(): void
 {
-    if (!current_user_can('edit_posts')) {
+    if (!fs_dashboard_can_access_statistics()) {
         wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'fromscratch'));
     }
     // Loads immediately on cache miss / ?no_cache=1 (blocking); same data as dashboard after refresh.

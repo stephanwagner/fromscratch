@@ -68,6 +68,7 @@ add_action('admin_head', function () {
 function fs_dashboard_panel()
 {
 	$is_developer = function_exists('fs_is_developer_user') && fs_is_developer_user((int) get_current_user_id());
+	$can_view_stats = function_exists('fs_dashboard_can_access_statistics') && fs_dashboard_can_access_statistics();
 	$system_url = admin_url('options-general.php?page=' . fs_developer_settings_page_slug('system') . '#fs-search-visibility');
 	$security_url = admin_url('options-general.php?page=fs-developer-security');
 	$stats_url = fs_dashboard_statistics_url();
@@ -227,7 +228,7 @@ function fs_dashboard_panel()
 				</ul>
 			</div>
 
-			<?php if (fs_theme_feature_enabled('matomo')) : ?>
+			<?php if (fs_theme_feature_enabled('matomo') && $can_view_stats) : ?>
 				<div class="fs-dashboard__section -stats" data-fs-dashboard-stats data-fs-stats-cached="<?= $matomo_stats_cached ? '1' : '0' ?>">
 					<div class="fs-dashboard__section-title"><?= esc_html__('Analytics', 'fromscratch') ?></div>
 					<ul class="fs-dashboard__section-list -limit">
@@ -305,6 +306,9 @@ add_action('welcome_panel', 'fs_dashboard_panel');
 function fs_dashboard_enqueue_matomo_stats(string $hook_suffix): void
 {
 	if ($hook_suffix !== 'index.php') {
+		return;
+	}
+	if (!(function_exists('fs_dashboard_can_access_statistics') && fs_dashboard_can_access_statistics())) {
 		return;
 	}
 	wp_register_script('fs-dashboard-matomo', false, [], null, true);
@@ -472,7 +476,7 @@ add_action('init', function (): void {
 function fs_dashboard_ajax_matomo_stats(): void
 {
 	check_ajax_referer('fs_dashboard_matomo_stats', 'nonce');
-	if (!current_user_can('read')) {
+	if (!(function_exists('fs_dashboard_can_access_statistics') && fs_dashboard_can_access_statistics())) {
 		wp_send_json_error(null, 403);
 	}
 

@@ -221,9 +221,6 @@ add_action('admin_menu', function (): void {
 	if (!current_user_can('manage_options')) {
 		return;
 	}
-	if (!function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
-		return;
-	}
 	if (!function_exists('fs_config_redis_enabled') || !fs_config_redis_enabled()) {
 		return;
 	}
@@ -242,6 +239,13 @@ add_action('load-settings_page_redis-cache', function (): void {
 	global $title;
 	if (!is_string($title) || $title === '') {
 		$title = __('Developer › Redis', 'fromscratch');
+	}
+	if (!current_user_can('manage_options')) {
+		return;
+	}
+	if (!function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
+		wp_safe_redirect(admin_url('options-general.php?page=fs-theme-settings'));
+		exit;
 	}
 }, 1);
 
@@ -290,6 +294,34 @@ add_filter('submenu_file', function ($submenu_file, $parent_file) {
 	}
 	return $submenu_file;
 }, 10, 2);
+
+/**
+ * Redis plugin may add admin-bar actions (e.g. flush cache). Keep those developer-only.
+ */
+add_action('admin_bar_menu', function (\WP_Admin_Bar $wp_admin_bar): void {
+	if (!is_user_logged_in() || !is_admin_bar_showing() || !current_user_can('manage_options')) {
+		return;
+	}
+	if (!function_exists('fs_config_redis_enabled') || !fs_config_redis_enabled()) {
+		return;
+	}
+	if (function_exists('fs_is_developer_user') && fs_is_developer_user((int) get_current_user_id())) {
+		return;
+	}
+	$nodes = $wp_admin_bar->get_nodes();
+	if (!is_array($nodes)) {
+		return;
+	}
+	foreach (array_keys($nodes) as $id) {
+		$id_str = (string) $id;
+		if (strpos($id_str, 'redis') !== false) {
+			if (function_exists('fs_admin_bar_remove_children_of')) {
+				fs_admin_bar_remove_children_of($wp_admin_bar, $id_str);
+			}
+			$wp_admin_bar->remove_node($id_str);
+		}
+	}
+}, 100000);
 
 /**
  * Delete revisions, keeping the N most recent per post.
