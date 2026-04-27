@@ -1277,8 +1277,8 @@ msgstr "Seitentitel anzeigen"
 msgid "Pin to dashboard"
 msgstr "Im Dashboard anheften"
 
-msgid "Pinned"
-msgstr "Fixiert"
+msgid "Pinned posts"
+msgstr "Fixierte Beiträge"
 
 # Post expirator (empty expiration button)
 msgctxt "expiration date empty"
@@ -1988,6 +1988,9 @@ msgstr "Ohne Ordner"
 # Event CPT: block editor document panel (inc/events.php → fromscratchEvents)
 msgid "Event"
 msgstr "Veranstaltung"
+
+msgid "Post"
+msgstr "Beitrag"
 
 msgid "Start date"
 msgstr "Startdatum"

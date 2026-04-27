@@ -21,65 +21,50 @@ function fs_dashboard_matomo_stats_format_lines(array $counts): array
 }
 
 /**
- * Users without edit_theme_options (e.g. editors) cannot see core welcome_panel.
- * For those users we render the same content as a normal dashboard widget.
- */
-function fs_dashboard_show_as_widget(): bool
-{
-	return is_user_logged_in()
-		&& current_user_can('read')
-		&& !current_user_can('edit_theme_options');
-}
-
-/**
  * Remove WordPress Events and News panel
  */
 add_action('wp_dashboard_setup', function () {
 	remove_meta_box('dashboard_primary', 'dashboard', 'side');
-
-	if (fs_dashboard_show_as_widget()) {
-		wp_add_dashboard_widget(
-			'fs_dashboard_panel_widget',
-			__('FromScratch', 'fromscratch'),
-			'fs_dashboard_panel_widget_render'
-		);
-	}
+	wp_add_dashboard_widget(
+		'fs_dashboard_panel_widget',
+		__('FromScratch', 'fromscratch'),
+		'fs_dashboard_panel_widget_render',
+		null,
+		null,
+		'normal',
+		'high'
+	);
 }, 20);
 
 /**
- * Force welcome panel to be shown
+ * Keep custom dashboard panel in first position by default.
  */
-add_filter('get_user_metadata', function ($value, $user_id, $meta_key) {
-	if ($meta_key === 'show_welcome_panel') {
-		return 1;
+add_filter('get_user_option_meta-box-order_dashboard', function ($value, $user_id) {
+	if (!is_user_logged_in()) {
+		return $value;
 	}
+
+	$widget_id = 'fs_dashboard_panel_widget';
+	$default_order = [
+		'normal' => $widget_id,
+		'side'   => '',
+	];
+
+	if (is_array($value) && $value !== []) {
+		return $value;
+	}
+
+	if (is_string($value) && $value !== '') {
+		return $value;
+	}
+
+	if ($value === false || $value === null || $value === '' || $value === []) {
+		return $default_order;
+	}
+
+	// Respect each user's saved drag/drop layout once it exists.
 	return $value;
-}, 10, 3);
-
-/**
- * Remove Welcome panel
- */
-add_action('admin_init', function () {
-	remove_action('welcome_panel', 'wp_welcome_panel');
-});
-
-/**
- * Hide Welcome panel checkbox
- */
-add_action('admin_head', function () {
-
-	$screen = get_current_screen();
-
-	if ($screen->id !== 'dashboard') {
-		return;
-	}
-
-	echo '<style>
-        #screen-options-wrap label[for="wp_welcome_panel-hide"] {
-            display:none;
-        }
-    </style>';
-});
+}, 10, 2);
 
 /**
  * Add a custom welcome panel
@@ -164,8 +149,6 @@ function fs_dashboard_panel()
 ?>
 	<div class="fs-dashboard__panel">
 
-		<h2 class="fs-dashboard__title">FromScratch</h2>
-
 		<p class="fs-dashboard__description">
 			A developer-first foundation built for flexibility and control.<br>
 			Crafted with care by <a href="https://stephanwagner.me" target="_blank" rel="noopener">Stephan Wagner</a> from <a href="https://bytesandstripes.com/en" target="_blank" rel="noopener">bytes and stripes</a>.
@@ -218,19 +201,6 @@ function fs_dashboard_panel()
 
 		<div class="fs-dashboard__sections -flex">
 
-			<?php if (!empty($pinned_pages)) : ?>
-				<div class="fs-dashboard__section -pinned">
-					<div class="fs-dashboard__section-title"><?= esc_html__('Pinned', 'fromscratch') ?></div>
-					<ul class="fs-dashboard__section-list -limit">
-						<?php foreach ($pinned_pages as $pinned) : ?>
-							<li>
-								<a href="<?= esc_url(get_permalink($pinned)) ?>"><?= esc_html(get_the_title($pinned) ?: __('(no title)', 'fromscratch')) ?></a>
-							</li>
-						<?php endforeach; ?>
-					</ul>
-				</div>
-			<?php endif; ?>
-
 			<div class="fs-dashboard__section -links">
 				<div class="fs-dashboard__section-title"><?= esc_html__('Quick links', 'fromscratch') ?></div>
 				<ul class="fs-dashboard__section-list -limit">
@@ -267,6 +237,40 @@ function fs_dashboard_panel()
 			<?php endif; ?>
 		</div>
 
+		<?php if (!empty($pinned_pages)) : ?>
+			<div class="fs-dashboard__section -pinned -margin">
+				<div class="fs-dashboard__section-title"><?= esc_html__('Pinned posts', 'fromscratch') ?></div>
+				<table class="fs-dashboard__section-table">
+					<?php foreach ($pinned_pages as $pinned) : ?>
+						<?php
+						$pinned_post_type = get_post_type((int) $pinned->ID);
+						$pinned_post_type_object = is_string($pinned_post_type) ? get_post_type_object($pinned_post_type) : null;
+						if ($pinned_post_type === 'post') {
+							$pinned_type_label = __('Post', 'fromscratch');
+						} elseif ($pinned_post_type === 'page') {
+							$pinned_type_label = __('Page', 'fromscratch');
+						} else {
+							$pinned_type_label = $pinned_post_type_object instanceof WP_Post_Type
+								? (string) __($pinned_post_type_object->labels->singular_name ?: $pinned_post_type_object->label, 'fromscratch')
+								: __('Content', 'fromscratch');
+						}
+						?>
+						<tr>
+							<td class="fs-dashboard__section-cell -type">
+								<?= esc_html($pinned_type_label) ?>
+							</td>
+							<td class="fs-dashboard__section-cell -preview">
+								<a href="<?= esc_url(get_permalink($pinned->ID)) ?>" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h240q17 0 28.5 11.5T480-800q0 17-11.5 28.5T440-760H200v560h560v-240q0-17 11.5-28.5T800-480q17 0 28.5 11.5T840-440v240q0 33-23.5 56.5T760-120H200Zm560-584L416-360q-11 11-28 11t-28-11q-11-11-11-28t11-28l344-344H600q-17 0-28.5-11.5T560-800q0-17 11.5-28.5T600-840h200q17 0 28.5 11.5T840-800v200q0 17-11.5 28.5T800-560q-17 0-28.5-11.5T760-600v-104Z"/></svg></a>
+							</td>
+							<td class="fs-dashboard__section-cell -title">
+								<a href="<?= esc_url(get_edit_post_link($pinned->ID)) ?>"><?= esc_html(get_the_title($pinned->ID) ?: __('(no title)', 'fromscratch')) ?></a><br>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+				</table>
+			</div>
+		<?php endif; ?>
+
 		<?php if (!empty($scheduled)) : ?>
 			<div class="fs-dashboard__section -margin">
 				<div class="fs-dashboard__section-title"><?= esc_html__('Scheduled posts', 'fromscratch') ?></div>
@@ -275,6 +279,9 @@ function fs_dashboard_panel()
 						<tr>
 							<td class="fs-dashboard__section-cell -date">
 								<?= esc_html(get_date_from_gmt((string) $item->post_date_gmt, get_option('date_format') . ' ' . get_option('time_format'))) ?>
+							</td>
+							<td class="fs-dashboard__section-cell -preview">
+								<a href="<?= esc_url(get_permalink($pinned->ID)) ?>" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h240q17 0 28.5 11.5T480-800q0 17-11.5 28.5T440-760H200v560h560v-240q0-17 11.5-28.5T800-480q17 0 28.5 11.5T840-440v240q0 33-23.5 56.5T760-120H200Zm560-584L416-360q-11 11-28 11t-28-11q-11-11-11-28t11-28l344-344H600q-17 0-28.5-11.5T560-800q0-17 11.5-28.5T600-840h200q17 0 28.5 11.5T840-800v200q0 17-11.5 28.5T800-560q-17 0-28.5-11.5T760-600v-104Z"/></svg></a>
 							</td>
 							<td class="fs-dashboard__section-cell -title">
 								<a href="<?= esc_url(get_edit_post_link((int) $item->ID)) ?>"><?= esc_html(get_the_title((int) $item->ID) ?: __('(no title)', 'fromscratch')) ?></a>
@@ -305,6 +312,9 @@ function fs_dashboard_panel()
 							<td class="fs-dashboard__section-cell -date">
 								<?= $exp_label ?>
 							</td>
+							<td class="fs-dashboard__section-cell -preview">
+								<a href="<?= esc_url(get_permalink($pinned->ID)) ?>" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h240q17 0 28.5 11.5T480-800q0 17-11.5 28.5T440-760H200v560h560v-240q0-17 11.5-28.5T800-480q17 0 28.5 11.5T840-440v240q0 33-23.5 56.5T760-120H200Zm560-584L416-360q-11 11-28 11t-28-11q-11-11-11-28t11-28l344-344H600q-17 0-28.5-11.5T560-800q0-17 11.5-28.5T600-840h200q17 0 28.5 11.5T840-800v200q0 17-11.5 28.5T800-560q-17 0-28.5-11.5T760-600v-104Z"/></svg></a>
+							</td>
 							<td class="fs-dashboard__section-cell -title">
 								<a href="<?= esc_url(get_edit_post_link((int) $item->ID)) ?>"><?= esc_html(get_the_title((int) $item->ID) ?: __('(no title)', 'fromscratch')) ?></a>
 							</td>
@@ -317,10 +327,8 @@ function fs_dashboard_panel()
 	</div>
 <?php
 }
-add_action('welcome_panel', 'fs_dashboard_panel');
-
 /**
- * Dashboard widget renderer (fallback when welcome_panel is unavailable).
+ * Dashboard widget renderer.
  */
 function fs_dashboard_panel_widget_render(): void
 {
@@ -347,7 +355,7 @@ function fs_dashboard_enqueue_matomo_stats(string $hook_suffix): void
 		'nonce'              => wp_create_nonce('fs_dashboard_matomo_stats'),
 		'pollIntervalMs'     => HOUR_IN_SECONDS * 1000,
 		'pollPendingMs'      => 2500,
-		'pollPendingMaxPolls'=> 48,
+		'pollPendingMaxPolls' => 48,
 	]);
 	$inline = <<<'JS'
 (function () {
