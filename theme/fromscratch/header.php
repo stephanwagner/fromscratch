@@ -16,7 +16,7 @@
 
 				<div class="logo__container">
 					<a href="/">
-						<img class="logo__image" src="<?= asset_url('/img/logo.png') ?>" alt="">
+						<img class="logo__image" src="<?= asset_url('/img/fromscratch-logo.svg') ?>" alt="">
 					</a>
 				</div>
 
