@@ -35,19 +35,6 @@ function fs_asset_url(string $path): string
 }
 
 /**
- * Short name for asset URL. Only defined if not already provided (e.g. by a plugin).
- *
- * @param string $path Path relative to theme root.
- * @return string Escaped URL safe for HTML output.
- */
-if (!function_exists('asset_url')) {
-	function asset_url(string $path): string
-	{
-		return fs_asset_url($path);
-	}
-}
-
-/**
  * Read SVG code from theme assets (e.g. /img/logo.svg).
  *
  * @param string $path Path relative to theme root or assets/, e.g. '/img/logo.svg'.
@@ -88,17 +75,37 @@ function fs_svg_code(string $path, array $attributes = []): string
 }
 
 /**
- * Short name for inline SVG code. Only defined if not already provided.
+ * Render an image tag from WordPress attachment input.
  *
- * @param string $path Path relative to theme root.
- * @param array<string,string> $attributes Optional attributes added to the root <svg> element.
- * @return string Inline SVG markup (empty string on failure).
+ * @param int|string|\WP_Post|null $image Attachment ID (or numeric string) or attachment post object.
+ * @param string|array<int,int>|int $size Attachment size for wp_get_attachment_image().
+ * @param array<string,mixed> $args Attributes for the resulting <img>.
+ * @return string
  */
-if (!function_exists('svg_code')) {
-	function svg_code(string $path, array $attributes = []): string
-	{
-		return fs_svg_code($path, $attributes);
+function fs_img($image, $size = 'medium', array $args = []): string
+{
+	$defaults = [
+		'class' => 'fs-img',
+		'loading' => 'lazy',
+		'decoding' => 'async',
+	];
+	$args = array_merge($defaults, $args);
+
+	$image_id = 0;
+	if ($image instanceof \WP_Post) {
+		$image_id = (int) $image->ID;
+	} elseif (is_numeric($image)) {
+		$image_id = (int) $image;
 	}
+	if ($image_id <= 0) {
+		return '';
+	}
+
+	if (!array_key_exists('alt', $args) || $args['alt'] === null || $args['alt'] === '') {
+		$args['alt'] = (string) get_post_meta($image_id, '_wp_attachment_image_alt', true);
+	}
+
+	return wp_get_attachment_image($image_id, $size, false, $args) ?: '';
 }
 
 /**

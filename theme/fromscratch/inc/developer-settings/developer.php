@@ -125,7 +125,7 @@ function fs_render_developer_cheatsheet(): void
 							<code class="fs-code-text fs-code-small">PHP</code>
 						</td>
 						<td>
-							<code class="fs-code-small"><?= esc_html("asset_url('/img/logo.svg')") ?></code>
+							<code class="fs-code-small"><?= esc_html("fs_asset_url('/img/logo.svg')") ?></code>
 							<div class="helpers-table__preview-code">
 								<span class="helpers-table__preview-pointer">→</span> <code class="fs-code-text fs-code-small">/assets/img/logo.svg?ver=1</code>
 							</div>
@@ -140,9 +140,24 @@ function fs_render_developer_cheatsheet(): void
 							<code class="fs-code-text fs-code-small">PHP</code>
 						</td>
 						<td>
-							<code class="fs-code-small"><?= esc_html("svg_code('/img/icon.svg', ['class' => 'my-class']);") ?></code>
+							<code class="fs-code-small"><?= esc_html("fs_svg_code('/img/icon.svg', ['class' => 'my-class']);") ?></code>
 							<div class="helpers-table__preview-code">
 								<span class="helpers-table__preview-pointer">→</span> <code class="fs-code-text fs-code-small">&lt;svg class="my-class" ...&gt;...&lt;/svg&gt;</code>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<strong><?= esc_html__('Image Helper', 'fromscratch') ?></strong><br>
+							<span class="description"><?= esc_html__('Builds a WordPress image tag from an attachment ID (or WP_Post attachment).', 'fromscratch') ?></span>
+						</td>
+						<td>
+							<code class="fs-code-text fs-code-small">PHP</code>
+						</td>
+						<td>
+							<code class="fs-code-small"><?= esc_html("fs_img(123, 'medium', ['class' => 'my-class', 'loading' => 'eager'])") ?></code>
+							<div class="helpers-table__preview-code">
+								<span class="helpers-table__preview-pointer">→</span> <code class="fs-code-text fs-code-small">&lt;img src="..." srcset="..." class="my-class" loading="eager" ...&gt;</code>
 							</div>
 						</td>
 					</tr>
