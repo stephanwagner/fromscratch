@@ -200,12 +200,19 @@ add_action('admin_init', function () {
 	$posted = isset($_POST['fromscratch_weekly_report_manual_recipient'])
 		? sanitize_email(wp_unslash((string) $_POST['fromscratch_weekly_report_manual_recipient']))
 		: '';
+	$current_user_mail = '';
+	if (is_user_logged_in()) {
+		$cud = wp_get_current_user();
+		if ($cud instanceof WP_User && isset($cud->user_email) && is_email((string) $cud->user_email)) {
+			$current_user_mail = (string) $cud->user_email;
+		}
+	}
 	$developer_email = function_exists('fs_developer_email') ? fs_developer_email() : '';
-	$recipient = $posted !== '' ? $posted : $developer_email;
+	$recipient = $posted !== '' ? $posted : ($current_user_mail !== '' ? $current_user_mail : $developer_email);
 	if ($recipient === '' || !is_email($recipient)) {
 		set_transient(
 			'fromscratch_weekly_report_send_error',
-			__('Please enter a valid email address, or configure the developer email as the default.', 'fromscratch'),
+			__('Please enter a valid email address.', 'fromscratch'),
 			30
 		);
 		wp_safe_redirect($url);
@@ -914,7 +921,10 @@ function theme_settings_page(): void
 			$client_logo_url = $client_logo_id > 0 ? wp_get_attachment_image_url($client_logo_id, 'medium') : '';
 			$og_fallback_id = (int) get_option('fromscratch_og_image_fallback', 0);
 			$og_fallback_url = $og_fallback_id > 0 ? wp_get_attachment_image_url($og_fallback_id, 'medium') : '';
-			$weekly_manual_send_default_email = function_exists('fs_developer_email') ? fs_developer_email() : '';
+			$_weekly_sender = wp_get_current_user();
+			$weekly_manual_send_default_email = (isset($_weekly_sender->user_email) && is_email((string) $_weekly_sender->user_email))
+				? (string) $_weekly_sender->user_email
+				: (function_exists('fs_developer_email') ? fs_developer_email() : '');
 			?>
 			<form method="post" action="<?= esc_url(admin_url('options-general.php?page=fs-theme-settings&tab=general')) ?>" class="fs-page-settings-form">
 				<?php settings_fields(FS_THEME_OPTION_GROUP_GENERAL); ?>
