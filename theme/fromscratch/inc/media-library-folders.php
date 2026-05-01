@@ -963,9 +963,12 @@ function fs_media_folders_render_list(array $terms, array $display_counts, int $
 		echo '<div class="' . esc_attr(implode(' ', $item_classes)) . '">';
 		echo '<a class="fs-media-folders-link" href="' . esc_url($url) . '">';
 		echo '<span class="name">' . esc_html($prefix . $term->name) . '</span>';
-		echo ' <span class="count">(' . $display_count . ')</span>';
+		echo '<span class="count">' . esc_html((string) $display_count) . '</span>';
 		echo '</a>';
+		echo '<span class="fs-media-folders-item-toolbar">';
+		echo '<button type="button" class="fs-media-folder-edit-btn" aria-label="' . esc_attr__('Rename folder', 'fromscratch') . '" data-term-id="' . esc_attr((string) $term_id) . '" data-folder-name="' . esc_attr($term->name) . '"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M180-180h44l443-443-44-44-443 443v44Zm614-486L666-794l42-42q17-17 42-17t42 17l44 44q17 17 17 42t-17 42l-42 42Zm-42 42L204-120H120v-84l396-396 84 84Zm-42-42-44-44 22 22 44 44-22-22Z"/></svg></button>';
 		echo '<button type="button" class="fs-media-folder-delete-btn" aria-label="' . esc_attr__('Delete folder', 'fromscratch') . '" data-folder-name="' . esc_attr($term->name) . '" data-folder-count="' . $display_count . '" data-delete-url="' . esc_url($delete_url) . '"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M480-424 284-228q-11 11-28 11t-28-11q-11-11-11-28t11-28l196-196-196-196q-11-11-11-28t11-28q11-11 28-11t28 11l196 196 196-196q11-11 28-11t28 11q11 11 11 28t-11 28L536-480l196 196q11 11 11 28t-11 28q-11 11-28 11t-28-11L480-424Z"/></svg></button>';
+		echo '</span>';
 		echo '</div>';
 		echo '</li>';
 		fs_media_folders_render_list($terms, $display_counts, $term_id, $depth + 1, $current_id, $unassigned_active, $base_url, $redirect_url);
@@ -1059,6 +1062,61 @@ add_action('admin_post_fs_media_folder_delete', function (): void {
 });
 
 /**
+ * Handle sidebar "rename folder" form submission.
+ */
+add_action('admin_post_fs_media_folder_rename', function (): void {
+	if (!taxonomy_exists(FS_MEDIA_FOLDER_TAXONOMY)) {
+		wp_die(esc_html__('Media folder taxonomy not available.', 'fromscratch'));
+	}
+	check_admin_referer('fs_media_folder_rename');
+
+	$term_id = isset($_POST['fs_media_folder_rename_term_id']) ? absint($_POST['fs_media_folder_rename_term_id']) : 0;
+	$name = isset($_POST['fs_media_folder_rename_name']) ? sanitize_text_field((string) wp_unslash($_POST['fs_media_folder_rename_name'])) : '';
+	$redirect_to = isset($_POST['redirect_to']) ? (string) wp_unslash($_POST['redirect_to']) : '';
+	$redirect_to = wp_validate_redirect($redirect_to, admin_url('upload.php'));
+	if ($redirect_to === '') {
+		$redirect_to = admin_url('upload.php');
+	}
+	$redirect_to = remove_query_arg(['fs_media_folder_error', 'fs_media_folder_success'], $redirect_to);
+
+	$tax = get_taxonomy(FS_MEDIA_FOLDER_TAXONOMY);
+	$edit_cap = ($tax && isset($tax->cap->edit_terms)) ? $tax->cap->edit_terms : 'manage_categories';
+	if (!current_user_can($edit_cap)) {
+		wp_safe_redirect(add_query_arg('fs_media_folder_error', 'rename_cap', $redirect_to));
+		exit;
+	}
+	if ($term_id <= 0) {
+		wp_safe_redirect(add_query_arg('fs_media_folder_error', 'rename_invalid', $redirect_to));
+		exit;
+	}
+	if ($name === '') {
+		wp_safe_redirect(add_query_arg('fs_media_folder_error', 'rename_empty', $redirect_to));
+		exit;
+	}
+
+	$term = get_term($term_id, FS_MEDIA_FOLDER_TAXONOMY);
+	if (!$term instanceof WP_Term || is_wp_error($term)) {
+		wp_safe_redirect(add_query_arg('fs_media_folder_error', 'rename_missing', $redirect_to));
+		exit;
+	}
+
+	$updated = wp_update_term($term_id, FS_MEDIA_FOLDER_TAXONOMY, ['name' => $name]);
+	if (is_wp_error($updated)) {
+		$code = $updated->get_error_code();
+		if ($code === 'duplicate_term' || $code === 'term_exists') {
+			wp_safe_redirect(add_query_arg('fs_media_folder_error', 'rename_duplicate', $redirect_to));
+			exit;
+		}
+		wp_safe_redirect(add_query_arg('fs_media_folder_error', 'rename_failed', $redirect_to));
+		exit;
+	}
+
+	$url = add_query_arg('fs_media_folder_id', $term_id, remove_query_arg(['fs_media_folder_unassigned'], $redirect_to));
+	wp_safe_redirect(add_query_arg('fs_media_folder_success', 'renamed', $url));
+	exit;
+});
+
+/**
  * Render the sidebar and attach it left of the media list.
  */
 add_action('admin_footer-upload.php', function (): void {
@@ -1093,32 +1151,60 @@ add_action('admin_footer-upload.php', function (): void {
 	if (isset($_GET['fs_media_folder_error'])) {
 		$message_class = 'is-error';
 		$error = sanitize_key((string) $_GET['fs_media_folder_error']);
-		if ($error === 'empty') {
+		if ($error === 'empty' || $error === 'rename_empty') {
 			$message = __('Please enter a folder name.', 'fromscratch');
+		} elseif ($error === 'rename_duplicate') {
+			$message = __('A folder with that name already exists.', 'fromscratch');
 		} elseif (strpos($error, 'delete_') === 0) {
 			$message = __('Could not delete this folder.', 'fromscratch');
+		} elseif (strpos($error, 'rename_') === 0) {
+			$message = __('Could not rename this folder.', 'fromscratch');
 		} else {
 			$message = __('Could not create this folder.', 'fromscratch');
 		}
 	} elseif (isset($_GET['fs_media_folder_success'])) {
 		$message_class = 'is-success';
 		$success = sanitize_key((string) $_GET['fs_media_folder_success']);
-		$message = $success === 'deleted'
-			? __('Folder deleted.', 'fromscratch')
-			: __('Folder created.', 'fromscratch');
+		if ($success === 'deleted') {
+			$message = __('Folder deleted.', 'fromscratch');
+		} elseif ($success === 'renamed') {
+			$message = __('Folder renamed.', 'fromscratch');
+		} else {
+			$message = __('Folder created.', 'fromscratch');
+		}
 	}
 ?>
 	<aside id="fs-media-folders-sidebar" class="fs-media-folders-sidebar" style="display:none;">
 		<div class="fs-media-folders-header">
 			<h2 class="fs-media-folders-title" id="fs-media-folders-heading"><?= esc_html__('Folders', 'fromscratch') ?></h2>
-			<button type="button" class="components-button is-small is-tertiary fs-media-folders-add-btn" id="fs-media-folders-add-open" aria-expanded="false" aria-haspopup="dialog" aria-controls="fs-media-folder-create-modal">
-				<div class="fs-media-folders-add-btn__icon">
-					<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
-						<path d="M440-440H240q-17 0-28.5-11.5T200-480q0-17 11.5-28.5T240-520h200v-200q0-17 11.5-28.5T480-760q17 0 28.5 11.5T520-720v200h200q17 0 28.5 11.5T760-480q0 17-11.5 28.5T720-440H520v200q0 17-11.5 28.5T480-200q-17 0-28.5-11.5T440-240v-200Z" />
-					</svg>
+			<div class="fs-media-folders-header-toolbar">
+				<div class="fs-media-folders-header-actions">
+					<button type="button" class="components-button is-small is-tertiary fs-media-folders-add-btn" id="fs-media-folders-add-open" aria-expanded="false" aria-haspopup="dialog" aria-controls="fs-media-folder-create-modal">
+						<div class="fs-media-folders-add-btn__icon">
+							<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+								<path d="M440-440H240q-17 0-28.5-11.5T200-480q0-17 11.5-28.5T240-520h200v-200q0-17 11.5-28.5T480-760q17 0 28.5 11.5T520-720v200h200q17 0 28.5 11.5T760-480q0 17-11.5 28.5T720-440H520v200q0 17-11.5 28.5T480-200q-17 0-28.5-11.5T440-240v-200Z" />
+							</svg>
+						</div>
+						<div class="fs-media-folders-add-btn__text"><?= esc_html__('Add', 'fromscratch') ?></div>
+					</button>
+					<div class="fs-media-folders-header-mode-toggles">
+						<button type="button" class="components-button is-small is-tertiary fs-media-folders-edit-toggle-btn" id="fs-media-folders-edit-toggle" aria-pressed="false" aria-label="<?= esc_attr__('Show folder rename buttons', 'fromscratch') ?>" title="<?= esc_attr__('Show folder rename buttons', 'fromscratch') ?>">
+							<span class="fs-media-folders-edit-toggle-btn__icon" aria-hidden="true">
+								<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+									<path d="M180-180h44l443-443-44-44-443 443v44Zm614-486L666-794l42-42q17-17 42-17t42 17l44 44q17 17 17 42t-17 42l-42 42Zm-42 42L204-120H120v-84l396-396 84 84Zm-42-42-44-44 22 22 44 44-22-22Z" />
+								</svg>
+							</span>
+						</button>
+						<button type="button" class="components-button is-small is-tertiary fs-media-folders-delete-toggle-btn" id="fs-media-folders-delete-toggle" aria-pressed="false" aria-label="<?= esc_attr__('Show folder delete buttons', 'fromscratch') ?>" title="<?= esc_attr__('Show folder delete buttons', 'fromscratch') ?>">
+							<span class="fs-media-folders-delete-toggle-btn__icon" aria-hidden="true">
+								<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+									<path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z" />
+								</svg>
+							</span>
+						</button>
+					</div>
 				</div>
-				<div class="fs-media-folders-add-btn__text"><?= esc_html__('Add', 'fromscratch') ?></div>
-			</button>
+			</div>
 		</div>
 		<?php if ($message !== '') : ?>
 			<div class="fs-media-folders-message <?= esc_attr($message_class) ?>"><?= esc_html($message) ?></div>
@@ -1150,7 +1236,7 @@ add_action('admin_footer-upload.php', function (): void {
 				<div class="<?= esc_attr(implode(' ', $un_item_classes)) ?>">
 					<a class="fs-media-folders-link" href="<?= esc_url($unassigned_url) ?>">
 						<span class="name"><?= esc_html__('Not in a folder', 'fromscratch') ?></span>
-						<span class="count">(<?= (int) $unassigned_count ?>)</span>
+						<span class="count"><?= esc_html((string) (int) $unassigned_count) ?></span>
 					</a>
 				</div>
 			</li>
@@ -1228,6 +1314,26 @@ add_action('admin_footer-upload.php', function (): void {
 				<div class="fs-media-folder-create-actions">
 					<button type="button" class="button" data-modal-close><?= esc_html__('Cancel', 'fromscratch') ?></button>
 					<button type="submit" class="button button-primary"><?= esc_html__('Create folder', 'fromscratch') ?></button>
+				</div>
+			</form>
+		</div>
+	</div>
+	<div id="fs-media-folder-rename-modal" class="fs-media-folder-rename-modal" aria-hidden="true">
+		<div class="fs-media-folder-rename-backdrop" data-modal-close></div>
+		<div class="fs-media-folder-rename-dialog" role="dialog" aria-modal="true" aria-labelledby="fs-media-folder-rename-title">
+			<h2 id="fs-media-folder-rename-title"><?= esc_html__('Rename folder', 'fromscratch') ?></h2>
+			<form method="post" action="<?= esc_url(admin_url('admin-post.php')) ?>" class="fs-media-folders-rename" id="fs-media-folders-rename-form">
+				<input type="hidden" name="action" value="fs_media_folder_rename">
+				<input type="hidden" name="redirect_to" id="fs_media_folder_rename_redirect" value="<?= esc_attr(remove_query_arg(['fs_media_folder_id', 'fs_media_folder_unassigned', 'fs_media_folder_error', 'fs_media_folder_success'], $base_url)) ?>">
+				<input type="hidden" name="fs_media_folder_rename_term_id" id="fs_media_folder_rename_term_id" value="">
+				<?php wp_nonce_field('fs_media_folder_rename'); ?>
+				<p>
+					<label for="fs_media_folder_rename_name" class="screen-reader-text"><?= esc_html__('Folder name', 'fromscratch') ?></label>
+					<input type="text" name="fs_media_folder_rename_name" id="fs_media_folder_rename_name" class="regular-text" style="width:100%;" required autocomplete="off">
+				</p>
+				<div class="fs-media-folder-rename-actions">
+					<button type="button" class="button" data-modal-close><?= esc_html__('Cancel', 'fromscratch') ?></button>
+					<button type="submit" class="button button-primary"><?= esc_html__('Save', 'fromscratch') ?></button>
 				</div>
 			</form>
 		</div>
@@ -1375,7 +1481,21 @@ add_action('admin_footer-upload.php', function (): void {
 			var assignTriggerLink = null;
 			var createModal = document.getElementById('fs-media-folder-create-modal');
 			var createOpenBtn = document.getElementById('fs-media-folders-add-open');
+			var deleteToggleBtn = document.getElementById('fs-media-folders-delete-toggle');
+			var editToggleBtn = document.getElementById('fs-media-folders-edit-toggle');
+			var renameModal = document.getElementById('fs-media-folder-rename-modal');
+			var renameTermInput = document.getElementById('fs_media_folder_rename_term_id');
+			var renameNameInput = document.getElementById('fs_media_folder_rename_name');
 			var folderNameInput = document.getElementById('fs_media_folder_name');
+			var deleteToggleLabels = {
+				show: <?= wp_json_encode(__('Show folder delete buttons', 'fromscratch'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+				hide: <?= wp_json_encode(__('Hide folder delete buttons', 'fromscratch'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
+			};
+			var editToggleLabels = {
+				show: <?= wp_json_encode(__('Show folder rename buttons', 'fromscratch'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+				hide: <?= wp_json_encode(__('Hide folder rename buttons', 'fromscratch'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
+			};
+			var renameTriggerBtn = null;
 
 			function closeModal() {
 				if (!modal || !modalConfirm) {
@@ -1386,10 +1506,48 @@ add_action('admin_footer-upload.php', function (): void {
 				modalConfirm.setAttribute('href', '#');
 			}
 
+			function closeRenameModal() {
+				if (!renameModal) {
+					return;
+				}
+				var wasOpen = renameModal.classList.contains('is-open');
+				renameModal.classList.remove('is-open');
+				renameModal.setAttribute('aria-hidden', 'true');
+				if (renameTermInput) {
+					renameTermInput.value = '';
+				}
+				if (renameNameInput) {
+					renameNameInput.value = '';
+				}
+				if (wasOpen && renameTriggerBtn && typeof renameTriggerBtn.focus === 'function') {
+					renameTriggerBtn.focus();
+				}
+				renameTriggerBtn = null;
+			}
+
+			function openRenameModal(editBtn) {
+				if (!renameModal || !renameTermInput || !renameNameInput || !editBtn) {
+					return;
+				}
+				closeModal();
+				closeAssignModal();
+				closeCreateModal();
+				renameTriggerBtn = editBtn;
+				var tid = editBtn.getAttribute('data-term-id') || '';
+				var fname = editBtn.getAttribute('data-folder-name') || '';
+				renameTermInput.value = tid;
+				renameNameInput.value = fname;
+				renameModal.classList.add('is-open');
+				renameModal.setAttribute('aria-hidden', 'false');
+				renameNameInput.focus();
+				renameNameInput.select();
+			}
+
 			function openModal(name, count, deleteUrl) {
 				if (!modal || !modalText || !modalConfirm) {
 					return;
 				}
+				closeRenameModal();
 				closeAssignModal();
 				closeCreateModal();
 				var countText = '';
@@ -1424,6 +1582,7 @@ add_action('admin_footer-upload.php', function (): void {
 					return;
 				}
 				closeModal();
+				closeRenameModal();
 				closeAssignModal();
 				createModal.classList.add('is-open');
 				createModal.setAttribute('aria-hidden', 'false');
@@ -1457,6 +1616,7 @@ add_action('admin_footer-upload.php', function (): void {
 					return;
 				}
 				closeModal();
+				closeRenameModal();
 				closeCreateModal();
 				assignTriggerLink = linkEl;
 				assignAttachmentId = parseInt(linkEl.getAttribute('data-attachment-id') || '0', 10) || 0;
@@ -1475,6 +1635,12 @@ add_action('admin_footer-upload.php', function (): void {
 					if (allUrl) {
 						window.location.href = allUrl;
 					}
+					return;
+				}
+				var editBtn = e.target.closest('.fs-media-folder-edit-btn');
+				if (editBtn) {
+					e.preventDefault();
+					openRenameModal(editBtn);
 					return;
 				}
 				var btn = e.target.closest('.fs-media-folder-delete-btn');
@@ -1502,9 +1668,60 @@ add_action('admin_footer-upload.php', function (): void {
 					}
 				});
 			}
+			if (renameModal) {
+				renameModal.addEventListener('click', function(e) {
+					if (e.target && e.target.hasAttribute('data-modal-close')) {
+						closeRenameModal();
+					}
+				});
+			}
 			if (createOpenBtn) {
 				createOpenBtn.addEventListener('click', function() {
 					openCreateModal();
+				});
+			}
+			function fsSetFolderDeleteMode(on) {
+				if (!sidebar || !deleteToggleBtn) {
+					return;
+				}
+				sidebar.classList.toggle('is-delete-mode', !!on);
+				deleteToggleBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+				var dlabel = on ? deleteToggleLabels.hide : deleteToggleLabels.show;
+				deleteToggleBtn.setAttribute('aria-label', dlabel);
+				deleteToggleBtn.setAttribute('title', dlabel);
+			}
+
+			function fsSetFolderEditMode(on) {
+				if (!sidebar || !editToggleBtn) {
+					return;
+				}
+				sidebar.classList.toggle('is-edit-mode', !!on);
+				editToggleBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+				var elabel = on ? editToggleLabels.hide : editToggleLabels.show;
+				editToggleBtn.setAttribute('aria-label', elabel);
+				editToggleBtn.setAttribute('title', elabel);
+			}
+
+			if (deleteToggleBtn && sidebar) {
+				deleteToggleBtn.addEventListener('click', function() {
+					var wasOn = sidebar.classList.contains('is-delete-mode');
+					if (wasOn) {
+						fsSetFolderDeleteMode(false);
+					} else {
+						fsSetFolderEditMode(false);
+						fsSetFolderDeleteMode(true);
+					}
+				});
+			}
+			if (editToggleBtn && sidebar) {
+				editToggleBtn.addEventListener('click', function() {
+					var wasOn = sidebar.classList.contains('is-edit-mode');
+					if (wasOn) {
+						fsSetFolderEditMode(false);
+					} else {
+						fsSetFolderDeleteMode(false);
+						fsSetFolderEditMode(true);
+					}
 				});
 			}
 			document.addEventListener('click', function(e) {

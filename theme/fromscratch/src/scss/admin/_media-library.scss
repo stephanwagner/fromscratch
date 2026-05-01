@@ -85,8 +85,8 @@ body.fs-feature-media-folders {
   }
 
   .fs-media-folders-sidebar {
-    width: 240px;
-    flex: 0 0 240px;
+    width: 220px;
+    flex: 0 0 220px;
     flex-shrink: 0;
     background: #fff;
     border: 1px solid #c3c4c7;
@@ -131,8 +131,8 @@ body.fs-feature-media-folders {
 
   .fs-media-folders-header {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: stretch;
     gap: 8px;
     margin: 0 0 8px;
   }
@@ -144,6 +144,30 @@ body.fs-feature-media-folders {
     font-weight: 600;
   }
 
+  .fs-media-folders-header-toolbar {
+    padding: 6px 8px;
+    border-radius: 4px;
+    background: #f0f0f1;
+    box-shadow: inset 0 0 0 1px #dcdcde;
+  }
+
+  .fs-media-folders-header-actions {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .fs-media-folders-header-mode-toggles {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+  }
+
   .fs-media-folders-add-btn {
     flex-shrink: 0;
     display: flex;
@@ -153,6 +177,68 @@ body.fs-feature-media-folders {
 
   .fs-media-folders-add-btn__icon {
     margin-left: -2px;
+
+    svg {
+      display: block;
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  .fs-media-folders-delete-toggle-btn {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    padding-left: 6px;
+    padding-right: 6px;
+    color: #646970;
+
+    &[aria-pressed='true'] {
+      color: #b32d2e;
+      background: rgba(179, 45, 46, 0.08);
+      box-shadow: inset 0 0 0 1px rgba(179, 45, 46, 0.35);
+    }
+  }
+
+  .fs-media-folders-delete-toggle-btn__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: -1px;
+    margin-right: -1px;
+
+    svg {
+      display: block;
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  .fs-media-folders-edit-toggle-btn {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    padding-left: 6px;
+    padding-right: 6px;
+    color: #646970;
+
+    &[aria-pressed='true'] {
+      color: #2271b1;
+      background: rgba(34, 113, 177, 0.08);
+      box-shadow: inset 0 0 0 1px rgba(34, 113, 177, 0.35);
+    }
+  }
+
+  .fs-media-folders-edit-toggle-btn__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: -1px;
+    margin-right: -1px;
 
     svg {
       display: block;
@@ -188,19 +274,65 @@ body.fs-feature-media-folders {
     background: #2271b1;
   }
 
-  .fs-media-folders-item>.fs-media-folders-link {
+  .fs-media-folders-item > a.fs-media-folders-link {
     display: block;
+    position: relative;
     flex: 1 1 auto;
     min-width: 0;
-    padding: 5px 28px 5px 8px;
+    padding: 5px 36px 5px 8px;
     border-radius: 4px;
     color: #1d2327;
     text-decoration: none;
   }
 
+  .fs-media-folders-item > a.fs-media-folders-link .name {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+
+  .fs-media-folders-item > a.fs-media-folders-link .count {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    z-index: 0;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #fff;
+    box-shadow: inset 0 0 0 1px #dcdcde;
+    font-size: 11px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+    color: #50575e;
+  }
+
+  #fs-media-folders-sidebar.is-edit-mode .fs-media-folders-item > a.fs-media-folders-link .count,
+  #fs-media-folders-sidebar.is-delete-mode .fs-media-folders-item > a.fs-media-folders-link .count {
+    display: none;
+  }
+
+  /* Folder rows: room for action toolbar while renaming/deleting */
+  #fs-media-folders-sidebar.is-edit-mode .fs-media-folders-item.fs-media-folders-link:not(.fs-media-folders-item--all):not(.fs-media-folders-item--unassigned) > a.fs-media-folders-link,
+  #fs-media-folders-sidebar.is-delete-mode .fs-media-folders-item.fs-media-folders-link:not(.fs-media-folders-item--all):not(.fs-media-folders-item--unassigned) > a.fs-media-folders-link {
+    padding-right: 44px;
+  }
+
+  /* No toolbar on this row — tighten when counts are hidden */
+  #fs-media-folders-sidebar.is-edit-mode .fs-media-folders-item--unassigned > a.fs-media-folders-link,
+  #fs-media-folders-sidebar.is-delete-mode .fs-media-folders-item--unassigned > a.fs-media-folders-link {
+    padding-right: 8px;
+  }
+
   button.fs-media-folders-link {
     appearance: none;
-    width: 100%;
     margin: 0;
     border: 0;
     background: transparent;
@@ -216,9 +348,13 @@ body.fs-feature-media-folders {
     outline-offset: 1px;
   }
 
-  .fs-media-folders-item--all>.fs-media-folders-link,
-  .fs-media-folders-item--unassigned>.fs-media-folders-link {
-    padding-right: 8px;
+  .fs-media-folders-item--all > button.fs-media-folders-link {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    padding: 5px 8px;
+    border-radius: 4px;
+    color: #1d2327;
   }
 
   .fs-media-folders-item:hover>.fs-media-folders-link {
@@ -230,20 +366,33 @@ body.fs-feature-media-folders {
     color: #fff;
   }
 
-  .fs-media-folders-item>.fs-media-folders-link .count {
-    opacity: 0.75;
+  .fs-media-folders-item.fs-media-folders-link.is-active > a.fs-media-folders-link .count {
+    background: #fff;
+    color: #1d2327;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35), 0 1px 2px rgba(0, 0, 0, 0.08);
   }
 
-  .fs-media-folders-item.fs-media-folders-link.is-active>.fs-media-folders-link .count {
-    opacity: 0.9;
-  }
-
-  .fs-media-folder-delete-btn {
+  .fs-media-folders-item-toolbar {
     position: absolute;
     top: 50%;
     right: 2px;
-    transform: translateY(-50%);
     z-index: 1;
+    display: none;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+    transform: translateY(-50%);
+  }
+
+  #fs-media-folders-sidebar.is-edit-mode .fs-media-folders-item-toolbar,
+  #fs-media-folders-sidebar.is-delete-mode .fs-media-folders-item-toolbar {
+    display: flex;
+  }
+
+  .fs-media-folder-delete-btn {
+    position: static;
+    transform: none;
     border: 0;
     background: transparent;
     color: #b32d2e;
@@ -254,13 +403,11 @@ body.fs-feature-media-folders {
     height: 26px;
     padding: 0;
     border-radius: 4px;
-    display: inline-flex;
+    display: none;
     align-items: center;
     justify-content: center;
-    opacity: 1;
-    visibility: visible;
     border: 1px solid transparent;
-    transition: opacity 0.12s ease, visibility 0.12s ease, background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+    transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 
     svg {
       display: block;
@@ -269,21 +416,63 @@ body.fs-feature-media-folders {
     }
   }
 
-  .fs-media-folders-item.fs-media-folders-link.is-active .fs-media-folder-delete-btn {
+  .fs-media-folder-edit-btn {
+    position: static;
+    transform: none;
+    border: 0;
+    background: transparent;
+    color: #2271b1;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border-radius: 4px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+
+    svg {
+      display: block;
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  #fs-media-folders-sidebar.is-edit-mode .fs-media-folder-edit-btn {
+    display: inline-flex;
+  }
+
+  .fs-media-folders-item.fs-media-folders-link.is-active .fs-media-folder-edit-btn {
     color: #fff;
   }
 
-  @media (hover: hover) and (pointer: fine) {
-    .fs-media-folder-delete-btn {
-      opacity: 0;
-      visibility: hidden;
-    }
+  .fs-media-folder-edit-btn:hover,
+  .fs-media-folders-item.fs-media-folders-link.is-active .fs-media-folder-edit-btn:hover,
+  .fs-media-folders-item.fs-media-folders-link.is-active .fs-media-folder-edit-btn:focus-visible {
+    background: #f0f6fc;
+    border-color: #2271b1;
+    color: #2271b1;
+  }
 
-    .fs-media-folders-item:hover .fs-media-folder-delete-btn,
-    .fs-media-folder-delete-btn:focus-visible {
-      opacity: 1;
-      visibility: visible;
-    }
+  .fs-media-folder-edit-btn:focus-visible {
+    outline: 2px solid #2271b1;
+    outline-offset: 1px;
+  }
+
+  .fs-media-folders-item.fs-media-folders-link.is-active .fs-media-folder-edit-btn:focus-visible {
+    outline-color: #fff;
+  }
+
+  #fs-media-folders-sidebar.is-delete-mode .fs-media-folder-delete-btn {
+    display: inline-flex;
+  }
+
+  .fs-media-folders-item.fs-media-folders-link.is-active .fs-media-folder-delete-btn {
+    color: #fff;
   }
 
   .fs-media-folder-delete-btn:hover,
@@ -303,7 +492,8 @@ body.fs-feature-media-folders {
     outline-color: #fff;
   }
 
-  .fs-media-folders-create p {
+  .fs-media-folders-create p,
+  .fs-media-folders-rename p {
     margin: 0 0 12px;
   }
 
@@ -338,6 +528,7 @@ body.fs-feature-media-folders {
 
   .fs-media-folder-delete-modal,
   .fs-media-folder-create-modal,
+  .fs-media-folder-rename-modal,
   .fs-media-folder-assign-modal {
     position: fixed;
     inset: 0;
@@ -347,12 +538,14 @@ body.fs-feature-media-folders {
 
   .fs-media-folder-delete-modal.is-open,
   .fs-media-folder-create-modal.is-open,
+  .fs-media-folder-rename-modal.is-open,
   .fs-media-folder-assign-modal.is-open {
     display: block;
   }
 
   .fs-media-folder-delete-backdrop,
   .fs-media-folder-create-backdrop,
+  .fs-media-folder-rename-backdrop,
   .fs-media-folder-assign-backdrop {
     position: absolute;
     inset: 0;
@@ -361,6 +554,7 @@ body.fs-feature-media-folders {
 
   .fs-media-folder-delete-dialog,
   .fs-media-folder-create-dialog,
+  .fs-media-folder-rename-dialog,
   .fs-media-folder-assign-dialog {
     position: relative;
     background: #fff;
@@ -392,8 +586,20 @@ body.fs-feature-media-folders {
     margin-top: 16px;
   }
 
-  .fs-media-folder-create-dialog .fs-media-folders-create {
+  .fs-media-folder-create-dialog .fs-media-folders-create,
+  .fs-media-folder-rename-dialog .fs-media-folders-rename {
     margin: 0;
+  }
+
+  .fs-media-folder-rename-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .fs-media-folder-rename-actions .button {
+    width: auto;
   }
 
   .fs-media-folder-create-dialog select,
