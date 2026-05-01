@@ -1818,14 +1818,38 @@ msgstr "Wöchentlicher Website-Bericht"
 msgid "Weekly reports"
 msgstr "Wöchentliche Berichte"
 
-msgid "Sends a weekly summary every Monday with analytics (when Matomo is enabled)."
-msgstr "Versendet jeden Montag eine Wochenübersicht mit Analysen (wenn Matomo aktiviert ist)."
+msgid "Sends a weekly summary on the schedule below (site timezone), with analytics when Matomo is enabled."
+msgstr "Versendet eine wöchentliche Übersicht gemäß Zeitplan unten (Zeitzone der Website), mit Analysen, wenn Matomo aktiviert ist."
+
+msgid "Schedule"
+msgstr "Zeitplan"
+
+msgid "Weekday"
+msgstr "Wochentag"
+
+msgid "Time"
+msgstr "Uhrzeit"
+
+msgid "AM or PM"
+msgstr "Vormittag oder Nachmittag"
+
+msgid "am"
+msgstr "am"
+
+msgid "pm"
+msgstr "pm"
+
+msgid "Minutes"
+msgstr "Minuten"
+
+msgid "Sent once per week on the first visit after your chosen day and time."
+msgstr "Wird einmal pro Woche beim ersten Besuch nach deinem gewählten Tag und Zeitpunkt versendet."
 
 msgid "Enable reports"
 msgstr "Website-Berichte aktivieren"
 
-msgid "Report recipents"
-msgstr "Berichte Empfänger"
+msgid "Recipents"
+msgstr "Empfänger"
 
 msgid "One email address per line."
 msgstr "Eine E-Mail-Adresse pro Zeile."

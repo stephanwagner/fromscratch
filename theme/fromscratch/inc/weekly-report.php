@@ -14,22 +14,213 @@ add_filter('cron_schedules', function (array $schedules): array {
 });
 
 /**
- * Next Monday 08:00 in site timezone.
+ * Whether the site uses a 12-hour clock in Settings → General (time format contains meridian).
  */
-function fs_weekly_report_next_monday_timestamp(): int
+function fs_weekly_report_uses_12h_time_format(): bool
+{
+	$tf = get_option('time_format', 'H:i');
+
+	return is_string($tf) && preg_match('/a|A/', $tf) === 1;
+}
+
+/**
+ * Sanitize weekday (PHP date('w'): 0 Sunday … 6 Saturday).
+ *
+ * @param mixed $value Raw option value.
+ */
+function fs_sanitize_weekly_report_wday($value): string
+{
+	$w = (int) $value;
+
+	return (string) max(0, min(6, $w));
+}
+
+/**
+ * Sanitize hour (stored 0–23). When the site uses 12-hour time, combines with meridian POST fields.
+ *
+ * @param mixed $value Raw option value.
+ */
+function fs_sanitize_weekly_report_hour($value): string
+{
+	if (fs_weekly_report_uses_12h_time_format() && isset($_POST['fromscratch_weekly_report_meridian'])) {
+		$h = (int) $value;
+		$h = max(1, min(12, $h));
+		$meridian = strtolower((string) wp_unslash((string) ($_POST['fromscratch_weekly_report_meridian'] ?? '')));
+		if ($h === 12) {
+			$h24 = ($meridian === 'pm') ? 12 : 0;
+		} else {
+			$h24 = ($meridian === 'pm') ? $h + 12 : $h;
+		}
+
+		return (string) max(0, min(23, $h24));
+	}
+	$h24 = (int) $value;
+
+	return (string) max(0, min(23, $h24));
+}
+
+/**
+ * Sanitize minute (steps of 5).
+ *
+ * @param mixed $value Raw option value.
+ */
+function fs_sanitize_weekly_report_minute($value): string
+{
+	$m = (int) $value;
+	$allowed = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+	if (in_array($m, $allowed, true)) {
+		return (string) $m;
+	}
+	$rounded = max(0, min(55, (int) round($m / 5) * 5));
+
+	return (string) $rounded;
+}
+
+/**
+ * Next Unix timestamp for the configured weekday + time in site timezone (first run ≥ now).
+ */
+function fs_weekly_report_next_run_timestamp(): int
 {
 	$tz = function_exists('wp_timezone') ? wp_timezone() : new \DateTimeZone(wp_timezone_string() ?: 'UTC');
 	$now = new \DateTimeImmutable('now', $tz);
-	$monday = $now->setTime(8, 0, 0);
-	if ((int) $monday->format('N') !== 1) {
-		$monday = $monday->modify('next monday');
-	}
-	if ($monday <= $now) {
-		$monday = $monday->modify('+7 days');
+	$wday = (int) get_option('fromscratch_weekly_report_wday', '1');
+	$wday = max(0, min(6, $wday));
+	$hour = (int) get_option('fromscratch_weekly_report_hour', '8');
+	$hour = max(0, min(23, $hour));
+	$minute = (int) get_option('fromscratch_weekly_report_minute', '0');
+	$minute = max(0, min(55, (int) round($minute / 5) * 5));
+
+	$candidate = $now->setTime($hour, $minute, 0);
+	$current_w = (int) $candidate->format('w');
+	$delta = ($wday - $current_w + 7) % 7;
+	$target = $candidate->modify("+{$delta} days");
+	if ($target <= $now) {
+		$target = $target->modify('+7 days');
 	}
 
-	return $monday->getTimestamp();
+	return $target->getTimestamp();
 }
+
+/**
+ * Clear and reschedule the weekly report cron from current options.
+ */
+function fs_weekly_report_reschedule_cron(): void
+{
+	if (wp_installing()) {
+		return;
+	}
+	while (($ts = wp_next_scheduled('fs_weekly_report_weekly')) !== false) {
+		wp_unschedule_event($ts, 'fs_weekly_report_weekly');
+	}
+	wp_schedule_event(fs_weekly_report_next_run_timestamp(), 'weekly', 'fs_weekly_report_weekly');
+}
+
+/**
+ * Output General settings table row: weekday + time (matches site time format).
+ */
+function fs_weekly_report_render_schedule_settings_row(): void
+{
+	global $wp_locale;
+	if (!$wp_locale instanceof \WP_Locale) {
+		return;
+	}
+	$wday = (string) get_option('fromscratch_weekly_report_wday', '1');
+	$hour_stored = (int) get_option('fromscratch_weekly_report_hour', '8');
+	$minute = (string) get_option('fromscratch_weekly_report_minute', '0');
+	$use_12h = fs_weekly_report_uses_12h_time_format();
+	$start = (int) get_option('start_of_week', 1);
+	$start = max(0, min(6, $start));
+	?>
+	<tr>
+		<th scope="row"><?= esc_html__('Schedule', 'fromscratch') ?></th>
+		<td>
+			<fieldset style="display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px;" role="group">
+				<legend class="screen-reader-text"><?= esc_html__('Schedule', 'fromscratch') ?></legend>
+				<p style="margin:0;">
+					<label for="fromscratch_weekly_report_wday"><?= esc_html__('Weekday', 'fromscratch') ?></label><br>
+					<select name="fromscratch_weekly_report_wday" id="fromscratch_weekly_report_wday">
+						<?php for ($k = 0; $k < 7; $k++) :
+							$d = ($start + $k) % 7;
+							?>
+							<option value="<?= esc_attr((string) $d) ?>" <?= selected($wday, (string) $d, false) ?>><?= esc_html($wp_locale->weekday[$d]) ?></option>
+						<?php endfor; ?>
+					</select>
+				</p>
+				<p style="margin:0;">
+					<span id="fromscratch-weekly-report-time-label"><?= esc_html__('Time', 'fromscratch') ?></span><br>
+					<span style="display:inline-flex; flex-wrap:wrap; align-items:center; gap:4px;" aria-labelledby="fromscratch-weekly-report-time-label">
+						<?php if ($use_12h) :
+							$h12 = $hour_stored % 12;
+							if ($h12 === 0) {
+								$h12 = 12;
+							}
+							$meridian = ($hour_stored >= 12) ? 'pm' : 'am';
+							?>
+							<select name="fromscratch_weekly_report_hour" id="fromscratch_weekly_report_hour" aria-describedby="fromscratch-weekly-report-time-label">
+								<?php for ($h = 1; $h <= 12; $h++) : ?>
+									<option value="<?= esc_attr((string) $h) ?>" <?= selected((string) $h12, (string) $h, false) ?>><?= esc_html((string) $h) ?></option>
+								<?php endfor; ?>
+							</select>
+							<select name="fromscratch_weekly_report_meridian" id="fromscratch_weekly_report_meridian" aria-label="<?= esc_attr__('AM or PM', 'fromscratch') ?>">
+								<option value="am" <?= selected($meridian, 'am', false) ?>><?= esc_html__('am', 'fromscratch') ?></option>
+								<option value="pm" <?= selected($meridian, 'pm', false) ?>><?= esc_html__('pm', 'fromscratch') ?></option>
+							</select>
+						<?php else : ?>
+							<select name="fromscratch_weekly_report_hour" id="fromscratch_weekly_report_hour" aria-describedby="fromscratch-weekly-report-time-label">
+								<?php for ($h = 0; $h <= 23; $h++) : ?>
+									<option value="<?= esc_attr((string) $h) ?>" <?= selected((string) $hour_stored, (string) $h, false) ?>><?= esc_html(sprintf('%02d', $h)) ?></option>
+								<?php endfor; ?>
+							</select>
+						<?php endif; ?>
+						<span class="screen-reader-text"><?= esc_html__('Minutes', 'fromscratch') ?></span>
+						<span aria-hidden="true">:</span>
+						<select name="fromscratch_weekly_report_minute" id="fromscratch_weekly_report_minute">
+							<?php for ($m = 0; $m <= 55; $m += 5) :
+								$ms = (string) $m;
+								?>
+								<option value="<?= esc_attr($ms) ?>" <?= selected($minute, $ms, false) ?>><?= esc_html(sprintf('%02d', $m)) ?></option>
+							<?php endfor; ?>
+						</select>
+					</span>
+				</p>
+			</fieldset>
+			<p class="description">
+				<?= esc_html__('Sent once per week on the first visit after your chosen day and time.', 'fromscratch') ?>
+			</p>
+		</td>
+	</tr>
+	<?php
+}
+
+add_action('update_option', static function ($option): void {
+	static $shutdown_registered = false;
+	$watch = [
+		'fromscratch_weekly_report_wday',
+		'fromscratch_weekly_report_hour',
+		'fromscratch_weekly_report_minute',
+	];
+	if (!in_array($option, $watch, true)) {
+		return;
+	}
+	if ($shutdown_registered) {
+		return;
+	}
+	$shutdown_registered = true;
+	add_action('shutdown', static function (): void {
+		fs_weekly_report_reschedule_cron();
+	}, 5);
+}, 10, 1);
+
+add_action('init', static function (): void {
+	if (wp_installing()) {
+		return;
+	}
+	if (get_option('fromscratch_weekly_report_schedule_v2', '') === '1') {
+		return;
+	}
+	fs_weekly_report_reschedule_cron();
+	update_option('fromscratch_weekly_report_schedule_v2', '1', false);
+}, 33);
 
 /**
  * @return array{went_live_last_week: array<int,array{title:string,url:string,date:string}>, scheduled_upcoming: array<int,array{title:string,url:string,date:string}>, expired_last_week: array<int,array{title:string,url:string,date:string}>, expiring_upcoming: array<int,array{title:string,url:string,date:string}>}
@@ -181,6 +372,7 @@ function fs_weekly_report_build_html(): string
 	$matomo_on = function_exists('fs_theme_feature_enabled') && fs_theme_feature_enabled('matomo');
 	$tz = function_exists('wp_timezone') ? wp_timezone() : new \DateTimeZone(wp_timezone_string() ?: 'UTC');
 	$today = new \DateTimeImmutable('now', $tz);
+	// Periods are anchored to “today” in the site timezone (send weekday/time does not change ranges): last completed ISO week for daily chart; weekly trends omit the current ISO week.
 	$this_monday = $today->modify('monday this week')->setTime(0, 0, 0);
 	$last_monday = $this_monday->modify('-7 days');
 	$last_sunday = $this_monday->modify('-1 day');
@@ -446,7 +638,7 @@ function fs_weekly_report_monday_send(): void
 add_action('fs_weekly_report_weekly', 'fs_weekly_report_monday_send');
 
 /**
- * Ensure weekly cron exists (Monday, 08:00 site timezone).
+ * Ensure weekly cron exists (configured weekday/time, site timezone).
  */
 add_action('init', function (): void {
 	if (wp_installing()) {
@@ -459,9 +651,8 @@ add_action('init', function (): void {
 		wp_unschedule_event($old_daily, 'fs_weekly_report_daily');
 	}
 
-	$next = wp_next_scheduled('fs_weekly_report_weekly');
-	if ($next) {
+	if (wp_next_scheduled('fs_weekly_report_weekly') !== false) {
 		return;
 	}
-	wp_schedule_event(fs_weekly_report_next_monday_timestamp(), 'weekly', 'fs_weekly_report_weekly');
+	wp_schedule_event(fs_weekly_report_next_run_timestamp(), 'weekly', 'fs_weekly_report_weekly');
 }, 35);

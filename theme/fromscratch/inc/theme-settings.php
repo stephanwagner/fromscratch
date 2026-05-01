@@ -371,6 +371,21 @@ add_action('admin_init', function () {
 		'type' => 'string',
 		'sanitize_callback' => 'fs_sanitize_report_email_list',
 	]);
+	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_weekly_report_wday', [
+		'type' => 'string',
+		'sanitize_callback' => 'fs_sanitize_weekly_report_wday',
+		'default' => '1',
+	]);
+	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_weekly_report_hour', [
+		'type' => 'string',
+		'sanitize_callback' => 'fs_sanitize_weekly_report_hour',
+		'default' => '8',
+	]);
+	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_weekly_report_minute', [
+		'type' => 'string',
+		'sanitize_callback' => 'fs_sanitize_weekly_report_minute',
+		'default' => '0',
+	]);
 }, 5);
 
 add_action('admin_init', function () {
@@ -810,8 +825,6 @@ function theme_settings_page(): void
 		<?php endif; ?>
 
 		<?php if ($tab === 'general') : ?>
-
-
 			<?php
 			$client_logo_id = (int) get_option('fromscratch_client_logo', 0);
 			$client_logo_url = $client_logo_id > 0 ? wp_get_attachment_image_url($client_logo_id, 'medium') : '';
@@ -822,7 +835,7 @@ function theme_settings_page(): void
 			<form method="post" action="options.php" class="fs-page-settings-form">
 				<?php settings_fields(FS_THEME_OPTION_GROUP_GENERAL); ?>
 				<h2 class="title"><?= esc_html__('Weekly website report', 'fromscratch') ?></h2>
-				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Sends a weekly summary every Monday with analytics (when Matomo is enabled).', 'fromscratch') ?></p>
+				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Sends a weekly summary on the schedule below (site timezone), with analytics when Matomo is enabled.', 'fromscratch') ?></p>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><?= esc_html__('Weekly reports', 'fromscratch') ?></th>
@@ -834,8 +847,13 @@ function theme_settings_page(): void
 							</label>
 						</td>
 					</tr>
+					<?php
+					if (function_exists('fs_weekly_report_render_schedule_settings_row')) {
+						fs_weekly_report_render_schedule_settings_row();
+					}
+					?>
 					<tr>
-						<th scope="row"><label for="fromscratch_report_email"><?= esc_html__('Report recipents', 'fromscratch') ?></label></th>
+						<th scope="row"><label for="fromscratch_report_email"><?= esc_html__('Recipents', 'fromscratch') ?></label></th>
 						<td>
 							<textarea name="fromscratch_report_email" id="fromscratch_report_email" rows="3" class="regular-text"><?= esc_textarea((string) get_option('fromscratch_report_email', '')) ?></textarea>
 							<p class="description"><?= esc_html__('One email address per line.', 'fromscratch') ?></p>
