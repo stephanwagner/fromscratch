@@ -39,6 +39,37 @@ p.fs-dashboard__description {
   font-weight: 600;
 }
 
+.fs-dashboard__section.-stats {
+  .fs-dashboard__section-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &[data-fs-stats-loading='1'] .fs-dashboard__stats-spinner {
+    display: inline-block;
+  }
+}
+
+.fs-dashboard__stats-spinner {
+  display: none;
+  box-sizing: border-box;
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  border: 2px solid #c3c4c7;
+  border-top-color: #50575e;
+  border-radius: 50%;
+  animation: fs-dashboard-stats-spin 0.65s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes fs-dashboard-stats-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .fs-dashboard__section-list {
   margin: 4px 0 0;
 

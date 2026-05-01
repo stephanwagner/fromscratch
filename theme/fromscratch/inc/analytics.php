@@ -10,7 +10,7 @@ const FS_MATOMO_STATS_CANONICAL_WEEKS = 9;
  * Legacy transient (v3): today/yesterday visit totals for the dashboard widget.
  * Migrated to FS_MATOMO_DASHBOARD_VISITS_OPTION on read; no longer written.
  */
-const FS_MATOMO_DASHBOARD_VISITS_TRANSIENT = 'fs_dashboard_matomo_stats_counts_v3';
+const FS_MATOMO_DASHBOARD_VISITS_TRANSIENT = 'fs_dashboard_matomo_stats_counts_v1';
 
 /**
  * Option (autoload=no): last known dashboard today/yesterday visit totals.
@@ -18,7 +18,7 @@ const FS_MATOMO_DASHBOARD_VISITS_TRANSIENT = 'fs_dashboard_matomo_stats_counts_v
  *
  * Shape: today (int), yesterday (int), series_end_date (Y-m-d of last daily row), updated_at (unix).
  */
-const FS_MATOMO_DASHBOARD_VISITS_OPTION = 'fs_dashboard_matomo_quick_stats_v4';
+const FS_MATOMO_DASHBOARD_VISITS_OPTION = 'fs_dashboard_matomo_quick_stats_v1';
 
 /** Prevents stacking multiple wp-cron jobs for the same dashboard refresh. */
 const FS_MATOMO_BACKGROUND_REFRESH_LOCK = 'fs_matomo_bg_refresh_lock';

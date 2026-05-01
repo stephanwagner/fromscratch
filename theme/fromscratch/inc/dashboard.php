@@ -223,8 +223,16 @@ function fs_dashboard_panel()
 			</div>
 
 			<?php if (fs_theme_feature_enabled('matomo') && $can_view_stats) : ?>
-				<div class="fs-dashboard__section -stats" data-fs-dashboard-stats data-fs-stats-cached="<?= $matomo_stats_cached ? '1' : '0' ?>">
-					<div class="fs-dashboard__section-title"><?= esc_html__('Analytics', 'fromscratch') ?></div>
+				<div
+					class="fs-dashboard__section -stats"
+					data-fs-dashboard-stats
+					data-fs-stats-cached="<?= $matomo_stats_cached ? '1' : '0' ?>"
+					data-fs-stats-loading="<?= $matomo_stats_cached ? '0' : '1' ?>"
+				>
+					<div class="fs-dashboard__section-title">
+						<?= esc_html__('Analytics', 'fromscratch') ?>
+						<span class="fs-dashboard__stats-spinner" aria-hidden="true"></span>
+					</div>
 					<ul class="fs-dashboard__section-list -limit">
 						<li>
 							<strong><?= esc_html__('Today', 'fromscratch') ?>:</strong>
@@ -376,6 +384,10 @@ function fs_dashboard_enqueue_matomo_stats(string $hook_suffix): void
 		var pendTimer = null;
 		var pendPolls = 0;
 
+		function setStatsLoading(on) {
+			wrap.setAttribute('data-fs-stats-loading', on ? '1' : '0');
+		}
+
 		function fetchStatsBody() {
 			var params = new URLSearchParams();
 			params.append('action', 'fs_dashboard_matomo_stats');
@@ -433,22 +445,33 @@ function fs_dashboard_enqueue_matomo_stats(string $hook_suffix): void
 				pendPolls += 1;
 				if (pendPolls > pendMax) {
 					stopPendingPoll();
+					setStatsLoading(false);
 					return;
 				}
 				fetchStatsBody().then(function (res) {
 					if (applyStats(res)) {
 						stopPendingPoll();
+						setStatsLoading(false);
 					}
 				});
 			}, pendMs);
 		}
 
 		function fetchStats() {
+			setStatsLoading(true);
 			fetchStatsBody().then(function (res) {
 				var ok = applyStats(res);
-				if (!ok && res && res.success && res.data && res.data.pending) {
-					startPendingPoll();
+				if (ok) {
+					setStatsLoading(false);
+					return;
 				}
+				if (res && res.success && res.data && res.data.pending) {
+					startPendingPoll();
+					return;
+				}
+				setStatsLoading(false);
+			}).catch(function () {
+				setStatsLoading(false);
 			});
 		}
 
