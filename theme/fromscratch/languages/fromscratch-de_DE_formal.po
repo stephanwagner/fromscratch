@@ -11,6 +11,14 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: \n"
 
+# Globals
+
+msgid "Search"
+msgstr "Suche"
+
+msgid "Search results"
+msgstr "Suchergebnisse"
+
 # Install page
 msgid "Install theme"
 msgstr "Theme installieren"

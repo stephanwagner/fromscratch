@@ -18,9 +18,9 @@ $is_event_archive = defined('FS_EVENT_POST_TYPE') && is_post_type_archive(FS_EVE
 <div class="content__wrapper">
 	<div class="content__container container">
 
-		<header class="archive__header">
-			<h1 class="archive__heading"><?php echo wp_kses_post($archive_heading); ?></h1>
-		</header>
+		<?php echo fs_breadcrumbs([]); ?>
+
+		<h1><?php echo wp_kses_post($archive_heading); ?></h1>
 
 		<?php if (have_posts()) : ?>
 			<?php if ($is_event_archive) : ?>

@@ -78,6 +78,19 @@ function fs_breadcrumbs(array $args = []): string
             }
         }
 
+        // Hierarchical CPT (and any hierarchical singular): parent chain like pages.
+        global $post;
+        $singular = ($post instanceof \WP_Post) ? $post : get_queried_object();
+        if ($singular instanceof \WP_Post && is_post_type_hierarchical($singular->post_type)) {
+            $parents = array_reverse(get_post_ancestors($singular));
+            foreach ($parents as $parent_id) {
+                $items[] = [
+                    'label' => get_the_title($parent_id),
+                    'url'   => get_permalink($parent_id),
+                ];
+            }
+        }
+
         $items[] = [
             'label' => get_the_title(),
             'url'   => null,
@@ -98,23 +111,20 @@ function fs_breadcrumbs(array $args = []): string
 
     // Search results
     elseif (is_search()) {
-        $query = get_search_query();
         $items[] = [
-            'label' => $query !== ''
-                ? sprintf(
-                    /* translators: %s: Search query. */
-                    __('Search results for "%s"', 'fromscratch'),
-                    $query
-                )
-                : __('Search results', 'fromscratch'),
+            'label' => __('Search results', 'fromscratch'),
             'url' => null,
         ];
     }
 
     // Archive
     elseif (is_archive()) {
+        add_filter('get_the_archive_title_prefix', '__return_empty_string', 99);
+        $archive_title = get_the_archive_title();
+        remove_filter('get_the_archive_title_prefix', '__return_empty_string', 99);
+
         $items[] = [
-            'label' => get_the_archive_title(),
+            'label' => wp_strip_all_tags($archive_title),
             'url'   => null,
         ];
     }

@@ -3,6 +3,8 @@
 <div class="content__wrapper">
 	<div class="content__container container">
 
+		<?php echo fs_breadcrumbs([]); ?>
+
 		<h1>Search</h1>
 
 		<?php
