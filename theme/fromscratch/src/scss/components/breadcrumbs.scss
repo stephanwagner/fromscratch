@@ -1,0 +1,52 @@
+@use '../_core' as *;
+
+.fs-breadcrumbs__container {
+  display: block;
+  padding: 0;
+  margin: 24px 0;
+
+  &:first-child {
+    margin-top: 0;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: $breakpointS) {
+    margin: 16px 0;
+
+    &:first-child {
+      margin-top: 0;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.fs-breadcrumbs__list {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  gap: 0 8px;
+  padding: 0;
+  margin: 0;
+  font-size: fontSize('s');
+  line-height: lineHeight('s');
+}
+
+.fs-breadcrumbs__item {
+  display: flex;
+  gap: 8px;
+}
+
+.fs-breadcrumbs__item-label {
+  flex-shrink: 0;
+}
+
+.fs-breadcrumbs__separator {
+  flex-shrink: 0;
+  transform: scale(1.25) translateY(-1px);
+}

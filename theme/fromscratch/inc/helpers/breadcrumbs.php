@@ -127,29 +127,29 @@ function fs_breadcrumbs(array $args = []): string
     // Build HTML
     $nav_label = esc_attr__('Breadcrumb', 'fromscratch');
 
-    $html = '<nav class="fs-breadcrumbs" aria-label="' . $nav_label . '">';
-    $html .= '<ol>';
+    $html = '<nav class="fs-breadcrumbs__container" aria-label="' . $nav_label . '">';
+    $html .= '<ol class="fs-breadcrumbs__list">';
 
     $last_index = count($items) - 1;
 
     foreach ($items as $index => $item) {
-        $html .= '<li>';
+        $html .= '<li class="fs-breadcrumbs__item">';
 
         if ($item['url']) {
             $html .= '<a href="' . esc_url($item['url']) . '">'
                 . esc_html($item['label']) . '</a>';
         } else {
             $current = ($index === $last_index) ? ' aria-current="page"' : '';
-            $html .= '<span' . $current . '>' . esc_html($item['label']) . '</span>';
+            $html .= '<span class="fs-breadcrumbs__item-label"' . $current . '>' . esc_html($item['label']) . '</span>';
+        }
+
+        if ($index < $last_index) {
+            $html .= '<span class="fs-breadcrumbs__separator" aria-hidden="true">'
+                . $args['separator_html']
+                . '</span>';
         }
 
         $html .= '</li>';
-
-        if ($index < $last_index) {
-            $html .= '<li class="fs-breadcrumbs__sep" aria-hidden="true">'
-                . $args['separator_html']
-                . '</li>';
-        }
     }
 
     $html .= '</ol></nav>';
