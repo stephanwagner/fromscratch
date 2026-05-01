@@ -97,18 +97,8 @@ if (!$has_insights && !$has_matomo) {
 										text-wrap: balance;
 										max-width: 320px;
 									">
-				<?= wp_kses(__('Visitors and page views <div class="fs-mail__small-mobile-inline">for this reporting period</div>', 'fromscratch'), ['br' => [], 'div' => ['class' => []]]) ?>
+				<?= wp_kses(__('Visitors and page views <div class="fs-mail__small-mobile-inline">of the last week</div>', 'fromscratch'), ['br' => [], 'div' => ['class' => []]]) ?>
 			</div>
-			<?php if (!empty($report_period_range)) : ?>
-				<div
-					style="
-							margin: 8px auto 0;
-							font-size: 14px;
-							line-height: 1.4;
-							color: #94a3b8;
-							text-align: center;
-						"><?= esc_html((string) $report_period_range) ?></div>
-			<?php endif; ?>
 			<?php if (!empty($daily_chart_url)) : ?>
 				<img
 					src="<?= esc_url($daily_chart_url) ?>"
@@ -207,8 +197,8 @@ if (!$has_insights && !$has_matomo) {
 					<?php
 					$week_line = '';
 					$monday_written = '';
-					if (function_exists('fs_weekly_report_wp_calendar_week_row_labels')) {
-						[$week_line, $monday_written] = fs_weekly_report_wp_calendar_week_row_labels($row);
+					if (function_exists('fs_weekly_report_email_iso_week_row_labels')) {
+						[$week_line, $monday_written] = fs_weekly_report_email_iso_week_row_labels($row);
 					}
 					?>
 					<tr>

@@ -1124,55 +1124,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
 }
 
 /**
- * Start (00:00 local) of the calendar week containing $local_midnight — WordPress “Week starts on” (Settings → General), default Monday.
- *
- * @param int|null $week_starts_on PHP date('w'): 0 Sunday … 6 Saturday; null reads {@see get_option( 'start_of_week' )}.
- */
-function fs_dashboard_wp_week_period_start_for_date(DateTimeImmutable $local_midnight, ?int $week_starts_on = null): DateTimeImmutable
-{
-    if ($week_starts_on === null) {
-        $opt = get_option('start_of_week', 1);
-        $week_starts_on = ($opt === '' || $opt === false) ? 1 : (int) $opt;
-    }
-    $week_starts_on = max(0, min(6, $week_starts_on));
-    $d = $local_midnight->setTime(0, 0, 0);
-    $current_w = (int) $d->format('w');
-    $back = ($current_w - $week_starts_on + 7) % 7;
-
-    return $d->modify(sprintf('-%d days', $back));
-}
-
-/**
- * True when the Matomo weekly row anchor falls in the same calendar week as “today” (per WordPress week start).
- */
-function fs_dashboard_wp_calendar_week_row_is_current_week(string $date_ymd, ?int $week_starts_on = null): bool
-{
-    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date_ymd)) {
-        return false;
-    }
-    $tz = wp_timezone();
-    $row = DateTimeImmutable::createFromFormat('Y-m-d', $date_ymd, $tz);
-    if ($row === false) {
-        return false;
-    }
-    $row_anchor = fs_dashboard_wp_week_period_start_for_date($row->setTime(12, 0, 0), $week_starts_on);
-    $today_anchor = fs_dashboard_wp_week_period_start_for_date((new DateTimeImmutable('now', $tz))->setTime(12, 0, 0), $week_starts_on);
-
-    return $row_anchor->format('Y-m-d') === $today_anchor->format('Y-m-d');
-}
-
-/**
- * ISO week number (1–53) for the ISO week that contains the WordPress calendar week start.
- */
-function fs_dashboard_iso_week_number_for_wp_calendar_start(DateTimeImmutable $week_start_wp): int
-{
-    $iso_monday = $week_start_wp->setTime(12, 0, 0)->modify('monday this week');
-
-    return (int) $iso_monday->format('W');
-}
-
-/**
- * Format a 7-day range from calendar week start (Settings → General) for labels (e.g. "2. – 9. März 2026").
+ * Format a 7-day range from anchor date (e.g. ISO week Monday → Sunday span for labels).
  */
 function fs_dashboard_format_week_date_range(DateTimeImmutable $week_start): string
 {
@@ -1182,10 +1134,10 @@ function fs_dashboard_format_week_date_range(DateTimeImmutable $week_start): str
 
     if ($same_month) {
         return sprintf(
-            /* translators: 1: start day with period, 2: end day, month, and year */
+            /* translators: 1: start day with period, 2: end day, abbreviated month, and year */
             __('%1$s – %2$s', 'fromscratch'),
             wp_date('j.', $week_start->getTimestamp()),
-            wp_date('j. F Y', $week_end->getTimestamp())
+            wp_date('j. M Y', $week_end->getTimestamp())
         );
     }
 
@@ -1193,8 +1145,8 @@ function fs_dashboard_format_week_date_range(DateTimeImmutable $week_start): str
         return sprintf(
             /* translators: 1: start date, 2: end date */
             __('%1$s – %2$s', 'fromscratch'),
-            wp_date('j. F', $week_start->getTimestamp()),
-            wp_date('j. F Y', $week_end->getTimestamp())
+            wp_date('j. M', $week_start->getTimestamp()),
+            wp_date('j. M Y', $week_end->getTimestamp())
         );
     }
 
@@ -1245,11 +1197,23 @@ function fs_dashboard_analytics_row_is_yesterday(string $date_ymd): bool
 }
 
 /**
- * Whether a Y-m-d row belongs to the current calendar week (WordPress “Week starts on”, site timezone).
+ * Whether a Y-m-d row belongs to the current ISO-style week (Monday week start) in the site timezone — statistics UI only (weekly email uses WP week helpers separately).
  */
 function fs_dashboard_analytics_row_is_current_week(string $date_ymd): bool
 {
-    return fs_dashboard_wp_calendar_week_row_is_current_week($date_ymd, null);
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date_ymd)) {
+        return false;
+    }
+    $tz = wp_timezone();
+    $row = DateTimeImmutable::createFromFormat('Y-m-d', $date_ymd, $tz);
+    if ($row === false) {
+        return false;
+    }
+    $row = $row->setTime(12, 0);
+    $row_monday = $row->modify('monday this week');
+    $now_monday = (new DateTimeImmutable('now', $tz))->modify('monday this week');
+
+    return $row_monday->format('Y-m-d') === $now_monday->format('Y-m-d');
 }
 
 /**
@@ -1346,11 +1310,11 @@ function fs_dashboard_analytics_chart_date_label(int $timestamp): string
 }
 
 /**
- * Weekly chart x-axis second line only: first day of week (per Settings → General), no range.
+ * Weekly chart x-axis second line only: ISO week-start Monday (sites statistics page), abbreviated date.
  */
-function fs_dashboard_analytics_week_chart_axis_date_line(int $week_start_timestamp): string
+function fs_dashboard_analytics_week_chart_axis_date_line(int $monday_timestamp): string
 {
-    return wp_date('j. M Y', $week_start_timestamp);
+    return wp_date('j. M Y', $monday_timestamp);
 }
 
 /**
@@ -1378,24 +1342,20 @@ function fs_dashboard_analytics_daily_axis_label(array $r)
 }
 
 /**
- * Weekly chart x-axis: “This week” or “Week N”, then first day of WP calendar week as d. M Y (no range on the chart).
+ * Weekly chart x-axis: “This week” or “Week N”, then ISO Monday as d. M Y (no range on the chart — statistics page).
  *
  * @return array{0:string,1:string}|string
  */
 function fs_dashboard_analytics_weekly_axis_label(array $r)
 {
     $date = (string) ($r['date'] ?? '');
-    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+    $ts = $date !== '' ? strtotime($date . ' 00:00:00') : false;
+    if (!$ts) {
         return $date;
     }
-    $tz = wp_timezone();
-    $row_dt = DateTimeImmutable::createFromFormat('Y-m-d', $date, $tz);
-    if ($row_dt === false) {
-        return $date;
-    }
-    $week_start_wp = fs_dashboard_wp_week_period_start_for_date($row_dt->setTime(0, 0, 0), null);
-    $week_no = fs_dashboard_iso_week_number_for_wp_calendar_start($week_start_wp);
-    $date_line = fs_dashboard_analytics_week_chart_axis_date_line($week_start_wp->getTimestamp());
+    $monday = (new DateTimeImmutable('@' . (int) $ts))->setTimezone(wp_timezone())->modify('monday this week');
+    $week_no = (int) $monday->format('W');
+    $date_line = fs_dashboard_analytics_week_chart_axis_date_line($monday->getTimestamp());
     if (fs_dashboard_analytics_row_is_current_week($date)) {
         return [
             __('This week', 'fromscratch'),
@@ -1781,14 +1741,10 @@ function fs_render_dashboard_statistics_page(): void
                             $week_label = $date;
                             $week_range = '';
                             if ($ts) {
-                                $tz = wp_timezone();
-                                $row_dt = DateTimeImmutable::createFromFormat('Y-m-d', $date, $tz);
-                                if ($row_dt instanceof DateTimeImmutable) {
-                                    $week_start_wp = fs_dashboard_wp_week_period_start_for_date($row_dt->setTime(0, 0, 0), null);
-                                    $week_no = fs_dashboard_iso_week_number_for_wp_calendar_start($week_start_wp);
-                                    $week_label = sprintf(__('Week %d', 'fromscratch'), $week_no);
-                                    $week_range = fs_dashboard_format_week_date_range($week_start_wp);
-                                }
+                                $monday = (new DateTimeImmutable('@' . $ts))->setTimezone(wp_timezone())->modify('monday this week');
+                                $week_no = (int) $monday->format('W');
+                                $week_label = sprintf(__('Week %d', 'fromscratch'), $week_no);
+                                $week_range = fs_dashboard_format_week_date_range($monday);
                             }
                             $is_current_week = $date !== '' && fs_dashboard_analytics_row_is_current_week($date);
                         ?>

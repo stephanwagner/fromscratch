@@ -156,26 +156,84 @@ function fs_weekly_report_report_period_for_now(\DateTimeImmutable $now): array
 }
 
 /**
- * Two-line chart/table labels for a Matomo weekly row: line 1 “Week N”; line 2 long range (WP week).
+ * Weekly email daily + insights: last 7 full site-local calendar days ending yesterday (today excluded).
+ *
+ * @return array{start:\DateTimeImmutable, after_exclusive:\DateTimeImmutable}
+ */
+function fs_weekly_report_email_daily_window_seven_through_yesterday(\DateTimeZone $tz): array
+{
+	$today_start = new \DateTimeImmutable('today', $tz);
+	$yesterday_start = $today_start->modify('-1 day');
+
+	return [
+		'start' => $yesterday_start->modify('-6 days')->setTime(0, 0, 0),
+		'after_exclusive' => $today_start->setTime(0, 0, 0),
+	];
+}
+
+/**
+ * Matomo daily rows for the weekly email chart/table only.
+ *
+ * @param array<int, array<string, mixed>> $daily_src
+ * @return array<int, array<string, mixed>>
+ */
+function fs_weekly_report_email_filter_daily_series_seven_through_yesterday(array $daily_src, \DateTimeZone $tz): array
+{
+	$window = fs_weekly_report_email_daily_window_seven_through_yesterday($tz);
+	$start = $window['start'];
+	$after = $window['after_exclusive'];
+	$out = [];
+	foreach ($daily_src as $row) {
+		$date = isset($row['date']) ? (string) $row['date'] : '';
+		if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+			continue;
+		}
+		$dt = new \DateTimeImmutable($date . ' 00:00:00', $tz);
+		if ($dt < $start || $dt >= $after) {
+			continue;
+		}
+		$out[] = $row;
+	}
+	usort(
+		$out,
+		static function ($a, $b): int {
+			return strcmp((string) ($a['date'] ?? ''), (string) ($b['date'] ?? ''));
+		}
+	);
+
+	return $out;
+}
+
+/**
+ * ISO week (Monday start) — Matomo weekly rows match this; ignores WordPress “Week starts on”.
+ */
+function fs_weekly_report_email_iso_week_monday_from_row_date(string $ymd, \DateTimeZone $tz): ?\DateTimeImmutable
+{
+	if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $ymd)) {
+		return null;
+	}
+
+	return (new \DateTimeImmutable($ymd . ' 12:00:00', $tz))->modify('monday this week')->setTime(0, 0, 0);
+}
+
+/**
+ * Two-line chart/table labels for a Matomo weekly row: ISO week (Mon–Sun); line 1 “Week N”; line 2 long range from Monday.
  *
  * @return array{0:string,1:string}
  */
-function fs_weekly_report_wp_calendar_week_row_labels(array $row): array
+function fs_weekly_report_email_iso_week_row_labels(array $row): array
 {
 	$tz = function_exists('wp_timezone') ? wp_timezone() : new \DateTimeZone(wp_timezone_string() ?: 'UTC');
 	$d = isset($row['date']) ? (string) $row['date'] : '';
-	if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $d)) {
+	$monday = fs_weekly_report_email_iso_week_monday_from_row_date($d, $tz);
+	if ($monday === null) {
 		return ['', ''];
 	}
-	$row_dt = new \DateTimeImmutable($d . ' 00:00:00', $tz);
-	$ws = fs_dashboard_wp_week_period_start_for_date($row_dt, null);
-	$we = $ws->modify('+6 days');
-	$t0 = $ws->getTimestamp();
-	$t1 = $we->getTimestamp();
-	$week_no = fs_dashboard_iso_week_number_for_wp_calendar_start($ws);
+	$week_no = (int) $monday->format('W');
+	$week_end_ts = $monday->modify('+6 days')->getTimestamp();
 	$line2 = function_exists('fs_dashboard_format_week_date_range')
-		? fs_dashboard_format_week_date_range($ws)
-		: (wp_date('j. M', $t0) . ' – ' . wp_date('j. M Y', $t1));
+		? fs_dashboard_format_week_date_range($monday)
+		: (wp_date('j. M', $monday->getTimestamp()) . ' – ' . wp_date('j. M Y', $week_end_ts));
 
 	return [
 		sprintf(__('Week %d', 'fromscratch'), $week_no),
@@ -184,7 +242,7 @@ function fs_weekly_report_wp_calendar_week_row_labels(array $row): array
 }
 
 /**
- * Compact x-axis labels for the weekly trend chart (email table keeps the long range on line 2).
+ * Compact x-axis labels for the weekly trend chart (email — ISO weeks only).
  *
  * @return array{0:string,1:string}
  */
@@ -192,16 +250,15 @@ function fs_weekly_report_weekly_chart_axis_labels(array $row): array
 {
 	$tz = function_exists('wp_timezone') ? wp_timezone() : new \DateTimeZone(wp_timezone_string() ?: 'UTC');
 	$d = isset($row['date']) ? (string) $row['date'] : '';
-	if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $d)) {
+	$monday = fs_weekly_report_email_iso_week_monday_from_row_date($d, $tz);
+	if ($monday === null) {
 		return ['', ''];
 	}
-	$row_mid = new \DateTimeImmutable($d . ' 00:00:00', $tz);
-	$week_start_wp = fs_dashboard_wp_week_period_start_for_date($row_mid, null);
-	$week_no = fs_dashboard_iso_week_number_for_wp_calendar_start($week_start_wp);
+	$week_no = (int) $monday->format('W');
 
 	return [
 		sprintf(__('Week %d', 'fromscratch'), $week_no),
-		wp_date('d.m.Y', $week_start_wp->getTimestamp()),
+		wp_date('d.m.Y', $monday->getTimestamp()),
 	];
 }
 
@@ -239,7 +296,7 @@ function fs_weekly_report_render_schedule_settings_row(): void
 		<td>
 			<div style="display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px;">
 				<p style="margin:0;">
-					<label for="fromscratch_weekly_report_wday"><?= esc_html__('Day', 'fromscratch') ?></label><br>
+					<label for="fromscratch_weekly_report_wday" style="display: block;margin-bottom: 2px;"><?= esc_html__('Weekday', 'fromscratch') ?></label>
 					<select name="fromscratch_weekly_report_wday" id="fromscratch_weekly_report_wday">
 						<?php for ($k = 0; $k < 7; $k++) :
 							$d = ($start + $k) % 7;
@@ -249,7 +306,7 @@ function fs_weekly_report_render_schedule_settings_row(): void
 					</select>
 				</p>
 				<p style="margin:0;">
-					<span id="fromscratch-weekly-report-time-label"><?= esc_html__('Time', 'fromscratch') ?></span><br>
+					<span id="fromscratch-weekly-report-time-label" style="display: block;margin-bottom: 2px;"><?= esc_html__('Time', 'fromscratch') ?></span>
 					<span style="display:inline-flex; flex-wrap:wrap; align-items:center; gap:4px;">
 						<?php if ($use_12h) :
 							$h12 = $hour_stored % 12;
@@ -285,49 +342,10 @@ function fs_weekly_report_render_schedule_settings_row(): void
 					</span>
 				</p>
 			</div>
-			<p class="description"><?= esc_html__('Uses your WordPress timezone. After this day & time passes, WordPress sends on the next request that runs cron (normally the next visitor).', 'fromscratch') ?></p>
-		</td>
-	</tr>
-	<tr>
-		<th scope="row"><?= esc_html__('Cron', 'fromscratch') ?></th>
-		<td>
-			<p style="margin:0 0 8px;"><strong><?= esc_html(fs_weekly_report_next_send_label()) ?></strong></p>
-			<button type="submit" form="fs-reset-weekly-report-test" class="button"><?= esc_html__('Reset weekly send lock (developer test)', 'fromscratch') ?></button>
-			<p class="description" style="margin-top:8px;"><?= esc_html__('Clears the “already sent this week” flag and queues one overdue cron job. Open the site as a visitor (or reload the front end) to act as that “next request”.', 'fromscratch') ?></p>
+			<p class="description"><?= esc_html__('Sent once per week on the first visit after your chosen day and time.', 'fromscratch') ?></p>
 		</td>
 	</tr>
 	<?php
-}
-
-/**
- * Developer: allow one more send this week; next HTTP request that runs wp-cron can fire the hook.
- */
-function fs_weekly_report_reset_for_testing(): void
-{
-	delete_option('fromscratch_weekly_report_last_sent_week');
-
-	while (($ts = wp_next_scheduled('fs_weekly_report_weekly')) !== false) {
-		wp_unschedule_event((int) $ts, 'fs_weekly_report_weekly');
-	}
-
-	wp_schedule_single_event(time() - 1, 'fs_weekly_report_weekly');
-}
-
-/**
- * Human-readable label for the next cron run (General settings UI).
- */
-function fs_weekly_report_next_send_label(): string
-{
-	$next = wp_next_scheduled('fs_weekly_report_weekly');
-	if ($next === false) {
-		return __('No cron event yet — save settings below.', 'fromscratch');
-	}
-
-	return sprintf(
-		/* translators: %s localized date/time */
-		__('Next cron run: %s', 'fromscratch'),
-		wp_date(get_option('date_format') . ' ' . get_option('time_format'), $next)
-	);
 }
 
 add_action('init', static function (): void {
@@ -342,9 +360,11 @@ add_action('init', static function (): void {
 }, 33);
 
 /**
+ * CMS blocks for weekly email — period is arbitrary half-open [ start, after_exclusive ).
+ *
  * @return array{went_live_last_week: array<int,array{title:string,url:string,date:string}>, scheduled_upcoming: array<int,array{title:string,url:string,date:string}>, expired_last_week: array<int,array{title:string,url:string,date:string}>, expiring_upcoming: array<int,array{title:string,url:string,date:string}>}
  */
-function fs_weekly_report_build_insights(\DateTimeImmutable $week_start, \DateTimeImmutable $week_after_exclusive): array
+function fs_weekly_report_build_insights(\DateTimeImmutable $period_start, \DateTimeImmutable $period_after_exclusive): array
 {
 	$insight_date_format = 'd.m.Y H:i';
 
@@ -358,8 +378,8 @@ function fs_weekly_report_build_insights(\DateTimeImmutable $week_start, \DateTi
 		return $out;
 	}
 	$post_types = fs_theme_post_types();
-	$last_week_start = $week_start->format('Y-m-d H:i:s');
-	$last_week_end = $week_after_exclusive->modify('-1 second')->format('Y-m-d H:i:s');
+	$last_week_start = $period_start->format('Y-m-d H:i:s');
+	$last_week_end = $period_after_exclusive->modify('-1 second')->format('Y-m-d H:i:s');
 
 	$scheduled = get_posts([
 		'post_type' => $post_types,
@@ -425,8 +445,8 @@ function fs_weekly_report_build_insights(\DateTimeImmutable $week_start, \DateTi
 				],
 			],
 		]);
-		$last_week_start_ts = $week_start->getTimestamp();
-		$week_after_ts = $week_after_exclusive->getTimestamp();
+		$last_week_start_ts = $period_start->getTimestamp();
+		$week_after_ts = $period_after_exclusive->getTimestamp();
 		foreach ($expiring as $p) {
 			$raw = (string) get_post_meta((int) $p->ID, FS_EXPIRATION_META_KEY, true);
 			$ts = fs_weekly_report_parse_expiration_timestamp($raw);
@@ -490,17 +510,11 @@ function fs_weekly_report_build_html(): string
 	$date_now = wp_date(get_option('date_format') . ' ' . get_option('time_format'));
 	$matomo_on = function_exists('fs_theme_feature_enabled') && fs_theme_feature_enabled('matomo');
 	$tz = function_exists('wp_timezone') ? wp_timezone() : new \DateTimeZone(wp_timezone_string() ?: 'UTC');
-	$today = new \DateTimeImmutable('now', $tz);
-	$report_period = fs_weekly_report_report_period_for_now($today);
-	$week_start = $report_period['week_start'];
-	$week_after_exclusive = $report_period['week_after_exclusive'];
-	$week_end_inclusive = $week_after_exclusive->modify('-1 day');
-	$date_fmt = get_option('date_format');
-	$report_period_range = wp_date((string) $date_fmt, $week_start->getTimestamp())
-		. ' – '
-		. wp_date((string) $date_fmt, $week_end_inclusive->getTimestamp());
-	// Content + Matomo slices use the configured send weekday as week start (e.g. Fri–Thu when sending on Friday).
-	$insights = fs_weekly_report_build_insights($week_start, $week_after_exclusive);
+	$email_daily = fs_weekly_report_email_daily_window_seven_through_yesterday($tz);
+	$email_daily_start = $email_daily['start'];
+	$email_daily_after_exclusive = $email_daily['after_exclusive'];
+	// CMS + Matomo daily in email only: rolling 7 days through yesterday (not send day / WP week).
+	$insights = fs_weekly_report_build_insights($email_daily_start, $email_daily_after_exclusive);
 
 	$daily = [];
 	$weekly = [];
@@ -510,36 +524,16 @@ function fs_weekly_report_build_html(): string
 	if ($matomo_on && function_exists('fs_matomo_get_statistics')) {
 		$series = fs_matomo_get_statistics();
 		$daily_src = isset($series['daily']) && is_array($series['daily']) ? $series['daily'] : [];
-		$daily = [];
-		foreach ($daily_src as $row) {
-			$date = isset($row['date']) ? (string) $row['date'] : '';
-			if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-				continue;
-			}
-			$dt = new \DateTimeImmutable($date . ' 00:00:00', $tz);
-			if ($dt < $week_start || $dt >= $week_after_exclusive) {
-				continue;
-			}
-			$daily[] = $row;
-		}
-		usort(
-			$daily,
-			static function ($a, $b): int {
-				return strcmp((string) ($a['date'] ?? ''), (string) ($b['date'] ?? ''));
-			}
-		);
+		$daily = fs_weekly_report_email_filter_daily_series_seven_through_yesterday($daily_src, $tz);
 
 		$weekly_src = isset($series['weekly']) && is_array($series['weekly']) ? $series['weekly'] : [];
-		$wp_week_starts = get_option('start_of_week', 1);
-		$wp_week_starts = ($wp_week_starts === '' || $wp_week_starts === false) ? 1 : (int) $wp_week_starts;
-		$wp_week_starts = max(0, min(6, $wp_week_starts));
 		$weekly_trend = [];
 		foreach ($weekly_src as $wrow) {
 			$wdate = isset($wrow['date']) ? (string) $wrow['date'] : '';
 			if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $wdate)) {
 				continue;
 			}
-			if (fs_dashboard_wp_calendar_week_row_is_current_week($wdate, $wp_week_starts)) {
+			if (fs_dashboard_analytics_row_is_current_week($wdate)) {
 				continue;
 			}
 			$weekly_trend[] = $wrow;
@@ -616,7 +610,6 @@ function fs_weekly_report_build_html(): string
 	}
 	$template_args = [
 		'site_name' => $site_name,
-		'report_period_range' => $report_period_range,
 		'date_now' => $date_now,
 		'site_url' => $site_url,
 		'admin_url' => $admin_url,

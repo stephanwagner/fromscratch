@@ -1818,11 +1818,11 @@ msgstr "Wöchentlicher Website-Bericht"
 msgid "Weekly reports"
 msgstr "Wöchentliche Berichte"
 
-msgid "Sends a weekly summary on the schedule below (site timezone), with analytics when Matomo is enabled."
-msgstr "Versendet eine wöchentliche Übersicht gemäß Zeitplan unten (Zeitzone der Website), mit Analysen, wenn Matomo aktiviert ist."
+msgid "Sends a weekly summary with analytics when Matomo is enabled."
+msgstr "Versendet eine wöchentliche Zusammenfassung mit Analysedaten, wenn Matomo aktiviert ist."
 
 msgid "Schedule"
-msgstr "Zeitplan"
+msgstr "Versandzeit"
 
 msgid "Weekday"
 msgstr "Wochentag"

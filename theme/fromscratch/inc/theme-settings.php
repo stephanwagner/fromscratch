@@ -147,7 +147,7 @@ function fs_theme_settings_save_general_options_from_post(): void
 	}
 }
 
-// General tab (self-POST): save & reset stay on Theme settings; no redirect to options.php.
+// General tab (self-POST): save stays on Theme settings; no redirect to options.php.
 add_action('admin_init', function (): void {
 	global $pagenow;
 	if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -164,22 +164,6 @@ add_action('admin_init', function (): void {
 		return;
 	}
 	$url = admin_url('options-general.php?page=fs-theme-settings&tab=general');
-
-	if (!empty($_POST['fromscratch_weekly_report_reset_test'])) {
-		check_admin_referer('fromscratch_weekly_report_reset_test');
-		if (!function_exists('fs_weekly_report_reset_for_testing')) {
-			wp_safe_redirect($url);
-			exit;
-		}
-		fs_weekly_report_reset_for_testing();
-		$notice = __('Reset done. The next page load that runs WordPress cron can send the report (if enabled and not already sent this week). Regular schedule is restored after cron runs. ', 'fromscratch');
-		if (function_exists('fs_weekly_report_next_send_label')) {
-			$notice .= fs_weekly_report_next_send_label();
-		}
-		set_transient('fromscratch_weekly_report_reset_notice', $notice, 60);
-		wp_safe_redirect($url);
-		exit;
-	}
 
 	if (($_POST['action'] ?? '') === 'update' && ($_POST['option_page'] ?? '') === FS_THEME_OPTION_GROUP_GENERAL) {
 		check_admin_referer(FS_THEME_OPTION_GROUP_GENERAL . '-options');
@@ -896,10 +880,6 @@ function theme_settings_page(): void
 	if ($general_saved !== false) {
 		delete_transient('fromscratch_general_saved');
 	}
-	$weekly_reset_notice = get_transient('fromscratch_weekly_report_reset_notice');
-	if ($weekly_reset_notice !== false) {
-		delete_transient('fromscratch_weekly_report_reset_notice');
-	}
 ?>
 	<div class="wrap">
 		<h1><?= esc_html__('Theme settings', 'fromscratch') ?></h1>
@@ -913,9 +893,6 @@ function theme_settings_page(): void
 		}
 		if ($weekly_send_error !== false) {
 			$notices[] = (string) $weekly_send_error;
-		}
-		if ($weekly_reset_notice !== false) {
-			$notices[] = (string) $weekly_reset_notice;
 		}
 		foreach ($notices as $msg) : ?>
 			<div class="notice <?= ($weekly_send_error !== false && $msg === (string) $weekly_send_error) ? 'notice-error' : 'notice-success' ?> is-dismissible">
@@ -942,7 +919,7 @@ function theme_settings_page(): void
 			<form method="post" action="<?= esc_url(admin_url('options-general.php?page=fs-theme-settings&tab=general')) ?>" class="fs-page-settings-form">
 				<?php settings_fields(FS_THEME_OPTION_GROUP_GENERAL); ?>
 				<h2 class="title"><?= esc_html__('Weekly website report', 'fromscratch') ?></h2>
-				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Sends a weekly summary on the schedule below (site timezone), with analytics when Matomo is enabled.', 'fromscratch') ?></p>
+				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Sends a weekly summary with analytics when Matomo is enabled.', 'fromscratch') ?></p>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row"><?= esc_html__('Weekly reports', 'fromscratch') ?></th>
@@ -978,7 +955,6 @@ function theme_settings_page(): void
 									form="fs-send-weekly-report-to-developer"
 									value="<?= esc_attr($weekly_manual_send_default_email) ?>"
 									class="regular-text"
-									style="flex:1; min-width:200px; max-width:420px;"
 									autocomplete="email"
 								>
 								<button type="submit" form="fs-send-weekly-report-to-developer" class="button"><?= esc_html__('Send report', 'fromscratch') ?></button>
@@ -1104,10 +1080,6 @@ function theme_settings_page(): void
 			<form method="post" action="<?= esc_url(admin_url('options-general.php?page=fs-theme-settings&tab=general')) ?>" id="fs-send-weekly-report-to-developer" style="display:none;">
 				<?php wp_nonce_field('fromscratch_send_weekly_report_to_developer'); ?>
 				<input type="hidden" name="fromscratch_send_weekly_report_to_developer" value="1">
-			</form>
-			<form method="post" action="<?= esc_url(admin_url('options-general.php?page=fs-theme-settings&tab=general')) ?>" id="fs-reset-weekly-report-test" style="display:none;">
-				<?php wp_nonce_field('fromscratch_weekly_report_reset_test'); ?>
-				<input type="hidden" name="fromscratch_weekly_report_reset_test" value="1">
 			</form>
 		<?php elseif ($tab === 'texts') : ?>
 			<form method="post" action="options.php" class="fs-page-settings-form" id="fs-content-form">
