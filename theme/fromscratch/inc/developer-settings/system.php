@@ -548,7 +548,7 @@ function fs_developer_render_system_info_panel(): void
 				</tr>
 
 				<tr>
-					<th scope="row"><?= esc_html__('OPcache', 'fromscratch') ?></th>
+					<th scope="row">OPcache</th>
 					<td>
 						<?= $opcache_status ?>
 						<?= $fs_render_warning($opcache_warning) ?>
@@ -578,7 +578,7 @@ function fs_developer_render_system_info_panel(): void
 					</tr>
 				<?php endif; ?>
 				<tr>
-					<th scope="row"><?= esc_html__('Xdebug', 'fromscratch') ?></th>
+					<th scope="row">Xdebug</th>
 					<td>
 						<?= $xdebug_on ? $fs_system_status(true, esc_html__('Enabled', 'fromscratch')) : $fs_system_status(false, esc_html__('Disabled', 'fromscratch')) ?>
 						<?= $fs_render_warning($xdebug_warning) ?>

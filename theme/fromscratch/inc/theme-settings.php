@@ -1397,7 +1397,7 @@ function theme_settings_page(): void
 						<?php foreach ($design_tabs as $i => $dt) :
 							$tab_id = isset($dt['title']) ? sanitize_title($dt['title']) : 'tab-' . $i;
 						?>
-							<button type="button" class="button fs-tabs-btn fs-button-can-toggle <?= ($i === 0) ? 'active' : '' ?>" role="tab" aria-selected="<?= ($i === 0) ? 'true' : 'false' ?>" aria-controls="fs-design-panel-<?= esc_attr($tab_id) ?>" data-fs-tabs-btn data-tab="<?= esc_attr($tab_id) ?>"><?= esc_html(_x($dt['title'] ?? $tab_id, 'Design tab', 'fromscratch')) ?></button>
+							<button type="button" class="button fs-tabs-btn fs-button-can-toggle <?= ($i === 0) ? 'active' : '' ?>" role="tab" aria-selected="<?= ($i === 0) ? 'true' : 'false' ?>" aria-controls="fs-design-panel-<?= esc_attr($tab_id) ?>" data-fs-tabs-btn data-tab="<?= esc_attr($tab_id) ?>"><?= esc_html(_x($dt['title'] ?? $tab_id, 'Design section', 'fromscratch')) ?></button>
 						<?php endforeach; ?>
 					</nav>
 					<div class="fs-tabs-panels" data-fs-tabs-panels>
@@ -1435,12 +1435,12 @@ function theme_settings_page(): void
 														</th>
 														<td>
 															<div class="fromscratch-design-field <?= $type_class ?>">
-																<label for="fromscratch_design_<?= esc_attr($var_id) ?>" class="screen-reader-text"><?= esc_html($var_title) ?></label>
+																<label for="fromscratch_design_<?= esc_attr($var_id) ?>" class="screen-reader-text"><?= esc_html(_x($var_title, 'Design variable', 'fromscratch')) ?></label>
 																<input type="text" name="<?= $input_name ?>" id="fromscratch_design_<?= esc_attr($var_id) ?>" value="<?= esc_attr($override) ?>" placeholder="<?= esc_attr($default) ?>" class="code fs-code-small fromscratch-design-input <?= esc_attr($type_class) ?>" <?= $var_type === 'color' ? 'maxlength="22" data-design-color-input' : '' ?>>
 																<?php if ($var_type === 'color') : ?>
 																	<span class="fromscratch-design-color-preview<?= $preview_color === '' ? ' -empty' : '' ?>" <?= $preview_color !== '' ? ' style="background-color: ' . esc_attr($preview_color) . ';"' : '' ?> aria-hidden="true" data-design-color-preview></span>
 																<?php endif; ?>
-																<span class="fromscratch-design-field-description"><?= esc_html($var_title) ?></span>
+																<span class="fromscratch-design-field-description"><?= esc_html(_x($var_title, 'Design variable', 'fromscratch')) ?></span>
 															</div>
 														</td>
 													</tr>

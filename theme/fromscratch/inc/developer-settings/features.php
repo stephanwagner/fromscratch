@@ -254,7 +254,7 @@ function fs_render_developer_features(): void
 
 				<table class="form-table" role="presentation">
 					<tr>
-						<th scope="row" class="form-table-checkbox-label"><?= esc_html__('Matomo', 'fromscratch') ?></th>
+						<th scope="row" class="form-table-checkbox-label">Matomo</th>
 						<td>
 							<input type="hidden" name="fromscratch_features[enable_matomo]" value="0">
 							<label><input type="checkbox" name="fromscratch_features[enable_matomo]" value="1" <?= checked($feat('enable_matomo'), 1, false) ?>> <?= esc_html__('Enable Matomo analytics integration', 'fromscratch') ?></label>
