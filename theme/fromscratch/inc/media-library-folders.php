@@ -582,7 +582,7 @@ add_action('admin_footer', function (): void {
 					var cnt = typeof it.count !== 'undefined' ? it.count : 0;
 					out += '<button type="button" class="fs-media-modal-folder-btn fs-media-modal-folder-btn--grow" data-folder-id="' + id + '">';
 					out += '<span class="fs-media-modal-folder-btn__label">' + name + '</span>';
-					out += '<span class="count">' + fsModalFmtCount(cnt) + '</span>';
+					out += '<span class="fs-media-folders-count">' + fsModalFmtCount(cnt) + '</span>';
 					out += '</button>';
 					out += '</div>';
 					if (hasChildren) {
@@ -769,13 +769,13 @@ add_action('admin_footer', function (): void {
 				html += '<button type="button" class="fs-media-modal-folder-btn fs-media-modal-folder-btn--with-icon" data-folder-id="0" data-fs-all="1">';
 				html += icons.all || '';
 				html += '<span class="fs-media-folders-link-label">' + fsEsc(L.allFiles || 'All files') + '</span>';
-				html += '<span class="count">' + fsModalFmtCount(counts.allFiles) + '</span>';
+				html += '<span class="fs-media-folders-count">' + fsModalFmtCount(counts.allFiles) + '</span>';
 				html += '</button></div></li>';
 				html += '<li class="fs-media-modal-folders__item"><div class="fs-media-modal-folders__row fs-media-folders-item fs-media-folders-item--unassigned fs-media-folders-link">';
 				html += '<button type="button" class="fs-media-modal-folder-btn fs-media-modal-folder-btn--with-icon" data-folder-id="0" data-fs-unassigned="1">';
 				html += icons.unassigned || '';
 				html += '<span class="name">' + fsEsc(L.notInFolder || 'Not in a folder') + '</span>';
-				html += '<span class="count">' + fsModalFmtCount(counts.unassigned) + '</span>';
+				html += '<span class="fs-media-folders-count">' + fsModalFmtCount(counts.unassigned) + '</span>';
 				html += '</button></div></li>';
 				html += fsModalRenderFolderTree(0);
 				html += '</ul>';
@@ -1212,7 +1212,7 @@ function fs_media_folders_render_list(array $terms, array $display_counts, int $
 		}
 		echo '<a class="fs-media-folders-link" href="' . esc_url($url) . '">';
 		echo '<span class="name">' . esc_html($term->name) . '</span>';
-		echo '<span class="count">' . esc_html((string) $display_count) . '</span>';
+		echo '<span class="fs-media-folders-count">' . esc_html((string) $display_count) . '</span>';
 		echo '</a>';
 		echo '<span class="fs-media-folders-item-toolbar">';
 		echo '<button type="button" class="fs-media-folder-edit-btn" aria-label="' . esc_attr__('Rename folder', 'fromscratch') . '" data-term-id="' . esc_attr((string) $term_id) . '" data-folder-name="' . esc_attr($term->name) . '"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M160-120q-17 0-28.5-11.5T120-160v-97q0-16 6-30.5t17-25.5l505-504q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L313-143q-11 11-25.5 17t-30.5 6h-97Zm544-528 56-56-56-56-56 56 56 56Z"/></svg></button>';
@@ -1479,7 +1479,7 @@ add_action('admin_footer-upload.php', function (): void {
 					<button type="button" class="fs-media-folders-link fs-media-folders-link--all" data-fs-all-url="<?= esc_url($all_files_url) ?>">
 						<span class="fs-media-folders-item-icon fs-media-folders-item-icon--all" aria-hidden="true"><?php echo fs_media_folders_icon_svg('all'); ?></span>
 						<span class="fs-media-folders-link-label"><?= esc_html__('All files', 'fromscratch') ?></span>
-						<span class="count"><?= esc_html((string) (int) $all_files_count) ?></span>
+						<span class="fs-media-folders-count"><?= esc_html((string) (int) $all_files_count) ?></span>
 					</button>
 				</div>
 			</li>
@@ -1495,7 +1495,7 @@ add_action('admin_footer-upload.php', function (): void {
 					<a class="fs-media-folders-link" href="<?= esc_url($unassigned_url) ?>">
 						<span class="fs-media-folders-item-icon fs-media-folders-item-icon--unassigned" aria-hidden="true"><?php echo fs_media_folders_icon_svg('unassigned'); ?></span>
 						<span class="name"><?= esc_html__('Not in a folder', 'fromscratch') ?></span>
-						<span class="count"><?= esc_html((string) (int) $unassigned_count) ?></span>
+						<span class="fs-media-folders-count"><?= esc_html((string) (int) $unassigned_count) ?></span>
 					</a>
 				</div>
 			</li>
