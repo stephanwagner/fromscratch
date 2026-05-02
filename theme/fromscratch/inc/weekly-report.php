@@ -502,7 +502,7 @@ function fs_weekly_report_build_html(): string
 	$admin_url = admin_url();
 	$stats_url = function_exists('fs_dashboard_statistics_url') ? fs_dashboard_statistics_url() : admin_url();
 	$theme_settings_url = admin_url('options-general.php?page=fs-theme-settings');
-	$developer_settings_url = admin_url('options-general.php?page=fs-developer-settings');
+	$developer_settings_url = admin_url('options-general.php?page=' . fs_developer_settings_page_slug('developer'));
 	$developer_email = function_exists('fs_developer_email') ? fs_developer_email() : '';
 	$admin_email = get_option('admin_email', '');
 	$developer_email_link = (is_string($developer_email) && is_email($developer_email)) ? ('mailto:' . $developer_email) : '';

@@ -261,7 +261,374 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 		wp_safe_redirect($url);
 		exit;
 	}
+
+	// Email (addresses, delivery, test) — formerly Developer › Email tab
+	if (!empty($_POST['option_page']) && $_POST['option_page'] === FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL . '-options')) {
+		$admin_email = isset($_POST['admin_email']) ? sanitize_email(wp_unslash($_POST['admin_email'])) : '';
+		if (is_email($admin_email)) {
+			update_option('admin_email', $admin_email);
+		}
+		$developer_email = isset($_POST['fromscratch_developer_email']) ? sanitize_email(wp_unslash($_POST['fromscratch_developer_email'])) : '';
+		update_option('fromscratch_developer_email', is_email($developer_email) ? $developer_email : '');
+		set_transient('fromscratch_email_saved', '1', 30);
+		wp_safe_redirect($url);
+		exit;
+	}
+
+	if (!empty($_POST['fromscratch_save_mail_delivery']) && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_system_mail_delivery')) {
+		$from_email = isset($_POST['fromscratch_email_from']) ? sanitize_email(wp_unslash($_POST['fromscratch_email_from'])) : '';
+		update_option('fromscratch_email_from', is_email($from_email) ? $from_email : '');
+		update_option('fromscratch_email_from_name', sanitize_text_field(wp_unslash($_POST['fromscratch_email_from_name'] ?? '')));
+
+		$mailer = isset($_POST['fromscratch_mailer']) && in_array($_POST['fromscratch_mailer'], ['php', 'smtp', 'sendgrid'], true) ? $_POST['fromscratch_mailer'] : 'php';
+		update_option('fromscratch_mailer', $mailer);
+
+		if ($mailer === 'smtp') {
+			update_option('fromscratch_smtp_host', sanitize_text_field(wp_unslash($_POST['fromscratch_smtp_host'] ?? '')));
+			$port = absint($_POST['fromscratch_smtp_port'] ?? 587);
+			update_option('fromscratch_smtp_port', $port > 0 && $port <= 65535 ? $port : 587);
+			$enc = isset($_POST['fromscratch_smtp_encryption']) && in_array($_POST['fromscratch_smtp_encryption'], ['none', 'tls', 'ssl'], true) ? $_POST['fromscratch_smtp_encryption'] : 'tls';
+			update_option('fromscratch_smtp_encryption', $enc);
+			update_option('fromscratch_smtp_user', sanitize_text_field(wp_unslash($_POST['fromscratch_smtp_user'] ?? '')));
+			$smtp_pass = isset($_POST['fromscratch_smtp_pass']) ? wp_unslash($_POST['fromscratch_smtp_pass']) : '';
+			if ($smtp_pass !== '') {
+				update_option('fromscratch_smtp_pass', $smtp_pass);
+			}
+		}
+
+		if ($mailer === 'sendgrid') {
+			update_option('fromscratch_sendgrid_api_key', sanitize_text_field(wp_unslash($_POST['fromscratch_sendgrid_api_key'] ?? '')));
+		}
+
+		set_transient('fromscratch_email_saved', '1', 30);
+		wp_safe_redirect($url);
+		exit;
+	}
+
+	if (!empty($_POST['fromscratch_send_test_mail']) && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_system_test_mail')) {
+		$to = isset($_POST['fromscratch_test_mail_to']) ? sanitize_email(wp_unslash($_POST['fromscratch_test_mail_to'])) : '';
+
+		if ($to === '' && function_exists('fs_developer_email')) {
+			$to = fs_developer_email();
+		}
+
+		if (!is_email($to)) {
+			set_transient('fromscratch_email_test_mail_error', __('Please enter a valid email address before sending a test.', 'fromscratch'), 30);
+			wp_safe_redirect($url);
+			exit;
+		}
+		$site_name = get_bloginfo('name');
+		$sent_at = wp_date(get_option('date_format') . ' ' . get_option('time_format'));
+		$test_title = __('Test email', 'fromscratch');
+		$body = fs_compose_email_document('test-mail', [
+			'site_name' => $site_name,
+			'to_email' => $to,
+			'sent_at' => $sent_at,
+			'email_page_title' => $test_title,
+			'email_html_lang' => str_replace('_', '-', determine_locale()),
+			'email_footer_html' => esc_html__('This email was sent to verify your mail delivery settings.', 'fromscratch'),
+		]);
+		if ($body === '') {
+			set_transient('fromscratch_email_test_mail_error', __('Test email template could not be loaded.', 'fromscratch'), 30);
+			wp_safe_redirect($url);
+			exit;
+		}
+		$subject = sprintf(/* translators: %s: site name */ __('Test email from %s', 'fromscratch'), $site_name);
+		$headers = ['Content-Type: text/html; charset=UTF-8'];
+
+		$fs_test_mail_error_detail = null;
+		$capture = function ($wp_error) use (&$fs_test_mail_error_detail) {
+			if ($wp_error instanceof WP_Error) {
+				$msgs = $wp_error->get_error_messages();
+				$fs_test_mail_error_detail = implode(' ', $msgs);
+			}
+		};
+		add_action('wp_mail_failed', $capture, 10, 1);
+
+		$sent = wp_mail($to, $subject, $body, $headers);
+
+		remove_action('wp_mail_failed', $capture, 10);
+
+		if ($sent) {
+			set_transient('fromscratch_email_test_mail_success', $to, 30);
+		} else {
+			$base = __('The test email could not be sent.', 'fromscratch');
+			if ($fs_test_mail_error_detail !== null && $fs_test_mail_error_detail !== '') {
+				$base .= ' ' . sprintf(/* translators: %s: error detail from mailer */ __('Reason: %s', 'fromscratch'), $fs_test_mail_error_detail);
+			} else {
+				$base .= ' ' . __('Check your mail delivery settings or try SMTP / SendGrid.', 'fromscratch');
+			}
+			set_transient('fromscratch_email_test_mail_error', $base, 30);
+		}
+		wp_safe_redirect($url);
+		exit;
+	}
 }, 1);
+
+/**
+ * PHP / server summary (Developer tab and optionally reused elsewhere).
+ */
+function fs_developer_render_system_info_panel(): void
+{
+	$fs_system_status = static function (bool $check, string $label): string {
+		$check_icon = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="m389-369 299-299q11-11 25.5-11t25.5 11q11 11 11 25.5T739-617L415-292q-11 11-25.5 11T364-292L221-435q-11-11-11-25.5t11-25.5q11-11 25.5-11t25.5 11l117 117Z"/></svg>';
+		$cross_icon = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M480-429 316-265q-11 11-25 10.5T266-266q-11-11-11-25.5t11-25.5l163-163-164-164q-11-11-10.5-25.5T266-695q11-11 25.5-11t25.5 11l163 164 164-164q11-11 25.5-11t25.5 11q11 11 11 25.5T695-644L531-480l164 164q11 11 11 25t-11 25q-11 11-25.5 11T644-266L480-429Z"/></svg>';
+		$label = esc_html($label);
+		return '<span class="fs-system-status-icon-wrap">' . ($check ? $check_icon : $cross_icon) . '<span class="fs-system-status-icon-label">' . $label . '</span></span>';
+	};
+
+	$opcache_ext_loaded = extension_loaded('Zend OPcache') || extension_loaded('opcache');
+	$opcache_enable_read = $opcache_ext_loaded ? ini_get('opcache.enable') : null;
+	$opcache_ini_is_one = $opcache_ext_loaded
+		&& (string) (is_scalar($opcache_enable_read) ? trim((string) $opcache_enable_read) : '') === '1';
+
+	$xdebug_on = fs_developer_perf_xdebug_enabled();
+	$memory_limit = ini_get('memory_limit');
+	$db_server = function_exists('fs_developer_perf_db_server') ? fs_developer_perf_db_server() : null;
+	$upload_max = ini_get('upload_max_filesize');
+	$post_max = ini_get('post_max_size');
+	$system_url = admin_url('options-general.php?page=' . fs_developer_settings_page_slug('system'));
+
+	$fs_parse_bytes = function ($value): ?int {
+		if ($value === false || $value === null) {
+			return null;
+		}
+		$value = trim((string) $value);
+		if ($value === '' || $value === '-1') {
+			return null;
+		}
+		if (preg_match('/^(\d+(?:\.\d+)?)\s*([KMG])$/i', $value, $m) !== 1) {
+			return null;
+		}
+		$amount = (float) $m[1];
+		$unit = strtoupper($m[2]);
+		$multiplier = match ($unit) {
+			'K' => 1024,
+			'M' => 1024 * 1024,
+			'G' => 1024 * 1024 * 1024,
+			default => 1,
+		};
+		return (int) floor($amount * $multiplier);
+	};
+
+	$fs_render_warning = function (?string $message): string {
+		if ($message === null || $message === '') {
+			return '';
+		}
+
+		$warning_label = esc_html(__('Warning:', 'fromscratch'));
+		$warning_text = esc_html($message);
+
+		return '<div class="fs-warning-wrap">'
+			. '<span class="fs-warning-label">' . $warning_label . '</span>'
+			. ' '
+			. '<span class="fs-warning-text">' . $warning_text . '</span>'
+			. '</div>';
+	};
+
+	$fs_latest_php_major = 8;
+	$fs_latest_php_minor = 5;
+
+	$fs_latest_php_version = get_transient('fs_latest_stable_php_version');
+	if ($fs_latest_php_version === false) {
+		fs_schedule_latest_php_version_refresh();
+		$fs_latest_php_version = '';
+	}
+
+	if (is_string($fs_latest_php_version) && $fs_latest_php_version !== '' && preg_match('/^(\d+)\.(\d+)\./', $fs_latest_php_version, $m) === 1) {
+		$fs_latest_php_major = (int) $m[1];
+		$fs_latest_php_minor = (int) $m[2];
+	}
+
+	$fs_php_min_minor = max(0, $fs_latest_php_minor - 2);
+	$php_parts = explode('.', PHP_VERSION);
+	$php_major = (int) ($php_parts[0] ?? 0);
+	$php_minor = (int) ($php_parts[1] ?? 0);
+	$php_version_warning = null;
+	if ($php_major < $fs_latest_php_major || ($php_major === $fs_latest_php_major && $php_minor < $fs_php_min_minor)) {
+		$php_version_warning = sprintf(
+			/* translators: 1: current PHP version, 2: recommended minimum PHP version, 3: latest stable PHP major.minor */
+			__('Your PHP version (%1$s) is older than recommended. Consider upgrading to at least %2$s (latest stable is %3$s).', 'fromscratch'),
+			PHP_VERSION,
+			$fs_latest_php_major . '.' . $fs_php_min_minor,
+			$fs_latest_php_major . '.' . $fs_latest_php_minor
+		);
+	}
+
+	$memory_warning = null;
+	$memory_limit_bytes = $fs_parse_bytes($memory_limit);
+	if ($memory_limit_bytes !== null && $memory_limit_bytes < 256 * 1024 * 1024) {
+		$memory_warning = __('Consider increasing `memory_limit` to at least 256M.', 'fromscratch');
+	}
+
+	$upload_warning = null;
+	$upload_bytes = $fs_parse_bytes($upload_max);
+	if ($upload_bytes !== null && $upload_bytes < 16 * 1024 * 1024) {
+		$upload_warning = __('Consider increasing `upload_max_filesize` to at least 16M.', 'fromscratch');
+	}
+
+	$post_warning = null;
+	$post_bytes = $fs_parse_bytes($post_max);
+	if ($post_bytes !== null && $post_bytes < 16 * 1024 * 1024) {
+		$post_warning = __('Consider increasing `post_max_size` to at least 16M.', 'fromscratch');
+	}
+
+	$upload_post_warning = null;
+	if ($upload_bytes !== null && $post_bytes !== null && $post_bytes < $upload_bytes) {
+		$upload_post_warning = __('`post_max_size` is smaller than `upload_max_filesize`. Some uploads may fail. Increase `post_max_size`.', 'fromscratch');
+	}
+
+	$debug_enabled = function_exists('fs_is_debug') && fs_is_debug();
+	$debugmode_warning = $debug_enabled ? __('Debug mode is enabled. Disable it in production.', 'fromscratch') : null;
+	$xdebug_warning = $xdebug_on ? __('Xdebug is enabled. Disable it in production for better performance.', 'fromscratch') : null;
+
+	$opcache_warning = null;
+	if (!$opcache_ext_loaded) {
+		$opcache_warning = __('Install PHP OPcache for significantly better performance.', 'fromscratch');
+		$opcache_status = $fs_system_status(false, esc_html__('Not installed', 'fromscratch'));
+	} elseif ($opcache_ini_is_one) {
+		$opcache_status = $fs_system_status(true, esc_html__('Active', 'fromscratch'));
+	} else {
+		$opcache_status = $fs_system_status(false, esc_html__('Unknown, See PHP info', 'fromscratch'));
+	}
+
+	$redis_enabled = fs_developer_redis_enabled();
+	$object_cache_active = function_exists('wp_using_ext_object_cache') && wp_using_ext_object_cache();
+	$is_redis_installed = $redis_enabled && (
+		defined('WP_REDIS_VERSION')
+		|| class_exists('\RedisCache\Plugin')
+		|| function_exists('redis_cache_enable')
+	);
+	$redis_guard_installed = $redis_enabled ? fs_developer_redis_safeguard_is_installed() : false;
+
+	$object_cache_warning = null;
+	if (!$object_cache_active) {
+		$object_cache_warning = $redis_enabled && $is_redis_installed
+			? __('Redis is installed, but object cache is not active. Enable Redis object caching.', 'fromscratch')
+			: __('No persistent object cache detected. Consider enabling an object cache for better performance.', 'fromscratch');
+	}
+
+	$object_cache_row_value = $object_cache_active ? $fs_system_status(true, esc_html__('Active', 'fromscratch')) : $fs_system_status(false, esc_html__('Inactive', 'fromscratch'));
+	$redis_safeguard_warning = null;
+	if ($redis_enabled && $is_redis_installed && !$redis_guard_installed) {
+		$redis_safeguard_warning = __('Redis object cache is active but safeguard is not installed. Install the safeguard to prevent outages when Redis is unavailable.', 'fromscratch');
+	}
+
+	$db_version_warning = null;
+	if ($db_server !== null && isset($db_server['type'], $db_server['version']) && stripos((string) $db_server['type'], 'mysql') !== false) {
+		if (preg_match('/^(\d+)/', (string) $db_server['version'], $m) === 1) {
+			$db_major = (int) $m[1];
+			if ($db_major > 0 && $db_major < 8) {
+				$db_version_warning = sprintf(
+					/* translators: %s: database server version */
+					__('Database version (%s) is quite old. Consider upgrading.', 'fromscratch'),
+					$db_server['version']
+				);
+			}
+		}
+	}
+
+	$dash = '&mdash;';
+	?>
+	<div class="fs-page-settings-form" style="margin-bottom: 24px;">
+		<h2 class="title" style="margin-top: 0;"><?= esc_html__('System info', 'fromscratch') ?></h2>
+		<table class="widefat striped fs-system-info-table" role="presentation">
+			<tbody>
+				<tr>
+					<th scope="row"><?= esc_html__('PHP version', 'fromscratch') ?></th>
+					<td>
+						<div>
+							<?= esc_html(PHP_VERSION) ?><br>
+							<a href="<?= esc_url(add_query_arg('phpinfo', '1', $system_url)) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html__('Open PHP info', 'fromscratch') ?></a>
+						</div>
+						<?= $fs_render_warning($php_version_warning) ?>
+					</td>
+				</tr>
+
+				<tr>
+					<th scope="row"><?= esc_html__('OPcache', 'fromscratch') ?></th>
+					<td>
+						<?= $opcache_status ?>
+						<?= $fs_render_warning($opcache_warning) ?>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?= esc_html__('Object cache', 'fromscratch') ?></th>
+					<td>
+						<?= $object_cache_row_value ?>
+						<?= $fs_render_warning($object_cache_warning) ?>
+					</td>
+				</tr>
+				<?php if ($redis_enabled) : ?>
+					<tr>
+						<th scope="row"><?= esc_html__('Redis safeguard', 'fromscratch') ?></th>
+						<td>
+							<?= $redis_guard_installed ? $fs_system_status(true, esc_html__('Installed', 'fromscratch')) : $fs_system_status(false, esc_html__('Not installed', 'fromscratch')) ?>
+							<?php if (!$redis_guard_installed) : ?>
+								<form method="post" action="<?= esc_url(admin_url('options-general.php?page=' . fs_developer_settings_page_slug('system'))) ?>" style="display: block;">
+									<?php wp_nonce_field('fromscratch_install_redis_safeguard'); ?>
+									<input type="hidden" name="fromscratch_install_redis_safeguard" value="1">
+									<button type="submit" class="is-link"><?= esc_html__('Install safeguard file', 'fromscratch') ?></button>
+								</form>
+							<?php endif; ?>
+							<?= $fs_render_warning($redis_safeguard_warning) ?>
+						</td>
+					</tr>
+				<?php endif; ?>
+				<tr>
+					<th scope="row"><?= esc_html__('Xdebug', 'fromscratch') ?></th>
+					<td>
+						<?= $xdebug_on ? $fs_system_status(true, esc_html__('Enabled', 'fromscratch')) : $fs_system_status(false, esc_html__('Disabled', 'fromscratch')) ?>
+						<?= $fs_render_warning($xdebug_warning) ?>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?= esc_html__('Debug mode', 'fromscratch') ?></th>
+					<td>
+						<?= $debug_enabled ? $fs_system_status(true, esc_html__('Enabled', 'fromscratch')) : $fs_system_status(false, esc_html__('Disabled', 'fromscratch')) ?>
+						<?= $fs_render_warning($debugmode_warning) ?>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?= esc_html__('Memory limit', 'fromscratch') ?></th>
+					<td>
+						<?= $memory_limit !== false && $memory_limit !== '' ? esc_html($memory_limit) : $dash ?>
+						<?= $fs_render_warning($memory_warning) ?>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?= esc_html__('Max upload size', 'fromscratch') ?></th>
+					<td>
+						<?= $upload_max !== false && $upload_max !== '' ? esc_html($upload_max) : $dash ?>
+						<?= $fs_render_warning($upload_warning) ?>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?= esc_html__('Max post size', 'fromscratch') ?></th>
+					<td>
+						<?= $post_max !== false && $post_max !== '' ? esc_html($post_max) : $dash ?>
+						<?= $fs_render_warning($post_warning) ?>
+						<?= $fs_render_warning($upload_post_warning) ?>
+					</td>
+				</tr>
+				<?php if ($db_server !== null) : ?>
+					<tr>
+						<th scope="row"><?= esc_html__('Database', 'fromscratch') ?></th>
+						<td><?= esc_html($db_server['type']) ?></td>
+					</tr>
+					<tr>
+						<th scope="row"><?= esc_html__('Database version', 'fromscratch') ?></th>
+						<td>
+							<?= esc_html($db_server['version']) ?>
+							<?= $fs_render_warning($db_version_warning) ?>
+						</td>
+					</tr>
+				<?php endif; ?>
+			</tbody>
+		</table>
+	</div>
+	<?php
+}
 
 function fs_render_developer_system(): void
 {
@@ -284,10 +651,22 @@ function fs_render_developer_system(): void
 			delete_transient('fromscratch_redis_safeguard_notice');
 		}
 	}
+	$email_saved = get_transient('fromscratch_email_saved');
+	if ($email_saved !== false) {
+		delete_transient('fromscratch_email_saved');
+	}
+	$test_mail_success = get_transient('fromscratch_email_test_mail_success');
+	if ($test_mail_success !== false) {
+		delete_transient('fromscratch_email_test_mail_success');
+	}
+	$test_mail_error = get_transient('fromscratch_email_test_mail_error');
+	if ($test_mail_error !== false) {
+		delete_transient('fromscratch_email_test_mail_error');
+	}
 ?>
 	<div class="wrap">
 		<h1><?= esc_html(__('Developer settings', 'fromscratch')) ?></h1>
-		<?php if ($system_saved !== false || $perf_saved !== false) : ?>
+		<?php if ($system_saved !== false || $perf_saved !== false || $email_saved !== false) : ?>
 			<div class="notice notice-success is-dismissible">
 				<p><strong><?= esc_html(__('Settings saved.', 'fromscratch')) ?></strong></p>
 			</div>
@@ -307,23 +686,6 @@ function fs_render_developer_system(): void
 		<?php endif; ?>
 
 		<?php
-		$fs_system_status = static function (bool $check, string $label): string {
-			$check_icon = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="m389-369 299-299q11-11 25.5-11t25.5 11q11 11 11 25.5T739-617L415-292q-11 11-25.5 11T364-292L221-435q-11-11-11-25.5t11-25.5q11-11 25.5-11t25.5 11l117 117Z"/></svg>';
-			$cross_icon = '<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M480-429 316-265q-11 11-25 10.5T266-266q-11-11-11-25.5t11-25.5l163-163-164-164q-11-11-10.5-25.5T266-695q11-11 25.5-11t25.5 11l163 164 164-164q11-11 25.5-11t25.5 11q11 11 11 25.5T695-644L531-480l164 164q11 11 11 25t-11 25q-11 11-25.5 11T644-266L480-429Z"/></svg>';
-			$label = esc_html($label);
-			return '<span class="fs-system-status-icon-wrap">' . ($check ? $check_icon : $cross_icon) . '<span class="fs-system-status-icon-label">' . $label . '</span></span>';
-		};
-
-		$opcache_ext_loaded  = extension_loaded('Zend OPcache') || extension_loaded('opcache');
-		$opcache_enable_read = $opcache_ext_loaded ? ini_get('opcache.enable') : null;
-		$opcache_ini_is_one  = $opcache_ext_loaded
-			&& (string) (is_scalar($opcache_enable_read) ? trim((string) $opcache_enable_read) : '') === '1';
-
-		$xdebug_on = fs_developer_perf_xdebug_enabled();
-		$memory_limit = ini_get('memory_limit');
-		$db_server = function_exists('fs_developer_perf_db_server') ? fs_developer_perf_db_server() : null;
-		$upload_max = ini_get('upload_max_filesize');
-		$post_max = ini_get('post_max_size');
 		$current_ip = function_exists('fs_developer_perf_current_ip') ? fs_developer_perf_current_ip() : '';
 		$guest_ips = get_option('fromscratch_perf_panel_guest_ips', '');
 		$guest_panel_on = get_option('fromscratch_perf_panel_guest', '0') === '1';
@@ -332,246 +694,27 @@ function fs_render_developer_system(): void
 		$matomo_token_value = (string) get_option('fromscratch_matomo_token_auth', '');
 		$matomo_custom_js_value = (string) get_option('fromscratch_matomo_custom_js', '');
 		$matomo_feature_enabled = function_exists('fs_theme_feature_enabled') && fs_theme_feature_enabled('matomo');
-		$system_url = admin_url('options-general.php?page=' . fs_developer_settings_page_slug('system'));
+		?>
+		<?php if ($test_mail_success !== false) : ?>
+			<div class="notice notice-success is-dismissible">
+				<p><strong><?= esc_html(sprintf(__('Test email sent to %s.', 'fromscratch'), $test_mail_success === '1' ? __('the address', 'fromscratch') : $test_mail_success)) ?></strong></p>
+			</div>
+		<?php endif; ?>
+		<?php if ($test_mail_error !== false) : ?>
+			<div class="notice notice-error is-dismissible">
+				<p><strong><?= esc_html($test_mail_error) ?></strong></p>
+			</div>
+		<?php endif; ?>
 
-		$fs_parse_bytes = function ($value): ?int {
-			if ($value === false || $value === null) {
-				return null;
-			}
-			$value = trim((string) $value);
-			if ($value === '' || $value === '-1') {
-				return null; // Treat as unknown/unlimited.
-			}
-			if (preg_match('/^(\d+(?:\.\d+)?)\s*([KMG])$/i', $value, $m) !== 1) {
-				return null;
-			}
-			$amount = (float) $m[1];
-			$unit = strtoupper($m[2]);
-			$multiplier = match ($unit) {
-				'K' => 1024,
-				'M' => 1024 * 1024,
-				'G' => 1024 * 1024 * 1024,
-				default => 1,
-			};
-			return (int) floor($amount * $multiplier);
-		};
-
-		$fs_render_warning = function (?string $message): string {
-			if ($message === null || $message === '') {
-				return '';
-			}
-
-			$warning_label = esc_html(__('Warning:', 'fromscratch'));
-			$warning_text = esc_html($message);
-
-			return '<div class="fs-warning-wrap">'
-				. '<span class="fs-warning-label">' . $warning_label . '</span>'
-				. ' '
-				. '<span class="fs-warning-text">' . $warning_text . '</span>'
-				. '</div>';
-		};
-
-		// PHP recommendations: based on latest stable PHP from GitHub releases (cached).
-		$fs_latest_php_major = 8;
-		$fs_latest_php_minor = 5;
-
-		$fs_latest_php_version = get_transient('fs_latest_stable_php_version');
-		if ($fs_latest_php_version === false) {
-			fs_schedule_latest_php_version_refresh();
-			$fs_latest_php_version = '';
-		}
-
-		if (is_string($fs_latest_php_version) && $fs_latest_php_version !== '' && preg_match('/^(\d+)\.(\d+)\./', $fs_latest_php_version, $m) === 1) {
-			$fs_latest_php_major = (int) $m[1];
-			$fs_latest_php_minor = (int) $m[2];
-		}
-
-		$fs_php_min_minor = max(0, $fs_latest_php_minor - 2);
-		$php_parts = explode('.', PHP_VERSION);
-		$php_major = (int) ($php_parts[0] ?? 0);
-		$php_minor = (int) ($php_parts[1] ?? 0);
-		$php_version_warning = null;
-		if ($php_major < $fs_latest_php_major || ($php_major === $fs_latest_php_major && $php_minor < $fs_php_min_minor)) {
-			$php_version_warning = sprintf(
-				/* translators: 1: current PHP version, 2: recommended minimum PHP version, 3: latest stable PHP major.minor */
-				__('Your PHP version (%1$s) is older than recommended. Consider upgrading to at least %2$s (latest stable is %3$s).', 'fromscratch'),
-				PHP_VERSION,
-				$fs_latest_php_major . '.' . $fs_php_min_minor,
-				$fs_latest_php_major . '.' . $fs_latest_php_minor
-			);
-		}
-
-		$memory_warning = null;
-		$memory_limit_bytes = $fs_parse_bytes($memory_limit);
-		if ($memory_limit_bytes !== null && $memory_limit_bytes < 256 * 1024 * 1024) {
-			$memory_warning = __('Consider increasing `memory_limit` to at least 256M.', 'fromscratch');
-		}
-
-		$upload_warning = null;
-		$upload_bytes = $fs_parse_bytes($upload_max);
-		if ($upload_bytes !== null && $upload_bytes < 16 * 1024 * 1024) {
-			$upload_warning = __('Consider increasing `upload_max_filesize` to at least 16M.', 'fromscratch');
-		}
-
-		$post_warning = null;
-		$post_bytes = $fs_parse_bytes($post_max);
-		if ($post_bytes !== null && $post_bytes < 16 * 1024 * 1024) {
-			$post_warning = __('Consider increasing `post_max_size` to at least 16M.', 'fromscratch');
-		}
-
-		$upload_post_warning = null;
-		if ($upload_bytes !== null && $post_bytes !== null && $post_bytes < $upload_bytes) {
-			$upload_post_warning = __('`post_max_size` is smaller than `upload_max_filesize`. Some uploads may fail. Increase `post_max_size`.', 'fromscratch');
-		}
-
-		$debug_enabled = function_exists('fs_is_debug') && fs_is_debug();
-		$debugmode_warning = $debug_enabled ? __('Debug mode is enabled. Disable it in production.', 'fromscratch') : null;
-		$xdebug_warning = $xdebug_on ? __('Xdebug is enabled. Disable it in production for better performance.', 'fromscratch') : null;
-
-		$opcache_warning = null;
-		if (! $opcache_ext_loaded) {
-			$opcache_warning = __('Install PHP OPcache for significantly better performance.', 'fromscratch');
-			$opcache_status  = $fs_system_status(false, esc_html__('Not installed', 'fromscratch'));
-		} elseif ($opcache_ini_is_one) {
-			$opcache_status = $fs_system_status(true, esc_html__('Active', 'fromscratch'));
-		} else {
-			$opcache_status = $fs_system_status(false, esc_html__('Unknown, See PHP info', 'fromscratch'));
-		}
-
-		$redis_enabled = fs_developer_redis_enabled();
-		$object_cache_active = function_exists('wp_us§ing_ext_object_cache') && wp_using_ext_object_cache();
-		$is_redis_installed = $redis_enabled && (
-			defined('WP_REDIS_VERSION')
-			|| class_exists('\RedisCache\Plugin')
-			|| function_exists('redis_cache_enable')
-		);
-		$redis_guard_installed = $redis_enabled ? fs_developer_redis_safeguard_is_installed() : false;
-
-		$object_cache_warning = null;
-		if (!$object_cache_active) {
-			$object_cache_warning = $redis_enabled && $is_redis_installed
-				? __('Redis is installed, but object cache is not active. Enable Redis object caching.', 'fromscratch')
-				: __('No persistent object cache detected. Consider enabling an object cache for better performance.', 'fromscratch');
-		}
-
-		$object_cache_row_value = $object_cache_active ? $fs_system_status(true, esc_html__('Active', 'fromscratch')) : $fs_system_status(false, esc_html__('Inactive', 'fromscratch'));
-		$redis_safeguard_warning = null;
-		if ($redis_enabled && $is_redis_installed && !$redis_guard_installed) {
-			$redis_safeguard_warning = __('Redis object cache is active but safeguard is not installed. Install the safeguard to prevent outages when Redis is unavailable.', 'fromscratch');
-		}
-
-		$db_version_warning = null;
-		if ($db_server !== null && isset($db_server['type'], $db_server['version']) && stripos((string) $db_server['type'], 'mysql') !== false) {
-			if (preg_match('/^(\d+)/', (string) $db_server['version'], $m) === 1) {
-				$db_major = (int) $m[1];
-				if ($db_major > 0 && $db_major < 8) {
-					$db_version_warning = sprintf(
-						/* translators: %s: database server version */
-						__('Database version (%s) is quite old. Consider upgrading.', 'fromscratch'),
-						$db_server['version']
-					);
-				}
-			}
+		<?php
+		if (function_exists('fs_developer_render_email_settings_section')) {
+			fs_developer_render_email_settings_section();
 		}
 		?>
+
+		<hr class="fs-page-settings-divider">
+
 		<div class="fs-page-settings-form" style="margin-bottom: 24px;">
-			<h2 class="title"><?= esc_html__('System info', 'fromscratch') ?></h2>
-			<table class="widefat striped fs-system-info-table" role="presentation">
-				<tbody>
-					<tr>
-						<th scope="row"><?= esc_html__('PHP version', 'fromscratch') ?></th>
-						<td>
-							<div>
-								<?= esc_html(PHP_VERSION) ?><br>
-								<a href="<?= esc_url(add_query_arg('phpinfo', '1', $system_url)) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html__('Open PHP info', 'fromscratch') ?></a>
-							</div>
-							<?= $fs_render_warning($php_version_warning) ?>
-						</td>
-					</tr>
-
-					<tr>
-						<th scope="row"><?= esc_html__('OPcache', 'fromscratch') ?></th>
-						<td>
-							<?= $opcache_status ?>
-							<?= $fs_render_warning($opcache_warning) ?>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><?= esc_html__('Object cache', 'fromscratch') ?></th>
-						<td>
-							<?= $object_cache_row_value ?>
-							<?= $fs_render_warning($object_cache_warning) ?>
-						</td>
-					</tr>
-					<?php if ($redis_enabled) : ?>
-						<tr>
-							<th scope="row"><?= esc_html__('Redis safeguard', 'fromscratch') ?></th>
-							<td>
-								<?= $redis_guard_installed ? $fs_system_status(true, esc_html__('Installed', 'fromscratch')) : $fs_system_status(false, esc_html__('Not installed', 'fromscratch')) ?>
-								<?php if (!$redis_guard_installed) : ?>
-									<form method="post" action="" style="display: block;">
-										<?php wp_nonce_field('fromscratch_install_redis_safeguard'); ?>
-										<input type="hidden" name="fromscratch_install_redis_safeguard" value="1">
-										<button type="submit" class="is-link"><?= esc_html__('Install safeguard file', 'fromscratch') ?></button>
-									</form>
-								<?php endif; ?>
-								<?= $fs_render_warning($redis_safeguard_warning) ?>
-							</td>
-						</tr>
-					<?php endif; ?>
-					<tr>
-						<th scope="row"><?= esc_html__('Xdebug', 'fromscratch') ?></th>
-						<td>
-							<?= $xdebug_on ? $fs_system_status(true, esc_html__('Enabled', 'fromscratch')) : $fs_system_status(false, esc_html__('Disabled', 'fromscratch')) ?>
-							<?= $fs_render_warning($xdebug_warning) ?>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><?= esc_html__('Debug mode', 'fromscratch') ?></th>
-						<td>
-							<?= $debug_enabled ? $fs_system_status(true, esc_html__('Enabled', 'fromscratch')) : $fs_system_status(false, esc_html__('Disabled', 'fromscratch')) ?>
-							<?= $fs_render_warning($debugmode_warning) ?>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><?= esc_html__('Memory limit', 'fromscratch') ?></th>
-						<td>
-							<?= $memory_limit !== false && $memory_limit !== '' ? esc_html($memory_limit) : – ?>
-							<?= $fs_render_warning($memory_warning) ?>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><?= esc_html__('Max upload size', 'fromscratch') ?></th>
-						<td>
-							<?= $upload_max !== false && $upload_max !== '' ? esc_html($upload_max) : – ?>
-							<?= $fs_render_warning($upload_warning) ?>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><?= esc_html__('Max post size', 'fromscratch') ?></th>
-						<td>
-							<?= $post_max !== false && $post_max !== '' ? esc_html($post_max) : – ?>
-							<?= $fs_render_warning($post_warning) ?>
-							<?= $fs_render_warning($upload_post_warning) ?>
-						</td>
-					</tr>
-					<?php if ($db_server !== null) : ?>
-						<tr>
-							<th scope="row"><?= esc_html__('Database', 'fromscratch') ?></th>
-							<td><?= esc_html($db_server['type']) ?></td>
-						</tr>
-						<tr>
-							<th scope="row"><?= esc_html__('Database version', 'fromscratch') ?></th>
-							<td>
-								<?= esc_html($db_server['version']) ?>
-								<?= $fs_render_warning($db_version_warning) ?>
-							</td>
-						</tr>
-					<?php endif; ?>
-				</tbody>
-			</table>
-
-			<hr>
 
 			<form method="post" action="" style="margin-top: 12px;">
 				<?php wp_nonce_field('fromscratch_perf'); ?>
@@ -593,7 +736,7 @@ function fs_render_developer_system(): void
 				</p>
 				<div id="fs-perf-guest-ips-wrap" class="fs-perf-guest-ips-wrap fs-indent-checkbox" style="margin-top: 12px; <?= $guest_panel_on ? '' : 'display: none;' ?>">
 					<p style="margin-bottom: 6px;">
-						<?= esc_html__('Your current IP address:', 'fromscratch') ?> <code id="fs-perf-current-ip"><?= $current_ip !== '' ? esc_html($current_ip) : – ?></code>
+						<?= esc_html__('Your current IP address:', 'fromscratch') ?> <code id="fs-perf-current-ip"><?= $current_ip !== '' ? esc_html($current_ip) : '&mdash;' ?></code>
 					</p>
 					<p style="margin-bottom: 0;">
 						<label for="fromscratch_perf_panel_guest_ips"><?= esc_html__('Allowed IP addresses', 'fromscratch') ?></label><br>

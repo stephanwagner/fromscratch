@@ -9,21 +9,21 @@ defined('ABSPATH') || exit;
 
 const FS_DEVELOPER_TABS_BASE = [
 	'developer' => ['label' => 'Developer'],
-	'system'   => ['label' => 'System'],
+	'system'   => ['label' => 'Settings'],
+	'tools'    => ['label' => 'Tools'],
 	'features' => ['label' => 'Features'],
 	'access'   => ['label' => 'Benutzerrechte'],
-	'email'    => ['label' => 'E-Mail'],
 	'security' => ['label' => 'Sicherheit'],
 ];
 
-/** Tab definitions: base tabs + Languages (before Email) when feature is on. */
+/** Tab definitions: base tabs + Languages (before Security) when feature is on. */
 function fs_developer_settings_available_tabs(): array
 {
 	$tabs = FS_DEVELOPER_TABS_BASE;
 	if (function_exists('fs_theme_feature_enabled') && fs_theme_feature_enabled('languages')) {
 		$out = [];
 		foreach ($tabs as $key => $val) {
-			if ($key === 'email') {
+			if ($key === 'security') {
 				$out['languages'] = ['label' => 'Sprachen'];
 			}
 			$out[$key] = $val;
@@ -33,10 +33,19 @@ function fs_developer_settings_available_tabs(): array
 	return $tabs;
 }
 
-/** Page slug for a tab. Developer = fs-developer-settings; others = fs-developer-<tab>. */
+/**
+ * Page slug for a tab.
+ * Developer uses fs-developer-system; Settings (system) uses fs-developer-settings; others = fs-developer-<tab>.
+ */
 function fs_developer_settings_page_slug(string $tab): string
 {
-	return $tab === 'developer' ? 'fs-developer-settings' : 'fs-developer-' . $tab;
+	if ($tab === 'developer') {
+		return 'fs-developer-system';
+	}
+	if ($tab === 'system') {
+		return 'fs-developer-settings';
+	}
+	return 'fs-developer-' . $tab;
 }
 
 /** Current tab derived from $_GET['page'] (e.g. fs-developer-features → features). */
@@ -44,8 +53,11 @@ function fs_developer_settings_current_tab_from_page(): string
 {
 	$page = isset($_GET['page']) ? sanitize_key($_GET['page']) : '';
 	$available = array_keys(fs_developer_settings_available_tabs());
-	if ($page === 'fs-developer-settings') {
+	if ($page === 'fs-developer-system') {
 		return 'developer';
+	}
+	if ($page === 'fs-developer-settings') {
+		return 'system';
 	}
 	$prefix = 'fs-developer-';
 	if (strpos($page, $prefix) !== 0) {
@@ -86,10 +98,16 @@ function fs_developer_settings_load_hook(string $page_slug): string
 foreach (fs_developer_settings_page_slugs() as $slug) {
 	add_action(fs_developer_settings_load_hook($slug), function () use ($slug) {
 		global $title;
-		$tab = $slug === 'fs-developer-settings' ? 'developer' : substr($slug, strlen('fs-developer-'));
+		if ($slug === 'fs-developer-system') {
+			$tab = 'developer';
+		} elseif ($slug === 'fs-developer-settings') {
+			$tab = 'system';
+		} else {
+			$tab = substr($slug, strlen('fs-developer-'));
+		}
 		$tabs = fs_developer_settings_available_tabs();
 		$label = $tabs[$tab]['label'] ?? $slug;
-		$title = $slug === 'fs-developer-settings' ? __('Developer', 'fromscratch') : sprintf(__('Developer › %s', 'fromscratch'), $label);
+		$title = $slug === 'fs-developer-system' ? __('Developer', 'fromscratch') : sprintf(__('Developer › %s', 'fromscratch'), $label);
 		if (!current_user_can('manage_options')) {
 			return;
 		}
@@ -186,10 +204,11 @@ function fs_developer_settings_render_nav(): void
 
 $fs_developer_settings_dir = __DIR__ . '/developer-settings/';
 require_once $fs_developer_settings_dir . 'developer.php';
+require_once $fs_developer_settings_dir . 'email.php';
 require_once $fs_developer_settings_dir . 'system.php';
+require_once $fs_developer_settings_dir . 'tools.php';
 require_once $fs_developer_settings_dir . 'features.php';
 require_once $fs_developer_settings_dir . 'access.php';
-require_once $fs_developer_settings_dir . 'email.php';
 require_once $fs_developer_settings_dir . 'security.php';
 require_once $fs_developer_settings_dir . 'performance.php';
 if (function_exists('fs_theme_feature_enabled') && fs_theme_feature_enabled('languages')) {
@@ -205,7 +224,7 @@ add_action('admin_menu', function () {
 	if (!function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
 		return;
 	}
-	$hide = array_diff(fs_developer_settings_page_slugs(), ['fs-developer-settings']);
+	$hide = array_diff(fs_developer_settings_page_slugs(), [fs_developer_settings_page_slug('developer')]);
 	foreach ($submenu['options-general.php'] as $i => $item) {
 		if (isset($item[2]) && in_array($item[2], $hide, true)) {
 			unset($submenu['options-general.php'][$i]);
@@ -279,7 +298,7 @@ add_filter('submenu_file', function ($submenu_file, $parent_file) {
 	}
 	$page = sanitize_key($_GET['page']);
 	if (in_array($page, fs_developer_settings_page_slugs(), true)) {
-		return 'fs-developer-settings';
+		return fs_developer_settings_page_slug('developer');
 	}
 	if (
 		$page === 'redis-cache'
@@ -290,7 +309,7 @@ add_filter('submenu_file', function ($submenu_file, $parent_file) {
 		&& fs_is_developer_user((int) get_current_user_id())
 		&& (class_exists('\RedisCache\Plugin') || defined('WP_REDIS_VERSION') || function_exists('redis_cache_enable'))
 	) {
-		return 'fs-developer-settings';
+		return fs_developer_settings_page_slug('developer');
 	}
 	return $submenu_file;
 }, 10, 2);

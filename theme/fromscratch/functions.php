@@ -50,7 +50,7 @@ require_once 'inc/events.php';
 require_once 'inc/exclude-from-search.php';
 require_once 'inc/page-editor-options.php';
 
-// Mail (SMTP / SendGrid from Developer › System)
+// Mail (SMTP / SendGrid from Developer › Settings)
 require_once 'inc/mail.php';
 require_once 'inc/matomo.php';
 require_once 'inc/weekly-report.php';

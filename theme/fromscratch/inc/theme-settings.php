@@ -352,7 +352,7 @@ add_action('admin_init', function () {
 }, 5);
 
 /**
- * Report email (Developer › System). Used for automated reports e.g. weekly analytics.
+ * Report email (Developer › Settings). Used for automated reports e.g. weekly analytics.
  *
  * @return string Sanitized email or empty string.
  */
@@ -412,7 +412,7 @@ function fs_report_emails(): array
 }
 
 /**
- * Developer email (Developer › System). Used for system alerts, errors and security warnings.
+ * Developer email (Developer › Settings). Used for system alerts, errors and security warnings.
  *
  * @return string Sanitized email or empty string.
  */

@@ -36,7 +36,7 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 	if (!current_user_can('manage_options') || !function_exists('fs_is_developer_user') || !fs_is_developer_user((int) get_current_user_id())) {
 		return;
 	}
-	$url = admin_url('options-general.php?page=fs-developer-tools');
+	$url = admin_url('options-general.php?page=' . $fs_developer_page_slug);
 
 	// Bump asset version (GET with nonce)
 	if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['fromscratch_bump']) && !empty($_GET['_wpnonce']) && wp_verify_nonce($_GET['_wpnonce'], 'fromscratch_bump_asset_version')) {
@@ -54,14 +54,14 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 	if (!empty($_POST['fromscratch_flush_redirect_cache']) && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_flush_redirect_cache')) {
 		flush_rewrite_rules();
 		set_transient('fromscratch_flush_redirect_cache_notice', '1', 30);
-		wp_safe_redirect(admin_url('options-general.php?page=fs-developer-tools'));
+		wp_safe_redirect($url);
 		exit;
 	}
 	if (!empty($_POST['fromscratch_clean_revisions']) && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_clean_revisions')) {
 		$keep = isset($_POST['fromscratch_revisions_keep']) ? max(0, (int) $_POST['fromscratch_revisions_keep']) : 5;
 		$deleted = fs_clean_revisions($keep);
 		set_transient('fromscratch_clean_revisions_notice', $deleted, 30);
-		wp_safe_redirect(admin_url('options-general.php?page=fs-developer-tools'));
+		wp_safe_redirect($url);
 		exit;
 	}
 }, 1);
@@ -121,7 +121,7 @@ function fs_render_developer_tools(): void
 							<code style="font-size: 14px; height: 30px; line-height: 30px; padding: 0 8px; min-width: 30px; text-align: center; box-sizing: border-box; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);">
 								<?= esc_html($asset_version) ?>
 							</code>
-							<?php $bump_url = wp_nonce_url(add_query_arg(['page' => 'fs-developer-tools', 'fromscratch_bump' => '1'], admin_url('options-general.php')), 'fromscratch_bump_asset_version'); ?>
+							<?php $bump_url = wp_nonce_url(add_query_arg(['page' => fs_developer_settings_page_slug('tools'), 'fromscratch_bump' => '1'], admin_url('options-general.php')), 'fromscratch_bump_asset_version'); ?>
 							<a href="<?= esc_url($bump_url) ?>" class="button" style="margin-left: 8px;"><?= esc_html__('Bump version', 'fromscratch') ?></a>
 						</div>
 					</td>

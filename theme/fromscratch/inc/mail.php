@@ -65,7 +65,7 @@ add_filter('wp_mail_from_name', function ($name) {
 });
 
 /**
- * Hook into WordPress mail to use Developer › System mail delivery settings (SMTP or SendGrid).
+ * Hook into WordPress mail to use Developer › Settings mail delivery settings (SMTP or SendGrid).
  * From address is set via wp_mail_from / wp_mail_from_name filters above.
  */
 add_action('phpmailer_init', 'fs_phpmailer_init_from_settings', 20, 1);

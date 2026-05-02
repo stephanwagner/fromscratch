@@ -152,6 +152,9 @@ msgstr "Auf exakte Maße zuschneiden"
 msgid "System"
 msgstr "System"
 
+msgid "Tools"
+msgstr "Werkzeuge"
+
 msgid "Permalinks"
 msgstr "Permalinks"
 
@@ -1565,8 +1568,8 @@ msgstr "Matomo"
 msgid "Enable Matomo analytics integration"
 msgstr "Matomo-Analytics-Integration aktivieren"
 
-msgid "Enables Matomo script loading on the frontend using the settings from Developer › System."
-msgstr "Aktiviert das Laden des Matomo-Skripts im Frontend anhand der Einstellungen unter Entwickler › System."
+msgid "Enables Matomo script loading on the frontend using the settings from Developer › Settings."
+msgstr "Aktiviert das Laden des Matomo-Skripts im Frontend anhand der Einstellungen unter Entwickler › Einstellungen."
 
 msgid "Loads the Matomo tracking script on the frontend and transmits page view and interaction data to the configured Matomo endpoint using the provided site ID."
 msgstr "Lädt das Matomo-Tracking-Skript im Frontend und überträgt Seitenaufrufe sowie Interaktionsdaten an den konfigurierten Matomo-Endpunkt mit der angegebenen Site-ID."
