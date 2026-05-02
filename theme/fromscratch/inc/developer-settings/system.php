@@ -266,7 +266,9 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 	if (!empty($_POST['option_page']) && $_POST['option_page'] === FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], FS_THEME_OPTION_GROUP_DEVELOPER_GENERAL . '-options')) {
 		$admin_email = isset($_POST['admin_email']) ? sanitize_email(wp_unslash($_POST['admin_email'])) : '';
 		if (is_email($admin_email)) {
+			add_filter('send_site_admin_email_change_email', '__return_false', 10, 3);
 			update_option('admin_email', $admin_email);
+			remove_filter('send_site_admin_email_change_email', '__return_false', 10);
 		}
 		$developer_email = isset($_POST['fromscratch_developer_email']) ? sanitize_email(wp_unslash($_POST['fromscratch_developer_email'])) : '';
 		update_option('fromscratch_developer_email', is_email($developer_email) ? $developer_email : '');
