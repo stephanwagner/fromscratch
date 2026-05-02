@@ -19,6 +19,9 @@ msgstr "Suche"
 msgid "Search results"
 msgstr "Suchergebnisse"
 
+msgid "Error"
+msgstr "Fehler"
+
 # Install page
 msgid "Install theme"
 msgstr "Theme installieren"

@@ -82,20 +82,27 @@ return [
 	],
 
 	/**
-	 * Login limit
-	 * Locks out IP after N failed attempts per minute for M minutes.
+	 * Login limit (wp-login failed attempts per IP).
+	 * attempts / window / lockout — times in minutes (same shape as login_suspicious_attempts).
 	 */
-	'login_limit' => true,       // Enable login limit
-	'login_limit_attempts' => 5, // Failed attempts per minute per IP
-	'login_limit_lockout' => 3,  // Lockout duration in minutes
+	'login_limit' => [
+		'enabled' => false, // Enable login limit
+		'attempts' => 5,   // Failed attempts per time window per IP
+		'window' => 5,     // Time window in minutes
+		'lockout' => 10,   // Lockout duration in minutes
+	],
 
 	/**
-	 * Suspicious login attempts threshold
-	 * When an IP has at least this many attempts within the time window, it is shown as suspicious and can be blocked.
+	 * Suspicious login attempts (Developer → Blocked IPs failed-login list).
+	 * When threshold is reached within the observation window, the IP is temporarily blocked for lockout minutes,
+	 * an email is sent to the developer, and the failed-login list shows how long the block lasts.
 	 */
 	'login_suspicious_attempts' => [
-		'attempts' => 10,
-		'minutes' => 30,
+		'enabled' => true,
+		'attempts' => 10,     // Failed attempts per time window per IP
+		'window' => 30,       // Time window in minutes
+		'lockout' => 60 * 24, // Lockout duration in minutes
+		'send_email' => true, // Send email to developer when threshold is reached
 	],
 
 	/**

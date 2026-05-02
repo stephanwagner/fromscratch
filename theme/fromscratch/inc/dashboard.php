@@ -164,13 +164,33 @@ function fs_dashboard_panel()
 		?>
 				<div class="notice notice-warning inline" style="margin: 16px 0;">
 					<p style="margin-bottom: 6px"><strong><?php esc_html_e('Suspicious login attempts', 'fromscratch'); ?></strong></p>
-					<p style="margin-top: 0"><?php esc_html_e('The following IPs exceeded the configured threshold.', 'fromscratch'); ?></p>
+					<p style="margin-top: 0"><?php esc_html_e('The following IPs exceeded the configured threshold (temporary site block may apply).', 'fromscratch'); ?></p>
 					<ul style="list-style: none; padding-left: 0; margin: 8px 0;">
 						<?php foreach ($suspicious_ips as $ip => $row) :
 							$attempts = (int) ($row['attempts'] ?? 0);
+							$until = (int) ($row['effective_blocked_until'] ?? $row['blocked_until'] ?? 0);
+							$block_hint = '';
+							if ($until > time()) {
+								$mins = (int) ($row['lockout_minutes'] ?? 0);
+								if ($mins > 0 && function_exists('fs_blocked_ips_format_lockout_human')) {
+									$dur = fs_blocked_ips_format_lockout_human($mins);
+									$block_hint = ' — ' . sprintf(
+										/* translators: 1: block duration, 2: time until block ends */
+										__('blocked %1$s; ends in %2$s', 'fromscratch'),
+										$dur,
+										human_time_diff(time(), $until)
+									);
+								} else {
+									$block_hint = ' — ' . sprintf(
+										/* translators: %s: human time until block ends */
+										__('site block ends in %s', 'fromscratch'),
+										human_time_diff(time(), $until)
+									);
+								}
+							}
 						?>
 							<li style="margin-bottom: 8px">
-								<code><?php echo esc_html($ip); ?></code> – <?php echo (int) $attempts; ?> <?php echo esc_html(_n('attempt', 'attempts', $attempts, 'fromscratch')); ?>
+								<code><?php echo esc_html($ip); ?></code> – <?php echo (int) $attempts; ?> <?php echo esc_html(_n('attempt', 'attempts', $attempts, 'fromscratch')); ?><?php echo esc_html($block_hint); ?>
 							</li>
 						<?php endforeach; ?>
 					</ul>

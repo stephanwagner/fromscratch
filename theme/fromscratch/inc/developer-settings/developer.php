@@ -111,7 +111,29 @@ function fs_render_developer_cheatsheet(): void
 
 		<div class="fs-page-settings-form" style="margin-top: 28px;">
 
-			<h2 class="title" style="margin-top: 24px;"><?= esc_html__('Helpers', 'fromscratch') ?></h2>
+			<h2 class="title" style="margin-top: 0;"><?= esc_html__('Configs', 'fromscratch') ?></h2>
+			<p class="description"><?= esc_html__('Optional defines in wp-config.php for local development and testing.', 'fromscratch') ?></p>
+
+			<table class="widefat striped helpers-table__table">
+				<tbody>
+					<tr>
+						<td>
+							<strong><?= esc_html__('Simulate client IP', 'fromscratch') ?></strong><br>
+							<span class="description"><?= esc_html__('Overrides the client IP with a fixed IP address. Active only when WP_DEBUG is true.', 'fromscratch') ?></span>
+						</td>
+						<td>
+							<code class="fs-code-text fs-code-small"><?= esc_html__('wp-config', 'fromscratch') ?></code>
+						</td>
+						<td>
+							<code class="fs-code-small"><?= esc_html("define( 'FS_SIMULATE_CLIENT_IP', '127.0.0.20' );") ?></code>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+
+			<hr style="margin: 28px 0;">
+
+			<h2 class="title" style="margin-top: 0;"><?= esc_html__('Helpers', 'fromscratch') ?></h2>
 			<p class="description"><?= esc_html__('Common helper functions and utilities for templates, theme code, and frontend scripts.', 'fromscratch') ?></p>
 
 			<table class="widefat striped helpers-table__table">

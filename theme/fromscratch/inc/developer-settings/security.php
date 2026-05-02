@@ -84,6 +84,17 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 		exit;
 	}
 
+	// Clear suspicious auto-block for one IP
+	if (!empty($_POST['fromscratch_do_clear_auto_block']) && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_clear_auto_block_ip')) {
+		$ip = isset($_POST['fromscratch_clear_auto_block_ip']) ? sanitize_text_field(wp_unslash($_POST['fromscratch_clear_auto_block_ip'])) : '';
+		if ($ip !== '' && filter_var($ip, FILTER_VALIDATE_IP) && function_exists('fs_blocked_ips_clear_suspicious_auto_block')) {
+			fs_blocked_ips_clear_suspicious_auto_block($ip);
+		}
+		set_transient('fromscratch_security_saved', '1', 30);
+		wp_safe_redirect($url);
+		exit;
+	}
+
 	// Quick Block IP
 	if (!empty($_POST['fromscratch_do_block_ip']) && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_block_ip')) {
 		$ip = isset($_POST['fromscratch_block_ip']) ? sanitize_text_field(wp_unslash($_POST['fromscratch_block_ip'])) : '';
@@ -256,12 +267,17 @@ function fs_render_developer_security(): void
 
 			<h2 class="title"><?= esc_html__('Failed login attempts', 'fromscratch') ?></h2>
 			<p class="description"><?= esc_html__('Shows recent failed login attempts.', 'fromscratch') ?></p>
-			<p class="description"><?= esc_html__('IPs exceeding the configured threshold are listed as suspicious and can be blocked.', 'fromscratch') ?></p>
+			<p class="description"><?= esc_html__('IPs that reach the threshold (set in theme config) are temporarily blocked from the whole site; the list shows how long that block lasts. You can still add an IP to the permanent block list below.', 'fromscratch') ?></p>
 			<?php
 			$failed = function_exists('fs_blocked_ips_get_failed_attempts') ? fs_blocked_ips_get_failed_attempts(true) : [];
-			$suspicious_config = function_exists('fs_blocked_ips_suspicious_config') ? fs_blocked_ips_suspicious_config() : ['attempts' => 10, 'minutes' => 10];
+			$suspicious_config = function_exists('fs_blocked_ips_suspicious_config') ? fs_blocked_ips_suspicious_config() : [
+				'enabled' => true,
+				'attempts' => 10,
+				'window_minutes' => 30,
+				'lockout_minutes' => 1440,
+			];
 			$threshold_attempts = (int) $suspicious_config['attempts'];
-			$threshold_seconds = (int) $suspicious_config['minutes'] * 60;
+			$threshold_seconds = (int) $suspicious_config['window_minutes'] * 60;
 			?>
 			<?php if (empty($failed)) : ?>
 				<p class="description" style="font-style: italic; color: #a7aaad; margin-top: 16px;"><?= esc_html__('No failed login attempts recorded.', 'fromscratch') ?></p>
@@ -272,6 +288,7 @@ function fs_render_developer_security(): void
 							<th><?= esc_html__('IP address', 'fromscratch') ?></th>
 							<th><?= esc_html__('Attempts', 'fromscratch') ?></th>
 							<th><?= esc_html__('Last attempt', 'fromscratch') ?></th>
+							<th><?= esc_html__('Auto-block', 'fromscratch') ?></th>
 							<th></th>
 						</tr>
 					</thead>
@@ -285,17 +302,56 @@ function fs_render_developer_security(): void
 							$last = (int) ($row['last'] ?? 0);
 							$within_window = (time() - $last) <= $threshold_seconds;
 							$show_block = $attempts >= $threshold_attempts && $within_window;
+							$until = (int) ($row['blocked_until'] ?? 0);
+							if ($until <= 0 && function_exists('fs_blocked_ips_is_suspicious_locked') && fs_blocked_ips_is_suspicious_locked($ip) && function_exists('fs_blocked_ips_suspicious_lock_key')) {
+								$raw = get_transient(fs_blocked_ips_suspicious_lock_key($ip));
+								$until = $raw !== false ? (int) $raw : 0;
+							}
+							$block_note = '';
+							if ($until > time()) {
+								$mins = (int) ($row['lockout_minutes'] ?? $suspicious_config['lockout_minutes'] ?? 0);
+								$total_label = $mins > 0 && function_exists('fs_blocked_ips_format_lockout_human')
+									? fs_blocked_ips_format_lockout_human($mins)
+									: '';
+								$remaining = sprintf(
+									/* translators: %s: human time until block ends */
+									__('ends in %s', 'fromscratch'),
+									human_time_diff(time(), $until)
+								);
+								$block_note = $total_label !== ''
+									? sprintf(
+										/* translators: 1: total block duration, 2: time until end */
+										__('%1$s (%2$s)', 'fromscratch'),
+										$total_label,
+										$remaining
+									)
+									: $remaining;
+							} elseif ($show_block && empty($suspicious_config['enabled'])) {
+								$block_note = __('Threshold met; auto-block is disabled in theme config.', 'fromscratch');
+							} else {
+								$block_note = '–';
+							}
+							$show_clear_auto = ($until > time())
+								|| (function_exists('fs_blocked_ips_is_suspicious_locked') && fs_blocked_ips_is_suspicious_locked($ip));
 						?>
 							<tr>
 								<td style="vertical-align: middle;"><code class="fs-code-small"><?= esc_html($ip) ?></code></td>
 								<td style="vertical-align: middle;"><?= (int) $attempts ?> <?= esc_html(_n('attempt', 'attempts', $attempts, 'fromscratch')) ?></td>
 								<td style="vertical-align: middle;"><?= $last ? esc_html(sprintf(__('%s ago', 'fromscratch'), human_time_diff($last, time()))) : '–' ?></td>
+								<td style="vertical-align: middle;"><?= $block_note === '–' ? '–' : esc_html($block_note) ?></td>
 								<td style="vertical-align: middle;">
+									<?php if ($show_clear_auto) : ?>
+										<form method="post" action="" style="display: inline-block; margin-right: 6px; margin-bottom: 4px;">
+											<?php wp_nonce_field('fromscratch_clear_auto_block_ip'); ?>
+											<input type="hidden" name="fromscratch_clear_auto_block_ip" value="<?= esc_attr($ip) ?>">
+											<button type="submit" name="fromscratch_do_clear_auto_block" value="1" class="button button-small"><?= esc_html__('Clear auto-block', 'fromscratch') ?></button>
+										</form>
+									<?php endif; ?>
 									<?php if ($show_block) : ?>
-										<form method="post" action="" style="display: inline;">
+										<form method="post" action="" style="display: inline-block; margin-bottom: 4px;">
 											<?php wp_nonce_field('fromscratch_block_ip'); ?>
 											<input type="hidden" name="fromscratch_block_ip" value="<?= esc_attr($ip) ?>">
-											<button type="submit" name="fromscratch_do_block_ip" value="1" class="button button-small"><?= esc_html__('Block IP', 'fromscratch') ?></button>
+											<button type="submit" name="fromscratch_do_block_ip" value="1" class="button button-small"><?= esc_html__('Block permanently', 'fromscratch') ?></button>
 										</form>
 									<?php endif; ?>
 								</td>
