@@ -1,4 +1,4 @@
-@use '../core' as *;
+@use '../variables' as *;
 
 @mixin wordpress-blocks {
   // Groups
@@ -10,26 +10,26 @@
       padding-top: 64px;
       padding-bottom: 64px;
 
-      @media (max-width: calc($maxContentWidth + $contentPaddingL + $contentPaddingL)) {
+      @media (max-width: calc(var(--content-max-width) + var(--content-padding-l) + var(--content-padding-l))) {
         padding-top: 48px;
         padding-bottom: 48px;
       }
 
-      @media (max-width: $breakpointM) {
+      @media (max-width: var(--breakpoint-m)) {
         padding-top: 32px;
         padding-bottom: 32px;
       }
 
-      @media (max-width: $breakpointXS) {
+      @media (max-width: var(--breakpoint-xs)) {
         padding-top: 16px;
         padding-bottom: 16px;
       }
 
       &:not(.alignfull) {
-        border-radius: $defaultBorderRadius;
+        border-radius: var(--border-radius);
 
-        @media (max-width: $breakpointXS) {
-          border-radius: $smallBorderRadius;
+        @media (max-width: var(--breakpoint-xs)) {
+          border-radius: var(--border-radius);
         }
       }
 
@@ -37,19 +37,19 @@
         padding-left: 48px;
         padding-right: 48px;
 
-        @media (max-width: $breakpointM) {
+        @media (max-width: var(--breakpoint-m)) {
           padding-left: 32px;
           padding-right: 32px;
         }
 
-        @media (max-width: $breakpointS) {
+        @media (max-width: var(--breakpoint-s)) {
           padding-left: 24px;
           padding-right: 24px;
           padding-top: 16px;
           padding-bottom: 16px;
         }
 
-        @media (max-width: $breakpointXS) {
+        @media (max-width: var(--breakpoint-xs)) {
           padding-left: 16px;
           padding-right: 16px;
           padding-top: 12px;
@@ -72,32 +72,32 @@
     margin-bottom: 0;
     gap: 48px;
 
-    @media (max-width: $breakpointL) {
+    @media (max-width: var(--breakpoint-l)) {
       gap: 32px;
     }
 
-    @media (max-width: $breakpointS) {
+    @media (max-width: var(--breakpoint-s)) {
       gap: 24px;
     }
   }
 
   .wp-block-column {
     &.-has-background-color {
-      background-color: color('gray-3');
-      border-radius: $defaultBorderRadius;
+      background-color: var(--color-gray-300);
+      border-radius: var(--border-radius);
 
       > .wp-block-group {
         padding: 64px;
 
-        @media (max-width: $breakpointL) {
+        @media (max-width: var(--breakpoint-l)) {
           padding: 48px;
         }
 
-        @media (max-width: $breakpointS) {
+        @media (max-width: var(--breakpoint-s)) {
           padding: 32px;
         }
 
-        @media (max-width: $breakpointXS) {
+        @media (max-width: var(--breakpoint-xs)) {
           padding: 24px;
         }
       }
@@ -112,7 +112,7 @@
     &.wp-block-image {
       &.is-style-rounded {
         img {
-          border-radius: $defaultBorderRadius;
+          border-radius: var(--border-radius);
         }
       }
     }

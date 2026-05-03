@@ -1,4 +1,4 @@
-@use '../_core' as *;
+@use '../variables' as *;
 
 .modal__wrapper {
   display: none;
@@ -94,7 +94,7 @@
   align-items: center;
   cursor: pointer;
   transition: transition('color');
-  color: color('gray-500');
+  color: var(--color-gray-500);
 
   &:hover {
     color: #000;

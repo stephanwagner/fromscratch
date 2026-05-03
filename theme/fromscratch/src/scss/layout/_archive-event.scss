@@ -1,4 +1,4 @@
-@use '../core' as *;
+@use '../variables' as *;
 
 .event-archive {
   display: flex;
@@ -10,7 +10,7 @@
   margin: 2rem 0 1rem;
   font-size: 1.35rem;
   font-weight: 600;
-  color: color-mix(in srgb, $defaultTextColor 88%, transparent);
+  color: color-mix(in srgb, var(--default-text-color) 88%, transparent);
 
   &:first-child {
     margin-top: 0;
@@ -20,7 +20,7 @@
 .event-archive__item {
   padding-bottom: 1.5rem;
   margin-bottom: 1.5rem;
-  border-bottom: 1px solid color-mix(in srgb, $defaultTextColor 12%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--default-text-color) 12%, transparent);
 
   &:last-child {
     border-bottom: 0;
@@ -33,5 +33,5 @@
   margin: 0 0 0.35rem;
   font-size: 0.9rem;
   font-weight: 500;
-  color: color-mix(in srgb, $defaultTextColor 75%, transparent);
+  color: color-mix(in srgb, var(--default-text-color) 75%, transparent);
 }

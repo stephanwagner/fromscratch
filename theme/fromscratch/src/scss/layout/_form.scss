@@ -1,4 +1,4 @@
-@use '../core' as *;
+@use '../variables' as *;
 
 // Buttons
 @mixin form {
@@ -17,7 +17,7 @@
       margin-bottom: 0;
     }
 
-    @media (max-width: $breakpointS) {
+    @media (max-width: var(--breakpoint-s)) {
       margin-top: 16px;
       margin-bottom: 16px;
 
@@ -52,7 +52,7 @@
     text-align: left;
     cursor: pointer;
     text-decoration: none !important;
-    background: color('secondary');
+    background: var(--color-secondary);
     transition: transition('background');
     font-weight: 600;
     height: auto;
@@ -60,7 +60,7 @@
     &:hover,
     .-button-trigger:hover & {
       text-decoration: none !important;
-      background: color('primary');
+      background: var(--color-primary);
     }
 
     &[disabled] {

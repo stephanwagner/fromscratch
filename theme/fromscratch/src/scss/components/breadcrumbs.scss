@@ -1,4 +1,4 @@
-@use '../_core' as *;
+@use '../variables' as *;
 
 .fs-breadcrumbs__container {
   display: block;
@@ -13,7 +13,7 @@
     margin-bottom: 0;
   }
 
-  @media (max-width: $breakpointS) {
+  @media (max-width: var(--breakpoint-s)) {
     margin: 16px 0;
 
     &:first-child {

@@ -1,4 +1,4 @@
-@use '../core' as *;
+@use '../variables' as *;
 
 // Header styles
 
@@ -21,33 +21,37 @@
 }
 
 .header__placeholder {
-  height: $headerHeight;
+  height: var(--header-height);
 
-  @media (max-width: $mobileBreakpoint) {
-    height: $headerHeightMobile;
+  @media (max-width: var(--breakpoint-mobile)) {
+    height: var(--header-height-mobile);
   }
 }
 
 .header__container {
   display: flex;
   align-items: center;
-  height: $headerHeight;
+  height: var(--header-height);
 
   body.-init & {
     transition: transition('height');
   }
 
   body.-scrolled & {
-    height: $headerHeightScrolled;
+    height: var(--header-height-scrolled);
   }
 
-  @media (max-width: $mobileBreakpoint) {
-    height: $headerHeightMobile;
+  @media (max-width: var(--breakpoint-mobile)) {
+    height: var(--header-height-mobile);
 
     body.-scrolled & {
-      height: $headerHeightScrolled;
+      height: var(--header-height-scrolled);
     }
   }
+}
+
+.logo__container {
+  line-height: 0;
 }
 
 .logo__image {
@@ -62,7 +66,7 @@
     height: 32px;
   }
 
-  @media (max-width: $mobileBreakpoint) {
+  @media (max-width: var(--breakpoint-mobile)) {
     height: 40px;
 
     body.-scrolled & {
@@ -78,67 +82,67 @@
   display: flex;
   align-items: center;
 
-  @media (max-width: $mobileBreakpoint) {
+  @media (max-width: var(--breakpoint-mobile)) {
     position: absolute;
     display: block;
     top: 100%;
-    width: $mobileMenuWidth;
-    right: calc($mobileMenuWidth * -1 - 8px - $contentPaddingL);
+    width: var(--mobile-menu-width);
+    right: calc(var(--mobile-menu-width) * -1 - 8px - var(--content-padding-l));
     background: #fff;
     margin: 0;
     transition: transition('right');
-    height: calc(100vh - $headerHeight);
-    padding: 24px $contentPaddingL 24px 24px;
+    height: calc(100vh - var(--header-height));
+    padding: 24px var(--content-padding-l) 24px 24px;
 
     body.-scrolled & {
-      height: calc(100vh - $headerHeightScrolled);
+      height: calc(100vh - var(--header-height-scrolled));
     }
 
     body.admin-bar & {
-      height: calc(100vh - $headerHeightMobile - 32px);
+      height: calc(100vh - var(--header-height-mobile) - 32px);
 
       @media (max-width: 782px) {
-        height: calc(100vh - $headerHeightMobile - 46px);
+        height: calc(100vh - var(--header-height-mobile) - 46px);
       }
     }
 
     body.admin-bar.-scrolled & {
-      height: calc(100vh - $headerHeightScrolled - 32px);
+      height: calc(100vh - var(--header-height-scrolled) - 32px);
 
       @media (max-width: 782px) {
-        height: calc(100vh - $headerHeightScrolled - 46px);
+        height: calc(100vh - var(--header-height-scrolled) - 46px);
       }
     }
 
-    @media (max-width: $breakpointM) {
-      padding-right: $contentPaddingM;
-      right: calc($mobileMenuWidth * -1 - $contentPaddingM);
+    @media (max-width: var(--breakpoint-m)) {
+      padding-right: var(--content-padding-m);
+      right: calc(var(--mobile-menu-width) * -1 - var(--content-padding-m));
     }
 
-    @media (max-width: $breakpointS) {
-      padding-right: $contentPaddingS;
-      right: calc($mobileMenuWidth * -1 - $contentPaddingS);
+    @media (max-width: var(--breakpoint-s)) {
+      padding-right: var(--content-padding-s);
+      right: calc(var(--mobile-menu-width) * -1 - var(--content-padding-s));
     }
 
-    @media (max-width: $breakpointXS) {
-      padding-right: $contentPaddingXS;
+    @media (max-width: var(--breakpoint-xs)) {
+      padding-right: var(--content-padding-xs);
       width: 100vw;
-      right: calc(100vw * -1 - $contentPaddingXS);
+      right: calc(100vw * -1 - var(--content-padding-xs));
     }
 
     body.-menu-open & {
-      right: calc($contentPaddingL * -1);
+      right: calc(var(--content-padding-l) * -1);
 
-      @media (max-width: $breakpointM) {
-        right: calc($contentPaddingM * -1);
+      @media (max-width: var(--breakpoint-m)) {
+        right: calc(var(--content-padding-m) * -1);
       }
 
-      @media (max-width: $breakpointS) {
-        right: calc($contentPaddingS * -1);
+      @media (max-width: var(--breakpoint-s)) {
+        right: calc(var(--content-padding-s) * -1);
       }
 
-      @media (max-width: $breakpointXS) {
-        right: calc($contentPaddingXS * -1);
+      @media (max-width: var(--breakpoint-xs)) {
+        right: calc(var(--content-padding-xs) * -1);
       }
     }
   }
@@ -150,7 +154,7 @@
   margin: 0;
   display: flex;
 
-  @media (max-width: $mobileBreakpoint) {
+  @media (max-width: var(--breakpoint-mobile)) {
     width: 100%;
     flex-direction: column;
     padding: 8px 0;
@@ -160,7 +164,7 @@
     padding: 0;
     margin: 0 24px 0 0;
 
-    @media (max-width: $mobileBreakpoint) {
+    @media (max-width: var(--breakpoint-mobile)) {
       margin: 0;
       text-align: right;
       padding: 8px 0;
@@ -171,28 +175,28 @@
     }
 
     >a {
-      color: $defaultTextColor;
+      color: var(--default-text-color);
       text-decoration: none;
 
       &:hover {
-        color: color('primary');
+        color: var(--color-primary);
         text-decoration: none;
       }
     }
 
     &.-current-active {
       >a {
-        color: color('primary');
+        color: var(--color-primary);
       }
     }
 
     &.menu-item-is-button {
-      @media (max-width: $mobileBreakpoint) {
+      @media (max-width: var(--breakpoint-mobile)) {
         margin-top: 16px;
       }
 
       >a {
-        background: color('primary');
+        background: var(--color-primary);
         color: #fff;
         padding: 12px 24px;
         border-radius: 8px;
@@ -201,7 +205,7 @@
         transition: transition('background-color', 'color');
 
         &:hover {
-          background: color('secondary');
+          background: var(--color-secondary);
         }
       }
     }
@@ -238,7 +242,7 @@ body.-menu-block-scroll {
   cursor: pointer;
   margin-left: auto;
   border-radius: 50%;
-  background: color('primary');
+  background: var(--color-primary);
 
   body.-page-init & {
     transition: transition('background-color');
@@ -246,7 +250,7 @@ body.-menu-block-scroll {
 
   &:hover,
   body.-menu-open & {
-    background: color('secondary');
+    background: var(--color-secondary);
   }
 }
 

@@ -1,86 +1,115 @@
-// Design variables: many entries use var(--variable-id, fallback). Override in Settings → Theme → Design.
-// Variable IDs and defaults are defined once in config/theme.php under design.sections; keep fallbacks here in sync.
-// Only variables and maps live here. Helper functions (color, gradient, fontSize, etc.) are in _functions.scss.
-
 // Paths
 $themePath: '/wp-content/themes/fromscratch';
 
-// Colors
-$colors: (
-  'primary' #00aaff,
-  'secondary' #00ddff,
+// Variables
+:root {
+  // Colors
+  --color-primary: #4080ff;
+  --color-secondary: #00ddff;
 
   // Grayscale
-  'white' #fff,
-  'black' #000,
-  'off-black' #222,
-  'gray-600' #666,
-  'gray-500' #999,
-  'gray-400' #ccc,
-  'gray-300' #ddd,
-  'gray-200' #eee,
-  'gray-100' #f6f6f6,
+  --color-white: #fff;
+  --color-black: #000;
+  --color-off-black: #222;
+  --color-gray-100: #f6f6f6;
+  --color-gray-200: #eee;
+  --color-gray-300: #ddd;
+  --color-gray-400: #ccc;
+  --color-gray-500: #999;
+  --color-gray-600: #666;
 
   // Status colors
-  'error' #f33,
-  'warning' #fc0,
-  'success' #5d5
+  --color-error: #f33;
+  --color-warning: #fc0;
+  --color-success: #5d5;
+
+  // Gradients
+  --gradient-primary: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+
+  // Font sizes
+  --font-size-s: 14px;
+  --font-size-m: 16px;
+  --font-size-l: 18px;
+  --font-size-xl: 22px;
+
+  // Text
+  --primary-font-family: 'Open Sans', sans-serif;
+  --default-text-color: var(--color-off-black);
+  --default-font-size: var(--font-size-m);
+  --default-line-height: 1.6;
+  --link-color: var(--color-primary);
+  --link-color-hover: var(--color-secondary);
+
+  // Content
+  --content-max-width: 1200px;
+  --content-narrow-width: 900px;
+  --content-very-narrow-width: 600px;
+
+  // Breakpoints
+  --breakpoint-xs: 400px;
+  --breakpoint-s: 600px;
+  --breakpoint-m: 900px;
+  --breakpoint-l: 1200px;
+  --breakpoint-xl: 1400px;
+
+  --breakpoint-mobile: 900px;
+
+  // Padding
+  --content-padding-xs: 24px;
+  --content-padding-m: 48px;
+  --content-padding-s: 32px;
+  --content-padding-l: 64px;
+  --content-padding-xl: 64px;
+
+  // Header
+  --header-height: 96px;
+  --header-height-mobile: 64px;
+  --header-height-scrolled: 64px;
+
+  // Mobile menu
+  --mobile-menu-width: 280px;
+
+  // Transitions
+  --transition-speed: 280ms;
+  --transition-speed-slow: 460ms;
+
+  // Border radius
+  --border-radius: 8px;
+  --border-radius-large: 16px;
+}
+
+// Colors
+$colors: (
+  // Primary colors
+  'primary' var(--color-primary),
+  'secondary' var(--color-secondary),
+
+  // Grayscale
+  'white' var(--color-white),
+  'black' var(--color-black),
+  'off-black' var(--color-off-black),
+  'gray-100' var(--color-gray-100),
+  'gray-200' var(--color-gray-200),
+  'gray-300' var(--color-gray-300),
+  'gray-400' var(--color-gray-400),
+  'gray-500' var(--color-gray-500),
+  'gray-600' var(--color-gray-600),
+
+  // Status colors
+  'error' var(--color-error),
+  'warning' var(--color-warning),
+  'success' var(--color-success),
 );
 
 // Gradients
 $gradients: (
-  "primary": ((to right), #00aaff, #00ddff)
+  "primary": var(--gradient-primary),
 );
 
 // Font sizes
 $fontSizes: (
-  's' 14px 1.5,
-  'm' 16px 1.6,
-  'l' 18px 1.5,
-  'xl' 22px 1.4
+  's' var(--font-size-s) 1.5,
+  'm' var(--font-size-m) 1.6,
+  'l' var(--font-size-l) 1.5,
+  'xl' var(--font-size-xl) 1.4
 );
-
-// Text
-$primaryFontFamily: var(--primary-font, 'Open Sans', sans-serif);
-$defaultTextColor: var(--default-text-color, #222);
-$defaultFontSize: var(--default-font-size, 16px);
-$defaultLineHeight: var(--default-line-height, 1.6);
-$linkColor: var(--link-color, #00aaff);
-$linkHoverColor: var(--link-hover-color, #00ddff);
-
-// Content
-$maxContentWidth: var(--max-content-width, 1200px);
-$narrowContentWidth: var(--narrow-content-width, 900px);
-$veryNarrowContentWidth: var(--very-narrow-content-width, 600px);
-
-$contentPaddingXL: var(--content-padding-xl, 64px);
-$contentPaddingL: var(--content-padding-l, 64px);
-$contentPaddingM: var(--content-padding-m, 48px);
-$contentPaddingS: var(--content-padding-s, 24px);
-$contentPaddingXS: var(--content-padding-xs, 16px);
-
-// Header
-$headerHeight: var(--header-height, 120px);
-$headerHeightMobile: var(--header-height-mobile, 80px);
-$headerHeightScrolled: var(--header-height-scrolled, 64px);
-
-// Menu
-$mobileMenuWidth: var(--mobile-menu-width, 280px);
-
-// Mobile breakpoint
-$mobileBreakpoint: var(--mobile-breakpoint, 900px);
-
-// Content breakpoints
-$breakpointXL: var(--breakpoint-xl, 1400px);
-$breakpointL: var(--breakpoint-l, 1200px);
-$breakpointM: var(--breakpoint-m, 900px);
-$breakpointS: var(--breakpoint-s, 600px);
-$breakpointXS: var(--breakpoint-xs, 400px);
-
-// Transitions
-$defaultTransitionSpeed: var(--default-transition-speed, 280ms);
-$slowTransitionSpeed: var(--slow-transition-speed, 460ms);
-
-// Border radius
-$smallBorderRadius: var(--small-border-radius, 8px);
-$defaultBorderRadius: var(--default-border-radius, 16px);

@@ -1,10 +1,10 @@
-@use '../core' as *;
+@use '../variables' as *;
 
 .page-not-found__content {
   text-align: center;
   padding: 64px 0;
 
-  @media (max-width: $breakpointS) {
+  @media (max-width: var(--breakpoint-s)) {
     padding: 48px 0;
   }
 
@@ -13,7 +13,7 @@
     font-size: 64px;
     font-weight: normal;
 
-    @media (max-width: $breakpointS) {
+    @media (max-width: var(--breakpoint-s)) {
       font-size: 48px;
       margin-bottom: 16px;
     }
@@ -24,7 +24,7 @@
     font-size: 32px;
     font-weight: normal;
 
-    @media (max-width: $breakpointS) {
+    @media (max-width: var(--breakpoint-s)) {
       font-size: 24px;
     }
   }

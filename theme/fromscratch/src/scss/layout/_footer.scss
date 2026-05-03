@@ -1,4 +1,4 @@
-@use '../core' as *;
+@use '../variables' as *;
 
 // Footer
 
@@ -13,7 +13,7 @@
   height: 60px;
   font-size: 14px;
 
-  @media (max-width: $breakpointM) {
+  @media (max-width: var(--breakpoint-m)) {
     flex-direction: column;
     height: auto;
     padding-top: 16px;
@@ -28,7 +28,7 @@
 .footer-menu__wrapper {
   margin-left: auto;
 
-  @media (max-width: $breakpointM) {
+  @media (max-width: var(--breakpoint-m)) {
     margin-left: 0;
     margin-top: 16px;
   }
@@ -44,7 +44,7 @@
   margin: 0;
   display: flex;
 
-  @media (max-width: $breakpointS) {
+  @media (max-width: var(--breakpoint-s)) {
     flex-direction: column;
     justify-content: center;
   }
@@ -53,7 +53,7 @@
     padding: 0;
     margin: 0 0 0 16px;
 
-    @media (max-width: $breakpointS) {
+    @media (max-width: var(--breakpoint-s)) {
       margin: 0;
     }
 

@@ -1,4 +1,4 @@
-@use '../core' as *;
+@use '../variables' as *;
 
 *[data-animation='move-up'] {
   transform: translateY(12px);

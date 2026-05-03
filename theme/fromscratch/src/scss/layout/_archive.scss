@@ -1,4 +1,4 @@
-@use '../core' as *;
+@use '../variables' as *;
 
 .archive__header {
   margin-bottom: 2rem;
@@ -12,7 +12,7 @@
 
 .archive__description {
   max-width: 48rem;
-  color: color-mix(in srgb, $defaultTextColor 85%, transparent);
+  color: color-mix(in srgb, var(--default-text-color) 85%, transparent);
 
   p:last-child {
     margin-bottom: 0;
@@ -31,14 +31,14 @@
   gap: 1.25rem;
   align-items: start;
   padding-bottom: 2rem;
-  border-bottom: 1px solid color-mix(in srgb, $defaultTextColor 12%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--default-text-color) 12%, transparent);
 
   &:last-child {
     border-bottom: 0;
     padding-bottom: 0;
   }
 
-  @media (max-width: $mobileBreakpoint) {
+  @media (max-width: var(--breakpoint-mobile)) {
     grid-template-columns: 1fr;
   }
 
@@ -51,10 +51,10 @@
   display: block;
   border-radius: 4px;
   overflow: hidden;
-  background: color-mix(in srgb, $defaultTextColor 6%, transparent);
+  background: color-mix(in srgb, var(--default-text-color) 6%, transparent);
 
   &:focus-visible {
-    outline: 2px solid color-mix(in srgb, $defaultTextColor 40%, transparent);
+    outline: 2px solid color-mix(in srgb, var(--default-text-color) 40%, transparent);
     outline-offset: 2px;
   }
 }
@@ -122,7 +122,7 @@
   }
 
   a:hover {
-    background: color-mix(in srgb, $defaultTextColor 8%, transparent);
+    background: color-mix(in srgb, var(--default-text-color) 8%, transparent);
   }
 
   .page-numbers.current {

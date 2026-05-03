@@ -1,11 +1,11 @@
-@use '../core' as *;
+@use '../variables' as *;
 
 // Search form
 
 .search__wrapper {
   margin-left: 16px;
 
-  @media (max-width: $breakpointM) {
+  @media (max-width: var(--breakpoint-m)) {
     margin-left: 0;
     padding: 8px 14px;
   }
@@ -25,7 +25,7 @@
   width: 160px;
   margin: 0 8px 0 0;
 
-  @media (max-width: $breakpointM) {
+  @media (max-width: var(--breakpoint-m)) {
     width: 100%;
     display: block;
   }
