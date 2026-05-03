@@ -92,6 +92,12 @@ function fs_dashboard_panel()
 		$matomo_yesterday_html = $dash_placeholder;
 	}
 
+	$expect_matomo_refresh = !$matomo_stats_cached
+		|| (
+			function_exists('fs_dashboard_matomo_dashboard_counts_need_full_refresh')
+			&& fs_dashboard_matomo_dashboard_counts_need_full_refresh()
+		);
+
 	$scheduled = get_posts([
 		'post_type'      => fs_theme_post_types(),
 		'post_status'    => 'future',
@@ -247,7 +253,8 @@ function fs_dashboard_panel()
 					class="fs-dashboard__section -stats"
 					data-fs-dashboard-stats
 					data-fs-stats-cached="<?= $matomo_stats_cached ? '1' : '0' ?>"
-					data-fs-stats-loading="<?= $matomo_stats_cached ? '0' : '1' ?>"
+					data-fs-expect-matomo-refresh="<?= $expect_matomo_refresh ? '1' : '0' ?>"
+					data-fs-stats-loading="<?= $expect_matomo_refresh ? '1' : '0' ?>"
 				>
 					<div class="fs-dashboard__section-title">
 						<?= esc_html__('Analytics', 'fromscratch') ?>
@@ -384,10 +391,9 @@ function fs_dashboard_enqueue_matomo_stats(string $hook_suffix): void
 	wp_register_script('fs-dashboard-matomo', false, [], null, true);
 	wp_enqueue_script('fs-dashboard-matomo');
 	wp_localize_script('fs-dashboard-matomo', 'fsDashboardMatomo', [
-		'ajaxUrl'            => admin_url('admin-ajax.php'),
-		'nonce'              => wp_create_nonce('fs_dashboard_matomo_stats'),
-		'pollIntervalMs'     => HOUR_IN_SECONDS * 1000,
-		'pollPendingMs'      => 2500,
+		'ajaxUrl'             => admin_url('admin-ajax.php'),
+		'nonce'               => wp_create_nonce('fs_dashboard_matomo_stats'),
+		'pollPendingMs'       => 2500,
 		'pollPendingMaxPolls' => 48,
 	]);
 	$inline = <<<'JS'
@@ -398,7 +404,6 @@ function fs_dashboard_enqueue_matomo_stats(string $hook_suffix): void
 		if (!wrap || !cfg) {
 			return;
 		}
-		var pollMs = cfg.pollIntervalMs || 3600000;
 		var pendMs = cfg.pollPendingMs || 2500;
 		var pendMax = cfg.pollPendingMaxPolls || 48;
 		var pendTimer = null;
@@ -468,6 +473,7 @@ function fs_dashboard_enqueue_matomo_stats(string $hook_suffix): void
 					setStatsLoading(false);
 					return;
 				}
+				setStatsLoading(true);
 				fetchStatsBody().then(function (res) {
 					if (applyStats(res)) {
 						stopPendingPoll();
@@ -478,7 +484,10 @@ function fs_dashboard_enqueue_matomo_stats(string $hook_suffix): void
 		}
 
 		function fetchStats() {
-			setStatsLoading(true);
+			var expectRefresh = wrap.getAttribute('data-fs-expect-matomo-refresh') === '1';
+			if (expectRefresh) {
+				setStatsLoading(true);
+			}
 			fetchStatsBody().then(function (res) {
 				var ok = applyStats(res);
 				if (ok) {
@@ -486,6 +495,7 @@ function fs_dashboard_enqueue_matomo_stats(string $hook_suffix): void
 					return;
 				}
 				if (res && res.success && res.data && res.data.pending) {
+					setStatsLoading(true);
 					startPendingPoll();
 					return;
 				}
@@ -495,10 +505,7 @@ function fs_dashboard_enqueue_matomo_stats(string $hook_suffix): void
 			});
 		}
 
-		if (wrap.getAttribute('data-fs-stats-cached') !== '1') {
-			fetchStats();
-		}
-		setInterval(fetchStats, pollMs);
+		fetchStats();
 	});
 })();
 JS;
@@ -508,7 +515,7 @@ JS;
 add_action('admin_enqueue_scripts', 'fs_dashboard_enqueue_matomo_stats', 20);
 
 /**
- * @param mixed $raw Option row or legacy shape.
+ * @param mixed $raw Option row with today/yesterday.
  * @return array{today: int, yesterday: int}|null
  */
 function fs_dashboard_matomo_stats_normalize_stored_counts($raw): ?array
@@ -540,33 +547,7 @@ function fs_dashboard_matomo_stats_get_cached_counts(): ?array
 		return $norm;
 	}
 
-	if (!defined('FS_MATOMO_DASHBOARD_VISITS_TRANSIENT')) {
-		return null;
-	}
-
-	$legacy = get_transient(FS_MATOMO_DASHBOARD_VISITS_TRANSIENT);
-	if (!is_array($legacy)) {
-		return null;
-	}
-
-	$norm = fs_dashboard_matomo_stats_normalize_stored_counts($legacy);
-	if ($norm === null) {
-		return null;
-	}
-
-	update_option(
-		FS_MATOMO_DASHBOARD_VISITS_OPTION,
-		[
-			'today' => $norm['today'],
-			'yesterday' => $norm['yesterday'],
-			'series_end_date' => '',
-			'updated_at' => time(),
-		],
-		false
-	);
-	delete_transient(FS_MATOMO_DASHBOARD_VISITS_TRANSIENT);
-
-	return $norm;
+	return null;
 }
 
 /**
@@ -614,7 +595,7 @@ function fs_dashboard_matomo_stats_schedule_background_refresh(): void
 	}
 }
 
-/** Stop legacy hourly Matomo cron (replaced by on-demand full refresh). */
+/** Remove obsolete hourly Matomo cron event if present (on-demand refresh replaced it). */
 add_action('init', function (): void {
 	if (wp_installing()) {
 		return;
@@ -636,6 +617,13 @@ function fs_dashboard_ajax_matomo_stats(): void
 
 	$counts = fs_dashboard_matomo_stats_get_cached_counts();
 	if ($counts !== null) {
+		if (function_exists('fs_dashboard_matomo_dashboard_counts_need_full_refresh') && fs_dashboard_matomo_dashboard_counts_need_full_refresh()) {
+			fs_matomo_statistics_refresh_full();
+			$after = fs_dashboard_matomo_stats_get_cached_counts();
+			if ($after !== null) {
+				$counts = $after;
+			}
+		}
 		fs_dashboard_matomo_stats_maybe_schedule_refresh();
 		wp_send_json_success(fs_dashboard_matomo_stats_format_lines($counts));
 

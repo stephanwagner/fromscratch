@@ -7,12 +7,6 @@ const FS_MATOMO_STATS_CANONICAL_DAYS = 14;
 const FS_MATOMO_STATS_CANONICAL_WEEKS = 9;
 
 /**
- * Legacy transient (v3): today/yesterday visit totals for the dashboard widget.
- * Migrated to FS_MATOMO_DASHBOARD_VISITS_OPTION on read; no longer written.
- */
-const FS_MATOMO_DASHBOARD_VISITS_TRANSIENT = 'fs_dashboard_matomo_stats_counts_v1';
-
-/**
  * Option (autoload=no): last known dashboard today/yesterday visit totals.
  * Persists across requests so the widget keeps showing numbers while Matomo refreshes in the background.
  *
@@ -22,6 +16,22 @@ const FS_MATOMO_DASHBOARD_VISITS_OPTION = 'fs_dashboard_matomo_quick_stats_v1';
 
 /** Prevents stacking multiple wp-cron jobs for the same dashboard refresh. */
 const FS_MATOMO_BACKGROUND_REFRESH_LOCK = 'fs_matomo_bg_refresh_lock';
+
+/**
+ * Cache TTL (seconds) for the Matomo bulk response and dashboard “staleness” checks. Default: one hour.
+ * For local testing use e.g. `define( 'FS_MATOMO_STATS_CACHE_TTL', 30 );` in wp-config.php (above the “stop editing” line).
+ */
+if (!defined('FS_MATOMO_STATS_CACHE_TTL')) {
+    define('FS_MATOMO_STATS_CACHE_TTL', HOUR_IN_SECONDS);
+}
+
+/**
+ * Effective Matomo stats cache TTL (minimum 1 second).
+ */
+function fs_matomo_stats_cache_ttl_seconds(): int
+{
+    return max(1, (int) FS_MATOMO_STATS_CACHE_TTL);
+}
 
 /**
  * Settings
@@ -163,6 +173,69 @@ function fs_dashboard_matomo_bulk_cache_key(int $days, int $weeks): string
         'weeks' => $weeks,
         'bulk_schema' => 17,
     ]));
+}
+
+/**
+ * True when the canonical bulk Matomo response is still in the transient cache (TTL {@see FS_MATOMO_STATS_CACHE_TTL}).
+ * After expiry, dashboard AJAX should trigger a refresh so today/yesterday stay in sync with Matomo.
+ */
+function fs_dashboard_matomo_canonical_bulk_cache_valid(): bool
+{
+    $cache_key = fs_dashboard_matomo_bulk_cache_key(FS_MATOMO_STATS_CANONICAL_DAYS, FS_MATOMO_STATS_CANONICAL_WEEKS);
+    if ($cache_key === '') {
+        return false;
+    }
+    $cached = get_transient($cache_key);
+    if (
+        !is_array($cached)
+        || !isset(
+            $cached['daily'],
+            $cached['weekly'],
+            $cached['devices'],
+            $cached['pages'],
+            $cached['referrers'],
+            $cached['visits_summary_90d'],
+            $cached['visit_frequency_90d'],
+            $cached['alltime_summary']
+        )
+        || !is_array($cached['daily'])
+        || !is_array($cached['weekly'])
+        || !is_array($cached['devices'])
+        || !is_array($cached['pages'])
+        || !is_array($cached['referrers'])
+        || !is_array($cached['alltime_summary'])
+    ) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Whether a full Matomo API refresh should run for the dashboard (visit-time AJAX).
+ * True when the bulk cache is missing/expired or the stored snapshot is older than the cache TTL.
+ */
+function fs_dashboard_matomo_dashboard_counts_need_full_refresh(): bool
+{
+    if (!function_exists('fs_matomo_statistics_refresh_full') || fs_dashboard_matomo_settings() === null) {
+        return false;
+    }
+    if (!fs_dashboard_matomo_canonical_bulk_cache_valid()) {
+        return true;
+    }
+    if (!defined('FS_MATOMO_DASHBOARD_VISITS_OPTION')) {
+        return true;
+    }
+    $opt = get_option(FS_MATOMO_DASHBOARD_VISITS_OPTION, null);
+    if (!is_array($opt) || !isset($opt['updated_at'])) {
+        return true;
+    }
+    $updated = (int) $opt['updated_at'];
+    if ($updated <= 0) {
+        return true;
+    }
+
+    return (time() - $updated) >= fs_matomo_stats_cache_ttl_seconds();
 }
 
 /**
@@ -781,7 +854,7 @@ function fs_dashboard_default_alltime_summary(): array
 
 /**
  * Bulk Matomo request (single HTTP round-trip): daily/weekly series, devices, pages, referrers, summaries.
- * Results are cached for one hour (HOUR_IN_SECONDS). Prefer {@see fs_matomo_get_statistics()} for the canonical bundle instead of arbitrary dimensions here.
+ * Results are cached for {@see FS_MATOMO_STATS_CACHE_TTL} seconds (default one hour). Prefer {@see fs_matomo_get_statistics()} for the canonical bundle instead of arbitrary dimensions here.
  *
  * @return array{
  *   daily: array<int, array{date:string,unique:int,visits:int,pageviews:int}>,
@@ -1115,7 +1188,7 @@ function fs_dashboard_get_matomo_daily_and_weekly(int $days = 7, int $weeks = 8)
     ];
 
     fs_dashboard_set_last_matomo_error('');
-    set_transient($cache_key, $out, HOUR_IN_SECONDS);
+    set_transient($cache_key, $out, fs_matomo_stats_cache_ttl_seconds());
     if ($days === FS_MATOMO_STATS_CANONICAL_DAYS && $weeks === FS_MATOMO_STATS_CANONICAL_WEEKS) {
         fs_matomo_sync_dashboard_quick_stats_from_daily($out['daily'] ?? []);
     }
