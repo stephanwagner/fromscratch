@@ -60,6 +60,7 @@ $security_url = admin_url('options-general.php?page=' . $security_page . '#fs-se
 	);
 	?>
 </p>
+
 <p class="fs-mail-weekly-report-has-link" style="margin: 0; font-size: 14px; line-height: 1.5; color: #64748b;">
 	<?= esc_html__('Sent to:', 'fromscratch') ?> <?= esc_html($to_email) ?><br>
 	<?= esc_html__('Sent at:', 'fromscratch') ?> <?= esc_html($sent_at) ?>
