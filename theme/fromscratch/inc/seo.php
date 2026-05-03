@@ -237,9 +237,17 @@ function fs_seo_editor_localize(): void
 		'postTypes' => fs_seo_post_types(),
 		'panelTitle' => __('SEO', 'fromscratch'),
 		'titleLabel' => __('Title', 'fromscratch'),
-		'titleHelp' => __('Recommended length: up to 60 characters.', 'fromscratch'),
+		'titleHelp' => sprintf(
+			/* translators: %d: maximum recommended title length in characters */
+			__('Recommended length: up to %d characters.', 'fromscratch'),
+			60
+		),
 		'descriptionLabel' => __('Description', 'fromscratch'),
-		'descriptionHelp' => __('Recommended length: up to 160 characters.', 'fromscratch'),
+		'descriptionHelp' => sprintf(
+			/* translators: %d: maximum recommended meta description length in characters */
+			__('Recommended length: up to %d characters.', 'fromscratch'),
+			160
+		),
 		'ogImageLabel' => __('Social Media Preview Image', 'fromscratch'),
 		'ogImageHelp' => __('Best size: 1200 × 630 px. Fallback: featured image if set.', 'fromscratch'),
 		'ogImageButton' => __('Set OG image', 'fromscratch'),

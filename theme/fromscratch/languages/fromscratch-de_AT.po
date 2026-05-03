@@ -1763,11 +1763,8 @@ msgstr "Unerwartetes Antwortformat von Matomo."
 
 # SEO
 
-msgid "Recommended length: up to 60 characters."
-msgstr "Empfohlene Länge: bis zu 60 Zeichen."
-
-msgid "Recommended length: up to 160 characters."
-msgstr "Empfohlene Länge: bis zu 160 Zeichen."
+msgid "Recommended length: up to %d characters."
+msgstr "Empfohlene Länge: bis zu %d Zeichen."
 
 msgid "Social Media Preview Image"
 msgstr "Vorschaubild für soziale Medien"
