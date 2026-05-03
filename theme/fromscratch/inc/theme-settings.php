@@ -934,59 +934,6 @@ function theme_settings_page(): void
 			?>
 			<form method="post" action="<?= esc_url(admin_url('options-general.php?page=fs-theme-settings&tab=general')) ?>" class="fs-page-settings-form">
 				<?php settings_fields(FS_THEME_OPTION_GROUP_GENERAL); ?>
-				<h2 class="title"><?= esc_html__('Weekly website report', 'fromscratch') ?></h2>
-				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Sends a weekly summary with analytics when Matomo is enabled.', 'fromscratch') ?></p>
-				<table class="form-table" role="presentation">
-					<tr>
-						<th scope="row"><?= esc_html__('Weekly reports', 'fromscratch') ?></th>
-						<td>
-							<label>
-								<input type="hidden" name="fromscratch_weekly_report_enabled" value="0">
-								<input type="checkbox" name="fromscratch_weekly_report_enabled" value="1" <?= checked(get_option('fromscratch_weekly_report_enabled', '0'), '1', false) ?>>
-								<?= esc_html__('Enable reports', 'fromscratch') ?>
-							</label>
-						</td>
-					</tr>
-					<?php
-					if (function_exists('fs_weekly_report_render_schedule_settings_row')) {
-						fs_weekly_report_render_schedule_settings_row();
-					}
-					?>
-					<tr>
-						<th scope="row"><label for="fromscratch_report_email"><?= esc_html__('Recipents', 'fromscratch') ?></label></th>
-						<td>
-							<textarea name="fromscratch_report_email" id="fromscratch_report_email" rows="3" class="regular-text"><?= esc_textarea((string) get_option('fromscratch_report_email', '')) ?></textarea>
-							<p class="description"><?= esc_html__('One email address per line.', 'fromscratch') ?></p>
-						</td>
-					</tr>
-					<tr>
-						<th scope="row"><?= esc_html__('Send report', 'fromscratch') ?></th>
-						<td>
-							<div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; max-width:100%;">
-								<label for="fromscratch_weekly_report_manual_recipient" class="screen-reader-text"><?= esc_html__('Recipient email', 'fromscratch') ?></label>
-								<input
-									type="email"
-									name="fromscratch_weekly_report_manual_recipient"
-									id="fromscratch_weekly_report_manual_recipient"
-									form="fs-send-weekly-report-to-developer"
-									value="<?= esc_attr($weekly_manual_send_default_email) ?>"
-									class="regular-text"
-									autocomplete="email"
-								>
-								<button type="submit" form="fs-send-weekly-report-to-developer" class="button"><?= esc_html__('Send report', 'fromscratch') ?></button>
-							</div>
-							<p class="description">
-								<?= esc_html__('Sends the current weekly report to provided email address.', 'fromscratch') ?>
-							</p>
-						</td>
-					</tr>
-				</table>
-				<div class="fs-submit-row">
-					<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
-				</div>
-
-				<hr>
-
 				<h2 class="title"><?= esc_html__('Posts per page', 'fromscratch') ?></h2>
 				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('How many posts appear per page on the blog, archives, and search results.', 'fromscratch') ?></p>
 				<table class="form-table" role="presentation">
@@ -1034,6 +981,59 @@ function theme_settings_page(): void
 							?>
 							<input type="text" name="fromscratch_excerpt_more" id="fromscratch_excerpt_more" value="<?= esc_attr($excerpt_more_val) ?>" class="small-text" maxlength="20">
 							<p class="description"><?= esc_html__('Text shown after the excerpt when it is truncated (e.g. …). Leave blank for none.', 'fromscratch') ?></p>
+						</td>
+					</tr>
+				</table>
+				<div class="fs-submit-row">
+					<button type="submit" class="button button-primary"><?= esc_html__('Save Changes') ?></button>
+				</div>
+
+				<hr>
+
+				<h2 class="title"><?= esc_html__('Weekly website report', 'fromscratch') ?></h2>
+				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Sends a weekly summary with analytics when Matomo is enabled.', 'fromscratch') ?></p>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><?= esc_html__('Weekly reports', 'fromscratch') ?></th>
+						<td>
+							<label>
+								<input type="hidden" name="fromscratch_weekly_report_enabled" value="0">
+								<input type="checkbox" name="fromscratch_weekly_report_enabled" value="1" <?= checked(get_option('fromscratch_weekly_report_enabled', '0'), '1', false) ?>>
+								<?= esc_html__('Enable reports', 'fromscratch') ?>
+							</label>
+						</td>
+					</tr>
+					<?php
+					if (function_exists('fs_weekly_report_render_schedule_settings_row')) {
+						fs_weekly_report_render_schedule_settings_row();
+					}
+					?>
+					<tr>
+						<th scope="row"><label for="fromscratch_report_email"><?= esc_html__('Recipents', 'fromscratch') ?></label></th>
+						<td>
+							<textarea name="fromscratch_report_email" id="fromscratch_report_email" rows="3" class="regular-text"><?= esc_textarea((string) get_option('fromscratch_report_email', '')) ?></textarea>
+							<p class="description"><?= esc_html__('One email address per line.', 'fromscratch') ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?= esc_html__('Send report', 'fromscratch') ?></th>
+						<td>
+							<div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; max-width:100%;">
+								<label for="fromscratch_weekly_report_manual_recipient" class="screen-reader-text"><?= esc_html__('Recipient email', 'fromscratch') ?></label>
+								<input
+									type="email"
+									name="fromscratch_weekly_report_manual_recipient"
+									id="fromscratch_weekly_report_manual_recipient"
+									form="fs-send-weekly-report-to-developer"
+									value="<?= esc_attr($weekly_manual_send_default_email) ?>"
+									class="regular-text"
+									autocomplete="email"
+								>
+								<button type="submit" form="fs-send-weekly-report-to-developer" class="button"><?= esc_html__('Send report', 'fromscratch') ?></button>
+							</div>
+							<p class="description">
+								<?= esc_html__('Sends the current weekly report to provided email address.', 'fromscratch') ?>
+							</p>
 						</td>
 					</tr>
 				</table>
