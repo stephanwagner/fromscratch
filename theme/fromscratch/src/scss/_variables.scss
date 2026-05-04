@@ -70,8 +70,8 @@ $themePath: '/wp-content/themes/fromscratch';
   --mobile-menu-width: 280px;
 
   // Transitions
-  --transition-speed: 280ms;
-  --transition-speed-slow: 460ms;
+  --transition-speed: 240ms;
+  --transition-speed-slow: 360ms;
 
   // Border radius
   --border-radius: 8px;
@@ -113,3 +113,21 @@ $fontSizes: (
   'l' var(--font-size-l) 1.5,
   'xl' var(--font-size-xl) 1.4
 );
+
+// Transition helpers
+
+@function transition($properties...) {
+  $out: ();
+  @each $p in $properties {
+    $out: append($out, #{$p} var(--transition-speed) ease-in-out, comma);
+  }
+  @return $out;
+}
+
+@function transition-slow($properties...) {
+  $out: ();
+  @each $p in $properties {
+    $out: append($out, #{$p} var(--transition-speed-slow) ease-in-out, comma);
+  }
+  @return $out;
+}

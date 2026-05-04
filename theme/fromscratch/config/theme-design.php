@@ -4,6 +4,7 @@
  * Design tokens merged into theme config (fs_config()). Used for the block editor palette / gradients / font sizes (see inc/theme-setup.php).
  */
 return [
+	// Colors
 	'colors' => [
 		// Primary colors
 		['slug' => 'primary', 'color' => '#4080ff', 'name' => 'Primary color'],
@@ -21,6 +22,7 @@ return [
 		['slug' => 'gray-100', 'color' => '#f6f6f6', 'name' => 'Gray 100'],
 	],
 
+	// Gradients
 	'gradients' => [
 		[
 			'slug' => 'primary',
@@ -29,6 +31,7 @@ return [
 		],
 	],
 
+	// Font sizes
 	'font_sizes' => [
 		['name' => 'Small', 'shortName' => 'S', 'size' => 14, 'slug' => 's'],
 		['name' => 'Normal', 'shortName' => 'M', 'size' => 16, 'slug' => 'm'],
