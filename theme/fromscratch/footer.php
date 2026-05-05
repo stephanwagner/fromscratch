@@ -10,7 +10,8 @@
 			<?php fs_nav_menu([
 				'theme_location' => 'footer_menu',
 				'menu_class' => 'footer-menu__container',
-				'container' => 'nav'
+				'container' => 'nav',
+				'aria_label' => esc_attr__('Footer navigation', 'fromscratch'),
 			]); ?>
 		</div>
 	</div>

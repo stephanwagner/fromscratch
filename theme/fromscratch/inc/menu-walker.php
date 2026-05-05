@@ -119,6 +119,10 @@ function fs_nav_menu(array $args = []): void
 		'echo' => true,
 	];
 	$args = wp_parse_args($args, $defaults);
+	if (!empty($args['aria_label']) && is_scalar($args['aria_label'])) {
+		$args['container_aria_label'] = (string) $args['aria_label'];
+	}
+	unset($args['aria_label']);
 	$theme_location = isset($args['theme_location']) ? (string) $args['theme_location'] : '';
 	if (empty($args['menu_id'])) {
 		$menu_id_base = $theme_location !== '' ? ('menu-' . $theme_location) : 'menu';

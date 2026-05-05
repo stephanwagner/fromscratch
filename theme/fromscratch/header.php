@@ -33,7 +33,8 @@
 					<?php fs_nav_menu([
 						'theme_location' => 'main_menu',
 						'menu_class' => 'main-menu__container',
-						'container' => 'nav'
+						'container' => 'nav',
+						'aria_label' => esc_attr__('Main navigation', 'fromscratch'),
 					]); ?>
 				</div>
 

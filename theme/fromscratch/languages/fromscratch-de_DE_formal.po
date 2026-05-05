@@ -2174,3 +2174,9 @@ msgstr "Telefon"
 msgctxt "Content variables"
 msgid "Email"
 msgstr "E-Mail"
+
+msgid "Main navigation"
+msgstr "Hauptnavigation"
+
+msgid "Footer navigation"
+msgstr "Fußnavigation"

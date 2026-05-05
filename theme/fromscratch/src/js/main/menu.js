@@ -71,11 +71,53 @@ function initSubmenuTogglers() {
 
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
-    toggles.forEach(function (btn) {
-      if (btn.getAttribute('aria-expanded') === 'true') {
-        setExpanded(btn, false);
+
+    var active = document.activeElement;
+
+    // If a toggle itself has focus, close that exact submenu first.
+    var activeToggle = active ? active.closest('.sub-menu-toggle[aria-controls]') : null;
+    if (activeToggle && activeToggle.getAttribute('aria-expanded') === 'true') {
+      setExpanded(activeToggle, false);
+      activeToggle.focus();
+      return;
+    }
+
+    // If focus is inside an open menu-item-with-children, close that item's submenu.
+    var activeOpenItem = active ? active.closest('li.menu-item-has-children.is-submenu-open') : null;
+    if (activeOpenItem) {
+      var ownedSubmenu = null;
+      for (var i = 0; i < activeOpenItem.children.length; i += 1) {
+        var child = activeOpenItem.children[i];
+        if (child && child.classList && child.classList.contains('sub-menu') && child.id) {
+          ownedSubmenu = child;
+          break;
+        }
       }
-    });
+      if (ownedSubmenu) {
+        var ownedToggle = activeOpenItem.querySelector('.menu-item__inner > .sub-menu-toggle[aria-controls]');
+        if (ownedToggle && ownedToggle.getAttribute('aria-controls') === ownedSubmenu.id && ownedToggle.getAttribute('aria-expanded') === 'true') {
+          setExpanded(ownedToggle, false);
+          ownedToggle.focus();
+          return;
+        }
+      }
+    }
+
+    // Otherwise close submenu nearest to current focus.
+    var activeSubmenu = active ? active.closest('.sub-menu[id]') : null;
+    if (activeSubmenu) {
+      var ownerToggle = document.querySelector('.sub-menu-toggle[aria-controls="' + activeSubmenu.id + '"]');
+      if (ownerToggle && ownerToggle.getAttribute('aria-expanded') === 'true') {
+        setExpanded(ownerToggle, false);
+        ownerToggle.focus();
+        return;
+      }
+    }
+
+    // No submenu focus context: close the main menu drawer if open.
+    if (menuIsOpen()) {
+      closeMenu();
+    }
   });
 }
 
