@@ -1,0 +1,126 @@
+@use '../../../src/scss/variables' as *;
+
+.accordion__wrapper {
+  margin: 32px 0;
+
+  &:first-child {
+    margin-top: 0;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  + .accordion__wrapper {
+    margin-top: -16px;
+
+    @media (max-width: 600px) {
+      margin-top: -20px;
+    }
+
+    @media (max-width: 400px) {
+      margin-top: -24px;
+    }
+
+    &.-design-image-subtitle {
+      margin-top: -8px;
+
+      @media (max-width: 600px) {
+        margin-top: -16px;
+      }
+    }
+  }
+}
+
+.accordion__container {
+  border-radius: var(--fs-border-radius);
+  background-color: var(--fs-color-gray-200);
+}
+
+.accordion__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 16px 0 24px;
+  cursor: pointer;
+
+  @media (max-width: 400px) {
+    padding-left: 16px;
+  }
+}
+
+.accordion__title {
+  flex: 1;
+  margin: 0;
+  padding: 16px 0;
+
+  @media (max-width: 400px) {
+    font-weight: 400;
+    padding: 12px 0;
+  }
+}
+
+.accordion__content-label {
+  color: var(--fs-color-default-text-color);
+  margin: 0 0 24px;
+}
+
+.accordion__icon {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  transition: transition('transform');
+
+  .accordion__header:hover & {
+    transform: scale(1.1);
+  }
+
+  > span {
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 18px;
+    height: 18px;
+
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 18px;
+      height: 2px;
+      border-radius: 1px;
+      background: #fff;
+      transition: transition('transform', 'opacity');
+    }
+
+    &::before {
+      transform: translate(-50%, -50%) rotate(-90deg);
+
+      .accordion__wrapper.-accordion-open & {
+        transform: translate(-50%, -50%) rotate(0deg);
+        opacity: 0;
+      }
+    }
+  }
+}
+
+.accordion__content {
+  display: none;
+}
+
+.accordion__content-inner {
+  padding: 16px 24px 24px;
+
+  @media (max-width: 400px) {
+    padding: 8px 16px 16px;
+  }
+}
+

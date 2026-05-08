@@ -41,8 +41,7 @@
 @forward 'layout/page-not-found';
 
 // Blocks
-// TODO find solution to sunc with blocks plugin
-// @forward '../blocks/all-blocks';
+@forward '../../acf/blocks/blocks';
 
 // Print
 @forward 'lib/print';

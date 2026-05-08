@@ -21,7 +21,7 @@ require_once 'inc/redirects.php';
 require_once 'inc/analytics.php';
 require_once 'inc/admin-bar.php';
 
-// User rights + theme settings + developer settings (needed on frontend for admin bar performance node)
+// Theme settings
 require_once 'inc/user-rights.php';
 require_once 'inc/theme-settings.php';
 require_once 'inc/admin-notice.php';
@@ -29,7 +29,7 @@ require_once 'inc/developer-settings.php';
 
 // Admin-only
 if (is_admin()) {
-	// Install wizard (when setup not completed or viewing success page)
+	// Install wizard
 	if (!fs_setup_completed() || isset($_GET['fromscratch_success'])) {
 		require_once 'inc/install.php';
 	}
@@ -50,7 +50,7 @@ require_once 'inc/events.php';
 require_once 'inc/exclude-from-search.php';
 require_once 'inc/page-editor-options.php';
 
-// Mail (SMTP / SendGrid from Developer › Settings)
+// Mail, Matomo
 require_once 'inc/mail.php';
 require_once 'inc/matomo.php';
 require_once 'inc/weekly-report.php';
@@ -86,3 +86,6 @@ if (fs_theme_feature_enabled('webp')) {
 if (fs_theme_feature_enabled('media_folders')) {
 	require_once 'inc/media-library-folders.php';
 }
+
+// ACF
+require_once 'acf/acf.php';

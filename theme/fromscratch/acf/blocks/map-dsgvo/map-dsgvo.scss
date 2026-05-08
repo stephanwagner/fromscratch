@@ -1,0 +1,41 @@
+@use '../../../src/scss/variables' as *;
+
+.google-maps-consent__container {
+  margin: 24px 0;
+}
+
+.google-maps-consent__title {
+  font-weight: bold;
+}
+
+.google-maps-consent__link {
+  cursor: pointer;
+}
+
+.google-maps-consent__modal-borlabs-link {
+  display: none;
+
+  body.has-borlabs & {
+    display: inline;
+  }
+}
+
+// Admin
+
+// TODO move
+
+.wp-block-acf-map-consent {
+  &::before {
+    content: "Anfahrts-Karte: Google Maps DSGVO";
+    display: block;
+    padding: 16px 24px;
+    font-weight: bold;
+    font-size: 18px;
+    background: #ddd;
+    border-left: 4px solid #000;
+  }
+
+  >.acf-block-component {
+    display: none;
+  }
+}

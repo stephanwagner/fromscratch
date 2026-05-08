@@ -28,3 +28,6 @@
 @forward 'admin/redis';
 @forward 'admin/analytics';
 @forward 'admin/media-library';
+
+// Blocks
+@forward '../../acf/blocks/blocks';
