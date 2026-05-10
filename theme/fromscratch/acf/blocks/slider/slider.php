@@ -43,11 +43,13 @@ if ($ratio == 'custom' && $ratioX > 0 && $ratioY > 0) {
 	}
 }
 $paddingTop = floatval($paddingTop);
+
+$spaceBetween = max(0, (int) $spaceBetween);
 ?>
 
 <div
 	class="<?= implode(' ', $classNames) ?>"
-	style="--slide-padding-top: <?= $paddingTop ?>%; --slider-editor-slide-gap: <?= max(0, (int) $spaceBetween) ?>px;"
+	style="--slide-padding-top: <?= $paddingTop ?>%; --slider-editor-slide-gap: <?= $spaceBetween ?>px;"
 
 	data-slider-id="<?= $block['id'] ?>"
 	data-slider-slides-per-view="<?= $slidesPerView ?>"
