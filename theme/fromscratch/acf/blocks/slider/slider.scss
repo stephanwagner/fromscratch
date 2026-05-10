@@ -1,10 +1,57 @@
 @use '../../../src/scss/variables' as *;
 
+// Must match gap on `.acf-innerblocks-container` in the block editor (see `.slider__wrapper` below).
+$slider-editor-slide-gap: 8px;
+
 .slider__wrapper {
+  margin: 32px 0;
+
+  &:first-child {
+    margin-top: 0;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 600px) {
+    margin: 24px 0;
+
+    &:first-child {
+      margin-top: 0;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
   .acf-innerblocks-container {
     display: flex;
     transition-property: transform;
     box-sizing: content-box;
+
+    .editor-styles-wrapper & {
+      gap: $slider-editor-slide-gap;
+    }
+
+    .wp-block-acf-slider-slide {
+      .editor-styles-wrapper & {
+        flex: 1;
+        margin: 0;
+      }
+    }
+  }
+}
+
+// Navigation
+
+.slider__navigation {
+  // TODO
+
+  // Hide navigation in editor
+  .editor-styles-wrapper & {
+    display: none;
   }
 }
 
@@ -43,19 +90,36 @@
   object-position: center;
 }
 
-// .image-slider__slides {
-//   position: relative;
-//   border-radius: var(--fs-border-radius);
-//   overflow: hidden;
-// }
+// Admin: wrap slides into rows of N (matches slides-per-view), same gap as above.
+@mixin slider-editor-innerblocks-wrap($max-slides-per-view: 12) {
+  @for $n from 1 through $max-slides-per-view {
+    .editor-styles-wrapper .slider__wrapper[data-slider-slides-per-view='#{$n}'] .acf-innerblocks-container {
+      flex-wrap: wrap;
 
-// .image-slider__slide {
-//   background: no-repeat center center/ cover;
-//   border-radius: var(--fs-border-radius);
-//   overflow: hidden;
-// }
+      .wp-block-acf-slider-slide {
+        flex: 0 0 calc((100% - (#{$n} - 1) * #{$slider-editor-slide-gap}) / #{$n});
+        max-width: calc((100% - (#{$n} - 1) * #{$slider-editor-slide-gap}) / #{$n});
+        min-width: 0;
+      }
+    }
+  }
+}
 
-// .image-slider__ratio {
-//   display: block;
-//   padding-top: var(--slide-padding-top, 100%);
-// }
+@include slider-editor-innerblocks-wrap(12);
+
+// Admin: hide slides beyond `slides-per-view` so the preview matches the frontend carousel.
+@mixin slider-editor-hide-extra-slides($max-slides-per-view: 12) {
+  @for $n from 1 through $max-slides-per-view {
+    .editor-styles-wrapper .slider__wrapper[data-slider-slides-per-view='#{$n}'] .acf-innerblocks-container>.wp-block-acf-slider-slide:nth-child(n + #{$n + 1}) {
+      display: none;
+    }
+  }
+}
+
+@include slider-editor-hide-extra-slides(12);
+
+// Admin: show every slide while the slider or a nested slide is selected.
+.editor-styles-wrapper .block-editor-block-list__block.is-selected .slider__wrapper .acf-innerblocks-container .wp-block-acf-slider-slide,
+.editor-styles-wrapper .block-editor-block-list__block:has(.is-selected) .slider__wrapper .acf-innerblocks-container .wp-block-acf-slider-slide {
+  display: block !important;
+}

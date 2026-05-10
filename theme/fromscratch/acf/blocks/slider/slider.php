@@ -42,7 +42,7 @@ if ($ratio == 'custom' && $ratioX > 0 && $ratioY > 0) {
 		$paddingTop = floatval($ratioArr[1]) / floatval($ratioArr[0]) * 100;
 	}
 }
-$paddingTop = number_format($paddingTop, 3);
+$paddingTop = floatval($paddingTop);
 ?>
 
 <div
