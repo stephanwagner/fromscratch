@@ -97,5 +97,5 @@ export default {
   ...fromCss,
 
   // Default scroll offset
-  scrollOffset: 16
+  scrollOffset: 8
 };

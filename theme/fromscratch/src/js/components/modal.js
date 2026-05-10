@@ -15,6 +15,7 @@ export function initModals() {
     });
   });
 }
+initModals();
 
 export function openModal(id, onOpen, sourceEl) {
   const modalEl = getModal(id);

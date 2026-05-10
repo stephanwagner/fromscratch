@@ -11,23 +11,11 @@
     margin-bottom: 0;
   }
 
-  + .accordion__wrapper {
-    margin-top: -16px;
+  +.accordion__wrapper {
+    margin-top: -20px;
 
     @media (max-width: 600px) {
-      margin-top: -20px;
-    }
-
-    @media (max-width: 400px) {
       margin-top: -24px;
-    }
-
-    &.-design-image-subtitle {
-      margin-top: -8px;
-
-      @media (max-width: 600px) {
-        margin-top: -16px;
-      }
     }
   }
 }
@@ -43,17 +31,27 @@
   justify-content: space-between;
   gap: 16px;
   padding: 0 16px 0 24px;
+  transition: transition('background-color');
+  border-radius: var(--fs-border-radius);
   cursor: pointer;
 
-  @media (max-width: 400px) {
+  @media (max-width: 600px) {
     padding-left: 16px;
+    padding-right: 8px;
   }
 }
 
 .accordion__title {
   flex: 1;
   margin: 0;
-  padding: 16px 0;
+  padding: 12px 0;
+  font-size: var(--fs-font-size-m);
+  line-height: 24px;
+  transition: transition('color');
+
+  .accordion__header:hover & {
+    color: var(--fs-color-primary);
+  }
 
   @media (max-width: 400px) {
     font-weight: 400;
@@ -61,59 +59,46 @@
   }
 }
 
-.accordion__content-label {
-  color: var(--fs-color-default-text-color);
-  margin: 0 0 24px;
-}
-
 .accordion__icon {
   position: relative;
-  width: 42px;
-  height: 42px;
+  width: 24px;
+  height: 24px;
+  margin: 12px 0 0;
   flex-shrink: 0;
+  line-height: 0;
+  align-self: flex-start;
   border-radius: 50%;
-  transition: transition('transform');
+  color: var(--fs-default-text-color);
+  pointer-events: none;
 
-  .accordion__header:hover & {
-    transform: scale(1.1);
-  }
+  svg {
+    display: block;
+    transition: transition('transform', 'fill');
+    width: 100%;
+    height: 100%;
 
-  > span {
-    position: absolute;
-    z-index: 2;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 18px;
-    height: 18px;
-
-    &::before,
-    &::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 18px;
-      height: 2px;
-      border-radius: 1px;
-      background: #fff;
-      transition: transition('transform', 'opacity');
+    .accordion__header:hover & {
+      color: var(--fs-color-primary);
     }
 
-    &::before {
-      transform: translate(-50%, -50%) rotate(-90deg);
-
-      .accordion__wrapper.-accordion-open & {
-        transform: translate(-50%, -50%) rotate(0deg);
-        opacity: 0;
-      }
+    .accordion__wrapper.accordion-open & {
+      transform: scaleY(-1);
     }
   }
 }
 
 .accordion__content {
   display: none;
+
+  .accordion__wrapper[data-accordion-is-open='true'] & {
+    display: block;
+  }
+
+  .editor-styles-wrapper .accordion__wrapper.accordion-open &,
+  .editor-styles-wrapper .wp-block.is-selected &,
+  .editor-styles-wrapper .wp-block.has-child-selected & {
+    display: block !important;
+  }
 }
 
 .accordion__content-inner {
@@ -123,4 +108,3 @@
     padding: 8px 16px 16px;
   }
 }
-

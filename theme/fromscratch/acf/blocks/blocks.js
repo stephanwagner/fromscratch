@@ -1,17 +1,17 @@
-// Map
-import './map/map.js';
+// // Map
+// import './map/map.js';
 
-// Map DSGVO consent
-import'./map-dsgvo/map-dsgvo.js';
+// // Map DSGVO consent
+// import'./map-dsgvo/map-dsgvo.js';
 
-// Slider
-import './blocks/map/map.js';
+// // Slider
+// import './blocks/map/map.js';
+
+// // Accordion
+// import './blocks/slider/slider.js';
 
 // Accordion
-import './blocks/slider/slider.js';
+import './accordion/accordion.js';
 
-// Accordion
-import './blocks/accordion/accordion.js';
-
-// Anchor
-import './blocks/anchor/anchor.js';
+// // Anchor
+// import './blocks/anchor/anchor.js';
