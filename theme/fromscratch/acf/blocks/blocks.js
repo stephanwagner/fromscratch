@@ -12,3 +12,6 @@ import './accordion/accordion.js';
 
 // Slider
 import './slider/slider.js';
+
+// Number Ticker
+import './number-ticker/number-ticker.js';

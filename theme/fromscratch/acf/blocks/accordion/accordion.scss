@@ -1,6 +1,7 @@
 @use '../../../src/scss/variables' as *;
 
 .accordion__wrapper {
+  position: relative;
   margin: 32px 0;
 
   &:first-child {

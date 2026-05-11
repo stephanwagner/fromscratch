@@ -1,6 +1,7 @@
 @use '../../../src/scss/variables' as *;
 
 .slider__wrapper {
+  position: relative;
   margin-top: 32px;
   margin-bottom: 32px;
 
@@ -144,6 +145,14 @@
 }
 
 // Slides
+
+.slider-slide__wrapper {
+  position: relative;
+
+  .editor-styles-wrapper & {
+    z-index: 1;
+  }
+}
 
 .slider-slide__container {
   position: relative;

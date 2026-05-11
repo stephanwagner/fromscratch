@@ -1,5 +1,9 @@
 @use '../../../src/scss/variables' as *;
 
+.map__wrapper {
+  position: relative;
+}
+
 .map__container {
   position: relative;
   max-height: 520px;

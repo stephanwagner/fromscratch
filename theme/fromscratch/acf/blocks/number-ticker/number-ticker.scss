@@ -1,0 +1,67 @@
+@use '../../../src/scss/variables' as *;
+
+.number-ticker__wrapper {
+  position: relative;
+  margin-top: 32px;
+  margin-bottom: 32px;
+
+  &:first-child {
+    margin-top: 0;
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.number-ticker__items {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 32px 24px;
+}
+
+.number-ticker__item {
+  position: relative;
+  text-align: center;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 25%;
+  text-align: center;
+
+  @media (max-width: $breakpoint-m) {
+    max-width: 100%;
+    width: calc(50% - 24px / 2);
+    flex: auto;
+  }
+
+  @media (max-width: $breakpoint-xs) {
+    width: 100%;
+  }
+}
+
+.number-ticker__number-container {
+  font-size: 48px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  line-height: 1;
+}
+
+.number-ticker__number {
+  font-weight: 600;
+}
+
+.number-ticker__prefix,
+.number-ticker__suffix {
+  font-size: 32px;
+}
+
+.number-ticker__label {
+  font-size: 16px;
+  text-wrap: balance;
+  border-top: 1px solid var(--fs-color-gray-300);
+  padding: 16px 12px 0;
+  margin: 16px 0 0;
+}

@@ -3,8 +3,11 @@
 // Block name
 $blockName = 'map';
 
+// Class names
+$classNames = ['fs-wp-block'];
+
 // ID for specific styling
-$classNames = [$block['id']];
+$classNames[] = $block['id'];
 
 // Align class ("alignwide") from block setting ("wide")
 if (!empty($block['align'])) {

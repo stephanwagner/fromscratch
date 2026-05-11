@@ -299,6 +299,13 @@ hr.wp-block-separator.block-editor-block-list__block {
   border-radius: 6px;
 }
 
+// Blocks
+
+.fs-wp-block {
+  position: relative;
+  z-index: 1;
+}
+
 // Block preview
 
 .admin-block-preview {

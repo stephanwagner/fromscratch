@@ -171,14 +171,43 @@ function fs_enqueue_admin_styles(): void
 }
 
 /**
- * Also loaded on block editor screens (post.php, post-new.php) so the document
- * sidebar (e.g. Expiration, SEO panels) gets theme admin styles. The editor
- * content iframe is unaffected; styles apply to the parent admin document.
+ * Block editor screens (post, site, widgets, etc.): admin.css must be registered via
+ * enqueue_block_assets so WordPress does not inject it into the canvas iframe from
+ * admin_enqueue_scripts (WP 6.3+).
+ *
+ * @return bool
+ */
+function fs_admin_is_block_editor_screen(): bool
+{
+	$screen = get_current_screen();
+
+	return $screen instanceof \WP_Screen && $screen->is_block_editor();
+}
+
+/**
+ * Load admin.css for the block editor (canvas + chrome) on the path WordPress expects.
+ *
+ * @return void
+ */
+function fs_enqueue_admin_styles_block_assets(): void
+{
+	if (!is_admin() || !fs_admin_is_block_editor_screen()) {
+		return;
+	}
+	fs_enqueue_admin_styles();
+}
+add_action('enqueue_block_assets', 'fs_enqueue_admin_styles_block_assets', 1);
+
+/**
+ * Theme admin.css everywhere in wp-admin except the block editor (handled above).
  *
  * @param string $hook_suffix Current admin page hook from admin_enqueue_scripts.
  */
 function fs_admin_styles(string $hook_suffix): void
 {
+	if (fs_admin_is_block_editor_screen()) {
+		return;
+	}
 	fs_enqueue_admin_styles();
 }
 add_action('admin_enqueue_scripts', 'fs_admin_styles');
