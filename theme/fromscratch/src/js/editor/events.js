@@ -11,8 +11,7 @@
   const { useSelect } = wp.data;
   const { useEntityProp } = wp.coreData;
   const { registerPlugin } = wp.plugins;
-  const editPost = wp.editPost || {};
-  const PluginDocumentSettingPanel = editPost.PluginDocumentSettingPanel;
+  const { PluginDocumentSettingPanel } = wp.editor;
   const { PanelRow, ToggleControl } = wp.components;
 
   const PT = fromscratchEvents.postType;

@@ -10,7 +10,7 @@
 
   const el = wp.element.createElement;
   const { registerPlugin } = wp.plugins;
-  const { PluginDocumentSettingPanel } = wp.editPost;
+  const { PluginDocumentSettingPanel } = wp.editor;
   const { useSelect, useDispatch } = wp.data;
   const { useEntityProp } = wp.coreData;
   const { PanelRow } = wp.components;
