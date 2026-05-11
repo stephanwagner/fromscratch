@@ -49,55 +49,68 @@ $.each(sliders, function (index, slider) {
   if (sliderConfig.slidesPerView == 2) {
     sliderConfig.breakpoints = {
       600: {
-        slidesPerView: 2
+        slidesPerView: 2,
+        slidesPerGroup: Math.min(sliderConfig.slidesPerGroup, 2)
       },
       0: {
-        slidesPerView: 1
+        slidesPerView: 1,
+        slidesPerGroup: 1
       }
     };
   }
   if (sliderConfig.slidesPerView == 3) {
     sliderConfig.breakpoints = {
       900: {
-        slidesPerView: 3
+        slidesPerView: 3,
+        slidesPerGroup: Math.min(sliderConfig.slidesPerGroup, 3)
       },
       600: {
-        slidesPerView: 2
+        slidesPerView: 2,
+        slidesPerGroup: Math.min(sliderConfig.slidesPerGroup, 2)
       },
       0: {
-        slidesPerView: 1
+        slidesPerView: 1,
+        slidesPerGroup: 1
       }
     };
   }
   if (sliderConfig.slidesPerView == 4) {
     sliderConfig.breakpoints = {
       1200: {
-        slidesPerView: 4
+        slidesPerView: 4,
+        slidesPerGroup: Math.min(sliderConfig.slidesPerGroup, 4)
       },
       900: {
-        slidesPerView: 3
+        slidesPerView: 3,
+        slidesPerGroup: Math.min(sliderConfig.slidesPerGroup, 3)
       },
       600: {
-        slidesPerView: 2
+        slidesPerView: 2,
+        slidesPerGroup: Math.min(sliderConfig.slidesPerGroup, 2)
       },
       0: {
-        slidesPerView: 1
+        slidesPerView: 1,
+        slidesPerGroup: 1
       }
     };
   }
   if (sliderConfig.slidesPerView >= 5) {
     sliderConfig.breakpoints = {
       1200: {
-        slidesPerView: sliderConfig.slidesPerView
+        slidesPerView: sliderConfig.slidesPerView,
+        slidesPerGroup: Math.min(sliderConfig.slidesPerGroup, sliderConfig.slidesPerView)
       },
       900: {
-        slidesPerView: 4
+        slidesPerView: 4,
+        slidesPerGroup: Math.min(sliderConfig.slidesPerGroup, 4)
       },
       600: {
-        slidesPerView: 2
+        slidesPerView: 2,
+        slidesPerGroup: Math.min(sliderConfig.slidesPerGroup, 2)
       },
       0: {
-        slidesPerView: 1
+        slidesPerView: 1,
+        slidesPerGroup: 1
       }
     };
   }
