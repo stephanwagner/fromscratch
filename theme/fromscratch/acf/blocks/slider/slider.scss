@@ -1,7 +1,8 @@
 @use '../../../src/scss/variables' as *;
 
 .slider__wrapper {
-  margin: 32px 0;
+  margin-top: 32px;
+  margin-bottom: 32px;
 
   &:first-child {
     margin-top: 0;
@@ -12,7 +13,8 @@
   }
 
   @media (max-width: 600px) {
-    margin: 24px 0;
+    margin-top: 24px;
+    margin-bottom: 24px;
 
     &:first-child {
       margin-top: 0;
@@ -44,11 +46,100 @@
 // Navigation
 
 .slider__navigation {
-  // TODO
+  position: relative;
+  height: 24px;
+  margin: 8px 0 0;
+  display: none;
+
+  .slider__wrapper[data-slider-navigation="true"] &,
+  .slider__wrapper[data-slider-pagination="true"] & {
+    display: block;
+  }
 
   // Hide navigation in editor
   .editor-styles-wrapper & {
-    display: none;
+    display: none !important;
+  }
+}
+
+.slider__button-next,
+.slider__button-prev {
+  position: absolute;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: 0;
+  padding: 0;
+  line-height: 0;
+  color: var(--fs-color-gray-500);
+  background: transparent;
+  box-shadow: none;
+  appearance: none;
+  cursor: pointer;
+  transition: transition('color');
+  display: none;
+
+  .slider__wrapper[data-slider-navigation="true"] & {
+    display: block;
+  }
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transition: transition('transform');
+    pointer-events: none;
+  }
+
+  &:hover {
+    color: var(--fs-color-primary);
+  }
+}
+
+.slider__button-next {
+  right: 0;
+
+  &:hover {
+    svg {
+      transform: translateX(3px);
+    }
+  }
+}
+
+.slider__button-prev {
+  left: 0;
+
+  &:hover {
+    svg {
+      transform: translateX(-3px);
+    }
+  }
+}
+
+.slider__pagination.swiper-pagination-bullets {
+  --swiper-pagination-color: var(--fs-color-gray-500);
+  --swiper-pagination-bullet-inactive-color: var(--fs-color-gray-300);
+  --swiper-pagination-bullet-inactive-opacity: 1;
+  --swiper-pagination-bullet-opacity: 1;
+  --swiper-pagination-bullet-height: 8px;
+  --swiper-pagination-bullet-width: 8px;
+  --swiper-pagination-bullet-horizontal-gap: 3px;
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: auto;
+  height: 8px;
+  display: none;
+
+  .slider__wrapper[data-slider-pagination="true"] & {
+    display: block;
+  }
+
+  .swiper-pagination-bullet {
+    transition: transition('transform', 'left');
   }
 }
 
@@ -62,9 +153,13 @@
   &::after {
     content: "";
     display: block;
-    padding-top: var(--slide-padding-top, 100%);
+    padding-top: var(--slider-padding-top, 100%);
     position: relative;
     z-index: 1;
+  }
+
+  .editor-styles-wrapper & {
+    background-color: var(--fs-color-gray-200);
   }
 }
 
