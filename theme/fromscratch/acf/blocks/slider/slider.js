@@ -46,6 +46,62 @@ $.each(sliders, function (index, slider) {
   sliderConfig.slidesPerGroup =
     parseInt(sliderWrapper.attr('data-slider-slides-per-group')) || 1;
 
+  if (sliderConfig.slidesPerView == 2) {
+    sliderConfig.breakpoints = {
+      600: {
+        slidesPerView: 2
+      },
+      0: {
+        slidesPerView: 1
+      }
+    };
+  }
+  if (sliderConfig.slidesPerView == 3) {
+    sliderConfig.breakpoints = {
+      900: {
+        slidesPerView: 3
+      },
+      600: {
+        slidesPerView: 2
+      },
+      0: {
+        slidesPerView: 1
+      }
+    };
+  }
+  if (sliderConfig.slidesPerView == 4) {
+    sliderConfig.breakpoints = {
+      1200: {
+        slidesPerView: 4
+      },
+      900: {
+        slidesPerView: 3
+      },
+      600: {
+        slidesPerView: 2
+      },
+      0: {
+        slidesPerView: 1
+      }
+    };
+  }
+  if (sliderConfig.slidesPerView >= 5) {
+    sliderConfig.breakpoints = {
+      1200: {
+        slidesPerView: sliderConfig.slidesPerView
+      },
+      900: {
+        slidesPerView: 4
+      },
+      600: {
+        slidesPerView: 2
+      },
+      0: {
+        slidesPerView: 1
+      }
+    };
+  }
+
   // Pagination
   if (sliderWrapper.attr('data-slider-pagination') === 'true') {
     sliderConfig.pagination = {
@@ -60,7 +116,7 @@ $.each(sliders, function (index, slider) {
   if (sliderWrapper.attr('data-slider-navigation') === 'true') {
     sliderConfig.navigation = {
       nextEl: '.slider__navigation .slider__button-next',
-      prevEl: '.slider__navigation .slider__button-prev',
+      prevEl: '.slider__navigation .slider__button-prev'
     };
   }
 
