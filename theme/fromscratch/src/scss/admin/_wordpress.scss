@@ -13,10 +13,13 @@ div#wpwrap {
 
 // Fix editor
 
-.block-editor-block-list__layout {
-  padding-top: 28px;
+.editor-visual-editor__post-title-wrapper {
+  margin-bottom: 28px;
+}
 
-  >.wp-block:first-child {
+.is-root-container {
+  >*:first-child {
+    padding-top: 0;
     margin-top: 0;
   }
 }

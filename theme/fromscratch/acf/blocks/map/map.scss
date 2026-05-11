@@ -35,6 +35,10 @@
     display: flex;
   }
 
+  .editor-styles-wrapper & {
+    display: flex !important;
+  }
+
   &::before {
     content: "";
     position: absolute;
@@ -77,6 +81,10 @@
   a {
     font-weight: 400;
   }
+
+  .editor-styles-wrapper & {
+    display: none !important;
+  }
 }
 
 .map__notice-title {
@@ -89,6 +97,7 @@
   margin: 12px 0 24px;
   font-size: var(--fs-font-size-s);
   line-height: var(--fs-line-height-s);
+  text-wrap: balance;
 
   @media (max-width: $breakpoint-s) {
     margin: 8px 0 16px;
