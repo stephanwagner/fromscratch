@@ -7,6 +7,7 @@ defined('ABSPATH') || exit;
  * Archive: upcoming/current only, ordered by start; template groups by month.
  */
 
+// TODO use flag in CPT
 const FS_EVENT_POST_TYPE = 'event';
 
 const FS_EVENT_META_START_DATE = '_fs_event_start_date';

@@ -11,7 +11,7 @@ defined('ABSPATH') || exit;
 function fs_theme_post_types(): array
 {
 	$types = ['post', 'page'];
-	$cpts = fs_config_cpt('cpts');
+	$cpts = fs_config_cpt('all');
 	if (is_array($cpts) && $cpts !== []) {
 		$types = array_merge($types, array_keys($cpts));
 	}

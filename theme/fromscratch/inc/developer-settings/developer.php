@@ -126,7 +126,8 @@ function fs_render_developer_cheatsheet(): void
 							<code class="fs-code-text fs-code-small">PHP</code>
 						</td>
 						<td>
-							<code class="fs-code-small"><?= esc_html("fs_config('headers.Cache-Control')") ?></code>
+							<code class="fs-code-small"><?= esc_html("fs_config('headers.Cache-Control')") ?></code><br>
+							<code class="fs-code-small"><?= esc_html("fs_config_cpt('project')") ?></code>
 						</td>
 					</tr>
 					<tr>

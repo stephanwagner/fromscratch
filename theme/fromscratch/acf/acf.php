@@ -1,4 +1,8 @@
 <?php
+
+// Import block filters
+include __DIR__ . '/block-filters.php';
+
 // Import blocks
 $configBlocks = include __DIR__ . '/blocks.php';
 

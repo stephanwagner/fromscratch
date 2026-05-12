@@ -41,7 +41,7 @@ function fs_post_type_has_page_title_toggle(string $post_type): bool
 
 		return is_array($post_cfg) && !empty($post_cfg['has_page_title_toggle']);
 	}
-	$cpts = fs_config_cpt('cpts');
+	$cpts = fs_config_cpt('all');
 	if (!is_array($cpts) || !isset($cpts[$post_type]) || !is_array($cpts[$post_type])) {
 		return false;
 	}

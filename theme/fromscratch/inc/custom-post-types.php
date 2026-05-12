@@ -14,7 +14,7 @@ defined('ABSPATH') || exit;
  */
 function fs_register_cpts(): void
 {
-	$cpts = fs_config_cpt('cpts');
+	$cpts = fs_config_cpt('all');
 	if (!is_array($cpts) || $cpts === []) {
 		return;
 	}
@@ -57,17 +57,8 @@ function fs_register_cpts(): void
 		$has_order = !empty($args['has_order']);
 		unset($args['has_order']);
 		unset($args['orderby'], $args['order']);
-		// Convenience config: has_categories => true adds built-in category taxonomy.
-		$has_categories = !empty($args['has_categories']);
-		unset($args['has_categories']);
-		unset($args['has_page_title_toggle']);
-		if ($has_categories) {
-			$taxonomies = isset($args['taxonomies']) && is_array($args['taxonomies']) ? $args['taxonomies'] : [];
-			if (!in_array('category', $taxonomies, true)) {
-				$taxonomies[] = 'category';
-			}
-			$args['taxonomies'] = $taxonomies;
-		}
+		// Taxonomies are attached separately so config can define/register custom taxonomies too.
+		unset($args['taxonomies'], $args['has_categories'], $args['has_page_title_toggle']);
 		// Block editor needs custom-fields support to expose/save post meta (e.g. SEO panel).
 		if (isset($args['supports']) && is_array($args['supports']) && !in_array('custom-fields', $args['supports'], true)) {
 			$args['supports'][] = 'custom-fields';
@@ -110,6 +101,212 @@ function fs_cpt_menu_icon($icon): string
 }
 
 /**
+ * Collect taxonomy config for built-in posts and configured CPTs.
+ *
+ * Supports:
+ * - `has_categories => true` (shared core category taxonomy)
+ * - `taxonomies => ['category']` (attach existing taxonomy)
+ * - `taxonomies => ['project_category' => ['label' => 'Projekt-Kategorien']]` (register custom taxonomy)
+ *
+ * @return array<string, array{args: ?array, object_types: string[]}>
+ */
+function fs_cpt_taxonomy_map(): array
+{
+	$map = [];
+	$sources = [];
+
+	$post_cfg = fs_config_cpt('post');
+	if (is_array($post_cfg)) {
+		$sources['post'] = $post_cfg;
+	}
+
+	$cpts = fs_config_cpt('all');
+	if (is_array($cpts)) {
+		foreach ($cpts as $post_type => $args) {
+			if (is_string($post_type) && $post_type !== '' && is_array($args)) {
+				$sources[$post_type] = $args;
+			}
+		}
+	}
+
+	foreach ($sources as $object_type => $cfg) {
+		$taxonomies = [];
+
+		if (!empty($cfg['has_categories'])) {
+			$taxonomies[] = 'category';
+		}
+		if (isset($cfg['taxonomies']) && is_array($cfg['taxonomies'])) {
+			$taxonomies = array_merge($taxonomies, $cfg['taxonomies']);
+		}
+
+		foreach ($taxonomies as $key => $value) {
+			$slug = '';
+			$args = null;
+
+			if (is_int($key) && is_string($value)) {
+				$slug = sanitize_key($value);
+			} elseif (is_string($key) && $key !== '' && is_array($value)) {
+				$slug = sanitize_key($key);
+				$args = $value;
+			}
+
+			if ($slug === '') {
+				continue;
+			}
+
+			if (!isset($map[$slug])) {
+				$map[$slug] = [
+					'args' => null,
+					'object_types' => [],
+				];
+			}
+			if (is_array($args) && $map[$slug]['args'] === null) {
+				$map[$slug]['args'] = $args;
+			}
+			$map[$slug]['object_types'][] = $object_type;
+		}
+	}
+
+	foreach ($map as $slug => $entry) {
+		$map[$slug]['object_types'] = array_values(array_unique(array_filter($entry['object_types'], 'is_string')));
+	}
+
+	return $map;
+}
+
+/**
+ * Build fallback labels for custom taxonomies declared in config.
+ *
+ * @param string $taxonomy Taxonomy slug.
+ * @param string $label Plural label.
+ * @param string $singular_label Singular label.
+ * @return array<string, string>
+ */
+function fs_cpt_default_taxonomy_labels(string $taxonomy, string $label, string $singular_label): array
+{
+	if ($label === '') {
+		$label = ucwords(str_replace(['-', '_'], ' ', $taxonomy));
+	}
+	if ($singular_label === '') {
+		$singular_label = $label;
+	}
+
+	return [
+		'name' => $label,
+		'menu_name' => $label,
+		'singular_name' => $singular_label,
+		'search_items' => __('Search categories', 'fromscratch'),
+		'all_items' => __('All categories', 'fromscratch'),
+		'parent_item' => __('Parent category', 'fromscratch'),
+		'parent_item_colon' => __('Parent category:', 'fromscratch'),
+		'edit_item' => __('Edit category', 'fromscratch'),
+		'view_item' => __('View categories', 'fromscratch'),
+		'update_item' => __('Update category', 'fromscratch'),
+		'add_new_item' => __('Add new category', 'fromscratch'),
+		'new_item_name' => __('New category name', 'fromscratch'),
+	];
+}
+
+/**
+ * Normalize custom taxonomy args from config.
+ *
+ * @param string $taxonomy Taxonomy slug.
+ * @param array<string, mixed> $args Raw config args.
+ * @return array<string, mixed>
+ */
+function fs_cpt_normalize_taxonomy_args(string $taxonomy, array $args): array
+{
+	$defaults = [
+		'public' => true,
+		'show_ui' => true,
+		'show_admin_column' => true,
+		'show_in_rest' => true,
+		'hierarchical' => true,
+		'rewrite' => true,
+		'query_var' => true,
+	];
+
+	$label = isset($args['label']) && is_string($args['label']) ? trim($args['label']) : '';
+	$singular_label = isset($args['singular_label']) && is_string($args['singular_label']) ? trim($args['singular_label']) : '';
+	unset($args['label'], $args['singular_label']);
+
+	if (isset($args['url'])) {
+		$url_raw = $args['url'];
+		unset($args['url']);
+		if (is_string($url_raw) && $url_raw !== '') {
+			$url_slug = sanitize_title($url_raw);
+			$rewrite = $args['rewrite'] ?? true;
+			if ($rewrite !== false) {
+				if ($rewrite === true) {
+					$args['rewrite'] = ['slug' => $url_slug];
+				} elseif (is_array($rewrite) && !isset($rewrite['slug'])) {
+					$args['rewrite'] = array_merge($rewrite, ['slug' => $url_slug]);
+				}
+			}
+		}
+	}
+
+	$provided_labels = isset($args['labels']) && is_array($args['labels']) ? $args['labels'] : [];
+	$args = array_merge($defaults, $args);
+	$args['labels'] = array_merge(
+		fs_cpt_default_taxonomy_labels($taxonomy, $label, $singular_label, $provided_labels),
+		$provided_labels
+	);
+
+	return $args;
+}
+
+/**
+ * Register/attach taxonomies declared in config for posts and CPTs.
+ */
+function fs_register_cpt_taxonomies(): void
+{
+	$taxonomies = fs_cpt_taxonomy_map();
+	if ($taxonomies === []) {
+		return;
+	}
+
+	foreach ($taxonomies as $taxonomy => $entry) {
+		$object_types = array_values(array_filter(
+			$entry['object_types'],
+			static fn(string $object_type): bool => post_type_exists($object_type)
+		));
+		if ($object_types === []) {
+			continue;
+		}
+
+		if (taxonomy_exists($taxonomy)) {
+			foreach ($object_types as $object_type) {
+				register_taxonomy_for_object_type($taxonomy, $object_type);
+			}
+			continue;
+		}
+
+		register_taxonomy(
+			$taxonomy,
+			$object_types,
+			fs_cpt_normalize_taxonomy_args($taxonomy, is_array($entry['args']) ? $entry['args'] : [])
+		);
+	}
+}
+add_action('init', 'fs_register_cpt_taxonomies', 11);
+
+/**
+ * Built-in posts use the shared core `category` taxonomy by default.
+ * Allow config/custom-post-types.php to opt out via `post.has_categories => false`
+ * so posts can use a dedicated taxonomy instead.
+ */
+add_action('init', function (): void {
+	$post_cfg = fs_config_cpt('post');
+	if (!is_array($post_cfg)) {
+		return;
+	}
+	if (array_key_exists('has_categories', $post_cfg) && !$post_cfg['has_categories']) {
+		unregister_taxonomy_for_object_type('category', 'post');
+	}
+}, 12);
+
+/**
  * Convert inline SVG markup to data URI accepted by register_post_type menu_icon.
  */
 function fs_cpt_svg_to_data_uri(string $svg): string
@@ -135,7 +332,7 @@ function fs_cpt_svg_apply_fill(string $svg, string $fill): string
  */
 function fs_cpt_admin_menu_icon_css(): string
 {
-	$cpts = fs_config_cpt('cpts');
+	$cpts = fs_config_cpt('all');
 	if (!is_array($cpts) || $cpts === []) {
 		return '';
 	}
@@ -178,7 +375,7 @@ add_action('admin_head', function (): void {
  */
 function fs_cpt_ordered_map(): array
 {
-	$cpts = fs_config_cpt('cpts');
+	$cpts = fs_config_cpt('all');
 	if (!is_array($cpts) || $cpts === []) {
 		return [];
 	}
@@ -221,7 +418,7 @@ function fs_cpt_pre_get_posts_order(\WP_Query $query): void
 	if (defined('FS_EVENT_POST_TYPE') && $pt === FS_EVENT_POST_TYPE) {
 		return;
 	}
-	$cpts = fs_config_cpt('cpts');
+	$cpts = fs_config_cpt('all');
 	if (!is_array($cpts) || !isset($cpts[$pt]) || !is_array($cpts[$pt])) {
 		return;
 	}
@@ -433,7 +630,7 @@ function fs_cpt_admin_list_insert_order_column(array $columns): array
 	foreach ($columns as $key => $label) {
 		$out[$key] = $label;
 		// Place order controls after category columns (or near date fallback below).
-		if ($key === 'categories' || $key === 'taxonomy-category' || $key === 'taxonomy-categories') {
+		if ($key === 'categories' || strncmp($key, 'taxonomy-', 9) === 0) {
 			$out['fs_cpt_reorder'] = $reorder_label;
 			$inserted = true;
 		}

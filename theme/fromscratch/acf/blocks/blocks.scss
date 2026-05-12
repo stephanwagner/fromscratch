@@ -1,14 +1,16 @@
-// Map
-@forward 'map/map';
-
-// Map DSGVO consent
-@forward 'map-dsgvo/map-dsgvo';
-
-// Slider
-@forward 'slider/slider';
-
 // Accordion
 @forward 'accordion/accordion';
 
+// Article List
+@forward 'article-list/article-list';
+
+// Map
+@forward 'map/map';
+@forward 'map-dsgvo/map-dsgvo';
+
 // Number Ticker
 @forward 'number-ticker/number-ticker';
+
+// Slider
+@forward 'slider/slider';
+@forward 'slider-slide/slider-slide';

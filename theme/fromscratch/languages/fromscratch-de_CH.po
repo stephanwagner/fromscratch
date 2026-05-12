@@ -164,6 +164,33 @@ msgstr "Groß"
 msgid "– Select –"
 msgstr "– Auswählen –"
 
+msgid "Search categories"
+msgstr "Kategorien suchen"
+
+msgid "All categories"
+msgstr "Alle Kategorien"
+
+msgid "Parent category"
+msgstr "Übergeordnete Kategorie"
+
+msgid "Parent category:"
+msgstr "Übergeordnete Kategorie:"
+
+msgid "Edit category"
+msgstr "Kategorie bearbeiten"
+
+msgid "View categories"
+msgstr "Kategorien anzeigen"
+
+msgid "Update category"
+msgstr "Kategorie aktualisieren"
+
+msgid "Add new category"
+msgstr "Neue Kategorie hinzufügen"
+
+msgid "New category name"
+msgstr "Neuer Kategoriename"
+
 # Templates
 
 msgid "Posts pagination"
