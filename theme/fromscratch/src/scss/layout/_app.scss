@@ -27,9 +27,13 @@ body {
 
 .content__wrapper {
   flex: 1;
-  padding: 48px 0;
+  padding: 32px 0 48px;
 
   @media (max-width: $breakpoint-mobile) {
     padding: 32px 0;
   }
+}
+
+.content__content {
+  position: relative;
 }

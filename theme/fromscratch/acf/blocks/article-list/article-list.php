@@ -32,54 +32,27 @@ $cpt = fs_config_cpt($postType);
 
 // Posts per page
 $postsPerPage = -1;
-if ($hasLimit && $limitType == 'pagination') {
-    $postsPerPage = $limit;
+$paged = 1;
+if ($hasLimit && $limitType === 'pagination') {
+	$postsPerPage = (int) $limit;
+	$paged = max(1, (int) get_query_var('paged'), (int) get_query_var('page'));
 }
 
 // Get articles
 $query = new WP_Query([
-    'post_type' => $postType,
-    'posts_per_page' => $postsPerPage,
-    'orderby' => $sortBy,
-    'order' => $sortDirection,
+	'post_type'      => $postType,
+	'posts_per_page' => $postsPerPage,
+	'orderby'        => $sortBy,
+	'order'          => $sortDirection,
+	'paged'          => $paged,
 ]);
 
 // Posts
 $posts = $query->posts;
 
-// Total pages
-$totalPosts = $query->found_posts;
-$totalPages = $query->max_num_pages;
-
 // TODO
 // - no articles list message
 // - fallback image
-
-/*
-
-// TODO maybe use this?
-
-<?php else : ?>
-    <div class="archive__list">
-        <?php
-        while (have_posts()) {
-            the_post();
-            get_template_part('template-parts/content', 'archive');
-        }
-        ?>
-    </div>
-<?php endif; ?>
-
-<nav class="archive__pagination" aria-label="<?php esc_attr_e('Posts pagination', 'fromscratch'); ?>">
-    <?php
-    the_posts_pagination([
-        'mid_size'  => 2,
-        'prev_text' => __('Previous', 'fromscratch'),
-        'next_text' => __('Next', 'fromscratch'),
-    ]);
-    ?>
-</nav>
-*/
 
 ?>
 
@@ -87,34 +60,25 @@ $totalPages = $query->max_num_pages;
     class="article-list__wrapper"
 >
     <div class="article-list__container">
-        <div class="article-list__items">
+        <div class="article-list__items archive__list">
             <?php
             foreach ($posts as $post) {
-                $postThumbnail = get_the_post_thumbnail($post->ID, 'small');
-                ?>
-                <a href="<?= get_the_permalink($post->ID); ?>" class="article-list__item">
-                    <div class="article-list__image">
-                        <?= $postThumbnail ?>
-                    </div>
-                    <div class="article-list__content">
-                        <h3 class="article-list__title"><?= $post->post_title ?></h3>
-                        <div class="article-list__excerpt"><?= get_the_excerpt($post->ID) ?></div>
-                    </div>
-                </a>
-                <?php
+                $GLOBALS['post'] = $post;
+                setup_postdata($post);
+                fs_render_template('post-preview.php', [
+                    'heading' => 'h3',
+                ]);
             }
+            wp_reset_postdata();
             ?>
         </div>
-        <?php /*if ($hasLimit && $limitType == 'pagination' && $totalPages > 1) { ?>
-            <div class="article-list__pagination">
-                <?php echo paginate_links([
-                    'total' => $totalPages,
-                    'current' => get_query_var('paged'),
-                    'format' => 'page/%#%/',
-                    'prev_text' => __('Previous', 'fromscratch'),
-                    'next_text' => __('Next', 'fromscratch'),
-                ]); ?>
-            </div>
-        <?php } */ ?>
+        <?php
+        if ($hasLimit && $limitType === 'pagination' && $query->max_num_pages > 1) {
+            fs_render_pagination_for_query($query, [
+                'aria_label' => __('Articles pagination', 'fromscratch'),
+                'nav_class'  => 'article-list__pagination archive__pagination',
+            ]);
+        }
+        ?>
     </div>
 </div>

@@ -1,59 +1,64 @@
-<?php get_header(); ?>
+<?php
+
+defined('ABSPATH') || exit;
+
+get_header();
+
+$s = trim((string) get_search_query());
+?>
 
 <div class="content__wrapper">
 	<div class="content__container container">
 
 		<?php echo fs_breadcrumbs([]); ?>
 
-		<h1>Search</h1>
+		<div class="content__content">
 
-		<?php
-		$s = trim(get_search_query());
+			<h1><?php esc_html_e('Search', 'fromscratch'); ?></h1>
 
-		if (!$s || !get_search_query()) {
-		?>
-			<p>Please enter a search term</p>
-			<?php
-		} else {
-			$args = array(
-				's' => $s
-			);
-
-			$the_query = new WP_Query($args);
-
-			if ($the_query->have_posts()) {
-
-				_e('<div class="search__amount">' . ($the_query->post_count) . ' ' . ($the_query->post_count == 1 ? 'result' : 'results') . ' for search term "' . get_query_var('s') . '"</div>');
-				_e('<div class="search-result__wrapper">');
-
-				while ($the_query->have_posts()) {
-					$the_query->the_post();
-			?>
-					<div class="search-result__container">
-						<div class="search-result__link">
-							<a href="<?php
-										if (strpos(get_the_permalink(), '?') > 0) {
-											echo get_the_permalink() . '&query=' . $s;
-										} else {
-											echo get_the_permalink() . '?query=' . $s;
-										}
-										?>"><?php the_title(); ?></a>
-						</div>
-						<div class="search-result__excerpt">
-							<?php the_excerpt(); ?>
-						</div>
-					</div>
+			<?php if ($s === '' || !get_search_query()) : ?>
+				<p><?php esc_html_e('Please enter a search term', 'fromscratch'); ?></p>
+			<?php else : ?>
 				<?php
-				}
-
-				_e('</div>');
-			} else {
+				$the_query = new \WP_Query([
+					's' => $s,
+				]);
 				?>
-				<p>No results found for "<?= $s ?>"</p>
-		<?php
-			}
-		}
-		?>
+
+				<?php if ($the_query->have_posts()) : ?>
+					<p class="search__amount">
+						<?php
+						$count = (int) $the_query->post_count;
+						echo esc_html(
+							sprintf(
+								/* translators: 1: number of results, 2: search term */
+								_n(
+									'%1$d result for "%2$s"',
+									'%1$d results for "%2$s"',
+									$count,
+									'fromscratch'
+								),
+								$count,
+								$s
+							)
+						);
+						?>
+					</p>
+					<div class="archive__list">
+						<?php
+						while ($the_query->have_posts()) {
+							$the_query->the_post();
+							fs_render_template('post-preview.php');
+						}
+						wp_reset_postdata();
+						?>
+					</div>
+				<?php else : ?>
+					<p><?php echo esc_html(sprintf(__('No results found for "%s"', 'fromscratch'), $s)); ?></p>
+				<?php endif; ?>
+			<?php endif; ?>
+		</div>
+
 	</div>
 </div>
 

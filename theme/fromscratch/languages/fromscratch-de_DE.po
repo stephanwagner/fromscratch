@@ -222,6 +222,9 @@ msgstr "Kundenlogo"
 msgid "Fallback OG image"
 msgstr "Fallback-OG-Bild"
 
+msgid "Fallback featured image"
+msgstr "Fallback-Beitragsbild"
+
 msgid "Excerpt length"
 msgstr "Auszugslänge"
 
@@ -242,6 +245,12 @@ msgstr "Wird als Vorschaubild für soziale Medien (og:image) genutzt, wenn eine 
 
 msgid "Best size: 1200 × 630 px."
 msgstr "Ideale Größe: 1200 × 630 px."
+
+msgid "Used as the featured image when a page or post has no featured image set."
+msgstr "Wird als Beitragsbild verwendet, wenn für eine Seite oder einen Beitrag kein Beitragsbild festgelegt ist."
+
+msgid "Best size: 2400 × 2400 px."
+msgstr "Ideale Größe: 2400 × 2400 px."
 
 msgid "Hide developer options"
 msgstr "Entwickleroptionen ausblenden"
@@ -684,9 +693,14 @@ msgstr "Helfer"
 
 msgid "Image Helper"
 msgstr "Bild-Helfer"
-
 msgid "Builds a WordPress image tag from an attachment ID (or WP_Post attachment)."
 msgstr "Erzeugt ein WordPress-Image-Tag aus einer Attachment-ID (oder einem WP_Post-Attachment)."
+
+msgid "Image with placeholder"
+msgstr "Bild mit Platzhalter"
+
+msgid "Builds a WordPress image tag or URL with a placeholder fallback."
+msgstr "Erzeugt ein WordPress-Image-Tag oder URL mit einem Platzhalter Fallback."
 
 msgid "Config Helper"
 msgstr "Config-Helfer"

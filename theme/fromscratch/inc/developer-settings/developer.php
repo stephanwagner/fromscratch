@@ -81,7 +81,7 @@ function fs_render_developer_cheatsheet(): void
 							<code class="fs-code-text fs-code-small">PHP</code>
 						</td>
 						<td>
-							<code class="fs-code-small"><?= esc_html("fs_asset_url('/img/logo.svg')") ?></code>
+							<code class="fs-code-small"><?= esc_html("fs_asset_url('/img/logo.svg');") ?></code>
 							<div class="helpers-table__preview-code">
 								<span class="helpers-table__preview-pointer">→</span> <code class="fs-code-text fs-code-small">/assets/img/logo.svg?ver=1</code>
 							</div>
@@ -111,10 +111,23 @@ function fs_render_developer_cheatsheet(): void
 							<code class="fs-code-text fs-code-small">PHP</code>
 						</td>
 						<td>
-							<code class="fs-code-small"><?= esc_html("fs_img(123, 'medium', ['class' => 'my-class', 'loading' => 'eager'])") ?></code>
+							<code class="fs-code-small"><?= esc_html("fs_img(123, 'medium', ['class' => 'my-class', 'loading' => 'eager']);") ?></code>
 							<div class="helpers-table__preview-code">
 								<span class="helpers-table__preview-pointer">→</span> <code class="fs-code-text fs-code-small">&lt;img src="..." srcset="..." class="my-class" loading="eager" ...&gt;</code>
 							</div>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<strong><?= esc_html__('Image with placeholder', 'fromscratch') ?></strong><br>
+							<span class="description"><?= esc_html__('Builds a WordPress image tag or URL with a placeholder fallback.', 'fromscratch') ?></span>
+						</td>
+						<td>
+							<code class="fs-code-text fs-code-small">PHP</code>
+						</td>
+						<td>
+							<code class="fs-code-small"><?= esc_html("fs_image_with_placeholder(123, 'medium', ['class' => 'my-class', 'loading' => 'eager']);") ?></code><br>
+							<code class="fs-code-small"><?= esc_html("fs_image_with_placeholder_url(123, 'medium', [...]);") ?></code>
 						</td>
 					</tr>
 					<tr>
@@ -126,8 +139,8 @@ function fs_render_developer_cheatsheet(): void
 							<code class="fs-code-text fs-code-small">PHP</code>
 						</td>
 						<td>
-							<code class="fs-code-small"><?= esc_html("fs_config('headers.Cache-Control')") ?></code><br>
-							<code class="fs-code-small"><?= esc_html("fs_config_cpt('project')") ?></code>
+							<code class="fs-code-small"><?= esc_html("fs_config('headers.Cache-Control');") ?></code><br>
+							<code class="fs-code-small"><?= esc_html("fs_config_cpt('project');") ?></code>
 						</td>
 					</tr>
 					<tr>
@@ -139,7 +152,7 @@ function fs_render_developer_cheatsheet(): void
 							<code class="fs-code-text fs-code-small">PHP</code>
 						</td>
 						<td>
-							<code class="fs-code-small"><?= esc_html("fs_content('hero_title', 'Default headline')") ?></code>
+							<code class="fs-code-small"><?= esc_html("fs_content('hero_title', 'Default headline');") ?></code>
 						</td>
 					</tr>
 					<tr>

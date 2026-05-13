@@ -93,6 +93,32 @@ function fs_add_post_thumbnails(): void
 add_action('after_setup_theme', 'fs_add_post_thumbnails');
 
 /**
+ * Theme setting: featured image fallback (Settings → Theme → General).
+ * When a post has no `_thumbnail_id`, expose the fallback attachment so `has_post_thumbnail()` and `the_post_thumbnail()` work.
+ *
+ * @param mixed $thumbnail_id Existing attachment ID or falsey.
+ * @param \WP_Post|int|null $post Post object or ID.
+ * @return int|string|false
+ */
+function fs_post_thumbnail_id_fallback($thumbnail_id, $post)
+{
+	if ((int) $thumbnail_id > 0) {
+		return $thumbnail_id;
+	}
+	$post_obj = $post instanceof \WP_Post ? $post : (is_numeric($post) ? get_post((int) $post) : null);
+	if (!$post_obj instanceof \WP_Post || !post_type_supports($post_obj->post_type, 'thumbnail')) {
+		return $thumbnail_id;
+	}
+	$fallback = (int) get_option('fromscratch_feature_image_fallback', 0);
+	if ($fallback <= 0 || !wp_attachment_is_image($fallback)) {
+		return $thumbnail_id;
+	}
+
+	return $fallback;
+}
+add_filter('post_thumbnail_id', 'fs_post_thumbnail_id_fallback', 10, 2);
+
+/**
  * Setup image sizes
  * 
  * - Disable image threshold if set so in config theme.php

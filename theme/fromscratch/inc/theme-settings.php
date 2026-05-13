@@ -195,6 +195,7 @@ function fs_theme_settings_save_general_options_from_post(): void
 		'fromscratch_excerpt_more' => 'sanitize_text_field',
 		'fromscratch_client_logo' => 'fs_sanitize_client_logo',
 		'fromscratch_og_image_fallback' => 'fs_sanitize_og_image_fallback',
+		'fromscratch_feature_image_fallback' => 'fs_sanitize_og_image_fallback',
 		'show_on_front' => 'fs_sanitize_show_on_front',
 		'page_on_front' => 'fs_sanitize_homepage_page_id',
 		'page_for_posts' => 'fs_sanitize_homepage_page_id',
@@ -513,6 +514,10 @@ add_action('admin_init', function () {
 		'sanitize_callback' => 'fs_sanitize_client_logo',
 	]);
 	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_og_image_fallback', [
+		'type' => 'integer',
+		'sanitize_callback' => 'fs_sanitize_og_image_fallback',
+	]);
+	register_setting(FS_THEME_OPTION_GROUP_GENERAL, 'fromscratch_feature_image_fallback', [
 		'type' => 'integer',
 		'sanitize_callback' => 'fs_sanitize_og_image_fallback',
 	]);
@@ -1007,6 +1012,8 @@ function theme_settings_page(): void
 			$client_logo_url = $client_logo_id > 0 ? wp_get_attachment_image_url($client_logo_id, 'medium') : '';
 			$og_fallback_id = (int) get_option('fromscratch_og_image_fallback', 0);
 			$og_fallback_url = $og_fallback_id > 0 ? wp_get_attachment_image_url($og_fallback_id, 'medium') : '';
+			$feature_image_fallback_id = (int) get_option('fromscratch_feature_image_fallback', 0);
+			$feature_image_fallback_url = $feature_image_fallback_id > 0 ? wp_get_attachment_image_url($feature_image_fallback_id, 'medium') : '';
 			$_weekly_sender = wp_get_current_user();
 			$weekly_manual_send_default_email = (isset($_weekly_sender->user_email) && is_email((string) $_weekly_sender->user_email))
 				? (string) $_weekly_sender->user_email
@@ -1212,6 +1219,25 @@ function theme_settings_page(): void
 					<p style="margin-bottom: 0;">
 						<button type="button" class="button" data-fs-image-picker-select><?= esc_html__('Select image', 'fromscratch') ?></button>
 						<button type="button" class="button" data-fs-image-picker-remove<?= $og_fallback_id <= 0 ? ' style="display:none;"' : '' ?>><?= esc_html__('Remove', 'fromscratch') ?></button>
+					</p>
+				</div>
+
+				<hr>
+
+				<h2 class="title"><?= esc_html__('Fallback featured image', 'fromscratch') ?></h2>
+				<p class="description"><?= esc_html__('Used as the featured image when a page or post has no featured image set.', 'fromscratch') ?></p>
+				<p class="description" style="margin-bottom: 12px;"><?= esc_html__('Best size: 2400 × 2400 px.', 'fromscratch') ?></p>
+
+				<div class="fs-image-picker" style="margin-top: 16px;" data-fs-image-picker>
+					<input type="hidden" name="fromscratch_feature_image_fallback" id="fromscratch_feature_image_fallback" value="<?= esc_attr($feature_image_fallback_id) ?>" data-fs-image-picker-input>
+					<div class="fs-image-picker-preview" data-fs-image-picker-preview>
+						<?php if ($feature_image_fallback_url) : ?>
+							<img src="<?= esc_url($feature_image_fallback_url) ?>" alt="" style="max-width: 240px; height: auto; display: block; border-radius: 3px;">
+						<?php endif; ?>
+					</div>
+					<p style="margin-bottom: 0;">
+						<button type="button" class="button" data-fs-image-picker-select><?= esc_html__('Select image', 'fromscratch') ?></button>
+						<button type="button" class="button" data-fs-image-picker-remove<?= $feature_image_fallback_id <= 0 ? ' style="display:none;"' : '' ?>><?= esc_html__('Remove', 'fromscratch') ?></button>
 					</p>
 				</div>
 

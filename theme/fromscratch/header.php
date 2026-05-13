@@ -15,7 +15,7 @@
 
 				<div class="logo__container">
 					<a href="/">
-						<?= fs_svg_code('/img/fromscratch-logo.svg', ['class' => 'logo__image', 'aria-hidden' => 'true']); ?>
+						<img src="<?= fs_asset_url('/img/logo.svg'); ?>" alt="" class="logo__image" aria-hidden="true">
 					</a>
 				</div>
 

@@ -43,10 +43,12 @@ if (is_admin()) {
 // Helpers
 require_once 'inc/helpers/page-blocker.php';
 require_once 'inc/helpers/breadcrumbs.php';
+require_once 'inc/helpers/templates.php';
 
 // Features
 require_once 'inc/login-client-logo.php';
 require_once 'inc/assets.php';
+require_once 'inc/helpers/images.php';
 require_once 'inc/service-worker.php';
 require_once 'inc/custom-post-types.php';
 require_once 'inc/events.php';

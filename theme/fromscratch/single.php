@@ -3,10 +3,10 @@
 <div class="content__wrapper">
 	<div class="content__container container">
 
-		<?php echo fs_breadcrumbs([]); ?>
+		<?= fs_breadcrumbs() ?>
 
-		<?php
-		if (have_posts()) {
+		<div class="content__content">
+			<?php
 			while (have_posts()) {
 				the_post();
 
@@ -16,8 +16,8 @@
 
 				the_content();
 			}
-		}
-		?>
+			?>
+		</div>
 
 	</div>
 </div>
