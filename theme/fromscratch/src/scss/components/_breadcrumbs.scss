@@ -31,26 +31,30 @@
 }
 
 .fs-breadcrumbs__list {
-  display: flex;
-  flex-wrap: wrap;
+  display: block;
   list-style: none;
-  gap: 0 8px;
   padding: 0;
   margin: 0;
-  font-size: fontSize('s');
-  line-height: lineHeight('s');
+  font-size: var(--fs-font-size-s);
+  line-height: var(--fs-line-height-s);
 }
 
 .fs-breadcrumbs__item {
-  display: flex;
-  gap: 8px;
+  display: inline;
 }
 
 .fs-breadcrumbs__item-label {
-  flex-shrink: 0;
+  display: inline;
+}
+
+.fs-breadcrumbs__item-label,
+.fs-breadcrumbs__item-link {
+  display: inline;
+  margin: 0 5px 0 0;
 }
 
 .fs-breadcrumbs__separator {
-  flex-shrink: 0;
-  transform: scale(1.25) translateY(-1px);
+  display: inline-block;
+  margin: 0 4px 0 0;
+  transform: scale(1.1) translateY(-0.5px);
 }

@@ -9,11 +9,9 @@ function fs_breadcrumbs(array $args = []): string
 
     $args = wp_parse_args($args, $defaults);
 
-    // `separator` may contain HTML (sanitized). Pass `separator_html` for the full fragment without the default wrapper.
+    // `separator_html` is the separator content only; output between items as `<li class="fs-breadcrumbs__separator">`.
     if (! array_key_exists('separator_html', $args)) {
-        $args['separator_html'] = '<span class="fs-breadcrumbs__separator">'
-            . esc_html($args['separator'])
-            . '</span>';
+        $args['separator_html'] = esc_html($args['separator']);
     }
 
     if (is_front_page()) {
@@ -146,20 +144,20 @@ function fs_breadcrumbs(array $args = []): string
         $html .= '<li class="fs-breadcrumbs__item">';
 
         if ($item['url']) {
-            $html .= '<a href="' . esc_url($item['url']) . '">'
+            $html .= '<a class="fs-breadcrumbs__item-link" href="' . esc_url($item['url']) . '">'
                 . esc_html($item['label']) . '</a>';
         } else {
             $current = ($index === $last_index) ? ' aria-current="page"' : '';
             $html .= '<span class="fs-breadcrumbs__item-label"' . $current . '>' . esc_html($item['label']) . '</span>';
         }
 
-        if ($index < $last_index) {
-            $html .= '<span class="fs-breadcrumbs__separator" aria-hidden="true">'
-                . $args['separator_html']
-                . '</span>';
-        }
-
         $html .= '</li>';
+
+        if ($index < $last_index) {
+            $html .= '<li class="fs-breadcrumbs__separator" aria-hidden="true">'
+                . $args['separator_html']
+                . '</li>';
+        }
     }
 
     $html .= '</ol></nav>';

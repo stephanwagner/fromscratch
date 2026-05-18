@@ -64,7 +64,7 @@ function fs_paginate_links_args_for_wp_query(\WP_Query $query, array $overrides 
 			'format'    => '',
 			'total'     => $total,
 			'current'   => $current,
-			'mid_size'  => 0, // TODO from config
+			'mid_size'  => 1, // TODO from config
 			'end_size'  => 1,
 			'prev_text' => fs_pagination_nav_link_text('prev'),
 			'next_text' => fs_pagination_nav_link_text('next'),

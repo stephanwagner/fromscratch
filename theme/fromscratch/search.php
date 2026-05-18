@@ -10,7 +10,7 @@ $s = trim((string) get_search_query());
 <div class="content__wrapper">
 	<div class="content__container container">
 
-		<?php echo fs_breadcrumbs([]); ?>
+		<?php echo fs_breadcrumbs(); ?>
 
 		<div class="content__content">
 
