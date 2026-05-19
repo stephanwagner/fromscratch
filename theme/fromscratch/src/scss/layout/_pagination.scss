@@ -29,6 +29,7 @@
 }
 
 .pagination__link {
+  position: relative;
   display: block;
   padding: 4px 6px;
   text-decoration: none;
@@ -40,7 +41,23 @@
   color: var(--fs-default-text-color);
 
   &.-current {
-    font-weight: bold;
+    font-weight: 600;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 3px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 4px);
+      height: 2px;
+      border-radius: 1px;
+      background-color: var(--fs-default-text-color);
+
+      @media (min-resolution: 1.9dppx) {
+        height: 1.5px;
+      }
+    }
   }
 
   &.-prev,
