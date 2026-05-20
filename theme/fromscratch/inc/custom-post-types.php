@@ -58,7 +58,7 @@ function fs_register_cpts(): void
 		unset($args['has_order']);
 		unset($args['orderby'], $args['order']);
 		// Taxonomies are attached separately so config can define/register custom taxonomies too.
-		unset($args['taxonomies'], $args['has_categories'], $args['has_page_title_toggle']);
+		unset($args['taxonomies'], $args['has_categories'], $args['has_page_title_toggle'], $args['archive_design']);
 		// Block editor needs custom-fields support to expose/save post meta (e.g. SEO panel).
 		if (isset($args['supports']) && is_array($args['supports']) && !in_array('custom-fields', $args['supports'], true)) {
 			$args['supports'][] = 'custom-fields';
@@ -997,13 +997,7 @@ function fs_archive_design(?string $post_type = null): string
 	}
 
 	$design = 'list';
-	if ($post_type === 'post') {
-		$cfg = fs_config_cpt('post');
-	} elseif ($post_type !== '') {
-		$cfg = fs_config_cpt($post_type);
-	} else {
-		$cfg = null;
-	}
+	$cfg = $post_type !== '' ? fs_config_cpt($post_type) : null;
 
 	if (is_array($cfg) && isset($cfg['archive_design'])) {
 		$design = (string) $cfg['archive_design'];

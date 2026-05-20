@@ -42,7 +42,7 @@ function fs_config_settings(?string $key = null)
 /**
  * Get custom post types config (config/custom-post-types.php).
  *
- * @param string|null $key Optional. 'all', 'cpts', 'post', or post type slug.
+ * @param string|null $key Optional. `all` / `cpts` (registered CPTs only, excludes `post`), `post`, or a CPT slug.
  * @return array|mixed Full config if $key is null, else value at $key.
  */
 function fs_config_cpt(?string $key = null)
@@ -53,16 +53,24 @@ function fs_config_cpt(?string $key = null)
 		$config = is_file($file) ? include $file : [];
 	}
 
-	if ($key == 'all' || $key == 'cpts') {
-		return $config['cpts'];
+	if ($key === null) {
+		return $config;
 	}
 
-	if ($key == 'post' && !empty($config['post'])) {
-		return $config['post'];
+	if ($key === 'all' || $key === 'cpts') {
+		$out = [];
+		foreach ($config as $slug => $cfg) {
+			if ($slug === 'post' || !is_array($cfg)) {
+				continue;
+			}
+			$out[$slug] = $cfg;
+		}
+
+		return $out;
 	}
 
-	if (!empty($config['cpts'][$key])) {
-		return $config['cpts'][$key];
+	if (!empty($config[$key]) && is_array($config[$key])) {
+		return $config[$key];
 	}
 
 	return null;
