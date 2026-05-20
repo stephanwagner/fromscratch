@@ -1,0 +1,27 @@
+@use '../variables' as *;
+
+.article-list__container {
+  position: relative;
+}
+
+.article-list__items {
+  position: relative;
+  
+  &.-design-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+
+    @media (max-width: $breakpoint-l) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    @media (max-width: $breakpoint-m) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: $breakpoint-s) {
+      grid-template-columns: repeat(1, 1fr);
+    }
+  }
+}

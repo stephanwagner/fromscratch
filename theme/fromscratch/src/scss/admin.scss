@@ -21,8 +21,8 @@
 
 // Layout
 @forward 'layout/content';
-@forward 'layout/archive';
-@forward 'layout/post-preview';
+@forward 'layout/article-list';
+@forward 'layout/article-preview';
 
 // Sections
 @forward 'admin/developer-settings';

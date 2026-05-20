@@ -5,7 +5,7 @@ defined('ABSPATH') || exit;
 /**
  * Load a PHP template from the theme `templates/` directory with scoped variables.
  *
- * @param string $template Relative path under `templates/`, e.g. `pagination.php` or `post-preview.php`.
+ * @param string $template Relative path under `templates/`, e.g. `pagination.php` or `article-preview.php`.
  * @param array<string, mixed> $data Variables extracted into the template scope (EXTR_SKIP).
  */
 function fs_render_template(string $template, array $data = []): void

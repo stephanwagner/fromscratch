@@ -38,9 +38,9 @@
 @forward 'layout/footer';
 @forward 'layout/search';
 @forward 'layout/content';
-@forward 'layout/archive';
 @forward 'layout/pagination';
-@forward 'layout/post-preview';
+@forward 'layout/article-list';
+@forward 'layout/article-preview';
 
 // Pages
 @forward 'layout/page-not-found';

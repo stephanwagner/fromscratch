@@ -52,12 +52,12 @@ $is_event_archive = defined('FS_EVENT_POST_TYPE') && is_post_type_archive(FS_EVE
 					</div>
 				<?php else : */ ?>
 
-				<div class="archive__items-container">
-					<div class="archive__items">
+				<div class="article-list__container">
+					<div class="article-list__items -design-<?= esc_attr(fs_archive_design()) ?>">
 						<?php
 						while (have_posts()) {
 							the_post();
-							fs_render_template('post-preview');
+							fs_render_template('article-preview');
 						}
 						?>
 					</div>
@@ -67,7 +67,7 @@ $is_event_archive = defined('FS_EVENT_POST_TYPE') && is_post_type_archive(FS_EVE
 				fs_render_template('pagination');
 				?>
 			<?php } else { ?>
-				<p class="archive__empty"><?php echo $is_event_archive ? esc_html__('No events found.', 'fromscratch') : esc_html__('No posts found.', 'fromscratch'); ?></p>
+				<div class="article-list__empty"><?php echo $is_event_archive ? esc_html__('No events found.', 'fromscratch') : esc_html__('No posts found.', 'fromscratch'); ?></div>
 			<?php } ?>
 		</div>
 

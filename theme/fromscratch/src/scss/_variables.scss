@@ -19,7 +19,7 @@ $breakpoint-xs: 400px;
 $breakpoint-s: 600px;
 $breakpoint-m: 900px;
 $breakpoint-l: 1200px;
-$breakpoint-Xl: 1400px;
+$breakpoint-xl: 1400px;
 $breakpoint-mobile: 900px;
 
 // Padding
@@ -98,7 +98,7 @@ $header-height-mobile: 64px;
   --fs-breakpoint-s: #{$breakpoint-s};
   --fs-breakpoint-m: #{$breakpoint-m};
   --fs-breakpoint-l: #{$breakpoint-l};
-  --fs-breakpoint-xl: #{$breakpoint-Xl};
+  --fs-breakpoint-xl: #{$breakpoint-xl};
   --fs-breakpoint-mobile: #{$breakpoint-mobile};
 
   // Padding

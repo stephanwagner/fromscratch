@@ -966,5 +966,51 @@ function fs_cpt_default_labels(string $post_type, array $labels = []): array
 	];
 }
 
+/**
+ * Post type for the current archive listing (built-in post archives and CPT archives).
+ */
+function fs_archive_current_post_type(): string
+{
+	if (is_post_type_archive()) {
+		$pto = get_query_var('post_type');
+		if (is_array($pto)) {
+			return (string) ($pto[0] ?? 'post');
+		}
+
+		return is_string($pto) && $pto !== '' ? $pto : 'post';
+	}
+
+	if (is_home() || is_category() || is_tag() || is_author() || is_date()) {
+		return 'post';
+	}
+
+	return '';
+}
+
+/**
+ * Archive layout from config: `grid` | `list` (default `list`).
+ */
+function fs_archive_design(?string $post_type = null): string
+{
+	if ($post_type === null || $post_type === '') {
+		$post_type = fs_archive_current_post_type();
+	}
+
+	$design = 'list';
+	if ($post_type === 'post') {
+		$cfg = fs_config_cpt('post');
+	} elseif ($post_type !== '') {
+		$cfg = fs_config_cpt($post_type);
+	} else {
+		$cfg = null;
+	}
+
+	if (is_array($cfg) && isset($cfg['archive_design'])) {
+		$design = (string) $cfg['archive_design'];
+	}
+
+	return in_array($design, ['grid', 'list'], true) ? $design : 'list';
+}
+
 // Register after theme textdomain is loaded (init priority 1 in inc/language.php).
 add_action('init', 'fs_register_cpts', 2);
