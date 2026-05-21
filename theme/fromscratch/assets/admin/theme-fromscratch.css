@@ -95,6 +95,10 @@ a:active {
   color: var(--wp-admin-theme-color-lighter-30);
 }
 
+#wpadminbar #wp-admin-bar-user-info a:hover .display-name {
+  color: var(--wp-admin-theme-color-lighter-30);
+}
+
 #adminmenu .awaiting-mod,
 #adminmenu .menu-counter,
 #adminmenu .update-plugins {

@@ -5,7 +5,11 @@
 .editor-styles-wrapper {
   font-family: var(--fs-primary-font-family);
   font-size: var(--fs-default-font-size);
-  line-height: var(--fs-default-line-height);
+  line-height: 1.5;
+}
+
+.components-placeholder.components-placeholder {
+  -webkit-font-smoothing: antialiased;
 }
 
 // SEO panel
