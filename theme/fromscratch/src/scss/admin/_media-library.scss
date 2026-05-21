@@ -296,26 +296,30 @@ body.fs-feature-media-folders {
   border-radius: 8px;
 }
 
-.compat-field-fs_media_folder_id {
-  vertical-align: top;
-
-  p.help {
-    font-size: 12px;
-    margin: 4px 1px 10px;
-  }
-
-  select {
-    width: 100%;
-  }
-}
-
-// Core prints the "required fields" <p> before the compat <table>; we swap order in PHP
-// (see fs_media_folders_reorder_attachment_compat_item) so space the footnote from the table.
-.attachment-compat .compat-attachment-fields+.media-types-required-info {
-  margin: 12px 0 0;
-}
-
 .upload-php {
+  .media-toolbar.wp-filter {
+    padding: 0 11px;
+  }
+
+  .attachments-browser .media-toolbar-secondary {
+    max-width: 100%;
+  }
+
+  .media-frame.mode-grid .media-toolbar-secondary {
+    gap: 0 8px;
+  }
+
+  .media-sidebar .compat-item .setting[data-setting=fs_media_folder_id] select,
+  .attachment-details .setting[data-setting=fs_media_folder_id] select {
+    width: 65%;
+  }
+
+  .media-frame.mode-grid .attachment.details:focus,
+  .media-frame.mode-grid .attachment:focus,
+  .media-frame.mode-grid .selected.attachment:focus {
+    box-shadow: inset 0 0 0 5px #f0f0f0, inset 0 0 0 7px var(--wp-admin-theme-color, #3858e9);
+  }
+
   .fs-media-folders-layout {
     display: flex;
     gap: 16px;
@@ -719,6 +723,8 @@ body.fs-feature-media-folders {
     margin-right: 6px;
     vertical-align: middle;
     width: 30px;
+    height: 32px;
+    min-height: 32px;
     padding: 0;
     display: inline-flex;
     align-items: center;
@@ -731,6 +737,10 @@ body.fs-feature-media-folders {
       height: 18px;
       fill: currentColor;
     }
+  }
+
+  .media-toolbar {
+    overflow: hidden;
   }
 
   .media-modal-content {
@@ -836,6 +846,9 @@ body.fs-feature-media-folders {
 
 // Revert WP 7.0 styles
 
+.edit-attachment-frame input,
+.edit-attachment-frame textarea,
+.edit-attachment-frame select,
 .media-frame input[type=date],
 .media-frame input[type=datetime-local],
 .media-frame input[type=datetime],
@@ -856,7 +869,8 @@ body.fs-feature-media-folders {
 
 .attachment-details .setting textarea,
 .compat-item .field textarea,
-.media-sidebar .setting textarea {
+.media-sidebar .setting textarea,
+.edit-attachment-frame textarea {
   padding: 6px 8px;
 }
 
@@ -901,6 +915,32 @@ body.fs-feature-media-folders {
   border-radius: 4px 4px 0 0;
 }
 
-.media-modal.acf-expanded .compat-item .label {
-  min-width: 20%;
+// Fix ACF expanded mode styles
+
+.media-modal.acf-expanded {
+
+  .media-frame-content .attachments-browser .media-toolbar,
+  .media-frame-content .attachments-browser .attachments {
+    right: 300px;
+  }
+
+  .media-sidebar {
+    z-index: 100;
+    overscroll-behavior: none;
+  }
+
+  label[for="attachment-details-fs-media-folder-id"] {
+    margin-right: 0;
+    min-width: 20%;
+  }
+
+  select[id="attachment-details-fs-media-folder-id"] {
+    float: right;
+    min-width: 77%;
+  }
+
+  .attachment-details .copy-to-clipboard-container,
+  .media-sidebar .copy-to-clipboard-container {
+    margin-left: calc(23% - 1px);
+  }
 }

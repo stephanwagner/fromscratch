@@ -1882,9 +1882,6 @@ msgstr "Mediathek öffnen"
 msgid "Expand or collapse subfolders"
 msgstr "Unterordner ein- oder ausklappen"
 
-msgid "Assign this file to a media folder."
-msgstr "Weise diese Datei einem Medienordner zu."
-
 # Security
 
 msgid "%1$d hours %2$d minutes"
