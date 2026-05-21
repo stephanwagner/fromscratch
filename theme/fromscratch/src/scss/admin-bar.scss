@@ -15,6 +15,24 @@
             color: #f3f1f1;
           }
         }
+
+        /*
+         * Wide perf rows: anchor the flyout to the icon’s right edge so it opens leftward
+         * (core does this for .ab-top-secondary; keep explicit for clarity).
+         */
+        &.menupop > .ab-sub-wrapper {
+          right: 0;
+          left: auto;
+        }
+      }
+
+      li#wp-admin-bar-fs_wp_perf.menupop {
+        .ab-submenu li .ab-item {
+          min-width: min(360px, calc(100vw - 24px));
+          width: max-content;
+          max-width: calc(100vw - 24px);
+          box-sizing: border-box;
+        }
       }
 
       li#wp-admin-bar-redis-cache {
