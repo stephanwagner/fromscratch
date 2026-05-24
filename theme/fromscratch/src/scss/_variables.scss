@@ -4,10 +4,45 @@
 // Paths
 $theme-path: '/wp-content/themes/fromscratch';
 
+// Colors
 $color-primary: #4080ff;
 $color-primary-dark: #{color.adjust($color-primary, $lightness: -10%)};
 $color-primary-light: #{color.adjust($color-primary, $lightness: 10%)};
 $color-secondary: #00ddff;
+
+// Grayscale
+$color-white: #fff;
+$color-black: #000;
+$color-off-black: #222;
+$color-gray-600: #666;
+$color-gray-500: #999;
+$color-gray-400: #ccc;
+$color-gray-300: #ddd;
+$color-gray-200: #eee;
+$color-gray-100: #f6f6f6;
+
+// Status colors
+$color-error: #f33;
+$color-warning: #fc0;
+$color-success: #5d5;
+
+// Gradients
+$gradient-primary: linear-gradient(to right, $color-primary, $color-secondary);
+
+// Font families
+$primary-font-family: 'Nunito Sans', sans-serif;
+
+// Font sizes
+$font-size-s: 14px;
+$font-size-m: 16px;
+$font-size-l: 18px;
+$font-size-xl: 22px;
+
+// Line heights
+$line-height-s: 1.5;
+$line-height-m: 1.6;
+$line-height-l: 1.5;
+$line-height-xl: 1.4;
 
 // Content
 $content-max-width: 1200px;
@@ -41,6 +76,18 @@ $header-height: 96px;
 $header-height-scrolled: 64px;
 $header-height-mobile: 64px;
 
+// Mobile menu
+$mobile-menu-width: 260px;
+
+// Transitions
+$transition-speed: 240ms;
+$transition-speed-slow: 360ms;
+
+// Border radius
+$border-radius: 8px;
+$border-radius-small: 4px;
+$border-radius-large: 16px;
+
 // Variables
 :root {
   // Colors
@@ -50,38 +97,38 @@ $header-height-mobile: 64px;
   --fs-color-secondary: #{$color-secondary};
 
   // Grayscale
-  --fs-color-white: #fff;
-  --fs-color-black: #000;
-  --fs-color-off-black: #222;
-  --fs-color-gray-600: #666;
-  --fs-color-gray-500: #999;
-  --fs-color-gray-400: #ccc;
-  --fs-color-gray-300: #ddd;
-  --fs-color-gray-200: #eee;
-  --fs-color-gray-100: #f6f6f6;
+  --fs-color-white: #{$color-white};
+  --fs-color-black: #{$color-black};
+  --fs-color-off-black: #{$color-off-black};
+  --fs-color-gray-600: #{$color-gray-600};
+  --fs-color-gray-500: #{$color-gray-500};
+  --fs-color-gray-400: #{$color-gray-400};
+  --fs-color-gray-300: #{$color-gray-300};
+  --fs-color-gray-200: #{$color-gray-200};
+  --fs-color-gray-100: #{$color-gray-100};
 
   // Status colors
-  --fs-color-error: #f33;
-  --fs-color-warning: #fc0;
-  --fs-color-success: #5d5;
+  --fs-color-error: #{$color-error};
+  --fs-color-warning: #{$color-warning};
+  --fs-color-success: #{$color-success};
 
   // Gradients
-  --fs-gradient-primary: linear-gradient(to right, var(--fs-color-primary), var(--fs-color-secondary));
+  --fs-gradient-primary: #{$gradient-primary};
 
   // Font sizes
-  --fs-font-size-s: 14px;
-  --fs-font-size-m: 16px;
-  --fs-font-size-l: 18px;
-  --fs-font-size-xl: 22px;
+  --fs-font-size-s: #{$font-size-s};
+  --fs-font-size-m: #{$font-size-m};
+  --fs-font-size-l: #{$font-size-l};
+  --fs-font-size-xl: #{$font-size-xl};
 
   // Line heights
-  --fs-line-height-s: 1.5;
-  --fs-line-height-m: 1.6;
-  --fs-line-height-l: 1.5;
-  --fs-line-height-xl: 1.4;
+  --fs-line-height-s: #{$line-height-s};
+  --fs-line-height-m: #{$line-height-m};
+  --fs-line-height-l: #{$line-height-l};
+  --fs-line-height-xl: #{$line-height-xl};
 
   // Text
-  --fs-primary-font-family: 'Nunito Sans', sans-serif;
+  --fs-primary-font-family: #{$primary-font-family};
   --fs-default-text-color: var(--fs-color-off-black);
   --fs-default-font-size: var(--fs-font-size-m);
   --fs-default-line-height: var(--fs-line-height-m);
@@ -116,21 +163,21 @@ $header-height-mobile: 64px;
   --fs-content-margin-xl: #{$content-margin-xl};
 
   // Header
-  --fs-header-height: 96px;
-  --fs-header-height-scrolled: 64px;
-  --fs-header-height-mobile: 64px;
+  --fs-header-height: #{$header-height};
+  --fs-header-height-scrolled: #{$header-height-scrolled};
+  --fs-header-height-mobile: #{$header-height-mobile};
 
   // Mobile menu
-  --fs-mobile-menu-width: 260px;
+  --fs-mobile-menu-width: #{$mobile-menu-width};
 
   // Transitions
-  --fs-transition-speed: 240ms;
-  --fs-transition-speed-slow: 360ms;
+  --fs-transition-speed: #{$transition-speed};
+  --fs-transition-speed-slow: #{$transition-speed-slow};
 
   // Border radius
-  --fs-border-radius-small: 4px;
-  --fs-border-radius: 8px;
-  --fs-border-radius-large: 16px;
+  --fs-border-radius: #{$border-radius};
+  --fs-border-radius-small: #{$border-radius-small};
+  --fs-border-radius-large: #{$border-radius-large};
 }
 
 // Colors
