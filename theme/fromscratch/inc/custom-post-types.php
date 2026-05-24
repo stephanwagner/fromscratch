@@ -538,6 +538,13 @@ function fs_cpt_normalize_taxonomy_args(string $taxonomy, array $args): array
 	$singular_label = isset($args['singular_label']) && is_string($args['singular_label']) ? trim($args['singular_label']) : '';
 	unset($args['label'], $args['singular_label']);
 
+	if ($label !== '') {
+		$label = __($label, 'fromscratch');
+	}
+	if ($singular_label !== '') {
+		$singular_label = __($singular_label, 'fromscratch');
+	}
+
 	if (isset($args['url'])) {
 		$url_raw = $args['url'];
 		unset($args['url']);
@@ -555,9 +562,10 @@ function fs_cpt_normalize_taxonomy_args(string $taxonomy, array $args): array
 	}
 
 	$provided_labels = isset($args['labels']) && is_array($args['labels']) ? $args['labels'] : [];
+	$provided_labels = fs_cpt_translate_config_label_strings($provided_labels);
 	$args = array_merge($defaults, $args);
 	$args['labels'] = array_merge(
-		fs_cpt_default_taxonomy_labels($taxonomy, $label, $singular_label, $provided_labels),
+		fs_cpt_default_taxonomy_labels($taxonomy, $label, $singular_label),
 		$provided_labels
 	);
 
