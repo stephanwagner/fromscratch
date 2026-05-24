@@ -398,7 +398,7 @@ add_action('init', function (): void {
  */
 function fs_cpt_svg_to_data_uri(string $svg): string
 {
-	$svg = fs_cpt_svg_apply_fill($svg, '#9da2a7');
+	$svg = fs_cpt_svg_apply_fill($svg, '#f3f1f1');
 	return 'data:image/svg+xml;base64,' . base64_encode($svg);
 }
 
