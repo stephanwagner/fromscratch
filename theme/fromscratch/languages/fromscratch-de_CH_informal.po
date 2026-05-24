@@ -2138,6 +2138,12 @@ msgstr "Von der Suche ausschließen"
 msgid "Search results"
 msgstr "Suchergebnisse"
 
+msgid "Please enter a search term."
+msgstr "Bitte einen Suchbegriff eingeben."
+
+msgid "No results found for \"%s\""
+msgstr "Keine Ergebnisse für \"%s\" gefunden"
+
 # Helpers
 
 msgid "Breadcrumb"

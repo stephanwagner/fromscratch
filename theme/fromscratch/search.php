@@ -14,19 +14,22 @@ $s = trim((string) get_search_query());
 
 		<div class="content__content">
 
-			<h1><?php esc_html_e('Search', 'fromscratch'); ?></h1>
+			<h1><?= esc_html(__('Search results', 'fromscratch')) ?></h1>
+
+			<div class="search__page-form">
+				<?php get_search_form(); ?>
+			</div>
 
 			<?php if ($s === '' || !get_search_query()) : ?>
-				<p><?php esc_html_e('Please enter a search term', 'fromscratch'); ?></p>
+				<div class="search__empty"><?php esc_html_e('Please enter a search term.', 'fromscratch'); ?></div>
 			<?php else : ?>
 				<?php
 				$the_query = new \WP_Query([
 					's' => $s,
 				]);
 				?>
-
 				<?php if ($the_query->have_posts()) : ?>
-					<p class="search__amount">
+					<div class="search__amount">
 						<?php
 						$count = (int) $the_query->post_count;
 						echo esc_html(
@@ -43,7 +46,7 @@ $s = trim((string) get_search_query());
 							)
 						);
 						?>
-					</p>
+					</div>
 					<div class="archive__list">
 						<?php
 						while ($the_query->have_posts()) {
@@ -54,7 +57,7 @@ $s = trim((string) get_search_query());
 						?>
 					</div>
 				<?php else : ?>
-					<p><?php echo esc_html(sprintf(__('No results found for "%s"', 'fromscratch'), $s)); ?></p>
+					<div class="search__empty"><?php echo esc_html(sprintf(__('No results found for "%s".', 'fromscratch'), $s)); ?></div>
 				<?php endif; ?>
 			<?php endif; ?>
 		</div>
