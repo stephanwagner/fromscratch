@@ -2141,8 +2141,13 @@ msgstr "Suchergebnisse"
 msgid "Please enter a search term."
 msgstr "Bitte einen Suchbegriff eingeben."
 
-msgid "No results found for \"%s\""
-msgstr "Keine Ergebnisse für \"%s\" gefunden"
+msgid "%1$d result for \"%2$s\"."
+msgid_plural "%1$d results for \"%2$s\"."
+msgstr[0] "%1$d Ergebnis für \"%2$s\"."
+msgstr[1] "%1$d Ergebnisse für \"%2$s\"."
+
+msgid "No results found for \"%s\"."
+msgstr "Keine Ergebnisse für \"%s\" gefunden."
 
 # Helpers
 
