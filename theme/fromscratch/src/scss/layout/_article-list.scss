@@ -6,7 +6,7 @@
 
 .article-list__items {
   position: relative;
-  
+
   &.-design-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -24,4 +24,8 @@
       grid-template-columns: repeat(1, 1fr);
     }
   }
+}
+
+.article-list__empty {
+  color: var(--fs-color-gray-600);
 }
