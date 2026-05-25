@@ -356,6 +356,135 @@ function fs_event_archive_pre_get_posts(\WP_Query $query): void
 add_action('pre_get_posts', 'fs_event_archive_pre_get_posts', 25);
 
 /**
+ * Published event IDs that have ended (same rule as the events archive).
+ *
+ * @return int[]
+ */
+function fs_event_past_published_ids(?int $now = null): array
+{
+	static $cache = null;
+	if (is_array($cache)) {
+		return $cache;
+	}
+
+	$now = $now ?? time();
+	$past = [];
+	foreach (fs_event_post_types() as $post_type) {
+		$candidate_ids = get_posts([
+			'post_type' => $post_type,
+			'post_status' => 'publish',
+			'posts_per_page' => -1,
+			'fields' => 'ids',
+			'orderby' => 'ID',
+			'order' => 'ASC',
+			'no_found_rows' => true,
+		]);
+		foreach ($candidate_ids as $post_id) {
+			$post_id = (int) $post_id;
+			if ($post_id > 0 && !fs_event_is_upcoming($post_id, $now)) {
+				$past[] = $post_id;
+			}
+		}
+	}
+
+	$cache = $past;
+
+	return $past;
+}
+
+/**
+ * Exclude ended events from front-end search (keep published for direct URLs / SEO).
+ *
+ * @param string    $where SQL WHERE clause.
+ * @param \WP_Query $query Query instance.
+ */
+function fs_event_search_exclude_past_posts_where(string $where, \WP_Query $query): string
+{
+	if (is_admin()) {
+		return $where;
+	}
+	if (apply_filters('fs_event_search_exclude_past_apply', true, $query) === false) {
+		return $where;
+	}
+	if (!$query->is_search()) {
+		return $where;
+	}
+	$s = $query->get('s');
+	if ($s === null || $s === '') {
+		return $where;
+	}
+
+	$event_types = fs_event_post_types();
+	if ($event_types === []) {
+		return $where;
+	}
+
+	$past_ids = fs_event_past_published_ids();
+	if ($past_ids === []) {
+		return $where;
+	}
+
+	global $wpdb;
+	$type_list = "'" . implode("','", array_map('esc_sql', $event_types)) . "'";
+	$id_list = implode(',', array_map('intval', $past_ids));
+	$where .= " AND NOT ({$wpdb->posts}.post_type IN ({$type_list}) AND {$wpdb->posts}.ID IN ({$id_list}))";
+
+	return $where;
+}
+
+add_filter('posts_where', 'fs_event_search_exclude_past_posts_where', 10, 2);
+
+/**
+ * REST collection search: hide ended events via stored end timestamp.
+ *
+ * @param array<string, mixed>            $args    Query args.
+ * @param \WP_REST_Request<string, mixed> $request Request.
+ * @return array<string, mixed>
+ */
+function fs_event_rest_search_exclude_past(array $args, \WP_REST_Request $request): array
+{
+	if (!$request->has_param('search')) {
+		return $args;
+	}
+	$search = $request->get_param('search');
+	if ($search === null || $search === '' || (is_string($search) && trim($search) === '')) {
+		return $args;
+	}
+
+	$clause = [
+		'key' => FS_EVENT_META_END_TS,
+		'value' => time(),
+		'compare' => '>=',
+		'type' => 'NUMERIC',
+	];
+	$old = isset($args['meta_query']) ? $args['meta_query'] : null;
+	if (empty($old)) {
+		$args['meta_query'] = $clause;
+
+		return $args;
+	}
+	$args['meta_query'] = [
+		'relation' => 'AND',
+		$old,
+		$clause,
+	];
+
+	return $args;
+}
+
+/**
+ * @return void
+ */
+function fs_event_register_rest_search_filters(): void
+{
+	foreach (fs_event_post_types() as $post_type) {
+		add_filter('rest_' . $post_type . '_query', 'fs_event_rest_search_exclude_past', 10, 2);
+	}
+}
+
+add_action('init', 'fs_event_register_rest_search_filters', 22);
+
+/**
  * Block editor: strings for the Event panel (same script as expirator).
  */
 add_action('enqueue_block_editor_assets', function (): void {
