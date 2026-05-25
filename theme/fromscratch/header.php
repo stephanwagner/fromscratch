@@ -19,6 +19,8 @@
 					</a>
 				</div>
 
+				<?= function_exists('fs_language_switcher_html') ? fs_language_switcher_html() : '' ?>
+
 				<button class="main-menu__toggler" data-toggle-menu aria-expanded="false" aria-controls="main-navigation">
 					<div class="main-menu__toggler-icon">
 						<span class="main-menu__toggler-icon-line1"></span>
@@ -27,7 +29,15 @@
 					</div>
 				</button>
 
-				<?= function_exists('fs_language_switcher_html') ? fs_language_switcher_html() : '' ?>
+				<div class="main-menu__wrapper">
+					<?php fs_nav_menu([
+						'theme_location' => 'main_menu',
+						'menu_class' => 'main-menu__container',
+						'container' => 'nav',
+						'container_id' => 'main-navigation',
+						'container_aria_label' => esc_attr__('Main navigation', 'fromscratch'),
+					]); ?>
+				</div>
 
 				<button
 					type="button"
@@ -40,16 +50,6 @@
 						</svg>
 					</span>
 				</button>
-
-				<div class="main-menu__wrapper">
-					<?php fs_nav_menu([
-						'theme_location' => 'main_menu',
-						'menu_class' => 'main-menu__container',
-						'container' => 'nav',
-						'container_id' => 'main-navigation',
-						'container_aria_label' => esc_attr__('Main navigation', 'fromscratch'),
-					]); ?>
-				</div>
 
 			</div>
 		</header>

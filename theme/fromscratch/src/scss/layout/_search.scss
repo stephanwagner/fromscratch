@@ -45,6 +45,29 @@
 
 // Header search trigger
 
+.header-search__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  margin-left: 16px;
+  height: 36px;
+  width: 36px;
+  border: 0;
+  box-shadow: none;
+  appearance: none;
+  transition: transition('color', 'background-color');
+  background: var(--fs-color-gray-200);
+  border-radius: 50%;
+  cursor: pointer;
+
+  svg {
+    display: block;
+    width: 24px;
+    height: 24px;
+  }
+}
+
 // TODO
 
 // .header-search__toggle {
