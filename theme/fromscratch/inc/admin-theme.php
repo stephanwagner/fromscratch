@@ -64,7 +64,7 @@ add_action('after_switch_theme', static function (): void {
 });
 
 /**
- * Load theme.css on the public site when the toolbar is visible (logged in).
+ * Load theme-fromscratch.css on the public site when the toolbar is visible (logged in).
  * Core only auto-enqueues registered schemes on the frontend if they were registered before admin bar styles.
  */
 function fs_enqueue_admin_color_scheme_toolbar(): void
@@ -82,7 +82,7 @@ function fs_enqueue_admin_color_scheme_toolbar(): void
 		return;
 	}
 
-	$file = 'assets/admin/theme.css';
+	$file = 'assets/admin/theme-fromscratch.css';
 
 	wp_enqueue_style(
 		'fromscratch-admin-color',
