@@ -1742,7 +1742,7 @@ function fs_render_dashboard_statistics_page(): void
                         · <a href="<?= esc_url($matomo_login_url) ?>" target="_blank" rel="noopener noreferrer"><?= esc_html__('Open Matomo', 'fromscratch') ?></a>
                     <?php endif; ?>
                     <?php if ($since_ts > 0) : ?>
-                        <div class="fs-analytics-summary-since">
+                        <div class="fs-analytics-summary-since" style="margin-top: 0;">
                             <?= esc_html(sprintf(
                                 /* translators: %s: first date visits are recorded from (localized) */
                                 __('Since %s', 'fromscratch'),
