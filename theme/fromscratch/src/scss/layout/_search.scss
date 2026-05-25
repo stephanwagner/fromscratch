@@ -56,8 +56,10 @@
   border: 0;
   box-shadow: none;
   appearance: none;
-  transition: transition('color', 'background-color');
-  background: var(--fs-color-gray-200);
+  transition: transition('color', 'background-color', 'border-color');
+  background: #fff;
+  border: 1px solid var(--fs-color-gray-300);
+  color: var(--fs-default-text-color);
   border-radius: 50%;
   cursor: pointer;
 
@@ -66,37 +68,27 @@
     width: 24px;
     height: 24px;
   }
+
+  &:hover {
+    color: #fff;
+    background-color: var(--fs-color-primary);
+    border-color: var(--fs-color-primary);
+  }
+
+  @media (max-width: $breakpoint-mobile) {
+    width: 42px;
+    height: 42px;
+    margin-left: 0;
+    border-color: transparent;
+    background: transparent;
+
+    &:hover {
+      border-color: transparent;
+      background: transparent;
+      color: var(--fs-color-primary);
+    }
+  }
 }
-
-// TODO
-
-// .header-search__toggle {
-//   display: inline-flex;
-//   align-items: center;
-//   justify-content: center;
-//   margin-left: 12px;
-//   padding: 8px;
-//   border: 0;
-//   border-radius: 50%;
-//   background: transparent;
-//   color: inherit;
-//   cursor: pointer;
-//   transition: transition('background', 'color');
-
-//   &:hover {
-//     background: rgba(#000, 0.06);
-//   }
-// }
-
-// .header-search__toggle-icon {
-//   display: block;
-//   line-height: 0;
-
-//   svg {
-//     width: 24px;
-//     height: 24px;
-//   }
-// }
 
 // Modal
 
