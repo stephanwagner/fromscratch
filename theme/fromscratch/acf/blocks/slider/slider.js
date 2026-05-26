@@ -11,6 +11,20 @@ $.each(sliders, function (index, slider) {
   // Id
   const id = sliderWrapper.attr('data-slider-id');
 
+  const slideCount = sliderWrapper.find('.slider-slide__wrapper').length;
+
+  // One slide: no nav, pagination, loop, or autoplay
+  if (slideCount <= 1) {
+    sliderWrapper.attr('data-slider-navigation', 'false');
+    sliderWrapper.attr('data-slider-pagination', 'false');
+    sliderWrapper.attr('data-slider-loop', 'false');
+    sliderWrapper.attr('data-slider-autoplay', 'false');
+  }
+
+  const paginationEl = sliderWrapper.find('.slider__pagination')[0];
+  const nextEl = sliderWrapper.find('.slider__button-next')[0];
+  const prevEl = sliderWrapper.find('.slider__button-prev')[0];
+
   // Modules
   const modules = [Autoplay, Pagination, Navigation];
 
@@ -115,10 +129,14 @@ $.each(sliders, function (index, slider) {
     };
   }
 
-  // Pagination
-  if (sliderWrapper.attr('data-slider-pagination') === 'true') {
+  // Pagination (scoped per slider — global selectors break with multiple blocks on one page)
+  if (
+    slideCount > 1 &&
+    sliderWrapper.attr('data-slider-pagination') === 'true' &&
+    paginationEl
+  ) {
     sliderConfig.pagination = {
-      el: '.slider__pagination',
+      el: paginationEl,
       clickable: true,
       dynamicBullets: true,
       dynamicMainBullets: 3
@@ -126,10 +144,15 @@ $.each(sliders, function (index, slider) {
   }
 
   // Navigation
-  if (sliderWrapper.attr('data-slider-navigation') === 'true') {
+  if (
+    slideCount > 1 &&
+    sliderWrapper.attr('data-slider-navigation') === 'true' &&
+    nextEl &&
+    prevEl
+  ) {
     sliderConfig.navigation = {
-      nextEl: '.slider__navigation .slider__button-next',
-      prevEl: '.slider__navigation .slider__button-prev'
+      nextEl,
+      prevEl
     };
   }
 

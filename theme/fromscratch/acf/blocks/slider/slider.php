@@ -54,7 +54,7 @@ $spaceBetween = max(0, (int) $spaceBetween);
 	class="<?= implode(' ', $classNames) ?>"
 	style="--slider-padding-top: <?= $paddingTop ?>%; --slider-editor-slide-gap: <?= $spaceBetween ?>px;"
 
-	data-slider-id="<?= $block['id'] ?>"
+	data-slider-id="<?= esc_attr($block['id']) ?>"
 	data-slider-slides-per-view="<?= $slidesPerView ?>"
 	data-slider-slides-per-group="<?= $slidesPerGroup ?>"
 	data-slider-animation="<?= $animation ?>"
