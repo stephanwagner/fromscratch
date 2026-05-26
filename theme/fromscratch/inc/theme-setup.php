@@ -141,10 +141,37 @@ function fs_disable_builtin_posts_admin(): void
 
 	add_action('admin_init', function (): void {
 		global $pagenow;
-		$blocked = ['edit.php', 'post.php', 'post-new.php'];
-		if (in_array($pagenow, $blocked, true)) {
-			wp_safe_redirect(admin_url());
-			exit;
+
+		if ($pagenow === 'edit.php') {
+			$post_type = isset($_GET['post_type'])
+				? sanitize_key((string) wp_unslash($_GET['post_type']))
+				: 'post';
+			if ($post_type === 'post') {
+				wp_safe_redirect(admin_url());
+				exit;
+			}
+
+			return;
+		}
+
+		if ($pagenow === 'post-new.php') {
+			$post_type = isset($_GET['post_type'])
+				? sanitize_key((string) wp_unslash($_GET['post_type']))
+				: 'post';
+			if ($post_type === 'post') {
+				wp_safe_redirect(admin_url());
+				exit;
+			}
+
+			return;
+		}
+
+		if ($pagenow === 'post.php') {
+			$post_id = isset($_GET['post']) ? (int) $_GET['post'] : 0;
+			if ($post_id > 0 && get_post_type($post_id) === 'post') {
+				wp_safe_redirect(admin_url());
+				exit;
+			}
 		}
 	});
 }
