@@ -6,9 +6,6 @@ defined('ABSPATH') || exit;
  * Category filter for article-list blocks (ACF) and CPT archives (config).
  */
 
-/** Scroll target id for CPT archive listings (filter + pagination). */
-const FS_ARTICLE_LIST_ARCHIVE_ANCHOR = 'fs-article-list';
-
 /**
  * HTML id for an ACF article-list block instance.
  *
@@ -36,6 +33,31 @@ function fs_article_list_url_with_anchor(string $url, string $anchor_id): string
 	$url = (string) strtok($url, '#');
 
 	return $url . '#' . $anchor_id;
+}
+
+/**
+ * Permalink of the page/post that contains the article-list block.
+ */
+function fs_article_list_block_form_action(): string
+{
+	global $post;
+
+	if ($post instanceof \WP_Post) {
+		$permalink = get_permalink($post);
+		if (is_string($permalink) && $permalink !== '') {
+			return $permalink;
+		}
+	}
+
+	$queried_id = get_queried_object_id();
+	if ($queried_id > 0) {
+		$permalink = get_permalink($queried_id);
+		if (is_string($permalink) && $permalink !== '') {
+			return $permalink;
+		}
+	}
+
+	return home_url('/');
 }
 
 /**
@@ -101,7 +123,7 @@ function fs_cpt_filter_taxonomy(string $post_type): string
 }
 
 /**
- * Query var for filter URLs. Block context uses a private param so core does not redirect to term archives.
+ * Query var for filter URLs. Block: `block_project_category`; archive: taxonomy query var.
  *
  * @param 'block'|'archive' $context
  */
@@ -112,7 +134,7 @@ function fs_article_list_filter_query_var(string $taxonomy, string $context = 'a
 	}
 
 	if ($context === 'block') {
-		return 'fs_f_' . sanitize_key($taxonomy);
+		return 'block_' . sanitize_key($taxonomy);
 	}
 
 	$tax = get_taxonomy($taxonomy);

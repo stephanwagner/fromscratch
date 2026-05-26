@@ -73,7 +73,7 @@ $filterPaginationArgs = $taxonomy !== ''
     ? ['add_args' => fs_article_list_active_filter_query_args($taxonomy, $selectedTermId, 'block')]
     : [];
 
-$formAction = is_singular() ? (string) get_permalink() : '';
+$formAction = fs_article_list_block_form_action();
 $scrollAnchor = fs_article_list_block_scroll_anchor($block);
 ?>
 

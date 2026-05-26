@@ -5,8 +5,11 @@ defined('ABSPATH') || exit;
 $taxonomy = isset($taxonomy) && is_string($taxonomy) ? $taxonomy : '';
 $selected_term_id = isset($selected_term_id) ? (int) $selected_term_id : 0;
 $form_action = isset($form_action) && is_string($form_action) ? $form_action : '';
-$scroll_anchor = isset($scroll_anchor) && is_string($scroll_anchor) ? sanitize_html_class($scroll_anchor) : '';
 $filter_context = isset($filter_context) && $filter_context === 'block' ? 'block' : 'archive';
+$scroll_anchor = isset($scroll_anchor) && is_string($scroll_anchor) ? sanitize_html_class($scroll_anchor) : '';
+if ($filter_context !== 'block') {
+	$scroll_anchor = '';
+}
 $wrapper_class = isset($wrapper_class) && is_string($wrapper_class) ? $wrapper_class : '';
 
 if ($taxonomy === '' || !taxonomy_exists($taxonomy)) {
@@ -34,11 +37,8 @@ if ($tax_obj instanceof \WP_Taxonomy && isset($tax_obj->labels->name) && is_stri
 }
 
 if ($filter_context === 'block') {
-	if ($form_action === '' && is_singular()) {
-		$form_action = (string) get_permalink();
-	}
 	if ($form_action === '') {
-		$form_action = home_url('/');
+		$form_action = fs_article_list_block_form_action();
 	}
 } else {
 	if ($form_action === '' && is_post_type_archive()) {

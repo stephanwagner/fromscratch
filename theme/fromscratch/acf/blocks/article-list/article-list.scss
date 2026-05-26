@@ -1,5 +1,12 @@
 @use '../../../src/scss/variables' as *;
 
 .article-list__wrapper {
-  position: relative;
+  &.-block {
+    position: relative;
+  }
+}
+
+.article-list__scroll-anchor {
+  position: absolute;
+  top: calc(var(--fs-header-height-scrolled) * -1 - 8px);
 }
