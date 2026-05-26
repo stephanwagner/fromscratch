@@ -1204,6 +1204,9 @@ Tags:
   $features['enable_blogs'] = !empty($_POST['install']['blogs']) ? 1 : 0;
   update_option('fromscratch_features', $features);
 
+  $profile_picture_default = defined('FS_PROFILE_PICTURE_MODE_DEFAULT') ? FS_PROFILE_PICTURE_MODE_DEFAULT : 'upload';
+  update_option('fromscratch_profile_picture_mode', $profile_picture_default);
+
   /**
    * Rename theme
    */

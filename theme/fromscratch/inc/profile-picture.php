@@ -3,16 +3,31 @@
 defined('ABSPATH') || exit;
 
 const FS_OPTION_PROFILE_PICTURE_MODE = 'fromscratch_profile_picture_mode';
+const FS_PROFILE_PICTURE_MODE_DEFAULT = 'upload';
 const FS_USER_META_PROFILE_PICTURE = 'fromscratch_profile_picture';
 const FS_USER_META_PROFILE_PICTURE_URL = 'fromscratch_profile_picture_url';
 const FS_ATTACHMENT_META_PROFILE_PICTURE = '_fs_profile_picture';
 
 function fs_profile_picture_mode(): string
 {
-	$mode = get_option(FS_OPTION_PROFILE_PICTURE_MODE, 'upload');
+	$mode = get_option(FS_OPTION_PROFILE_PICTURE_MODE, FS_PROFILE_PICTURE_MODE_DEFAULT);
 
-	return $mode === 'gravatar' ? 'gravatar' : 'upload';
+	return $mode === 'gravatar' ? 'gravatar' : FS_PROFILE_PICTURE_MODE_DEFAULT;
 }
+
+/**
+ * Persist theme default on first run (upload, not Gravatar).
+ */
+function fs_profile_picture_register_default_option(): void
+{
+	if (get_option(FS_OPTION_PROFILE_PICTURE_MODE, false) !== false) {
+		return;
+	}
+
+	add_option(FS_OPTION_PROFILE_PICTURE_MODE, FS_PROFILE_PICTURE_MODE_DEFAULT, '', false);
+}
+
+add_action('init', 'fs_profile_picture_register_default_option', 1);
 
 function fs_profile_picture_uses_upload(): bool
 {

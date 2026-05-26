@@ -238,8 +238,9 @@ add_action('admin_init', function () use ($fs_developer_page_slug) {
 
 	// Profile picture mode (upload vs Gravatar)
 	if (!empty($_POST['fromscratch_save_profile_picture_mode']) && !empty($_POST['_wpnonce']) && wp_verify_nonce($_POST['_wpnonce'], 'fromscratch_profile_picture_mode')) {
-		$mode = isset($_POST['fromscratch_profile_picture_mode']) ? sanitize_key((string) wp_unslash($_POST['fromscratch_profile_picture_mode'])) : 'upload';
-		update_option('fromscratch_profile_picture_mode', $mode === 'gravatar' ? 'gravatar' : 'upload');
+		$default = defined('FS_PROFILE_PICTURE_MODE_DEFAULT') ? FS_PROFILE_PICTURE_MODE_DEFAULT : 'upload';
+		$mode = isset($_POST['fromscratch_profile_picture_mode']) ? sanitize_key((string) wp_unslash($_POST['fromscratch_profile_picture_mode'])) : $default;
+		update_option('fromscratch_profile_picture_mode', $mode === 'gravatar' ? 'gravatar' : $default);
 		set_transient('fromscratch_system_saved', '1', 30);
 		wp_safe_redirect($url);
 		exit;
@@ -818,7 +819,10 @@ function fs_render_developer_system(): void
 
 		<hr class="fs-page-settings-divider">
 
-		<?php $profile_picture_mode = function_exists('fs_profile_picture_mode') ? fs_profile_picture_mode() : 'upload'; ?>
+		<?php
+		$profile_picture_default = defined('FS_PROFILE_PICTURE_MODE_DEFAULT') ? FS_PROFILE_PICTURE_MODE_DEFAULT : 'upload';
+		$profile_picture_mode = function_exists('fs_profile_picture_mode') ? fs_profile_picture_mode() : $profile_picture_default;
+		?>
 		<form method="post" action="" class="fs-page-settings-form" id="fs-profile-picture-mode">
 			<?php wp_nonce_field('fromscratch_profile_picture_mode'); ?>
 			<input type="hidden" name="fromscratch_save_profile_picture_mode" value="1">
