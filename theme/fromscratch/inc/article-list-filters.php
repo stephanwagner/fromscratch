@@ -101,12 +101,18 @@ function fs_cpt_filter_taxonomy(string $post_type): string
 }
 
 /**
- * Query var name for a taxonomy filter in URLs.
+ * Query var for filter URLs. Block context uses a private param so core does not redirect to term archives.
+ *
+ * @param 'block'|'archive' $context
  */
-function fs_article_list_filter_query_var(string $taxonomy): string
+function fs_article_list_filter_query_var(string $taxonomy, string $context = 'archive'): string
 {
 	if ($taxonomy === '' || !taxonomy_exists($taxonomy)) {
 		return '';
+	}
+
+	if ($context === 'block') {
+		return 'fs_f_' . sanitize_key($taxonomy);
 	}
 
 	$tax = get_taxonomy($taxonomy);
@@ -124,10 +130,12 @@ function fs_article_list_filter_query_var(string $taxonomy): string
 
 /**
  * Term ID from the current request for a taxonomy, or 0 when unset / invalid.
+ *
+ * @param 'block'|'archive' $context
  */
-function fs_article_list_filter_term_id_from_request(string $taxonomy): int
+function fs_article_list_filter_term_id_from_request(string $taxonomy, string $context = 'archive'): int
 {
-	$query_var = fs_article_list_filter_query_var($taxonomy);
+	$query_var = fs_article_list_filter_query_var($taxonomy, $context);
 	if ($query_var === '') {
 		return 0;
 	}
@@ -158,10 +166,12 @@ function fs_article_list_filter_term_id_from_request(string $taxonomy): int
 
 /**
  * Selected term: request wins, then optional editor default (block field).
+ *
+ * @param 'block'|'archive' $context
  */
-function fs_article_list_selected_term_id(string $taxonomy, int $editor_default_term_id = 0): int
+function fs_article_list_selected_term_id(string $taxonomy, int $editor_default_term_id = 0, string $context = 'archive'): int
 {
-	$from_request = fs_article_list_filter_term_id_from_request($taxonomy);
+	$from_request = fs_article_list_filter_term_id_from_request($taxonomy, $context);
 	if ($from_request > 0) {
 		return $from_request;
 	}
@@ -226,15 +236,16 @@ function fs_article_list_build_tax_query(string $taxonomy, int $term_id): array
  * Query args to preserve the active filter in pagination links.
  *
  * @return array<string, string>
+ * @param 'block'|'archive' $context
  */
-function fs_article_list_active_filter_query_args(string $taxonomy, int $term_id = 0): array
+function fs_article_list_active_filter_query_args(string $taxonomy, int $term_id = 0, string $context = 'archive'): array
 {
 	if ($taxonomy === '') {
 		return [];
 	}
 
 	if ($term_id <= 0) {
-		$term_id = fs_article_list_filter_term_id_from_request($taxonomy);
+		$term_id = fs_article_list_filter_term_id_from_request($taxonomy, $context);
 	}
 	if ($term_id <= 0) {
 		return [];
@@ -245,7 +256,7 @@ function fs_article_list_active_filter_query_args(string $taxonomy, int $term_id
 		return [];
 	}
 
-	$query_var = fs_article_list_filter_query_var($taxonomy);
+	$query_var = fs_article_list_filter_query_var($taxonomy, $context);
 	if ($query_var === '') {
 		return [];
 	}
@@ -279,7 +290,7 @@ function fs_archive_apply_category_filter(\WP_Query $query): void
 	}
 
 	$taxonomy = fs_cpt_filter_taxonomy($pt);
-	$term_id = fs_article_list_filter_term_id_from_request($taxonomy);
+	$term_id = fs_article_list_filter_term_id_from_request($taxonomy, 'archive');
 	if ($term_id <= 0) {
 		return;
 	}

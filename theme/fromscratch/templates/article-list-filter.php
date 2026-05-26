@@ -6,6 +6,7 @@ $taxonomy = isset($taxonomy) && is_string($taxonomy) ? $taxonomy : '';
 $selected_term_id = isset($selected_term_id) ? (int) $selected_term_id : 0;
 $form_action = isset($form_action) && is_string($form_action) ? $form_action : '';
 $scroll_anchor = isset($scroll_anchor) && is_string($scroll_anchor) ? sanitize_html_class($scroll_anchor) : '';
+$filter_context = isset($filter_context) && $filter_context === 'block' ? 'block' : 'archive';
 $wrapper_class = isset($wrapper_class) && is_string($wrapper_class) ? $wrapper_class : '';
 
 if ($taxonomy === '' || !taxonomy_exists($taxonomy)) {
@@ -17,7 +18,7 @@ if ($terms === []) {
 	return;
 }
 
-$query_var = fs_article_list_filter_query_var($taxonomy);
+$query_var = fs_article_list_filter_query_var($taxonomy, $filter_context);
 if ($query_var === '') {
 	return;
 }
@@ -32,22 +33,34 @@ if ($tax_obj instanceof \WP_Taxonomy && isset($tax_obj->labels->name) && is_stri
 	);
 }
 
-if ($form_action === '' && is_post_type_archive()) {
-	$pto = get_query_var('post_type');
-	$post_type = is_array($pto) ? (string) ($pto[0] ?? '') : (string) $pto;
-	if ($post_type !== '') {
-		$form_action = (string) get_post_type_archive_link($post_type);
+if ($filter_context === 'block') {
+	if ($form_action === '' && is_singular()) {
+		$form_action = (string) get_permalink();
+	}
+	if ($form_action === '') {
+		$form_action = home_url('/');
+	}
+} else {
+	if ($form_action === '' && is_post_type_archive()) {
+		$pto = get_query_var('post_type');
+		$post_type = is_array($pto) ? (string) ($pto[0] ?? '') : (string) $pto;
+		if ($post_type !== '') {
+			$form_action = (string) get_post_type_archive_link($post_type);
+		}
+	}
+	if ($form_action === '' && is_singular()) {
+		$form_action = (string) get_permalink();
+	}
+	if ($form_action === '') {
+		$form_action = home_url('/');
 	}
 }
-if ($form_action === '' && is_singular()) {
-	$form_action = (string) get_permalink();
-}
-if ($form_action === '') {
-	$form_action = home_url('/');
-}
 
+$form_action_url = $form_action;
+$form_action_hash = '';
 if ($scroll_anchor !== '') {
-	$form_action = fs_article_list_url_with_anchor($form_action, $scroll_anchor);
+	$form_action_url = (string) strtok($form_action, '#');
+	$form_action_hash = '#' . $scroll_anchor;
 }
 
 $filter_id = 'fs-article-list-filter-' . sanitize_html_class($taxonomy);
@@ -56,7 +69,7 @@ $wrapper_classes = array_filter([
 	$wrapper_class,
 ]);
 ?>
-<form class="<?= esc_attr(implode(' ', $wrapper_classes)) ?>" method="get" action="<?= esc_url($form_action) ?>" data-article-list-filter>
+<form class="<?= esc_attr(implode(' ', $wrapper_classes)) ?>" method="get" action="<?= esc_url($form_action_url) . esc_attr($form_action_hash) ?>" data-article-list-filter<?= $scroll_anchor !== '' ? ' data-scroll-anchor="' . esc_attr($scroll_anchor) . '"' : '' ?>>
 	<label class="screen-reader-text" for="<?= esc_attr($filter_id) ?>">
 		<?= esc_html($all_label) ?>
 	</label>

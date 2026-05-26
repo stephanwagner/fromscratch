@@ -23,6 +23,16 @@
     width: 100%;
     margin-bottom: 4px;
   }
+
+  .article-list__wrapper.-block & {
+    margin: 0 0 24px;
+    display: flex;
+    justify-content: flex-end;
+
+    @media (max-width: $breakpoint-s) {
+      margin: 0 0 16px;
+    }
+  }
 }
 
 .article-list__filter-select-container {
@@ -35,6 +45,11 @@
   @media (max-width: $breakpoint-xs) {
     max-width: 100%;
     width: 100%;
+  }
+
+
+  .article-list__wrapper.-block & {
+    max-width: 100%;
   }
 }
 

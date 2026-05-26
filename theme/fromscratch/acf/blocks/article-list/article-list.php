@@ -13,6 +13,7 @@ if (!empty($block['className'])) {
 
 // Add wrapper class
 $classNames[] = 'article-list__wrapper';
+$classNames[] = '-block';
 
 // Add margin class
 $classNames[] = '-content-margin-m';
@@ -38,7 +39,7 @@ if ($hasCategoryFilters) {
     $taxonomy = fs_cpt_filter_taxonomy($postType);
     if ($taxonomy !== '') {
         $editorDefaultTermId = is_numeric($postTaxonomy) ? (int) $postTaxonomy : 0;
-        $selectedTermId = fs_article_list_selected_term_id($taxonomy, $editorDefaultTermId);
+        $selectedTermId = fs_article_list_selected_term_id($taxonomy, $editorDefaultTermId, 'block');
     } else {
         $hasCategoryFilters = false;
     }
@@ -69,7 +70,7 @@ $query = new WP_Query($queryArgs);
 $posts = $query->posts;
 
 $filterPaginationArgs = $taxonomy !== ''
-    ? ['add_args' => fs_article_list_active_filter_query_args($taxonomy, $selectedTermId)]
+    ? ['add_args' => fs_article_list_active_filter_query_args($taxonomy, $selectedTermId, 'block')]
     : [];
 
 $formAction = is_singular() ? (string) get_permalink() : '';
@@ -84,6 +85,7 @@ $scrollAnchor = fs_article_list_block_scroll_anchor($block);
             'selected_term_id' => $selectedTermId,
             'form_action'      => $formAction,
             'scroll_anchor'    => $scrollAnchor,
+            'filter_context'   => 'block',
         ]); ?>
     <?php } ?>
 
