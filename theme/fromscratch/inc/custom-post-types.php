@@ -1038,25 +1038,25 @@ function fs_cpt_admin_list_render_order_column(string $column, int $post_id): vo
 	$is_last = $idx === count($ordered_ids) - 1;
 
 	$base = admin_url('edit.php?post_type=' . rawurlencode($post->post_type));
-	$mk = function (string $dir, string $label, string $icon_class, bool $disabled = false) use ($base, $post_id): string {
+	$mk = function (string $dir, string $label, string $icon_svg_code, bool $disabled = false) use ($base, $post_id): string {
 		if ($disabled) {
-			return '<span class="fs-cpt-reorder-menu__action is-disabled" aria-disabled="true"><span class="dashicons ' . esc_attr($icon_class) . '" aria-hidden="true"></span><span>' . esc_html($label) . '</span></span>';
+			return '<span class="fs-cpt-reorder-menu__action is-disabled" aria-disabled="true"><span class="fs-cpt-reorder-menu__icon" aria-hidden="true">' . $icon_svg_code . '</span><span>' . esc_html($label) . '</span></span>';
 		}
 		$url = add_query_arg([
 			'fs_cpt_reorder' => $dir,
 			'post_id'        => $post_id,
 		], $base);
 		$url = wp_nonce_url($url, 'fs_cpt_reorder_' . $dir . '_' . $post_id);
-		return '<a class="fs-cpt-reorder-menu__action" href="' . esc_url($url) . '"><span class="dashicons ' . esc_attr($icon_class) . '" aria-hidden="true"></span><span>' . esc_html($label) . '</span></a>';
+		return '<a class="fs-cpt-reorder-menu__action" href="' . esc_url($url) . '"><span class="fs-cpt-reorder-menu__icon" aria-hidden="true">' . $icon_svg_code . '</span><span>' . esc_html($label) . '</span></a>';
 	};
 	$order = (int) get_post_field('menu_order', $post_id);
 	echo '<div class="fs-cpt-reorder-menu"><span class="fs-cpt-reorder-menu__order">' . esc_html((string) $order) . '</span>';
 	echo '<button type="button" class="button button-small button-icon fs-cpt-reorder-menu__toggle" aria-expanded="false" aria-label="' . esc_attr__('Reorder', 'fromscratch') . '" title="' . esc_attr__('Reorder', 'fromscratch') . '"><svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M334.5-442.35Q324-452.7 324-468v-258l-80 80q-11 11-25.67 11-14.66 0-25.33-11-11-10.67-11-25.33Q182-686 193-697l142-142q5.4-5 11.7-7.5 6.3-2.5 13.5-2.5t13.5 2.5Q380-844 385-839l142 142q11 11 11 25t-11 25.48Q516-636 501.5-636T476-647l-80-79v258q0 15.3-10.29 25.65Q375.42-432 360.21-432t-25.71-10.35ZM586.3-113.5Q580-116 575-121L433-263q-11-10.91-10.5-25.45.5-14.55 11.5-26.03Q445-325 459.5-325t25.5 11l79 80v-258q0-15.3 10.29-25.65Q584.58-528 599.79-528t25.71 10.35Q636-507.3 636-492v258l80-80q11-11 25.67-11 14.66 0 25.33 11 11 10.67 11 25.33Q778-274 767-263L625-121q-5.4 5-11.7 7.5-6.3 2.5-13.5 2.5t-13.5-2.5Z"/></svg></button>';
 	echo '<div class="fs-cpt-reorder-menu__popover" hidden>';
-	echo $mk('up', __('Move up', 'fromscratch'), 'dashicons-arrow-up-alt2', $is_first);
-	echo $mk('down', __('Move down', 'fromscratch'), 'dashicons-arrow-down-alt2', $is_last);
-	echo $mk('top', __('Move to top', 'fromscratch'), 'dashicons-upload', $is_first);
-	echo $mk('bottom', __('Move to bottom', 'fromscratch'), 'dashicons-download', $is_last);
+	echo $mk('up', __('Move up', 'fromscratch'), '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M450-635.69 317.08-502.77q-8.31 8.31-20.89 8.5-12.57.19-21.27-8.5-8.69-8.69-8.69-21.08 0-12.38 8.69-21.07l179.77-179.77q10.85-10.85 25.31-10.85 14.46 0 25.31 10.85l179.77 179.77q8.3 8.3 8.5 20.88.19 12.58-8.5 21.27-8.7 8.69-21.08 8.69-12.38 0-21.08-8.69L510-635.69v351.84q0 12.77-8.62 21.39-8.61 8.61-21.38 8.61t-21.38-8.61q-8.62-8.62-8.62-21.39v-351.84Z"/></svg>', $is_first);
+	echo $mk('down', __('Move down', 'fromscratch'), '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M450-368.15V-720q0-12.77 8.62-21.38Q467.23-750 480-750t21.38 8.62Q510-732.77 510-720v351.85l132.92-132.93q8.31-8.3 20.89-8.5 12.57-.19 21.27 8.5 8.69 8.7 8.69 21.08 0 12.38-8.69 21.08L505.31-279.15q-10.85 10.84-25.31 10.84-14.46 0-25.31-10.84L274.92-458.92q-8.3-8.31-8.5-20.89-.19-12.57 8.5-21.27 8.7-8.69 21.08-8.69 12.38 0 21.08 8.69L450-368.15Z"/></svg>', $is_last);
+	echo $mk('top', __('Move to top', 'fromscratch'), '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M210-760q-12.77 0-21.38-8.62Q180-777.23 180-790t8.62-21.38Q197.23-820 210-820h540q12.77 0 21.38 8.62Q780-802.77 780-790t-8.62 21.38Q762.77-760 750-760H210Zm248.62 611.38Q450-157.23 450-170v-381.85l-92.92 92.93q-8.7 8.69-21.08 8.69-12.38 0-21.08-8.69-8.69-8.7-8.5-21.27.2-12.58 8.5-20.89l139.77-139.77q5.62-5.61 11.85-7.92 6.23-2.31 13.46-2.31t13.46 2.31q6.23 2.31 11.85 7.92l139.77 139.77q8.69 8.7 8.69 21.08 0 12.38-8.69 21.08-8.7 8.69-21.27 8.5-12.58-.2-20.89-8.5L510-551.85V-170q0 12.77-8.62 21.38Q492.77-140 480-140t-21.38-8.62Z"/></svg>', $is_first);
+	echo $mk('bottom', __('Move to bottom', 'fromscratch'), '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M210-140q-12.77 0-21.38-8.62Q180-157.23 180-170t8.62-21.38Q197.23-200 210-200h540q12.77 0 21.38 8.62Q780-182.77 780-170t-8.62 21.38Q762.77-140 750-140H210Zm256.54-171.23q-6.23-2.31-11.85-7.92L314.92-458.92q-8.3-8.31-8.5-20.89-.19-12.57 8.5-21.27 8.7-8.69 21.08-8.69 12.38 0 21.08 8.69L450-408.15V-790q0-12.77 8.62-21.38Q467.23-820 480-820t21.38 8.62Q510-802.77 510-790v381.85l92.92-92.93q8.31-8.3 20.89-8.5 12.57-.19 21.27 8.5 8.69 8.7 8.69 21.08 0 12.38-8.69 21.08L505.31-319.15q-5.62 5.61-11.85 7.92-6.23 2.31-13.46 2.31t-13.46-2.31Z"/></svg>', $is_last);
 	echo '</div>';
 	echo '</div>';
 }
@@ -1131,7 +1131,8 @@ add_action('admin_head', function (): void {
 	td.fs_cpt_reorder.column-fs_cpt_reorder{white-space:nowrap;}
 	.fs-cpt-reorder-menu{position:relative;display:inline-flex;align-items:center;gap:8px}
 	.fs-cpt-reorder-menu__order{display:inline-block;min-width:18px;text-align:right;font-variant-numeric:tabular-nums;}
-	.fs-cpt-reorder-menu__toggle .dashicons{font-size:16px;line-height:18px;width:16px;height:16px}
+	.fs-cpt-reorder-menu__icon{line-height:0;display:inline-block;width:24px;height:24px;}
+	.fs-cpt-reorder-menu__icon svg{width:24px;height:24px;}
 	.fs-cpt-reorder-menu__popover{position:absolute;right:calc(26px + 4px);top:0;z-index:1000;display:flex;gap:4px;flex-direction:column;padding:6px;margin-left:6px;min-width:170px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
 	.fs-cpt-reorder-menu__popover[hidden]{display:none}
 	.fs-cpt-reorder-menu__action{display:inline-flex;align-items:center;gap:6px;padding:4px 6px;border-radius:3px;color:#2271b1;text-decoration:none}

@@ -2088,10 +2088,10 @@ msgid "Move down"
 msgstr "Nach unten"
 
 msgid "Move to top"
-msgstr "An den Anfang"
+msgstr "An erste Stelle"
 
 msgid "Move to bottom"
-msgstr "An das Ende"
+msgstr "An letzte Stelle"
 
 msgid "Add New"
 msgstr "Neu hinzufügen"
