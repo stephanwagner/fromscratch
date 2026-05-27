@@ -48,6 +48,7 @@ h2.title+p.description {
 
     &.button-small {
       width: 26px;
+      height: 26px;
 
       svg {
         width: 20px;
@@ -62,6 +63,16 @@ h2.title+p.description {
 table.widefat {
   border-radius: 6px;
   overflow: hidden;
+}
+
+// CPT list with manual order: popover must not be clipped by table overflow.
+body.fs-cpt-reorder-list {
+  table.wp-list-table.widefat,
+  table.wp-list-table.widefat tbody,
+  table.wp-list-table.widefat tr,
+  td.column-fs_cpt_reorder {
+    overflow: visible;
+  }
 }
 
 .fs-table-in-form {

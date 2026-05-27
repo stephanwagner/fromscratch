@@ -1098,6 +1098,19 @@ add_filter('request', function (array $vars): array {
 	return $vars;
 }, 20);
 
+add_filter('admin_body_class', function (string $classes): string {
+	global $pagenow;
+	if ($pagenow !== 'edit.php') {
+		return $classes;
+	}
+	$post_type = fs_cpt_current_admin_post_type();
+	if ($post_type === '' || !fs_cpt_is_ordered($post_type)) {
+		return $classes;
+	}
+
+	return $classes . ' fs-cpt-reorder-list';
+});
+
 add_action('admin_head', function (): void {
 	global $pagenow;
 	if ($pagenow !== 'edit.php') {
@@ -1109,13 +1122,17 @@ add_action('admin_head', function (): void {
 	}
 	// TODO in scss
 	echo '<style>
+	.fs-cpt-reorder-list table.wp-list-table.widefat,
+	.fs-cpt-reorder-list table.wp-list-table.widefat tbody,
+	.fs-cpt-reorder-list table.wp-list-table.widefat tr,
+	.fs-cpt-reorder-list td.column-fs_cpt_reorder{overflow:visible;}
 	.column-fs_cpt_reorder{width:115px; text-align: right;}
 	th.column-fs_cpt_reorder a {display: flex; align-items: center; justify-content: flex-end;}
 	td.fs_cpt_reorder.column-fs_cpt_reorder{white-space:nowrap;}
 	.fs-cpt-reorder-menu{position:relative;display:inline-flex;align-items:center;gap:8px}
 	.fs-cpt-reorder-menu__order{display:inline-block;min-width:18px;text-align:right;font-variant-numeric:tabular-nums;}
 	.fs-cpt-reorder-menu__toggle .dashicons{font-size:16px;line-height:18px;width:16px;height:16px}
-	.fs-cpt-reorder-menu__popover{position:absolute;right:100%;top:0;z-index:1000;display:flex;gap:4px;flex-direction:column;padding:6px;margin-left:6px;min-width:170px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+	.fs-cpt-reorder-menu__popover{position:absolute;right:calc(26px + 4px);top:0;z-index:1000;display:flex;gap:4px;flex-direction:column;padding:6px;margin-left:6px;min-width:170px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
 	.fs-cpt-reorder-menu__popover[hidden]{display:none}
 	.fs-cpt-reorder-menu__action{display:inline-flex;align-items:center;gap:6px;padding:4px 6px;border-radius:3px;color:#2271b1;text-decoration:none}
 	.fs-cpt-reorder-menu__action:hover{background:#f0f6fc;color:#135e96}
@@ -1159,25 +1176,6 @@ add_action('admin_footer', function (): void {
 				dateTh.removeAttribute("aria-sort");
 			}
 		}
-		function positionPopover(menu,pop){
-			var btn=menu.querySelector(".fs-cpt-reorder-menu__toggle");
-			if(!btn||!pop) return;
-			var rect=btn.getBoundingClientRect();
-			var margin=8;
-			var popW=pop.offsetWidth||170;
-			var popH=pop.offsetHeight||140;
-			var left=rect.left-popW-margin;
-			if(left<margin){left=margin;}
-			var top=rect.top;
-			if(top+popH>window.innerHeight-margin){
-				top=rect.bottom-popH;
-			}
-			if(top<margin){top=margin;}
-			pop.style.position="fixed";
-			pop.style.left=left+"px";
-			pop.style.top=top+"px";
-			pop.style.right="auto";
-		}
 		function closeAll(exceptMenu){
 			document.querySelectorAll(".fs-cpt-reorder-menu").forEach(function(menu){
 				if(exceptMenu && menu===exceptMenu) return;
@@ -1185,10 +1183,6 @@ add_action('admin_footer', function (): void {
 				var btn=menu.querySelector(".fs-cpt-reorder-menu__toggle");
 				if(pop){
 					pop.hidden=true;
-					pop.style.position="";
-					pop.style.left="";
-					pop.style.top="";
-					pop.style.right="";
 				}
 				if(btn){btn.setAttribute("aria-expanded","false");}
 			});
@@ -1203,18 +1197,11 @@ add_action('admin_footer', function (): void {
 				closeAll(menu);
 				pop.hidden=!willOpen;
 				btn.setAttribute("aria-expanded",willOpen?"true":"false");
-				if(willOpen){positionPopover(menu,pop);}
 				return;
 			}
 			if(!e.target.closest(".fs-cpt-reorder-menu")){
 				closeAll(null);
 			}
-		});
-		window.addEventListener("resize",function(){
-			document.querySelectorAll(".fs-cpt-reorder-menu").forEach(function(menu){
-				var pop=menu.querySelector(".fs-cpt-reorder-menu__popover");
-				if(pop && !pop.hidden){positionPopover(menu,pop);}
-			});
 		});
 		document.addEventListener("keydown",function(e){
 			if(e.key==="Escape"){closeAll(null);}
