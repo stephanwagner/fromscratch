@@ -1752,6 +1752,21 @@ msgstr "Letzte Woche abgelaufene Seiten oder Beiträge"
 msgid "Upcoming expirations"
 msgstr "Bevorstehende Abläufe"
 
+msgid "Page or post"
+msgstr "Seite oder Beitrag"
+
+msgid "Published on"
+msgstr "Veröffentlicht am"
+
+msgid "Scheduled on"
+msgstr "Geplant für"
+
+msgid "Expired on"
+msgstr "Abgelaufen am"
+
+msgid "Expires on"
+msgstr "Läuft ab am"
+
 # Weekly report
 
 msgid "Weekly website report – %s"

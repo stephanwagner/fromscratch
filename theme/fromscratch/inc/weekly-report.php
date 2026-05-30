@@ -233,7 +233,7 @@ function fs_weekly_report_email_iso_week_row_labels(array $row): array
 	$week_end_ts = $monday->modify('+6 days')->getTimestamp();
 	$line2 = function_exists('fs_dashboard_format_week_date_range')
 		? fs_dashboard_format_week_date_range($monday)
-		: (wp_date('j. M', $monday->getTimestamp()) . ' – ' . wp_date('j. M Y', $week_end_ts));
+		: '<span class="fs-mail__nowrap">' . wp_date('j. M', $monday->getTimestamp()) . '</span> – <span class="fs-mail__nowrap">' . wp_date('j. M Y', $week_end_ts) . '</span>';
 
 	return [
 		sprintf(__('Week %d', 'fromscratch'), $week_no),
@@ -360,6 +360,22 @@ add_action('init', static function (): void {
 }, 33);
 
 /**
+ * Get the post type singular label.
+ *
+ * @param string $post_type
+ * @return string
+ */
+function fs_weekly_report_get_post_type_singular_label(string $post_type): string
+{
+	$obj = get_post_type_object($post_type);
+	if (!$obj instanceof \WP_Post_Type) {
+		return '';
+	}
+
+	return (string) __($obj->labels->singular_name, 'fromscratch');
+}
+
+/**
  * CMS blocks for weekly email — period is arbitrary half-open [ start, after_exclusive ).
  *
  * @return array{went_live_last_week: array<int,array{title:string,url:string,date:string}>, scheduled_upcoming: array<int,array{title:string,url:string,date:string}>, expired_last_week: array<int,array{title:string,url:string,date:string}>, expiring_upcoming: array<int,array{title:string,url:string,date:string}>}
@@ -390,6 +406,7 @@ function fs_weekly_report_build_insights(\DateTimeImmutable $period_start, \Date
 	]);
 	foreach ($scheduled as $p) {
 		$out['scheduled_upcoming'][] = [
+			'post_type' => fs_weekly_report_get_post_type_singular_label((string) $p->post_type),
 			'title' => (string) (get_the_title((int) $p->ID) ?: __('(no title)', 'fromscratch')),
 			'url' => (string) get_permalink((int) $p->ID),
 			'date' => (string) get_date_from_gmt((string) $p->post_date_gmt, $insight_date_format),
@@ -413,6 +430,7 @@ function fs_weekly_report_build_insights(\DateTimeImmutable $period_start, \Date
 	]);
 	foreach ($went_live as $p) {
 		$out['went_live_last_week'][] = [
+			'post_type' => fs_weekly_report_get_post_type_singular_label((string) $p->post_type),
 			'title' => (string) (get_the_title((int) $p->ID) ?: __('(no title)', 'fromscratch')),
 			'url' => (string) get_permalink((int) $p->ID),
 			'date' => (string) get_the_date($insight_date_format, (int) $p->ID),
@@ -454,6 +472,7 @@ function fs_weekly_report_build_insights(\DateTimeImmutable $period_start, \Date
 				continue;
 			}
 			$row = [
+				'post_type' => fs_weekly_report_get_post_type_singular_label((string) $p->post_type),
 				'title' => (string) (get_the_title((int) $p->ID) ?: __('(no title)', 'fromscratch')),
 				'url' => (string) get_permalink((int) $p->ID),
 				'date' => (string) wp_date($insight_date_format, $ts),

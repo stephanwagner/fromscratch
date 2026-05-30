@@ -62,6 +62,15 @@ $email_html_lang = isset($email_html_lang) && is_string($email_html_lang) && $em
 			color: #2b6cb0;
 		}
 
+		.fs-mail__table-th {
+			font-size: 13px;
+			line-height: 1.3;
+		}
+
+		.fs-mail__nowrap {
+			white-space: nowrap;
+		}
+
 		@media (max-width: 900px) {
 			.fs-mail-weekly-report-wrapper {
 				padding: 24px;
@@ -81,6 +90,10 @@ $email_html_lang = isset($email_html_lang) && is_string($email_html_lang) && $em
 			.fs-mail-weekly-report-content {
 				padding: 20px 16px 24px;
 			}
+
+			.fs-mail__table-th {
+				font-size: 12px;
+			}
 		}
 
 		@media (max-width: 400px) {
@@ -94,6 +107,10 @@ $email_html_lang = isset($email_html_lang) && is_string($email_html_lang) && $em
 
 			.fs-mail__small-mobile-inline {
 				display: inline !important;
+			}
+
+			.fs-mail__table-th {
+				font-size: 11px;
 			}
 		}
 	</style>

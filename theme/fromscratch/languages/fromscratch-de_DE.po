@@ -1713,8 +1713,8 @@ msgstr "Das ist eine Test E-Mail von %s."
 msgid "If you received this, your mail delivery settings are working."
 msgstr "Wenn du diese E-Mail erhalten hast, funktionieren deine Einstellungen für die E-Mail-Zustellung."
 
-msgid "Your weekly website report"
-msgstr "Ihr wöchentlicher Website-Bericht"
+msgid "Your weekly<br>website report"
+msgstr "Ihr wöchentlicher<br>Website-Bericht"
 
 msgid "Visitors and page views <div class=\"fs-mail__small-mobile-inline\">of the last week</div>"
 msgstr "Besucherzahlen und Seitenaufrufe <div class=\"fs-mail__small-mobile-inline\">der letzten Woche</div>"
@@ -1751,6 +1751,21 @@ msgstr "Letzte Woche abgelaufene Seiten oder Beiträge"
 
 msgid "Upcoming expirations"
 msgstr "Bevorstehende Abläufe"
+
+msgid "Page or post"
+msgstr "Seite oder Beitrag"
+
+msgid "Published on"
+msgstr "Veröffentlicht am"
+
+msgid "Scheduled on"
+msgstr "Geplant für"
+
+msgid "Expired on"
+msgstr "Abgelaufen am"
+
+msgid "Expires on"
+msgstr "Läuft ab am"
 
 # Weekly report
 

@@ -19,7 +19,7 @@ a:active {
   color: var(--wp-admin-theme-color-darker-10);
 }
 
-/* Admin bar */
+/* Admin menu */
 
 #adminmenu li.current a.menu-top,
 #adminmenu li.wp-has-current-submenu .wp-submenu .wp-submenu-head,
@@ -54,6 +54,8 @@ a:active {
 #adminmenu a.wp-has-current-submenu:focus + .wp-submenu li.current a:hover {
   color: var(--wp-admin-theme-color-lighter-30);
 }
+
+/* Admin bar */
 
 #wpadminbar .ab-top-menu > li.menupop.hover > .ab-item,
 #wpadminbar.nojq .quicklinks .ab-top-menu > li > .ab-item:focus,
