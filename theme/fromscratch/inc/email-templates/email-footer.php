@@ -14,7 +14,7 @@ $email_show_footer_html = isset($email_footer_html) && is_string($email_footer_h
 					class="fs-mail-weekly-report-footer-text"
 					style="
               padding: 16px 0 0;
-              color: #94a3b8;
+              color: #8393A9;
               font-size: 13px;
 			  text-wrap: balance;
 			  text-align: center;

@@ -53,7 +53,7 @@ $email_html_lang = isset($email_html_lang) && is_string($email_html_lang) && $em
 		}
 
 		.fs-mail-weekly-report-footer-text a {
-			color: #94a3b8;
+			color: #8393A9;
 			text-decoration: underline;
 			transition: color 280ms;
 		}

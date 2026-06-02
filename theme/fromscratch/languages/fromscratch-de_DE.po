@@ -1740,14 +1740,14 @@ msgstr "Admin Dashboard öffnen"
 msgid "Everything stayed unchanged last week, no content updates to show."
 msgstr "Letzte Woche ist alles beim Alten geblieben, es gibt keine Aktualisierungen anzuzeigen."
 
-msgid "Pages or posts published last week"
-msgstr "Seiten oder Beiträge, die letzte Woche veröffentlicht wurden"
+msgid "Published last week"
+msgstr "Letzte Woche veröffentlicht"
 
 msgid "Upcoming scheduled pages or posts"
 msgstr "Geplante Seiten oder Beiträge"
 
-msgid "Expired pages or posts last week"
-msgstr "Letzte Woche abgelaufene Seiten oder Beiträge"
+msgid "Expired last week"
+msgstr "Letzte Woche abgelaufen"
 
 msgid "Upcoming expirations"
 msgstr "Bevorstehende Abläufe"

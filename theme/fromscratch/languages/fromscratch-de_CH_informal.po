@@ -1713,8 +1713,8 @@ msgstr "Das ist eine Test E-Mail von %s."
 msgid "If you received this, your mail delivery settings are working."
 msgstr "Wenn du diese E-Mail erhalten hast, funktionieren deine Einstellungen für die E-Mail-Zustellung."
 
-msgid "Your weekly website report"
-msgstr "Ihr wöchentlicher Website-Bericht"
+msgid "Your weekly<br>website report"
+msgstr "Ihr wöchentlicher<br>Website-Bericht"
 
 msgid "Visitors and page views <div class=\"fs-mail__small-mobile-inline\">of the last week</div>"
 msgstr "Besucherzahlen und Seitenaufrufe <div class=\"fs-mail__small-mobile-inline\">der letzten Woche</div>"
@@ -1740,14 +1740,14 @@ msgstr "Admin Dashboard öffnen"
 msgid "Everything stayed unchanged last week, no content updates to show."
 msgstr "Letzte Woche ist alles beim Alten geblieben, es gibt keine Aktualisierungen anzuzeigen."
 
-msgid "Pages or posts published last week"
-msgstr "Seiten oder Beiträge, die letzte Woche veröffentlicht wurden"
+msgid "Published last week"
+msgstr "Letzte Woche veröffentlicht"
 
 msgid "Upcoming scheduled pages or posts"
 msgstr "Geplante Seiten oder Beiträge"
 
-msgid "Expired pages or posts last week"
-msgstr "Letzte Woche abgelaufene Seiten oder Beiträge"
+msgid "Expired last week"
+msgstr "Letzte Woche abgelaufen"
 
 msgid "Upcoming expirations"
 msgstr "Bevorstehende Abläufe"

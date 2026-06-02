@@ -39,7 +39,7 @@ if (!$has_insights && !$has_matomo) {
 	foreach (
 		[
 			'went_live_last_week' => [
-				'title' => __('Pages or posts published last week', 'fromscratch'),
+				'title' => __('Published last week', 'fromscratch'),
 				'th' => [
 					'date' => __('Published on', 'fromscratch'),
 					'label' => __('Page or post', 'fromscratch'),
@@ -53,7 +53,7 @@ if (!$has_insights && !$has_matomo) {
 				],
 			],
 			'expired_last_week' => [
-				'title' => __('Expired pages or posts last week', 'fromscratch'),
+				'title' => __('Expired last week', 'fromscratch'),
 				'th' => [
 					'date' => __('Expired on', 'fromscratch'),
 					'label' => __('Page or post', 'fromscratch'),
@@ -74,7 +74,6 @@ if (!$has_insights && !$has_matomo) {
 				style="
 					margin: 24px auto 6px;
 					font-size: 16px;
-					color: #64748b;
 					text-wrap: balance;
 					font-weight: 600;
 				">
@@ -91,14 +90,14 @@ if (!$has_insights && !$has_matomo) {
 					font-size: 13px;
 				">
 				<tr>
-					<th style="border-bottom: 1px solid #e2e8f0; padding: 0 6px 4px 0; font-weight: normal; color: #72839b; text-align: left; font-size: 11px;"><?= esc_html($data['th']['date']) ?></th>
-					<th style="border-bottom: 1px solid #e2e8f0; padding: 0 0 4px 6px; font-weight: normal; color: #72839b; text-align: left; font-size: 11px;"><?= esc_html($data['th']['label']) ?></th>
+					<th style="border-bottom: 1px solid #e2e8f0; padding: 0 6px 4px 0; font-weight: normal; color: #64748b; text-align: left; font-size: 11px; font-weight: 500;"><?= esc_html($data['th']['date']) ?></th>
+					<th style="border-bottom: 1px solid #e2e8f0; padding: 0 0 4px 6px; font-weight: normal; color: #64748b; text-align: left; font-size: 11px; font-weight: 500;"><?= esc_html($data['th']['label']) ?></th>
 				</tr>
 				<?php foreach ($insights[$key] as $row) { ?>
 					<tr>
-						<td style="padding: 4px 6px 0 0; white-space: nowrap; color: #72839b; vertical-align: top;"><?= esc_html((string) ($row['date'] ?? '')) ?></td>
+						<td style="padding: 4px 6px 0 0; white-space: nowrap; color: #64748b; vertical-align: top;"><?= esc_html((string) ($row['date'] ?? '')) ?></td>
 						<td style="padding: 4px 0 0 6px; vertical-align: top;" class="fs-mail-weekly-report-has-link" width="100%">
-							<a href="<?= esc_url((string) ($row['url'] ?? '')) ?>"><?= esc_html((string) ($row['title'] ?? '')) ?></a> <span style="color: #72839b;">(<?= esc_html((string) ($row['post_type'] ?? '')) ?>)</span>
+							<a href="<?= esc_url((string) ($row['url'] ?? '')) ?>"><?= esc_html((string) ($row['title'] ?? '')) ?></a> <span style="color: #64748b;">(<?= esc_html((string) ($row['post_type'] ?? '')) ?>)</span>
 						</td>
 					</tr>
 				<?php } ?>
@@ -119,7 +118,6 @@ if (!$has_insights && !$has_matomo) {
 		style="
 			margin: 32px auto 16px;
 			font-size: 16px;
-			color: #64748b;
 			text-align: center;
 			text-wrap: balance;
 			max-width: 320px;
@@ -170,7 +168,7 @@ if (!$has_insights && !$has_matomo) {
 			}
 			?>
 			<tr>
-				<td style="border-bottom: 2px solid #e2e8f0; line-height: 1.4; padding: 6px 0"><b style="font-weight: bold;"><?php if ($daily_weekday !== '') : ?><?= esc_html($daily_weekday) ?></b><br><span style="color: #72839b;"><?= esc_html($daily_written) ?></span><?php endif; ?></td>
+				<td style="border-bottom: 2px solid #e2e8f0; line-height: 1.4; padding: 6px 0"><b style="font-weight: bold;"><?php if ($daily_weekday !== '') : ?><?= esc_html($daily_weekday) ?></b><br><span style="color: #64748b;"><?= esc_html($daily_written) ?></span><?php endif; ?></td>
 				<td style="border-bottom: 2px solid #e2e8f0; padding: 6px; text-align: center; font-weight: bold;"><?= esc_html(number_format_i18n((int) ($row['unique'] ?? 0))) ?></td>
 				<td style="border-bottom: 2px solid #e2e8f0; padding: 6px; text-align: center;"><?= esc_html(number_format_i18n((int) ($row['visits'] ?? 0))) ?></td>
 				<td style="border-bottom: 2px solid #e2e8f0; padding: 6px; text-align: center;"><?= esc_html(number_format_i18n((int) ($row['pageviews'] ?? 0))) ?></td>
@@ -182,7 +180,6 @@ if (!$has_insights && !$has_matomo) {
 		style="
 			margin: 32px auto 16px;
 			font-size: 16px;
-			color: #64748b;
 			text-align: center;
 			text-wrap: balance;
 			font-weight: 600;
@@ -228,7 +225,7 @@ if (!$has_insights && !$has_matomo) {
 			}
 			?>
 			<tr>
-				<td style="border-bottom: 2px solid #e2e8f0; line-height: 1.4; padding: 6px 0"><b style="font-weight: bold;"><?php if ($week_line !== '') : ?><?= esc_html($week_line) ?></b><br><span style="color: #72839b;"><?= esc_html($monday_written) ?></span><?php endif; ?></td>
+				<td style="border-bottom: 2px solid #e2e8f0; line-height: 1.4; padding: 6px 0"><b style="font-weight: bold;"><?php if ($week_line !== '') : ?><?= esc_html($week_line) ?></b><br><span style="color: #64748b;"><?= esc_html($monday_written) ?></span><?php endif; ?></td>
 				<td style="border-bottom: 2px solid #e2e8f0; padding: 6px; text-align: center; font-weight: bold;"><?= esc_html(number_format_i18n((int) ($row['unique'] ?? 0))) ?></td>
 				<td style="border-bottom: 2px solid #e2e8f0; padding: 6px; text-align: center;"><?= esc_html(number_format_i18n((int) ($row['visits'] ?? 0))) ?></td>
 				<td style="border-bottom: 2px solid #e2e8f0; padding: 6px; text-align: center;"><?= esc_html(number_format_i18n((int) ($row['pageviews'] ?? 0))) ?></td>
